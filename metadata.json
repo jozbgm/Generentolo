@@ -1,0 +1,5 @@
+{
+  "name": "Generentolo v0.1 Beta",
+  "description": "let me do for you. V.0.1. A professional web application for generating and editing images using Google's Gemini Nano Banana model. Features include reference-based prompt generation, dynamic creative tools, aspect ratio control, persistent history, and a sleek dark/light interface for high-level graphic designers.",
+  "requestFramePermissions": []
+}
