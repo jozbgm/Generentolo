@@ -1,21 +1,339 @@
+# 🎨 Generentolo v0.1 Beta
+
+**Professional AI-Powered Image Generation Web Application**
+
+A sophisticated web application for generating high-quality images using Google's Gemini 2.5 Flash Image model. Designed for graphic designers, marketers, and creative professionals who need precise control over AI-generated imagery.
+
+[![Live Demo](https://img.shields.io/badge/Live-Demo-blue?style=for-the-badge)](https://www.dugongo.it/generentolo/)
+[![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
+[![React](https://img.shields.io/badge/React-19.2.0-61DAFB?style=for-the-badge&logo=react)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
+
+---
+
+## ✨ Features
+
+### 🖼️ **Multi-Reference Image Generation**
+- Upload up to **4 reference images** to combine elements intelligently
+- Separate **style reference image** for consistent visual branding
+- Advanced AI prompt engineering ensures all subjects are included in final output
+
+### 🎯 **Professional Creative Controls**
+- **3 AI-Generated Prompt Suggestions** (Hero Shot, Lifestyle, Detail/Macro)
+- **Dynamic Professional Tools** - AI analyzes your images and generates contextual controls:
+  - For people: Hairstyle, outfit, pose, expression
+  - For products: Camera angle, lighting, background setting
+  - For scenes: Time of day, weather, artistic style
+- **15-20 options per tool** for granular creative control
+
+### 📐 **Aspect Ratio Mastery**
+- Support for all common ratios: **1:1, 16:9, 9:16, 4:3, 3:4, 21:9**
+- **Aggressive white border detection** and automatic cropping
+- **High-resolution output**: Always 2048px on longest side, minimum 1024px on shortest
+- Smart sizing ensures frame is completely filled with no letterboxing
+
+### 🎨 **Advanced Image Controls**
+- **Negative Prompts** with AI-powered generation
+- **Seed Control** for reproducible results
+- **Batch Generation** - Create up to 4 images at once
+- **Inpainting** - Edit specific regions with mask-based AI editing
+
+### 💾 **Persistent History & Storage**
+- **Last 12 generations** saved automatically
+- **IndexedDB** for full-resolution images
+- **localStorage** for metadata and thumbnails
+- Reuse settings from any historical generation
+
+### 🌐 **Bilingual Interface**
+- Full support for **English** and **Italian**
+- Toggle languages instantly with preserved state
+
+### ⚡ **Developer-Friendly**
+- **Keyboard shortcuts** (Ctrl+G to generate, Ctrl+E to enhance, etc.)
+- Custom API key support (or use shared default)
+- Dark/Light theme toggle
+- Responsive design (mobile, tablet, desktop)
+
+---
+
+## 🚀 Live Demo
+
+**Try it now:** [https://www.dugongo.it/generentolo/](https://www.dugongo.it/generentolo/)
+
+---
+
+## 📸 Screenshots
+
+### Main Interface
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  ┌──────────────┐  ┌────────────────────────────┐  ┌─────────┐ │
+│  │  Reference   │  │   Generated Images         │  │ History │ │
+│  │  Images      │  │                            │  │         │ │
+│  │  (Up to 4)   │  │   [High-res 2048px]        │  │ [Last   │ │
+│  │              │  │                            │  │  12]    │ │
+│  │  + Style Ref │  └────────────────────────────┘  └─────────┘ │
+│  └──────────────┘                                                │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │  Creative Prompts  |  Professional Tools  |  Settings   │   │
+│  └──────────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 🛠️ Tech Stack
+
+- **Frontend Framework**: React 19.2.0
+- **Language**: TypeScript 5.8
+- **Build Tool**: Vite 6.2
+- **Styling**: Tailwind CSS 3.4.7
+- **AI Model**: Google Gemini 2.5 Flash Image (`@google/genai` v1.25.0)
+- **Storage**: IndexedDB + localStorage
+- **State Management**: React Hooks (useState, useCallback, useContext)
+
+---
+
+## 📦 Installation
+
+### Prerequisites
+- Node.js 18+
+- npm or yarn
+- Gemini API Key ([Get one free](https://ai.google.dev/))
+
+### Steps
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/jozbgm/generentolo-v0.1-beta.git
+   cd generentolo-v0.1-beta
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Configure API Key**
+
+   Create a `.env.local` file in the root directory:
+   ```env
+   VITE_API_KEY=your_gemini_api_key_here
+   ```
+
+4. **Run development server**
+   ```bash
+   npm run dev
+   ```
+   Open [http://localhost:3000](http://localhost:3000)
+
+5. **Build for production**
+   ```bash
+   npm run build
+   ```
+   Output will be in `dist/` folder
+
+---
+
+## 🔧 Configuration
+
+### Deployment Path
+
+Edit `vite.config.ts` to set the base path:
+
+```typescript
+export default defineConfig({
+  base: '/generentolo/',  // For subdirectory deployment
+  // base: '/',           // For root deployment
+  // ...
+});
+```
+
+### API Key Options
+
+Users can:
+1. Use the **shared default key** (defined in `.env.local`)
+2. Enter their **own API key** via Settings (stored locally in browser)
+
+---
+
+## 📁 Project Structure
+
+```
+generentolo-v0.1-beta/
+├── src/
+│   ├── App.tsx                    # Main application component (1,908 lines)
+│   ├── index.tsx                  # React entry point
+│   ├── types.ts                   # TypeScript interfaces
+│   ├── services/
+│   │   ├── geminiService.ts       # Gemini API wrapper (800+ lines)
+│   │   ├── indexedDB.ts           # Image storage service
+│   │   └── promptLibrary.ts       # Prompt management
+│   ├── components/
+│   │   └── icons.tsx              # Custom SVG icons
+│   └── hooks/
+│       └── useKeyboardShortcuts.ts # Keyboard shortcuts hook
+├── public/
+│   └── _redirects                 # SPA routing configuration
+├── dist/                          # Production build output
+├── vite.config.ts                 # Vite configuration
+├── tailwind.config.js             # Tailwind theme customization
+├── tsconfig.json                  # TypeScript configuration
+├── package.json                   # Dependencies
+└── README.md                      # This file
+```
+
+---
+
+## 🎨 Design System
+
+### Color Palette
+
+```css
+/* Brand Colors */
+--brand-blue: #5E8BFF;
+--brand-purple: #8A78F4;
+--brand-pink: #F075B6;
+
+/* Dark Mode */
+--dark-bg: #0F101A;
+--dark-surface: #181923;
+--dark-text: #E2E2E8;
+
+/* Light Mode */
+--light-bg: #F5F6FA;
+--light-surface: #FFFFFF;
+--light-text: #181923;
+```
+
+### Typography
+- **Primary Font**: System UI font stack
+- **Sizes**: Responsive scale (text-sm to text-lg)
+- **Weights**: Regular (400), Semibold (600), Bold (700)
+
+---
+
+## ⌨️ Keyboard Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| `Ctrl+G` | Generate images |
+| `Ctrl+E` | Enhance prompt |
+| `Ctrl+R` | Randomize seed |
+| `Ctrl+K` | Reset interface |
+| `Ctrl+,` | Open settings |
+| `Ctrl+P` | Focus prompt field |
+| `Ctrl+Shift+T` | Toggle theme |
+
+---
+
+## 🔄 Workflow Example
+
+1. **Upload Reference Images** (drag & drop or click to browse)
+2. **Add Style Image** (optional - for consistent branding)
+3. **Generate Creative Prompts** (AI suggests 3 professional prompts)
+4. **Generate Professional Tools** (AI creates contextual controls)
+5. **Select Tool Options** (hairstyle, lighting, camera angle, etc.)
+6. **Choose Aspect Ratio** (1:1, 16:9, 9:16, etc.)
+7. **Set Advanced Options** (negative prompt, seed, number of images)
+8. **Generate!** 🎨
+9. **Download, Edit, or Reuse** your creations
+
+---
+
+## 📊 Image Resolution Guarantees
+
+| Aspect Ratio | Output Size | Megapixels | Notes |
+|--------------|-------------|------------|-------|
+| 1:1 | 2048 × 2048 | 4.19 MP | Maximum quality |
+| 16:9 | 2048 × 1152 | 2.36 MP | Full HD+ |
+| 9:16 | 1152 × 2048 | 2.36 MP | Vertical HD+ |
+| 4:3 | 2048 × 1536 | 3.15 MP | Classic |
+| 21:9 | 2048 × 878 | 1.80 MP | Ultra-wide, min 1024px |
+
+**All images:**
+- ✅ PNG format with 100% quality
+- ✅ 2048px on longest side
+- ✅ Minimum 1024px on shortest side
+- ✅ High-quality image smoothing enabled
+
+---
+
+## 🐛 Bug Fixes & Improvements (Latest Release)
+
+### v0.1-beta (November 2025)
+- ✅ **Fixed**: History scroll with unlimited images
+- ✅ **Fixed**: Low-resolution output (now always 2048px max)
+- ✅ **Fixed**: API key popup closing on text selection
+- ✅ **Fixed**: Multiple reference images not recognized (critical fix)
+- ✅ **Fixed**: White bands in aspect ratio output
+- ✅ **Fixed**: Reset interface not working
+- ✅ **Improved**: Aggressive border detection (threshold 230, sample 5px)
+- ✅ **Improved**: Smart aspect ratio sizing with minimum dimension guarantee
+- ✅ **UI**: Removed placeholder icon, cleaner professional design
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Please follow these steps:
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+## 🙏 Acknowledgments
+
+- **Google Gemini Team** - For the powerful Gemini 2.5 Flash Image model
+- **React Team** - For the amazing React 19 framework
+- **Tailwind CSS** - For the beautiful utility-first CSS framework
+- **Claude AI** - Development assistance and code review
+
+---
+
+## 📞 Contact
+
+**Developer**: Joz BGM
+**Website**: [https://bgm.media](https://bgm.media)
+**Email**: [joz@bgm.media](mailto:joz@bgm.media)
+**Project Link**: [https://github.com/jozbgm/generentolo-v0.1-beta](https://github.com/jozbgm/generentolo-v0.1-beta)
+
+---
+
+## 🚧 Roadmap
+
+- [ ] Export/Import prompt library
+- [ ] Batch processing for multiple generation sets
+- [ ] Advanced history filtering and search
+- [ ] Template system for common use cases
+- [ ] Collaboration features (share generations)
+- [ ] API endpoint for programmatic access
+- [ ] More AI models support
+
+---
+
+## ⚠️ Disclaimer
+
+This application uses Google's Gemini API. Users are responsible for complying with [Google's Terms of Service](https://ai.google.dev/terms) and [Usage Guidelines](https://ai.google.dev/gemini-api/docs/safety-guidance). API keys should be kept private and secure.
+
+---
+
 <div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+
+**Made with ❤️ and 🤖 by Joz BGM**
+
+⭐ **Star this repo if you find it useful!** ⭐
+
+[Report Bug](https://github.com/jozbgm/generentolo-v0.1-beta/issues) · [Request Feature](https://github.com/jozbgm/generentolo-v0.1-beta/issues)
+
 </div>
-
-# Run and deploy your AI Studio app
-
-This contains everything you need to run your app locally.
-
-View your app in AI Studio: https://ai.studio/apps/drive/1Cv9bzLyQEiRiByhrZFQJo9sSY0ipT1yU
-
-## Run Locally
-
-**Prerequisites:**  Node.js
-
-
-1. Install dependencies:
-   `npm install`
-2. Create a file named `.env` in the root of the project.
-3. Inside `.env`, add your Gemini API key like this: `VITE_DEFAULT_API_KEY=YOUR_API_KEY_HERE`
-3. Run the app:
-   `npm run dev`
