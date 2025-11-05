@@ -443,8 +443,8 @@ const getAspectRatioGuidance = (aspectRatio: string, language: 'en' | 'it' = 'en
 const detectWhiteBorders = (ctx: CanvasRenderingContext2D, width: number, height: number): { top: number; bottom: number; left: number; right: number } => {
     const imageData = ctx.getImageData(0, 0, width, height);
     const data = imageData.data;
-    const threshold = 240; // Consider pixels > 240 as "white"
-    const sampleSize = 10; // Check every 10th pixel for performance
+    const threshold = 230; // Consider pixels > 230 as "white" (more aggressive)
+    const sampleSize = 5; // Check every 5th pixel for better accuracy
     
     let top = 0, bottom = 0, left = 0, right = 0;
     
@@ -503,84 +503,119 @@ const detectWhiteBorders = (ctx: CanvasRenderingContext2D, width: number, height
     return { top, bottom, left, right };
 };
 
-// Aggressive crop and resize to fill target aspect ratio (SOLUTION 4 - COMBINED)
+// Improved crop and resize to fill target aspect ratio with maximum quality retention
 const aggressiveCropAndResize = (imageDataUrl: string, targetAspectRatio: string): Promise<string> => {
     return new Promise((resolve, reject) => {
         const [widthRatio, heightRatio] = targetAspectRatio.split(':').map(Number);
         const targetRatio = widthRatio / heightRatio;
-        
+
         const img = new Image();
         img.onload = () => {
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
             if (!ctx) return reject(new Error('Could not get canvas context'));
-            
-            // Draw image to detect borders
+
+            // Step 1: Draw image to detect borders
             canvas.width = img.width;
             canvas.height = img.height;
             ctx.drawImage(img, 0, 0);
-            
-            // Detect white borders
+
+            // Step 2: Detect white borders with improved threshold
             const borders = detectWhiteBorders(ctx, img.width, img.height);
-            
-            // Calculate content area (excluding detected borders)
-            const contentX = borders.left;
-            const contentY = borders.top;
-            const contentWidth = img.width - borders.left - borders.right;
-            const contentHeight = img.height - borders.top - borders.bottom;
-            
-            // If significant borders detected (>5% on any side), crop them out
-            const borderPercentage = Math.max(
-                borders.top / img.height,
-                borders.bottom / img.height,
-                borders.left / img.width,
-                borders.right / img.width
+
+            // Step 3: Calculate content area (excluding detected borders)
+            let sourceX = borders.left;
+            let sourceY = borders.top;
+            let sourceWidth = img.width - borders.left - borders.right;
+            let sourceHeight = img.height - borders.top - borders.bottom;
+
+            // Debug logging
+            console.log(`[Aspect Ratio Processing] Target: ${targetAspectRatio}, Original size: ${img.width}x${img.height}, Borders detected: T${borders.top} B${borders.bottom} L${borders.left} R${borders.right}`);
+
+            // Only apply border detection if significant borders found (>3% on any side)
+            const borderThreshold = 0.03;
+            const hasBorders = (
+                borders.top / img.height > borderThreshold ||
+                borders.bottom / img.height > borderThreshold ||
+                borders.left / img.width > borderThreshold ||
+                borders.right / img.width > borderThreshold
             );
-            
-            let sourceX = contentX;
-            let sourceY = contentY;
-            let sourceWidth = contentWidth;
-            let sourceHeight = contentHeight;
-            
-            // If no significant borders, use full image
-            if (borderPercentage < 0.05) {
+
+            if (!hasBorders) {
+                // No significant borders - use full image
                 sourceX = 0;
                 sourceY = 0;
                 sourceWidth = img.width;
                 sourceHeight = img.height;
             }
-            
-            // Now crop to target aspect ratio from the content area
+
+            // Step 4: Crop to target aspect ratio from content area
             const contentRatio = sourceWidth / sourceHeight;
-            
+
+            // Only crop if aspect ratio difference is > 1%
             if (Math.abs(contentRatio - targetRatio) > 0.01) {
                 if (contentRatio > targetRatio) {
-                    // Content is wider, crop width
+                    // Content is wider than target - crop width (keep height)
                     const newWidth = sourceHeight * targetRatio;
-                    sourceX += (sourceWidth - newWidth) / 2;
+                    sourceX += (sourceWidth - newWidth) / 2; // Center crop
                     sourceWidth = newWidth;
                 } else {
-                    // Content is taller, crop height
+                    // Content is taller than target - crop height (keep width)
                     const newHeight = sourceWidth / targetRatio;
-                    sourceY += (sourceHeight - newHeight) / 2;
+                    sourceY += (sourceHeight - newHeight) / 2; // Center crop
                     sourceHeight = newHeight;
                 }
             }
-            
-            // Set output dimensions (high quality)
-            const maxDimension = 1536;
+
+            // Step 5: Calculate optimal output dimensions (always maximize to 2048px on longest side)
+            // This ensures we ALWAYS get maximum resolution regardless of aspect ratio
+            const MIN_DIMENSION = 1024; // Minimum size for shorter dimension
+            const MAX_DIMENSION = 2048; // Maximum size for longer dimension
+
+            let outputWidth: number;
+            let outputHeight: number;
+
             if (targetRatio >= 1) {
-                canvas.width = maxDimension;
-                canvas.height = Math.round(maxDimension / targetRatio);
+                // Landscape or square - width is longer/equal
+                outputWidth = MAX_DIMENSION;
+                outputHeight = Math.round(MAX_DIMENSION / targetRatio);
+
+                // Ensure minimum dimension for height
+                if (outputHeight < MIN_DIMENSION) {
+                    outputHeight = MIN_DIMENSION;
+                    outputWidth = Math.round(MIN_DIMENSION * targetRatio);
+                }
             } else {
-                canvas.height = maxDimension;
-                canvas.width = Math.round(maxDimension * targetRatio);
+                // Portrait - height is longer
+                outputHeight = MAX_DIMENSION;
+                outputWidth = Math.round(MAX_DIMENSION * targetRatio);
+
+                // Ensure minimum dimension for width
+                if (outputWidth < MIN_DIMENSION) {
+                    outputWidth = MIN_DIMENSION;
+                    outputHeight = Math.round(MIN_DIMENSION / targetRatio);
+                }
             }
-            
-            // Draw final cropped and resized image
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.drawImage(img, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, canvas.width, canvas.height);
-            
+
+            // Step 6: Resize canvas and draw final image with high-quality filtering
+            canvas.width = outputWidth;
+            canvas.height = outputHeight;
+
+            // Enable high-quality image smoothing
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+
+            // Draw the cropped and resized image
+            ctx.drawImage(
+                img,
+                sourceX, sourceY, sourceWidth, sourceHeight,  // Source rectangle
+                0, 0, outputWidth, outputHeight               // Destination rectangle
+            );
+
+            // Debug logging for final output
+            console.log(`[Aspect Ratio Processing] Final output: ${outputWidth}x${outputHeight} (ratio: ${(outputWidth/outputHeight).toFixed(3)}, target: ${targetRatio.toFixed(3)})`);
+
+            // Return as high-quality PNG
             resolve(canvas.toDataURL('image/png', 1.0));
         };
         img.onerror = reject;
@@ -661,9 +696,17 @@ export const generateImage = async (prompt: string, aspectRatio: string, referen
         const instructionParts: string[] = [aspectRatioGuidance];
         
         if (referenceFiles.length > 0) {
+            const imageCountText = language === 'it'
+                ? `Hai ricevuto ESATTAMENTE ${referenceFiles.length} ${referenceFiles.length === 1 ? 'immagine di riferimento' : 'immagini di riferimento'}.`
+                : `You have received EXACTLY ${referenceFiles.length} reference ${referenceFiles.length === 1 ? 'image' : 'images'}.`;
+            
+            const imageListText = language === 'it'
+                ? referenceFiles.map((_, idx) => `Immagine ${idx + 1}`).join(', ')
+                : referenceFiles.map((_, idx) => `Image ${idx + 1}`).join(', ');
+            
             instructionParts.push(language === 'it' 
-                ? "⚠️ IMPERATIVO - DEVI RIPRODURRE ESATTAMENTE I SOGGETTI DALLE IMMAGINI DI RIFERIMENTO: Non inventare nuovi soggetti! Analizza ATTENTAMENTE ogni immagine di riferimento fornita e REPLICA i soggetti specifici (persone, prodotti, oggetti) che vedi in esse. Se vedi una bottiglia specifica, QUELLA bottiglia deve apparire. Se vedi una persona specifica, QUELLA persona deve apparire. Le immagini di riferimento NON sono solo ispirazione, sono ISTRUZIONI VINCOLANTI sui soggetti da includere. MANTIENI pose, caratteristiche fisiche, dettagli dei prodotti fedeli alle reference." 
-                : '⚠️ IMPERATIVE - YOU MUST EXACTLY REPRODUCE THE SUBJECTS FROM THE REFERENCE IMAGES: Do not invent new subjects! Carefully ANALYZE each provided reference image and REPLICATE the specific subjects (people, products, objects) you see in them. If you see a specific bottle, THAT bottle must appear. If you see a specific person, THAT person must appear. The reference images are NOT just inspiration, they are BINDING INSTRUCTIONS on which subjects to include. MAINTAIN poses, physical features, product details faithful to the references.');
+                ? `⚠️ IMPERATIVO CRITICO - USA TUTTI I SOGGETTI DA TUTTE LE IMMAGINI: ${imageCountText} Le immagini sono: ${imageListText}. DEVI includere gli elementi principali da OGNI SINGOLA immagine nella composizione finale. NON ignorare nessuna immagine! NON concentrarti solo sulla prima! Analizza SEPARATAMENTE ogni immagine e identifica il suo soggetto principale, poi COMBINA tutti i soggetti in una scena coerente. Se vedi un personaggio in un'immagine E un oggetto in un'altra, ENTRAMBI devono apparire insieme. Le immagini NON sono alternative tra cui scegliere, ma elementi da COMBINARE obbligatoriamente. Tratta ogni immagine con uguale importanza!`
+                : `⚠️ CRITICAL IMPERATIVE - USE ALL SUBJECTS FROM ALL IMAGES: ${imageCountText} The images are: ${imageListText}. You MUST include the main elements from EACH AND EVERY image in the final composition. DO NOT ignore any image! DO NOT focus only on the first one! Analyze EACH image SEPARATELY and identify its main subject, then COMBINE all subjects into a coherent scene. If you see a character in one image AND an object in another, BOTH must appear together. The images are NOT alternatives to choose from, but elements to MANDATORILY COMBINE. Treat each image with equal importance!`);
         }
 
         // Extract style description from style image (if provided) and add to prompt text
@@ -684,10 +727,15 @@ export const generateImage = async (prompt: string, aspectRatio: string, referen
             fullPrompt += ` --no ${negativePrompt.trim()}`;
         }
 
-        const parts: any[] = [{ text: fullPrompt }, ...imageParts];
+        // CRITICAL: Images must come BEFORE text for proper reference interpretation
+        const parts: any[] = [...imageParts, { text: fullPrompt }];
         
         const config: any = {
             responseModalities: [Modality.IMAGE],
+            outputOptions: {
+                mimeType: 'image/png',
+                compressionQuality: 100
+            },
             safetySettings: [
                 { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH },
                 { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH },
@@ -703,16 +751,58 @@ export const generateImage = async (prompt: string, aspectRatio: string, referen
         const result = await ai.models.generateContent({
             model: 'gemini-2.5-flash-image',
             contents: { parts },
-            config,
+            config: config as any,
         });
 
         const candidate = result.candidates?.[0];
         if (!candidate || !candidate.content || !candidate.content.parts) {
+            // Log detailed error information
+            console.error("=== GEMINI API ERROR DEBUG ===");
+            console.error("Full API Response:", JSON.stringify(result, null, 2));
+            console.error("Prompt sent:", fullPrompt);
+            console.error("Number of reference images:", referenceFiles.length);
+            console.error("Image parts in request:", imageParts.length);
+            console.error("Parts order:", parts.map((p, i) => `${i}: ${p.text ? 'TEXT' : 'IMAGE'}`).join(', '));
+            console.error("=============================");
+            
             if (result.promptFeedback?.blockReason) {
-                throw { promptFeedback: result.promptFeedback };
+                const blockReason = result.promptFeedback.blockReason;
+                const safetyRatings = result.promptFeedback.safetyRatings || [];
+                
+                let detailedMessage = language === 'it'
+                    ? `La richiesta è stata bloccata: ${blockReason}. `
+                    : `The request was blocked: ${blockReason}. `;
+                
+                if (safetyRatings.length > 0) {
+                    const issues = safetyRatings
+                        .filter((r: any) => r.blocked)
+                        .map((r: any) => r.category)
+                        .join(', ');
+                    if (issues) {
+                        detailedMessage += language === 'it'
+                            ? `Categorie problematiche: ${issues}. Prova a modificare le immagini o il prompt.`
+                            : `Problematic categories: ${issues}. Try modifying the images or prompt.`;
+                    }
+                }
+                
+                throw new Error(detailedMessage);
             }
-            console.error("Invalid response structure from Gemini API:", JSON.stringify(result, null, 2));
-            throw new Error("No valid image content found in the API response. The request may have been blocked due to safety settings or other issues.");
+            
+            // Check if there are candidates but they're empty
+            if (result.candidates && result.candidates.length > 0) {
+                const finishReason = result.candidates[0]?.finishReason;
+                if (finishReason && finishReason !== 'STOP') {
+                    const message = language === 'it'
+                        ? `Generazione interrotta (${finishReason}). Il modello potrebbe non riuscire a combinare queste immagini. Prova con: 1) Immagini più semplici 2) Prompt più breve 3) Meno immagini di riferimento.`
+                        : `Generation stopped (${finishReason}). The model may not be able to combine these images. Try: 1) Simpler images 2) Shorter prompt 3) Fewer reference images.`;
+                    throw new Error(message);
+                }
+            }
+            
+            const genericMessage = language === 'it'
+                ? 'Nessun contenuto immagine nella risposta. Possibili cause: 1) Prompt troppo complesso 2) Immagini incompatibili 3) Richiesta bloccata. Riprova con immagini o prompt diversi.'
+                : 'No image content in response. Possible causes: 1) Prompt too complex 2) Incompatible images 3) Blocked request. Try again with different images or prompt.';
+            throw new Error(genericMessage);
         }
 
         for (const part of candidate.content.parts) {
@@ -743,7 +833,11 @@ export const editImage = async (prompt: string, imageFile: File, userApiKey?: st
             contents: { parts },
             config: {
                 responseModalities: [Modality.IMAGE],
-            },
+                outputOptions: {
+                    mimeType: 'image/png',
+                    compressionQuality: 100
+                },
+            } as any,
         });
 
         const candidate = result.candidates?.[0];
@@ -773,10 +867,10 @@ export const inpaintImage = async (prompt: string, imageFile: File, maskFile: Fi
         const ai = getAiClient(userApiKey);
         const imagePart = await fileToGenerativePart(imageFile);
         const maskPart = await fileToGenerativePart(maskFile);
-        
+
         const parts: any[] = [
-            imagePart, 
-            maskPart, 
+            imagePart,
+            maskPart,
             { text: `Using the second image provided as a mask (where the non-transparent/colored area indicates the area to change), edit the first image. The edited area should become: "${prompt}". Blend the results seamlessly.` }
         ];
 
@@ -785,7 +879,11 @@ export const inpaintImage = async (prompt: string, imageFile: File, maskFile: Fi
             contents: { parts },
             config: {
                 responseModalities: [Modality.IMAGE],
-            },
+                outputOptions: {
+                    mimeType: 'image/png',
+                    compressionQuality: 100
+                },
+            } as any,
         });
 
         const candidate = result.candidates?.[0];

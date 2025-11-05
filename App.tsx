@@ -926,7 +926,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, onSave, 
                 <h2 id="settings-title" className="text-lg font-semibold mb-4 text-light-text dark:text-dark-text">{t.settingsTitle}</h2>
                 <div>
                     <label htmlFor="api-key-input" className="block text-sm font-medium text-light-text-muted dark:text-dark-text-muted mb-1">{t.apiKeyLabel}</label>
-                    <input id="api-key-input" type="password" value={apiKeyInput} onChange={e => setApiKeyInput(e.target.value)} placeholder={t.apiKeyPlaceholder} className="w-full p-2 bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded-lg focus:ring-2 focus:ring-brand-purple focus:outline-none" />
+                    <input id="api-key-input" type="password" value={apiKeyInput} onChange={e => setApiKeyInput(e.target.value)} onMouseDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()} placeholder={t.apiKeyPlaceholder} className="w-full p-2 bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded-lg focus:ring-2 focus:ring-brand-purple focus:outline-none" />
                     <p className="text-xs text-light-text-muted dark:text-dark-text-muted mt-2">{t.apiKeySubtext}</p>
                 </div>
                 <div className="mt-6 flex justify-end gap-3">
@@ -1710,8 +1710,8 @@ export default function App() {
     };
 
     const handleEnterHistorySelectionMode = () => setIsHistorySelectionMode(true);
-    
-    const handleResetInterface = () => {
+
+    const handleResetInterface = useCallback(() => {
         setReferenceImages([]);
         setStyleReferenceImage(null);
         setPrompts([]);
@@ -1719,10 +1719,10 @@ export default function App() {
         setNegativePrompt('');
         setSeed('');
         setDynamicTools([]);
-        handleAspectRatioChange('1:1');
+        setAspectRatio('1:1');
         setCurrentImages([]);
         setNumImagesToGenerate(1);
-    };
+    }, []);
 
      const handleUseAsReference = () => {
         if (currentImages.length === 0 || referenceImages.length >= MAX_USER_IMAGES) return;
@@ -1857,7 +1857,7 @@ export default function App() {
                              </div>
                         </div>
 
-                        <aside className="flex-1 min-h-0 h-96 lg:h-auto">
+                        <aside className="flex-1 min-h-0">
                             <HistoryPanel 
                                 history={history} 
                                 onSelect={handleSelectHistory} 
