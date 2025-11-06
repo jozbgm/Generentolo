@@ -597,7 +597,28 @@ interface ControlPanelProps {
     onCopySeed: () => void;
     promptTextareaRef: React.RefObject<HTMLTextAreaElement>;
 }
-const ControlPanel: React.FC<ControlPanelProps> = React.memo((props) => {
+// Memoized Prompt Textarea to prevent flickering
+const PromptTextarea = React.memo<{
+    value: string;
+    onChange: (value: string) => void;
+    placeholder: string;
+    disabled: boolean;
+    textareaRef: React.RefObject<HTMLTextAreaElement>;
+}>(({ value, onChange, placeholder, disabled, textareaRef }) => {
+    return (
+        <textarea
+            ref={textareaRef}
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            rows={4}
+            className="w-full p-3 bg-light-surface/50 dark:bg-dark-surface/50 border border-light-border dark:border-dark-border rounded-xl focus:ring-2 focus:ring-brand-purple focus:outline-none text-light-text dark:text-dark-text placeholder-light-text-muted dark:placeholder-dark-text-muted"
+            placeholder={placeholder}
+            disabled={disabled}
+        />
+    );
+});
+
+const ControlPanel: React.FC<ControlPanelProps> = (props) => {
     const {
         dynamicTools, selectedAspectRatio, onAspectRatioChange, onMagicPrompt, onGenerateTools,
         isLoading, isToolsLoading, isEnhancing, referenceImages, styleReferenceImage, numImages, onNumImagesChange,
@@ -665,14 +686,12 @@ const ControlPanel: React.FC<ControlPanelProps> = React.memo((props) => {
                 <div className={`absolute inset-0 bg-light-surface/50 dark:bg-dark-bg/50 z-10 flex items-center justify-center transition-opacity rounded-xl ${(isRewriting || isEnhancing) ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
                     <div className="w-5 h-5 border-2 border-brand-purple border-t-transparent rounded-full animate-spin"></div>
                 </div>
-                <textarea 
-                    ref={promptTextareaRef}
-                    value={editedPrompt} 
-                    onChange={(e) => onEditedPromptChange(e.target.value)} 
-                    rows={4} 
-                    className="w-full p-3 bg-light-surface/50 dark:bg-dark-surface/50 border border-light-border dark:border-dark-border rounded-xl focus:ring-2 focus:ring-brand-purple focus:outline-none text-light-text dark:text-dark-text placeholder-light-text-muted dark:placeholder-dark-text-muted" 
-                    placeholder={t.promptPlaceholder} 
-                    disabled={isRewriting || isEnhancing} 
+                <PromptTextarea
+                    value={editedPrompt}
+                    onChange={onEditedPromptChange}
+                    placeholder={t.promptPlaceholder}
+                    disabled={isRewriting || isEnhancing}
+                    textareaRef={promptTextareaRef}
                 />
             </div>
             <button 
@@ -769,7 +788,7 @@ const ControlPanel: React.FC<ControlPanelProps> = React.memo((props) => {
             <ToolSelectionModal isOpen={!!editingTool} onClose={() => setEditingTool(null)} tool={editingTool} initialSelections={editingTool ? toolSettings[editingTool.name] : []} onSave={handleToolSave} />
         </div>
     );
-});
+};
 
 interface ImageDisplayProps {
     images: GeneratedImage[];
@@ -1603,10 +1622,14 @@ export default function App() {
     const showToast = useCallback((message: string, type: 'success' | 'error') => {
         setToast({ id: Date.now(), message, type });
     }, []);
-    
-    const handleAspectRatioChange = (ratio: string) => {
+
+    const handleAspectRatioChange = useCallback((ratio: string) => {
         setAspectRatio(ratio);
-    };
+    }, []);
+
+    const handleCopySeedCallback = useCallback(() => {
+        handleCopyToClipboard(seed);
+    }, [seed]);
 
     useEffect(() => {
         const root = window.document.documentElement;
@@ -2030,29 +2053,29 @@ export default function App() {
                             structureImage={structureImage}
                         />
                         <div className="border-t border-light-border dark:border-dark-border mx-4"></div>
-                        <ControlPanel 
+                        <ControlPanel
                             editedPrompt={editedPrompt}
                             onEditedPromptChange={setEditedPrompt}
-                            dynamicTools={dynamicTools} 
-                            selectedAspectRatio={aspectRatio} 
-                            onAspectRatioChange={handleAspectRatioChange} 
+                            dynamicTools={dynamicTools}
+                            selectedAspectRatio={aspectRatio}
+                            onAspectRatioChange={handleAspectRatioChange}
                             onMagicPrompt={handleMagicPrompt}
                             onGenerateTools={handleGenerateDynamicTools}
-                            isLoading={isLoading} 
+                            isLoading={isLoading}
                             isToolsLoading={isToolsLoading}
                             isEnhancing={isEnhancing}
-                            referenceImages={referenceImages} 
+                            referenceImages={referenceImages}
                             styleReferenceImage={styleReferenceImage}
-                            numImages={numImagesToGenerate} 
-                            onNumImagesChange={setNumImagesToGenerate} 
-                            userApiKey={userApiKey} 
+                            numImages={numImagesToGenerate}
+                            onNumImagesChange={setNumImagesToGenerate}
+                            userApiKey={userApiKey}
                             language={language}
                             negativePrompt={negativePrompt}
                             onNegativePromptChange={setNegativePrompt}
                             seed={seed}
                             onSeedChange={setSeed}
                             onRandomizeSeed={handleRandomizeSeed}
-                            onCopySeed={() => handleCopyToClipboard(seed)}
+                            onCopySeed={handleCopySeedCallback}
                             promptTextareaRef={promptTextareaRef}
                         />
                     </aside>
