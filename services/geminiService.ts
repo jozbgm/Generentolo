@@ -60,11 +60,11 @@ const fileToGenerativePart = async (file: File) => {
   };
 };
 
-export const generatePromptsFromImage = async (imageFiles: File[], styleFile: File | null, userApiKey?: string | null, language: 'en' | 'it' = 'en'): Promise<string[]> => {
+export const generatePromptsFromImage = async (imageFiles: File[], styleFile: File | null, structureFile: File | null, userApiKey?: string | null, language: 'en' | 'it' = 'en'): Promise<string[]> => {
   try {
-    if (imageFiles.length === 0 && !styleFile) return [];
+    if (imageFiles.length === 0 && !styleFile && !structureFile) return [];
     const ai = getAiClient(userApiKey);
-    
+
     const imageParts = [];
     for (const file of imageFiles) {
         imageParts.push(await fileToGenerativePart(file));
@@ -72,13 +72,20 @@ export const generatePromptsFromImage = async (imageFiles: File[], styleFile: Fi
     if (styleFile) {
         imageParts.push(await fileToGenerativePart(styleFile));
     }
-    
-    const stylePromptPart = styleFile 
+    if (structureFile) {
+        imageParts.push(await fileToGenerativePart(structureFile));
+    }
+
+    const stylePromptPart = styleFile
         ? (language === 'it' ? "Applica lo stile visivo (colori, illuminazione, atmosfera) dell'immagine di stile fornita a questi scenari." : "Apply the visual style (colors, lighting, mood) from the provided style image to these scenarios.")
         : "";
 
+    const structurePromptPart = structureFile
+        ? (language === 'it' ? "L'ultima immagine è una guida strutturale: mantieni la stessa composizione spaziale, layout e geometria nella generazione." : "The last image is a structural guide: maintain the same spatial composition, layout and geometry in the generation.")
+        : "";
+
     const promptText = language === 'it'
-      ? `Sei un art director senior e un esperto di fotografia pubblicitaria per agenzie di comunicazione. Analizza TUTTI i soggetti e gli elementi in TUTTE le immagini di riferimento fornite. Il tuo obiettivo è creare 3 prompt distinti per immagini pubblicitarie professionali che COMBININO in modo creativo i soggetti delle diverse immagini. ${stylePromptPart}
+      ? `Sei un art director senior e un esperto di fotografia pubblicitaria per agenzie di comunicazione. Analizza TUTTI i soggetti e gli elementi in TUTTE le immagini di riferimento fornite. Il tuo obiettivo è creare 3 prompt distinti per immagini pubblicitarie professionali che COMBININO in modo creativo i soggetti delle diverse immagini. ${stylePromptPart} ${structurePromptPart}
 
 **STRUTTURA DEI 3 PROMPT:**
 1. **HERO SHOT** - Focus principale sul prodotto/soggetto con lighting da studio professionale
@@ -130,7 +137,7 @@ export const generatePromptsFromImage = async (imageFiles: File[], styleFile: Fi
 - Varia mood e tecnica tra i 3 prompt ma mantieni coerenza di brand
 
 Restituisci un array JSON di 3 stringhe, ciascuna altamente dettagliata e professionale.`
-      : `You are a senior art director and expert in advertising photography for communication agencies. Analyze ALL subjects and elements in ALL provided reference images. Your goal is to create 3 distinct prompts for professional advertising images that creatively COMBINE the subjects from different images. ${stylePromptPart}
+      : `You are a senior art director and expert in advertising photography for communication agencies. Analyze ALL subjects and elements in ALL provided reference images. Your goal is to create 3 distinct prompts for professional advertising images that creatively COMBINE the subjects from different images. ${stylePromptPart} ${structurePromptPart}
 
 **STRUCTURE OF 3 PROMPTS:**
 1. **HERO SHOT** - Main focus on product/subject with professional studio lighting
@@ -208,11 +215,11 @@ Return a JSON array of 3 strings, each highly detailed and professional.`;
   }
 };
 
-export const generateSinglePromptFromImage = async (imageFiles: File[], styleFile: File | null, userApiKey?: string | null, language: 'en' | 'it' = 'en'): Promise<string> => {
+export const generateSinglePromptFromImage = async (imageFiles: File[], styleFile: File | null, structureFile: File | null, userApiKey?: string | null, language: 'en' | 'it' = 'en'): Promise<string> => {
   try {
-    if (imageFiles.length === 0 && !styleFile) return '';
+    if (imageFiles.length === 0 && !styleFile && !structureFile) return '';
     const ai = getAiClient(userApiKey);
-    
+
     const imageParts = [];
     for (const file of imageFiles) {
         imageParts.push(await fileToGenerativePart(file));
@@ -220,14 +227,21 @@ export const generateSinglePromptFromImage = async (imageFiles: File[], styleFil
     if (styleFile) {
         imageParts.push(await fileToGenerativePart(styleFile));
     }
+    if (structureFile) {
+        imageParts.push(await fileToGenerativePart(structureFile));
+    }
 
-    const stylePromptPart = styleFile 
+    const stylePromptPart = styleFile
         ? (language === 'it' ? "Applica lo stile visivo (colori, illuminazione, atmosfera) dell'immagine di stile fornita a questo scenario." : "Apply the visual style (colors, lighting, mood) from the provided style image to this scenario.")
         : "";
 
+    const structurePromptPart = structureFile
+        ? (language === 'it' ? "L'ultima immagine è una guida strutturale: mantieni la stessa composizione spaziale, layout e geometria nella generazione." : "The last image is a structural guide: maintain the same spatial composition, layout and geometry in the generation.")
+        : "";
+
     const promptText = language === 'it'
-      ? `Sei un art director e un esperto di prompt per la generazione di immagini pubblicitarie. Analizza TUTTI i soggetti e gli elementi in TUTTE le immagini di riferimento fornite. Il tuo obiettivo è creare UN UNICO prompt per un'immagine pubblicitaria professionale e creativa che COMBINI in modo intelligente e artistico i soggetti delle diverse immagini. Invece di descrivere semplicemente le immagini, immagina uno scenario di advertising ideale che unisca i soggetti. ${stylePromptPart} Sii dettagliato e mira a produrre un'immagine di alta qualità. Restituisci solo la stringa del prompt.`
-      : `You are an art director and an expert prompt engineer for advertising imagery. Analyze ALL subjects and elements in ALL provided reference images. Your goal is to create A SINGLE professional and creative advertising image prompt that intelligently and artistically COMBINES the subjects from the different images. Instead of just describing the images, imagine an ideal advertising scenario that merges the subjects. ${stylePromptPart} Be detailed and aim to produce a high-quality image. Return only the prompt string.`;
+      ? `Sei un art director e un esperto di prompt per la generazione di immagini pubblicitarie. Analizza TUTTI i soggetti e gli elementi in TUTTE le immagini di riferimento fornite. Il tuo obiettivo è creare UN UNICO prompt per un'immagine pubblicitaria professionale e creativa che COMBINI in modo intelligente e artistico i soggetti delle diverse immagini. Invece di descrivere semplicemente le immagini, immagina uno scenario di advertising ideale che unisca i soggetti. ${stylePromptPart} ${structurePromptPart} Sii dettagliato e mira a produrre un'immagine di alta qualità. Restituisci solo la stringa del prompt.`
+      : `You are an art director and an expert prompt engineer for advertising imagery. Analyze ALL subjects and elements in ALL provided reference images. Your goal is to create A SINGLE professional and creative advertising image prompt that intelligently and artistically COMBINES the subjects from the different images. Instead of just describing the images, imagine an ideal advertising scenario that merges the subjects. ${stylePromptPart} ${structurePromptPart} Be detailed and aim to produce a high-quality image. Return only the prompt string.`;
       
     const result = await ai.models.generateContent({
         model: 'gemini-2.5-flash',
@@ -248,7 +262,7 @@ export const generateSinglePromptFromImage = async (imageFiles: File[], styleFil
   }
 };
 
-export const enhancePrompt = async (currentPrompt: string, imageFiles: File[], styleFile: File | null, userApiKey?: string | null, language: 'en' | 'it' = 'en'): Promise<string> => {
+export const enhancePrompt = async (currentPrompt: string, imageFiles: File[], styleFile: File | null, structureFile: File | null, userApiKey?: string | null, language: 'en' | 'it' = 'en'): Promise<string> => {
     try {
         const ai = getAiClient(userApiKey);
         const imageParts = [];
@@ -258,10 +272,13 @@ export const enhancePrompt = async (currentPrompt: string, imageFiles: File[], s
         if (styleFile) {
             imageParts.push(await fileToGenerativePart(styleFile));
         }
+        if (structureFile) {
+            imageParts.push(await fileToGenerativePart(structureFile));
+        }
 
         const systemInstruction = language === 'it'
-            ? `Sei un esperto di prompt per la generazione di immagini pubblicitarie. Il tuo compito è migliorare il prompt dell'utente. REGOLA FONDAMENTALE: DEVI MANTENERE intatti tutti i soggetti principali, le azioni e le ambientazioni specificate dall'utente (es. se l'utente scrive "donna seduta su una panchina in palestra", la donna, la panchina e la palestra DEVONO rimanere nel prompt finale). Il tuo miglioramento deve AGGIUNGERE dettagli descrittivi, evocativi e professionali (come stile fotografico, illuminazione, angolo di ripresa, atmosfera) attorno alla richiesta originale, senza snaturarla. Analizza anche le immagini fornite per incorporare dettagli pertinenti di stile, soggetto e atmosfera. Restituisci solo il prompt migliorato.`
-            : `You are an expert prompt engineer for advertising imagery. Your task is to enhance the user's prompt. CRITICAL RULE: You MUST KEEP all main subjects, actions, and settings specified by the user intact (e.g., if the user writes "woman sitting on a bench in a gym," the woman, the bench, and the gym MUST remain in the final prompt). Your enhancement should ADD descriptive, evocative, and professional details (like photographic style, lighting, camera angle, mood) around the original request, without distorting it. Also, analyze the provided images to incorporate relevant details of style, subject, and mood. Return only the improved prompt.`;
+            ? `Sei un esperto di prompt per la generazione di immagini pubblicitarie. Il tuo compito è migliorare il prompt dell'utente. REGOLA FONDAMENTALE: DEVI MANTENERE intatti tutti i soggetti principali, le azioni e le ambientazioni specificate dall'utente (es. se l'utente scrive "donna seduta su una panchina in palestra", la donna, la panchina e la palestra DEVONO rimanere nel prompt finale). Il tuo miglioramento deve AGGIUNGERE dettagli descrittivi, evocativi e professionali (come stile fotografico, illuminazione, angolo di ripresa, atmosfera) attorno alla richiesta originale, senza snaturarla. Analizza anche le immagini fornite per incorporare dettagli pertinenti di stile, soggetto e atmosfera. ${styleFile ? "Una delle immagini rappresenta lo stile da applicare." : ""} ${structureFile ? "L'ultima immagine è una guida strutturale: la generazione finale deve mantenere la stessa composizione spaziale e layout." : ""} Restituisci solo il prompt migliorato.`
+            : `You are an expert prompt engineer for advertising imagery. Your task is to enhance the user's prompt. CRITICAL RULE: You MUST KEEP all main subjects, actions, and settings specified by the user intact (e.g., if the user writes "woman sitting on a bench in a gym," the woman, the bench, and the gym MUST remain in the final prompt). Your enhancement should ADD descriptive, evocative, and professional details (like photographic style, lighting, camera angle, mood) around the original request, without distorting it. Also, analyze the provided images to incorporate relevant details of style, subject, and mood. ${styleFile ? "One of the images represents the style to apply." : ""} ${structureFile ? "The last image is a structural guide: the final generation must maintain the same spatial composition and layout." : ""} Return only the improved prompt.`;
 
         const result = await ai.models.generateContent({
             model: 'gemini-2.5-flash',
@@ -275,17 +292,20 @@ export const enhancePrompt = async (currentPrompt: string, imageFiles: File[], s
     } catch (error) { throw handleError(error, language); }
 }
 
-export const generateDynamicToolsFromImage = async (imageFiles: File[], styleFile: File | null, userApiKey?: string | null, language: 'en' | 'it' = 'en'): Promise<DynamicTool[]> => {
+export const generateDynamicToolsFromImage = async (imageFiles: File[], styleFile: File | null, structureFile: File | null, userApiKey?: string | null, language: 'en' | 'it' = 'en'): Promise<DynamicTool[]> => {
     try {
-        if (imageFiles.length === 0 && !styleFile) return [];
+        if (imageFiles.length === 0 && !styleFile && !structureFile) return [];
         const ai = getAiClient(userApiKey);
-        
+
         const imageParts = [];
         for (const file of imageFiles) {
             imageParts.push(await fileToGenerativePart(file));
         }
         if (styleFile) {
             imageParts.push(await fileToGenerativePart(styleFile));
+        }
+        if (structureFile) {
+            imageParts.push(await fileToGenerativePart(structureFile));
         }
         
         const promptText = language === 'it'

@@ -1685,11 +1685,11 @@ export default function App() {
     const toggleTheme = () => setTheme(prev => prev === 'dark' ? 'light' : 'dark');
 
     const generateInitialPrompt = useCallback(async (refFiles: File[], styleFile: File | null) => {
-        if (refFiles.length === 0 && !styleFile) return;
-        
+        if (refFiles.length === 0 && !styleFile && !structureImage) return;
+
         setIsEnhancing(true);
         try {
-            const newPrompt = await geminiService.generateSinglePromptFromImage(refFiles, styleFile, userApiKey, language);
+            const newPrompt = await geminiService.generateSinglePromptFromImage(refFiles, styleFile, structureImage, userApiKey, language);
             setEditedPrompt(newPrompt);
         } catch (error: any) {
             console.error("Failed to generate initial prompt", error);
@@ -1697,7 +1697,7 @@ export default function App() {
         } finally {
             setIsEnhancing(false);
         }
-    }, [userApiKey, language, showToast, t.promptCreationFailed]);
+    }, [userApiKey, language, showToast, t.promptCreationFailed, structureImage]);
 
     useEffect(() => {
         const hasImages = referenceImages.length > 0 || styleReferenceImage;
@@ -1708,12 +1708,12 @@ export default function App() {
     }, [referenceImages, styleReferenceImage]);
     
     const handleGenerateCreativePrompts = useCallback(async () => {
-        const hasImages = referenceImages.length > 0 || styleReferenceImage;
+        const hasImages = referenceImages.length > 0 || styleReferenceImage || structureImage;
         if (!hasImages) return;
 
         setIsPromptsLoading(true);
         try {
-            const newPrompts = await geminiService.generatePromptsFromImage(referenceImages, styleReferenceImage, userApiKey, language);
+            const newPrompts = await geminiService.generatePromptsFromImage(referenceImages, styleReferenceImage, structureImage, userApiKey, language);
             setPrompts(newPrompts);
             if (newPrompts.length > 0 && !editedPrompt) {
                 setEditedPrompt(newPrompts[0]);
@@ -1724,15 +1724,15 @@ export default function App() {
         } finally {
             setIsPromptsLoading(false);
         }
-    }, [referenceImages, styleReferenceImage, userApiKey, language, showToast, editedPrompt]);
+    }, [referenceImages, styleReferenceImage, structureImage, userApiKey, language, showToast, editedPrompt]);
 
     const handleGenerateDynamicTools = useCallback(async () => {
-        const hasImages = referenceImages.length > 0 || styleReferenceImage;
+        const hasImages = referenceImages.length > 0 || styleReferenceImage || structureImage;
         if (!hasImages) return;
 
         setIsToolsLoading(true);
         try {
-            const newTools = await geminiService.generateDynamicToolsFromImage(referenceImages, styleReferenceImage, userApiKey, language);
+            const newTools = await geminiService.generateDynamicToolsFromImage(referenceImages, styleReferenceImage, structureImage, userApiKey, language);
             setDynamicTools(newTools);
         } catch (error: any) {
             console.error("Failed to generate dynamic tools", error);
@@ -1740,7 +1740,7 @@ export default function App() {
         } finally {
             setIsToolsLoading(false);
         }
-    }, [referenceImages, styleReferenceImage, userApiKey, language, showToast]);
+    }, [referenceImages, styleReferenceImage, structureImage, userApiKey, language, showToast]);
 
 
     const handleAddImages = (newFiles: File[]) => {
@@ -1869,7 +1869,7 @@ export default function App() {
         if (!editedPrompt) return;
         setIsEnhancing(true);
         try {
-            const enhanced = await geminiService.enhancePrompt(editedPrompt, referenceImages, styleReferenceImage, userApiKey, language);
+            const enhanced = await geminiService.enhancePrompt(editedPrompt, referenceImages, styleReferenceImage, structureImage, userApiKey, language);
             setEditedPrompt(enhanced);
         } catch (error: any) {
             console.error("Prompt enhancement failed", error);
@@ -1877,7 +1877,7 @@ export default function App() {
         } finally {
             setIsEnhancing(false);
         }
-    }, [editedPrompt, referenceImages, styleReferenceImage, userApiKey, language, showToast, t.promptEnhancementFailed]);
+    }, [editedPrompt, referenceImages, styleReferenceImage, structureImage, userApiKey, language, showToast, t.promptEnhancementFailed]);
     
     const handleMagicPrompt = useCallback(() => {
         if (editedPrompt.trim() === '') {
