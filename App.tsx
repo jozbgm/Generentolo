@@ -2187,7 +2187,7 @@ export default function App() {
                 )}
 
                 {zoomedImage && (
-                    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 cursor-zoom-out" onClick={() => setZoomedImage(null)} role="dialog" aria-modal="true" aria-label="Zoomed image view">
+                    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[100] flex items-center justify-center p-4 cursor-zoom-out" onClick={() => setZoomedImage(null)} role="dialog" aria-modal="true" aria-label="Zoomed image view">
                         <div className="relative" onClick={e => e.stopPropagation()}>
                             {/* Show image comparer if original image exists (upscaled image) */}
                             {zoomedImage.originalImageDataUrl ? (
