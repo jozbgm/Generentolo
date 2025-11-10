@@ -2045,7 +2045,7 @@ export default function App() {
         <LanguageContext.Provider value={{ language, setLanguage, t }}>
             <div className="h-screen w-screen bg-light-bg dark:bg-dark-bg text-light-text dark:text-dark-text flex flex-col font-sans">
                 <Header theme={theme} toggleTheme={toggleTheme} onOpenSettings={() => setIsSettingsOpen(true)} onOpenFeedback={() => setIsFeedbackOpen(true)} onOpenShortcuts={() => setIsShortcutsOpen(true)} onOpenHelp={() => setIsHelpOpen(true)} />
-                <main className="flex-1 flex flex-col lg:flex-row gap-4 px-4 pb-4 overflow-y-auto lg:overflow-hidden pb-32 lg:pb-28">
+                <main className="flex-1 flex flex-col lg:flex-row gap-4 lg:gap-6 px-4 pt-4 pb-32 lg:pb-28 overflow-y-auto lg:overflow-hidden">
                     {/* --- Left Sidebar (only references/style/structure) --- */}
                     <aside className="w-full lg:w-[280px] flex-shrink-0 bg-light-surface/50 dark:bg-dark-surface/30 backdrop-blur-xl rounded-3xl overflow-y-auto lg:h-full">
                         <ReferencePanel
@@ -2062,12 +2062,12 @@ export default function App() {
                     </aside>
 
                     {/* --- Main Content --- */}
-                    <div className="flex-1 flex flex-col min-w-0 lg:h-full">
+                    <div className="flex-1 flex flex-col gap-4 lg:gap-6 min-w-0 lg:h-full">
                         <div className="flex-1 min-h-0 bg-light-surface/50 dark:bg-dark-surface/30 backdrop-blur-xl rounded-3xl overflow-hidden">
                             <ImageDisplay images={currentImages} isLoading={isLoading} onDownload={handleDownload} onZoom={setZoomedImage} onEdit={setEditingImage} onUpscale={handleUpscale} upscalingImageId={upscalingImageId}/>
                         </div>
 
-                        <div className="flex-shrink-0 space-y-4 overflow-y-auto">
+                        <div className="flex-shrink-0 space-y-4 overflow-y-auto max-h-[300px] lg:max-h-[250px]">
                            {(referenceImages.length > 0 || !!styleReferenceImage) && (
                                 <CreativePromptsPanel 
                                     prompts={prompts} 
