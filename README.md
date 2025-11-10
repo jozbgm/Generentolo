@@ -1,4 +1,4 @@
-# 🎨 Generentolo v0.2 Beta
+# 🎨 Generentolo v0.3 Beta
 
 **Professional AI-Powered Image Generation Web Application**
 
@@ -317,6 +317,25 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 ## 📋 Changelog
+
+### v0.3 Beta (January 2025)
+**Major UX Overhaul:**
+- 🎨 **Floating Action Bar** - wan.video-inspired floating menu for streamlined workflow
+- 📱 **Mobile Optimization** - Fully responsive with touch-friendly controls
+- ⚡ **Always-Accessible Controls** - Aspect ratio, num images, and Generate button always visible
+- 🎯 **Expanded Mode** - Write prompts with all controls accessible simultaneously
+- 🔧 **Advanced Panel** - Slide-up overlay for negative prompt, seed, and professional tools
+- 💫 **Smart Positioning** - No more overlapping menus, z-index hierarchy perfected
+- 🎭 **Compact Pills** - Space-efficient design with emoji indicators
+- 🖼️ **Improved Layout** - Sidebar reduced to 280px, more space for image display
+- ✨ **Better UX** - Click outside to close menus, smooth transitions, professional glassmorphism
+
+**Technical Improvements:**
+- Context-aware UI that adapts to app state
+- Backdrop blur for modern visual depth
+- Proper z-index management (40→50→60→65→70)
+- Mobile-first responsive breakpoints (sm: 640px, lg: 1024px)
+- Export of LanguageContext for component reusability
 
 ### v0.2 Beta (January 2025)
 **Major Features:**
