@@ -161,10 +161,10 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
             )}
 
             {/* Main Floating Bar */}
-            <div className="fixed bottom-4 left-1/2 -translate-x-1/2 lg:left-[calc(50%+160px)] lg:-translate-x-1/2 w-[95%] lg:w-[calc(100%-360px)] max-w-5xl bg-light-surface/98 dark:bg-dark-surface/98 backdrop-blur-xl border border-light-border dark:border-dark-border rounded-2xl shadow-2xl z-[60] transition-all duration-300 ease-out overflow-hidden">
+            <div className="fixed bottom-4 left-1/2 -translate-x-1/2 lg:left-[calc(50%+160px)] lg:-translate-x-1/2 w-[95%] lg:w-[calc(100%-360px)] max-w-5xl bg-light-surface/98 dark:bg-dark-surface/98 backdrop-blur-xl border border-light-border dark:border-dark-border rounded-2xl shadow-2xl z-[60] transition-all duration-300 ease-out">
                 {/* Progress Bar */}
                 {isLoading && (
-                    <div className="absolute top-0 left-0 right-0 h-1 bg-light-surface-accent/30 dark:bg-dark-surface-accent/30">
+                    <div className="absolute top-0 left-0 right-0 h-1 bg-light-surface-accent/30 dark:bg-dark-surface-accent/30 overflow-hidden rounded-t-2xl">
                         <div className="h-full bg-gradient-to-r from-brand-purple via-brand-pink to-brand-purple bg-[length:200%_100%] animate-shimmer" />
                     </div>
                 )}
