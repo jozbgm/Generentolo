@@ -83,19 +83,19 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
             {/* Backdrop for Advanced Panel */}
             {showAdvancedPanel && (
                 <div
-                    className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40"
+                    className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 animate-fadeIn"
                     onClick={() => setShowAdvancedPanel(false)}
                 />
             )}
 
             {/* Advanced Panel Overlay (slide up from bottom) */}
             {showAdvancedPanel && (
-                <div className={`fixed ${isExpanded ? 'bottom-[200px]' : 'bottom-[88px]'} left-1/2 -translate-x-1/2 lg:left-[calc(50%+160px)] lg:-translate-x-1/2 w-[95%] lg:w-[calc(100%-360px)] max-w-5xl bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border rounded-2xl shadow-2xl z-50 p-6 max-h-[40vh] overflow-y-auto`}>
+                <div className={`fixed ${isExpanded ? 'bottom-[200px]' : 'bottom-[88px]'} left-1/2 -translate-x-1/2 lg:left-[calc(50%+160px)] lg:-translate-x-1/2 w-[95%] lg:w-[calc(100%-360px)] max-w-5xl bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border rounded-2xl shadow-2xl z-50 p-6 max-h-[40vh] overflow-y-auto animate-slideUp`}>
                     <div className="flex items-center justify-between mb-4">
                         <h3 className="font-semibold text-light-text dark:text-dark-text">{t.advancedSettings || 'Advanced Settings'}</h3>
                         <button
                             onClick={() => setShowAdvancedPanel(false)}
-                            className="text-light-text-muted dark:text-dark-text-muted hover:text-light-text dark:hover:text-dark-text"
+                            className="text-light-text-muted dark:text-dark-text-muted hover:text-light-text dark:hover:text-dark-text hover:scale-110 active:scale-95 transition-all duration-150"
                         >
                             ✕
                         </button>
@@ -126,7 +126,7 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                             />
                             <button
                                 onClick={onRandomizeSeed}
-                                className="px-4 py-2 bg-light-surface-accent dark:bg-dark-surface-accent rounded-lg hover:bg-light-border dark:hover:bg-dark-border transition-colors"
+                                className="px-4 py-2 bg-light-surface-accent dark:bg-dark-surface-accent rounded-lg hover:bg-light-border dark:hover:bg-dark-border hover:scale-105 active:scale-95 transition-all duration-150"
                             >
                                 🎲
                             </button>
@@ -141,9 +141,9 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                                 <button
                                     onClick={onGenerateTools}
                                     disabled={isToolsLoading}
-                                    className="text-sm text-brand-purple hover:text-brand-pink transition-colors disabled:opacity-50"
+                                    className="text-sm text-brand-purple hover:text-brand-pink hover:scale-105 active:scale-95 transition-all duration-150 disabled:opacity-50 disabled:hover:scale-100"
                                 >
-                                    {isToolsLoading ? '⏳' : '🔄'} {t.generate || 'Generate'}
+                                    {isToolsLoading ? <span className="inline-block animate-pulse">⏳</span> : '🔄'} {t.generate || 'Generate'}
                                 </button>
                             </div>
                             {dynamicTools.length > 0 ? (
@@ -161,14 +161,20 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
             )}
 
             {/* Main Floating Bar */}
-            <div className="fixed bottom-4 left-1/2 -translate-x-1/2 lg:left-[calc(50%+160px)] lg:-translate-x-1/2 w-[95%] lg:w-[calc(100%-360px)] max-w-5xl bg-light-surface/98 dark:bg-dark-surface/98 backdrop-blur-xl border border-light-border dark:border-dark-border rounded-2xl shadow-2xl z-[60]">
+            <div className="fixed bottom-4 left-1/2 -translate-x-1/2 lg:left-[calc(50%+160px)] lg:-translate-x-1/2 w-[95%] lg:w-[calc(100%-360px)] max-w-5xl bg-light-surface/98 dark:bg-dark-surface/98 backdrop-blur-xl border border-light-border dark:border-dark-border rounded-2xl shadow-2xl z-[60] transition-all duration-300 ease-out overflow-hidden">
+                {/* Progress Bar */}
+                {isLoading && (
+                    <div className="absolute top-0 left-0 right-0 h-1 bg-light-surface-accent/30 dark:bg-dark-surface-accent/30">
+                        <div className="h-full bg-gradient-to-r from-brand-purple via-brand-pink to-brand-purple bg-[length:200%_100%] animate-shimmer" />
+                    </div>
+                )}
                 {/* Compact Mode */}
                 {!isExpanded && (
-                    <div className="flex items-center gap-2 lg:gap-3 px-3 lg:px-4 py-2.5 lg:py-3">
+                    <div className="flex items-center gap-2 lg:gap-3 px-3 lg:px-4 py-2.5 lg:py-3 animate-fadeIn">
                         {/* Prompt Preview (clickable to expand) */}
                         <button
                             onClick={handleExpandClick}
-                            className="flex-1 text-left px-3 lg:px-4 py-2 lg:py-2.5 bg-transparent text-xs lg:text-sm text-light-text-muted dark:text-dark-text-muted truncate hover:text-light-text dark:hover:text-dark-text transition-colors min-w-0"
+                            className="flex-1 text-left px-3 lg:px-4 py-2 lg:py-2.5 bg-transparent text-xs lg:text-sm text-light-text-muted dark:text-dark-text-muted truncate hover:text-light-text dark:hover:text-dark-text transition-all duration-150 min-w-0"
                         >
                             {prompt || t.promptPlaceholder || "Describe what you want to generate..."}
                         </button>
@@ -181,7 +187,7 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                                     setShowAspectMenu(!showAspectMenu);
                                     setShowNumImagesMenu(false);
                                 }}
-                                className="flex items-center gap-1 lg:gap-1.5 px-2 lg:px-3 py-1.5 lg:py-2 bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-lg text-xs text-light-text dark:text-dark-text hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors whitespace-nowrap"
+                                className="flex items-center gap-1 lg:gap-1.5 px-2 lg:px-3 py-1.5 lg:py-2 bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-lg text-xs text-light-text dark:text-dark-text hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 active:scale-95 transition-all duration-150 whitespace-nowrap"
                             >
                                 <span className="hidden sm:inline">📐</span>
                                 <span>{aspectRatio}</span>
@@ -189,7 +195,7 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                             {showAspectMenu && (
                                 <>
                                     <div className="fixed inset-0 z-[65]" onClick={() => setShowAspectMenu(false)} />
-                                    <div className="absolute bottom-full mb-2 right-0 bg-light-surface dark:bg-dark-surface rounded-xl shadow-2xl p-2 min-w-[120px] border border-light-border dark:border-dark-border z-[70]">
+                                    <div className="absolute bottom-full mb-2 right-0 bg-light-surface dark:bg-dark-surface rounded-xl shadow-2xl p-2 min-w-[120px] border border-light-border dark:border-dark-border z-[70] animate-slideDown">
                                         {aspectRatios.map(ratio => (
                                             <button
                                                 key={ratio}
@@ -197,7 +203,7 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                                                     onAspectRatioChange(ratio);
                                                     setShowAspectMenu(false);
                                                 }}
-                                                className={`w-full px-3 py-1.5 text-left text-sm rounded-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors ${ratio === aspectRatio ? 'bg-brand-purple/20 text-brand-purple' : 'text-light-text dark:text-dark-text'}`}
+                                                className={`w-full px-3 py-1.5 text-left text-sm rounded-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 transition-all duration-150 ${ratio === aspectRatio ? 'bg-brand-purple/20 text-brand-purple' : 'text-light-text dark:text-dark-text'}`}
                                             >
                                                 {ratio}
                                             </button>
@@ -214,7 +220,7 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                                     setShowNumImagesMenu(!showNumImagesMenu);
                                     setShowAspectMenu(false);
                                 }}
-                                className="flex items-center gap-1 lg:gap-1.5 px-2 lg:px-3 py-1.5 lg:py-2 bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-lg text-xs text-light-text dark:text-dark-text hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors whitespace-nowrap"
+                                className="flex items-center gap-1 lg:gap-1.5 px-2 lg:px-3 py-1.5 lg:py-2 bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-lg text-xs text-light-text dark:text-dark-text hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 active:scale-95 transition-all duration-150 whitespace-nowrap"
                             >
                                 <span className="hidden sm:inline">🖼️</span>
                                 <span>{numImages}x</span>
@@ -222,7 +228,7 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                             {showNumImagesMenu && (
                                 <>
                                     <div className="fixed inset-0 z-[65]" onClick={() => setShowNumImagesMenu(false)} />
-                                    <div className="absolute bottom-full mb-2 right-0 bg-light-surface dark:bg-dark-surface rounded-xl shadow-2xl p-2 min-w-[100px] border border-light-border dark:border-dark-border z-[70]">
+                                    <div className="absolute bottom-full mb-2 right-0 bg-light-surface dark:bg-dark-surface rounded-xl shadow-2xl p-2 min-w-[100px] border border-light-border dark:border-dark-border z-[70] animate-slideDown">
                                         {numImagesOptions.map(num => (
                                             <button
                                                 key={num}
@@ -230,7 +236,7 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                                                     onNumImagesChange(num);
                                                     setShowNumImagesMenu(false);
                                                 }}
-                                                className={`w-full px-3 py-1.5 text-left text-sm rounded-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors ${num === numImages ? 'bg-brand-purple/20 text-brand-purple' : 'text-light-text dark:text-dark-text'}`}
+                                                className={`w-full px-3 py-1.5 text-left text-sm rounded-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 transition-all duration-150 ${num === numImages ? 'bg-brand-purple/20 text-brand-purple' : 'text-light-text dark:text-dark-text'}`}
                                             >
                                                 {num}x
                                             </button>
@@ -247,25 +253,25 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                                 setShowNumImagesMenu(false);
                                 setIsExpanded(false);
                             }}
-                            className="flex items-center gap-1 lg:gap-1.5 px-2 lg:px-3 py-1.5 lg:py-2 bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-lg text-xs text-light-text dark:text-dark-text hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors"
+                            className="flex items-center gap-1 lg:gap-1.5 px-2 lg:px-3 py-1.5 lg:py-2 bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-lg text-xs text-light-text dark:text-dark-text hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 active:scale-95 transition-all duration-150"
                         >
                             <span>⚙️</span>
                         </button>
 
-                        {/* Primary Action */}
+                        {/* Primary Action - HERO BUTTON */}
                         <button
                             onClick={onGenerate}
                             disabled={isLoading}
-                            className="px-3 lg:px-5 py-2 lg:py-2.5 bg-brand-purple hover:bg-brand-purple/90 rounded-lg font-medium text-white text-xs lg:text-sm shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                            className="relative px-4 lg:px-6 py-2.5 lg:py-3 bg-gradient-to-r from-brand-purple via-brand-pink to-brand-purple bg-[length:200%_100%] hover:bg-[position:100%_0] hover:scale-110 active:scale-95 rounded-xl font-bold text-white text-sm lg:text-base shadow-[0_0_20px_rgba(138,120,244,0.5)] hover:shadow-[0_0_30px_rgba(138,120,244,0.8)] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:shadow-lg whitespace-nowrap"
                         >
-                            {isLoading ? "⏳" : "⚡"} <span className="hidden sm:inline">{isLoading ? "Generating..." : "Generate"}</span>
+                            {isLoading ? <span className="inline-block animate-pulse">⏳</span> : "⚡"} <span className="hidden sm:inline">{isLoading ? "Generating..." : "Generate"}</span>
                         </button>
                     </div>
                 )}
 
                 {/* Expanded Mode */}
                 {isExpanded && (
-                    <div className="px-3 lg:px-4 py-2.5 lg:py-3 space-y-2 lg:space-y-3">
+                    <div className="px-3 lg:px-4 py-2.5 lg:py-3 space-y-2 lg:space-y-3 animate-fadeIn">
                         {/* Prompt Textarea */}
                         <textarea
                             ref={promptTextareaRef}
@@ -282,21 +288,21 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                             <button
                                 onClick={onEnhancePrompt}
                                 disabled={isEnhancing || !prompt}
-                                className="px-2 lg:px-3 py-1.5 bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-lg text-xs hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="px-2 lg:px-3 py-1.5 bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-lg text-xs hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 active:scale-95 transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                             >
                                 ✨ <span className="hidden sm:inline">Enhance</span>
                             </button>
                             <button
                                 onClick={onMagicPrompt}
                                 disabled={isEnhancing || !hasReferences}
-                                className="px-2 lg:px-3 py-1.5 bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-lg text-xs hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="px-2 lg:px-3 py-1.5 bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-lg text-xs hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 active:scale-95 transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                             >
                                 🪄 <span className="hidden sm:inline">Magic</span>
                             </button>
                             <button
                                 onClick={onGenerate3Prompts}
                                 disabled={isEnhancing || !hasReferences}
-                                className="px-2 lg:px-3 py-1.5 bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-lg text-xs hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="px-2 lg:px-3 py-1.5 bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-lg text-xs hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 active:scale-95 transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                             >
                                 📝 <span className="hidden sm:inline">3 Prompts</span>
                             </button>
@@ -312,14 +318,14 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                                         setShowAspectMenu(!showAspectMenu);
                                         setShowNumImagesMenu(false);
                                     }}
-                                    className="flex items-center gap-1 lg:gap-1.5 px-2 lg:px-3 py-1.5 bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-lg text-xs text-light-text dark:text-dark-text hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors whitespace-nowrap"
+                                    className="flex items-center gap-1 lg:gap-1.5 px-2 lg:px-3 py-1.5 bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-lg text-xs text-light-text dark:text-dark-text hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 active:scale-95 transition-all duration-150 whitespace-nowrap"
                                 >
                                     <span>{aspectRatio}</span>
                                 </button>
                                 {showAspectMenu && (
                                     <>
                                         <div className="fixed inset-0 z-[65]" onClick={() => setShowAspectMenu(false)} />
-                                        <div className="absolute bottom-full mb-2 left-0 bg-light-surface dark:bg-dark-surface rounded-xl shadow-2xl p-2 min-w-[120px] border border-light-border dark:border-dark-border z-[70]">
+                                        <div className="absolute bottom-full mb-2 left-0 bg-light-surface dark:bg-dark-surface rounded-xl shadow-2xl p-2 min-w-[120px] border border-light-border dark:border-dark-border z-[70] animate-slideDown">
                                             {aspectRatios.map(ratio => (
                                                 <button
                                                     key={ratio}
@@ -327,7 +333,7 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                                                         onAspectRatioChange(ratio);
                                                         setShowAspectMenu(false);
                                                     }}
-                                                    className={`w-full px-3 py-1.5 text-left text-sm rounded-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors ${ratio === aspectRatio ? 'bg-brand-purple/20 text-brand-purple' : 'text-light-text dark:text-dark-text'}`}
+                                                    className={`w-full px-3 py-1.5 text-left text-sm rounded-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 transition-all duration-150 ${ratio === aspectRatio ? 'bg-brand-purple/20 text-brand-purple' : 'text-light-text dark:text-dark-text'}`}
                                                 >
                                                     {ratio}
                                                 </button>
@@ -344,14 +350,14 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                                         setShowNumImagesMenu(!showNumImagesMenu);
                                         setShowAspectMenu(false);
                                     }}
-                                    className="flex items-center gap-1 lg:gap-1.5 px-2 lg:px-3 py-1.5 bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-lg text-xs text-light-text dark:text-dark-text hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors whitespace-nowrap"
+                                    className="flex items-center gap-1 lg:gap-1.5 px-2 lg:px-3 py-1.5 bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-lg text-xs text-light-text dark:text-dark-text hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 active:scale-95 transition-all duration-150 whitespace-nowrap"
                                 >
                                     <span>{numImages}x</span>
                                 </button>
                                 {showNumImagesMenu && (
                                     <>
                                         <div className="fixed inset-0 z-[65]" onClick={() => setShowNumImagesMenu(false)} />
-                                        <div className="absolute bottom-full mb-2 left-0 bg-light-surface dark:bg-dark-surface rounded-xl shadow-2xl p-2 min-w-[100px] border border-light-border dark:border-dark-border z-[70]">
+                                        <div className="absolute bottom-full mb-2 left-0 bg-light-surface dark:bg-dark-surface rounded-xl shadow-2xl p-2 min-w-[100px] border border-light-border dark:border-dark-border z-[70] animate-slideDown">
                                             {numImagesOptions.map(num => (
                                                 <button
                                                     key={num}
@@ -359,7 +365,7 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                                                         onNumImagesChange(num);
                                                         setShowNumImagesMenu(false);
                                                     }}
-                                                    className={`w-full px-3 py-1.5 text-left text-sm rounded-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors ${num === numImages ? 'bg-brand-purple/20 text-brand-purple' : 'text-light-text dark:text-dark-text'}`}
+                                                    className={`w-full px-3 py-1.5 text-left text-sm rounded-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 transition-all duration-150 ${num === numImages ? 'bg-brand-purple/20 text-brand-purple' : 'text-light-text dark:text-dark-text'}`}
                                                 >
                                                     {num}x
                                                 </button>
@@ -375,7 +381,7 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                                     setShowAspectMenu(false);
                                     setShowNumImagesMenu(false);
                                 }}
-                                className="flex items-center gap-1 lg:gap-1.5 px-2 lg:px-3 py-1.5 bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-lg text-xs text-light-text dark:text-dark-text hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors"
+                                className="flex items-center gap-1 lg:gap-1.5 px-2 lg:px-3 py-1.5 bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-lg text-xs text-light-text dark:text-dark-text hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 active:scale-95 transition-all duration-150"
                             >
                                 <span>⚙️</span>
                             </button>
@@ -385,18 +391,18 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                             {/* Collapse */}
                             <button
                                 onClick={() => setIsExpanded(false)}
-                                className="px-2 lg:px-3 py-1.5 text-light-text-muted dark:text-dark-text-muted hover:text-light-text dark:hover:text-dark-text text-xs"
+                                className="px-2 lg:px-3 py-1.5 text-light-text-muted dark:text-dark-text-muted hover:text-light-text dark:hover:text-dark-text hover:scale-110 active:scale-95 transition-all duration-150 text-xs"
                             >
                                 ▼
                             </button>
 
-                            {/* Generate */}
+                            {/* Generate - HERO BUTTON */}
                             <button
                                 onClick={onGenerate}
                                 disabled={isLoading}
-                                className="px-3 lg:px-5 py-1.5 lg:py-2 bg-brand-purple hover:bg-brand-purple/90 rounded-lg font-medium text-white text-xs shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                                className="relative px-4 lg:px-6 py-2 lg:py-2.5 bg-gradient-to-r from-brand-purple via-brand-pink to-brand-purple bg-[length:200%_100%] hover:bg-[position:100%_0] hover:scale-110 active:scale-95 rounded-xl font-bold text-white text-xs lg:text-sm shadow-[0_0_20px_rgba(138,120,244,0.5)] hover:shadow-[0_0_30px_rgba(138,120,244,0.8)] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:shadow-lg whitespace-nowrap"
                             >
-                                {isLoading ? "⏳" : "⚡"} <span className="hidden sm:inline">{isLoading ? "Generating..." : "Generate"}</span>
+                                {isLoading ? <span className="inline-block animate-pulse">⏳</span> : "⚡"} <span className="hidden sm:inline">{isLoading ? "Generating..." : "Generate"}</span>
                             </button>
                         </div>
                     </div>

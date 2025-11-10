@@ -1,4 +1,4 @@
-# 🎨 Generentolo v0.4 Beta
+# 🎨 Generentolo v0.5 Beta
 
 **Professional AI-Powered Image Generation Web Application**
 
@@ -317,6 +317,25 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 ## 📋 Changelog
+
+### v0.5 Beta (January 2025)
+**Visual & Animation Overhaul:**
+- ✨ **Micro-animations** - Smooth transitions for all UI elements (fadeIn, slideUp, slideDown)
+- 🎯 **Hero Generate Button** - Gradient background with glow effect, larger size, bold typography
+- 📊 **Progress Bar** - Animated shimmer bar during image generation
+- 💫 **Interactive Feedback** - Hover scale effects (1.05x-1.10x) on all buttons
+- 🎨 **Dropdown Animations** - SlideDown effect for all menus with smooth transitions
+- ⚡ **Success/Error States** - Prepared animations (pulse success, shake error) for future integration
+- 🖱️ **Enhanced Hover States** - All interactive elements have scale and color transitions
+- 🎭 **Loading States** - Pulsing emoji animations during processing
+- 🌊 **Smooth Transitions** - 150ms-300ms duration with ease-out timing for all interactions
+- 🎪 **Visual Hierarchy** - Generate button stands out with gradient (purple→pink→purple) and shadow glow
+
+**Technical Improvements:**
+- Custom Tailwind animations: fadeIn, slideUp, slideDown, scaleIn, shimmer, success, shake
+- Optimized transition timing for fluid user experience
+- Professional animation curves (ease-out, cubic-bezier)
+- Consistent 150-300ms transition durations across all components
 
 ### v0.4 Beta (January 2025)
 **Polish & Refinements:**
