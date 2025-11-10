@@ -274,8 +274,9 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                             className="w-full px-4 py-2.5 bg-transparent text-light-text dark:text-dark-text resize-none focus:ring-2 focus:ring-brand-purple/50 rounded-xl outline-none"
                         />
 
-                        {/* Quick Actions + Collapse */}
+                        {/* All Controls Row */}
                         <div className="flex items-center gap-2 flex-wrap">
+                            {/* Quick Actions */}
                             <button
                                 onClick={onEnhancePrompt}
                                 disabled={isEnhancing || !prompt}
@@ -298,6 +299,85 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                                 📝 3 Prompts
                             </button>
 
+                            {/* Divider */}
+                            <div className="h-6 w-px bg-light-border dark:bg-dark-border"></div>
+
+                            {/* Settings Pills */}
+                            <div className="relative z-[70]">
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setShowAspectMenu(!showAspectMenu);
+                                        setShowNumImagesMenu(false);
+                                    }}
+                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-lg text-xs text-light-text dark:text-dark-text hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors whitespace-nowrap"
+                                >
+                                    <span>{aspectRatio}</span>
+                                </button>
+                                {showAspectMenu && (
+                                    <>
+                                        <div className="fixed inset-0 z-[65]" onClick={() => setShowAspectMenu(false)} />
+                                        <div className="absolute bottom-full mb-2 left-0 bg-light-surface dark:bg-dark-surface rounded-xl shadow-2xl p-2 min-w-[120px] border border-light-border dark:border-dark-border z-[70]">
+                                            {aspectRatios.map(ratio => (
+                                                <button
+                                                    key={ratio}
+                                                    onClick={() => {
+                                                        onAspectRatioChange(ratio);
+                                                        setShowAspectMenu(false);
+                                                    }}
+                                                    className={`w-full px-3 py-1.5 text-left text-sm rounded-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors ${ratio === aspectRatio ? 'bg-brand-purple/20 text-brand-purple' : 'text-light-text dark:text-dark-text'}`}
+                                                >
+                                                    {ratio}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+
+                            <div className="relative z-[70]">
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setShowNumImagesMenu(!showNumImagesMenu);
+                                        setShowAspectMenu(false);
+                                    }}
+                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-lg text-xs text-light-text dark:text-dark-text hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors whitespace-nowrap"
+                                >
+                                    <span>{numImages}x</span>
+                                </button>
+                                {showNumImagesMenu && (
+                                    <>
+                                        <div className="fixed inset-0 z-[65]" onClick={() => setShowNumImagesMenu(false)} />
+                                        <div className="absolute bottom-full mb-2 left-0 bg-light-surface dark:bg-dark-surface rounded-xl shadow-2xl p-2 min-w-[100px] border border-light-border dark:border-dark-border z-[70]">
+                                            {numImagesOptions.map(num => (
+                                                <button
+                                                    key={num}
+                                                    onClick={() => {
+                                                        onNumImagesChange(num);
+                                                        setShowNumImagesMenu(false);
+                                                    }}
+                                                    className={`w-full px-3 py-1.5 text-left text-sm rounded-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors ${num === numImages ? 'bg-brand-purple/20 text-brand-purple' : 'text-light-text dark:text-dark-text'}`}
+                                                >
+                                                    {num}x
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+
+                            <button
+                                onClick={() => {
+                                    setShowAdvancedPanel(!showAdvancedPanel);
+                                    setShowAspectMenu(false);
+                                    setShowNumImagesMenu(false);
+                                }}
+                                className="flex items-center gap-1.5 px-3 py-1.5 bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-lg text-xs text-light-text dark:text-dark-text hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors"
+                            >
+                                <span>⚙️</span>
+                            </button>
+
                             <div className="flex-1" />
 
                             {/* Collapse */}
@@ -305,7 +385,16 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                                 onClick={() => setIsExpanded(false)}
                                 className="px-3 py-1.5 text-light-text-muted dark:text-dark-text-muted hover:text-light-text dark:hover:text-dark-text text-xs"
                             >
-                                ▼ Close
+                                ▼
+                            </button>
+
+                            {/* Generate */}
+                            <button
+                                onClick={onGenerate}
+                                disabled={isLoading}
+                                className="px-5 py-2 bg-brand-purple hover:bg-brand-purple/90 rounded-lg font-medium text-white text-xs shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                            >
+                                {isLoading ? "⏳ Generating..." : "⚡ Generate"}
                             </button>
                         </div>
                     </div>
