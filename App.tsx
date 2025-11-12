@@ -571,14 +571,33 @@ const ToolSelectionModal: React.FC<ToolSelectionModalProps> = ({ isOpen, onClose
     );
 };
 
-const Tooltip: React.FC<{ text: string }> = ({ text }) => (
-    <div className="relative group flex items-center">
-      <InfoIcon className="w-4 h-4 text-light-text-muted dark:text-dark-text-muted cursor-help" />
-      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max max-w-[200px] p-2 text-xs text-dark-text bg-dark-bg/90 backdrop-blur-sm rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20 dark:bg-light-bg/90 dark:text-light-text">
-        {text}
-      </div>
-    </div>
-);
+const Tooltip: React.FC<{ text: string }> = ({ text }) => {
+    const [isOpen, setIsOpen] = useState(false);
+
+    return (
+        <div className="relative flex items-center">
+            <button
+                type="button"
+                onClick={(e: React.MouseEvent) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setIsOpen(!isOpen);
+                }}
+                onBlur={() => setTimeout(() => setIsOpen(false), 150)}
+                className="p-1 rounded-full hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors"
+                aria-label="Show info"
+            >
+                <InfoIcon className="w-4 h-4 text-light-text-muted dark:text-dark-text-muted" />
+            </button>
+            {isOpen && (
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max max-w-[200px] p-2 text-xs text-white bg-gray-900 dark:bg-gray-800 rounded-md shadow-lg z-[100] animate-fadeIn">
+                    {text}
+                    <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-gray-900 dark:border-t-gray-800"></div>
+                </div>
+            )}
+        </div>
+    );
+};
 
 interface ControlPanelProps {
     dynamicTools: DynamicTool[];
