@@ -3,7 +3,7 @@ import { GeneratedImage, DynamicTool } from './types';
 import * as geminiService from './services/geminiService';
 import * as upscaleService from './services/upscaleService';
 import { useKeyboardShortcuts, APP_SHORTCUTS } from './hooks/useKeyboardShortcuts';
-import { SunIcon, MoonIcon, UploadIcon, DownloadIcon, ZoomInIcon, SparklesIcon, CopyIcon, SettingsIcon, XIcon, CheckIcon, LanguageIcon, WandIcon, InfoIcon, AlertTriangleIcon, BrushIcon, DiceIcon, TrashIcon, ReloadIcon, EnvelopeIcon, StarIcon, CornerUpLeftIcon, UpscaleIcon } from './components/icons';
+import { SunIcon, MoonIcon, UploadIcon, DownloadIcon, ZoomInIcon, SparklesIcon, CopyIcon, SettingsIcon, XIcon, CheckIcon, LanguageIcon, WandIcon, InfoIcon, AlertTriangleIcon, BrushIcon, DiceIcon, TrashIcon, ReloadIcon, EnvelopeIcon, StarIcon, CornerUpLeftIcon, UpscaleIcon, ChevronLeftIcon, ChevronRightIcon } from './components/icons';
 import FloatingActionBar from './components/FloatingActionBar';
 
 // --- Localization ---
@@ -1845,8 +1845,65 @@ export default function App() {
         }, 100);
     
     }, [prompts, isLoading, dynamicTools, userApiKey, language, handleGenerate]);
-    
-    
+
+    // Image navigation in lightbox
+    const getImageNavigation = useCallback(() => {
+        if (!zoomedImage) return { prev: null, next: null, current: 0, total: 0 };
+
+        // Check if image is in currentImages
+        let images = currentImages;
+        let index = images.findIndex(img => img.id === zoomedImage.id);
+
+        // If not found, check history
+        if (index === -1) {
+            images = history;
+            index = images.findIndex(img => img.id === zoomedImage.id);
+        }
+
+        // If still not found, return null
+        if (index === -1) return { prev: null, next: null, current: 0, total: 0 };
+
+        const prevIndex = index > 0 ? index - 1 : images.length - 1;
+        const nextIndex = index < images.length - 1 ? index + 1 : 0;
+
+        return {
+            prev: images[prevIndex] || null,
+            next: images[nextIndex] || null,
+            current: index + 1,
+            total: images.length
+        };
+    }, [zoomedImage, currentImages, history]);
+
+    const navigateImage = useCallback((direction: 'prev' | 'next') => {
+        const nav = getImageNavigation();
+        if (direction === 'prev' && nav.prev) {
+            setZoomedImage(nav.prev);
+        } else if (direction === 'next' && nav.next) {
+            setZoomedImage(nav.next);
+        }
+    }, [getImageNavigation]);
+
+    // Keyboard navigation
+    useEffect(() => {
+        if (!zoomedImage) return;
+
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                navigateImage('prev');
+            } else if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                navigateImage('next');
+            } else if (e.key === 'Escape') {
+                setZoomedImage(null);
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [zoomedImage, navigateImage]);
+
+
     const handleInpaint = async (imageFile: File, maskFile: File, prompt: string) => {
         try {
             const imageDataUrl = await geminiService.inpaintImage(prompt, imageFile, maskFile, userApiKey, language);
@@ -2186,26 +2243,103 @@ export default function App() {
                     />
                 )}
 
-                {zoomedImage && (
-                    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[100] flex items-center justify-center p-4 cursor-zoom-out" onClick={() => setZoomedImage(null)} role="dialog" aria-modal="true" aria-label="Zoomed image view">
-                        <div className="relative" onClick={e => e.stopPropagation()}>
-                            {/* Show image comparer if original image exists (upscaled image) */}
-                            {zoomedImage.originalImageDataUrl ? (
-                                <ImageComparer
-                                    originalImage={zoomedImage.originalImageDataUrl}
-                                    upscaledImage={zoomedImage.imageDataUrl || zoomedImage.thumbnailDataUrl!}
-                                    alt={zoomedImage.prompt}
-                                />
-                            ) : (
-                                <img src={zoomedImage.imageDataUrl || zoomedImage.thumbnailDataUrl} alt={zoomedImage.prompt} className="max-w-[90vw] max-h-[90vh] object-contain rounded-lg shadow-2xl" />
-                            )}
-                            <div className="absolute -top-12 right-0 flex gap-2">
-                                <button onClick={() => handleDownload(zoomedImage)} className="p-2 rounded-full bg-black/60 text-white hover:bg-black/80 transition-colors" aria-label="Download image"><DownloadIcon className="w-6 h-6" /></button>
-                                <button onClick={() => setZoomedImage(null)} className="p-2 rounded-full bg-black/60 text-white hover:bg-black/80 transition-colors" aria-label="Close zoom view"><XIcon className="w-6 h-6" /></button>
+                {zoomedImage && (() => {
+                    const nav = getImageNavigation();
+                    const showNavigation = nav.total > 1;
+
+                    return (
+                        <div
+                            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[100] flex items-center justify-center p-4 cursor-zoom-out"
+                            onClick={() => setZoomedImage(null)}
+                            role="dialog"
+                            aria-modal="true"
+                            aria-label="Zoomed image view"
+                        >
+                            <div
+                                className="relative select-none"
+                                onClick={e => e.stopPropagation()}
+                                onTouchStart={(e) => {
+                                    const touch = e.touches[0];
+                                    (e.currentTarget as any).touchStartX = touch.clientX;
+                                }}
+                                onTouchEnd={(e) => {
+                                    const touch = e.changedTouches[0];
+                                    const startX = (e.currentTarget as any).touchStartX;
+                                    const diff = touch.clientX - startX;
+
+                                    // Swipe threshold: 50px
+                                    if (Math.abs(diff) > 50) {
+                                        if (diff > 0) {
+                                            // Swipe right = previous
+                                            navigateImage('prev');
+                                        } else {
+                                            // Swipe left = next
+                                            navigateImage('next');
+                                        }
+                                    }
+                                }}
+                            >
+                                {/* Show image comparer if original image exists (upscaled image) */}
+                                {zoomedImage.originalImageDataUrl ? (
+                                    <ImageComparer
+                                        originalImage={zoomedImage.originalImageDataUrl}
+                                        upscaledImage={zoomedImage.imageDataUrl || zoomedImage.thumbnailDataUrl!}
+                                        alt={zoomedImage.prompt}
+                                    />
+                                ) : (
+                                    <img src={zoomedImage.imageDataUrl || zoomedImage.thumbnailDataUrl} alt={zoomedImage.prompt} className="max-w-[90vw] max-h-[90vh] object-contain rounded-lg shadow-2xl" />
+                                )}
+
+                                {/* Top bar with counter, download and close */}
+                                <div className="absolute -top-12 left-0 right-0 flex items-center justify-between">
+                                    {/* Counter */}
+                                    {showNavigation && (
+                                        <div className="px-3 py-1.5 rounded-full bg-black/60 text-white text-sm font-medium">
+                                            {nav.current} / {nav.total}
+                                        </div>
+                                    )}
+                                    <div className={`flex gap-2 ${!showNavigation ? 'ml-auto' : ''}`}>
+                                        <button onClick={() => handleDownload(zoomedImage)} className="p-2 rounded-full bg-black/60 text-white hover:bg-black/80 transition-colors" aria-label="Download image">
+                                            <DownloadIcon className="w-6 h-6" />
+                                        </button>
+                                        <button onClick={() => setZoomedImage(null)} className="p-2 rounded-full bg-black/60 text-white hover:bg-black/80 transition-colors" aria-label="Close zoom view">
+                                            <XIcon className="w-6 h-6" />
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Navigation arrows (only show if there are multiple images) */}
+                                {showNavigation && (
+                                    <>
+                                        {/* Previous button */}
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                navigateImage('prev');
+                                            }}
+                                            className="absolute left-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/60 text-white hover:bg-black/80 transition-all hover:scale-110 active:scale-95"
+                                            aria-label="Previous image"
+                                        >
+                                            <ChevronLeftIcon className="w-8 h-8" />
+                                        </button>
+
+                                        {/* Next button */}
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                navigateImage('next');
+                                            }}
+                                            className="absolute right-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/60 text-white hover:bg-black/80 transition-all hover:scale-110 active:scale-95"
+                                            aria-label="Next image"
+                                        >
+                                            <ChevronRightIcon className="w-8 h-8" />
+                                        </button>
+                                    </>
+                                )}
                             </div>
                         </div>
-                    </div>
-                )}
+                    );
+                })()}
             </div>
         </LanguageContext.Provider>
     );
