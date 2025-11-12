@@ -15,3 +15,11 @@ export interface DynamicTool {
   label: string;
   options: string[];
 }
+
+export interface PromptPreset {
+  id: string;
+  name: string;
+  prompt: string;
+  negativePrompt?: string;
+  timestamp: number;
+}

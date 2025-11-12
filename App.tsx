@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback, useMemo, createContext, useContext, useRef } from 'react';
-import { GeneratedImage, DynamicTool } from './types';
+import { GeneratedImage, DynamicTool, PromptPreset } from './types';
 import * as geminiService from './services/geminiService';
 import * as upscaleService from './services/upscaleService';
+import * as presetsService from './services/presetsService';
 import { useKeyboardShortcuts, APP_SHORTCUTS } from './hooks/useKeyboardShortcuts';
 import { SunIcon, MoonIcon, UploadIcon, DownloadIcon, ZoomInIcon, SparklesIcon, CopyIcon, SettingsIcon, XIcon, CheckIcon, LanguageIcon, WandIcon, InfoIcon, AlertTriangleIcon, BrushIcon, DiceIcon, TrashIcon, ReloadIcon, EnvelopeIcon, StarIcon, CornerUpLeftIcon, UpscaleIcon, ChevronLeftIcon, ChevronRightIcon } from './components/icons';
 import FloatingActionBar from './components/FloatingActionBar';
@@ -1047,23 +1048,57 @@ interface HistoryPanelProps {
     onToggleSelection: (id: string) => void;
     onDeleteSelected: () => void;
 }
-const HistoryPanel: React.FC<HistoryPanelProps> = ({ 
+const HistoryPanel: React.FC<HistoryPanelProps> = ({
     history, onSelect, onZoom, onDelete, onClearAll,
     isSelectionMode, selectedIds, onEnterSelectionMode, onCancelSelectionMode, onToggleSelection, onDeleteSelected
 }) => {
     const { t } = useLocalization();
+    const [displayCount, setDisplayCount] = useState(30); // Show 30 images initially
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
+    const loadMoreRef = useRef<HTMLDivElement>(null);
+
+    // Infinite scroll observer
+    useEffect(() => {
+        const container = scrollContainerRef.current;
+        const loadMoreTrigger = loadMoreRef.current;
+
+        if (!container || !loadMoreTrigger) return;
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0].isIntersecting && displayCount < history.length) {
+                    // Load 20 more images
+                    setDisplayCount(prev => Math.min(prev + 20, history.length));
+                }
+            },
+            { root: container, threshold: 0.1 }
+        );
+
+        observer.observe(loadMoreTrigger);
+        return () => observer.disconnect();
+    }, [displayCount, history.length]);
+
+    // Reset display count when history changes significantly
+    useEffect(() => {
+        if (history.length < displayCount) {
+            setDisplayCount(Math.min(30, history.length));
+        }
+    }, [history.length]);
+
+    const visibleHistory = history.slice(0, displayCount);
+
     return (
         <div className="h-full flex flex-col bg-light-surface/50 dark:bg-dark-surface/30 backdrop-blur-xl rounded-3xl p-4">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="font-semibold text-light-text dark:text-dark-text">{t.historyTitle}</h2>
+              <h2 className="font-semibold text-light-text dark:text-dark-text">{t.historyTitle} {history.length > 0 && <span className="text-sm text-light-text-muted dark:text-dark-text-muted">({history.length})</span>}</h2>
               {history.length > 0 && (
                  <div className="flex items-center gap-2">
                   {!isSelectionMode ? (
                     <>
                       <button onClick={onEnterSelectionMode} className="text-sm font-medium text-brand-blue hover:underline">{t.select}</button>
-                      <button 
-                        onClick={onClearAll} 
-                        title={t.clearHistory} 
+                      <button
+                        onClick={onClearAll}
+                        title={t.clearHistory}
                         className="p-1.5 rounded-full text-light-text-muted dark:text-dark-text-muted hover:bg-red-500/20 hover:text-red-500 dark:hover:bg-red-500/20 transition-colors"
                       >
                         <TrashIcon className="w-4 h-4" />
@@ -1078,10 +1113,10 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
                 </div>
               )}
             </div>
-            <div className="flex-1 overflow-y-auto pr-2 -mr-2">
+            <div ref={scrollContainerRef} className="flex-1 overflow-y-auto pr-2 -mr-2">
                 {history.length > 0 ? (
                     <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-2 gap-3">
-                        {history.map(item => {
+                        {visibleHistory.map(item => {
                             const isSelected = selectedIds.has(item.id);
                             return (
                                 <div key={item.id} className="relative group" onClick={() => isSelectionMode ? onToggleSelection(item.id) : onZoom(item)}>
@@ -1119,12 +1154,166 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
                                 </div>
                             )
                         })}
+                        {/* Infinite scroll trigger */}
+                        {displayCount < history.length && (
+                            <div ref={loadMoreRef} className="col-span-full py-4 text-center">
+                                <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-brand-purple"></div>
+                            </div>
+                        )}
                     </div>
                 ) : (
                     <p className="text-sm text-center text-light-text-muted dark:text-dark-text-muted">{t.historyEmpty}</p>
                 )}
             </div>
-            <p className="text-xs text-center text-light-text-muted dark:text-dark-text-muted mt-4 pt-2 border-t border-light-border/50 dark:border-dark-border/50">{t.historyCapped}</p>
+            {displayCount < history.length && (
+                <p className="text-xs text-center text-light-text-muted dark:text-dark-text-muted mt-4 pt-2 border-t border-light-border/50 dark:border-dark-border/50">Showing {displayCount} of {history.length} images</p>
+            )}
+        </div>
+    );
+}
+
+interface PresetsPanelProps {
+    presets: PromptPreset[];
+    onLoadPreset: (preset: PromptPreset) => void;
+    onDeletePreset: (id: string) => void;
+    onSavePreset: (name: string, prompt: string, negativePrompt?: string) => void;
+    onExport: () => void;
+    onImport: (file: File) => void;
+    currentPrompt: string;
+    currentNegativePrompt: string;
+}
+const PresetsPanel: React.FC<PresetsPanelProps> = ({
+    presets, onLoadPreset, onDeletePreset, onSavePreset, onExport, onImport, currentPrompt, currentNegativePrompt
+}) => {
+    const { t } = useLocalization();
+    const [showSaveDialog, setShowSaveDialog] = useState(false);
+    const [presetName, setPresetName] = useState('');
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const handleSave = () => {
+        if (!presetName.trim()) return;
+        onSavePreset(presetName.trim(), currentPrompt, currentNegativePrompt);
+        setPresetName('');
+        setShowSaveDialog(false);
+    };
+
+    const handleImportClick = () => {
+        fileInputRef.current?.click();
+    };
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            onImport(file);
+            e.target.value = ''; // Reset input
+        }
+    };
+
+    return (
+        <div className="h-full flex flex-col bg-light-surface/50 dark:bg-dark-surface/30 backdrop-blur-xl rounded-3xl p-4">
+            <div className="flex justify-between items-center mb-4">
+                <h2 className="font-semibold text-light-text dark:text-dark-text flex items-center gap-2">
+                    <StarIcon className="w-5 h-5 text-brand-purple" filled />
+                    Presets {presets.length > 0 && <span className="text-sm text-light-text-muted dark:text-dark-text-muted">({presets.length}/50)</span>}
+                </h2>
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => setShowSaveDialog(true)}
+                        disabled={!currentPrompt.trim()}
+                        className="text-sm font-medium text-brand-purple hover:underline disabled:opacity-50 disabled:no-underline"
+                        title="Save current prompt"
+                    >
+                        + Save
+                    </button>
+                    <button onClick={onExport} disabled={presets.length === 0} className="p-1.5 rounded-lg text-light-text-muted dark:text-dark-text-muted hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors disabled:opacity-50" title="Export presets">
+                        <DownloadIcon className="w-4 h-4" />
+                    </button>
+                    <button onClick={handleImportClick} className="p-1.5 rounded-lg text-light-text-muted dark:text-dark-text-muted hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors" title="Import presets">
+                        <UploadIcon className="w-4 h-4" />
+                    </button>
+                </div>
+            </div>
+
+            {/* Hidden file input for import */}
+            <input
+                ref={fileInputRef}
+                type="file"
+                accept=".json"
+                onChange={handleFileChange}
+                className="hidden"
+            />
+
+            {/* Save Dialog */}
+            {showSaveDialog && (
+                <div className="mb-4 p-3 bg-light-surface dark:bg-dark-surface rounded-xl border border-brand-purple">
+                    <input
+                        type="text"
+                        value={presetName}
+                        onChange={(e) => setPresetName(e.target.value)}
+                        placeholder="Preset name..."
+                        className="w-full mb-2 p-2 bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded-lg focus:ring-2 focus:ring-brand-purple focus:outline-none text-sm"
+                        autoFocus
+                        onKeyPress={(e) => e.key === 'Enter' && handleSave()}
+                    />
+                    <div className="flex gap-2">
+                        <button
+                            onClick={handleSave}
+                            disabled={!presetName.trim()}
+                            className="flex-1 py-1.5 px-3 bg-brand-purple text-white rounded-lg hover:bg-brand-purple/90 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            Save
+                        </button>
+                        <button
+                            onClick={() => { setShowSaveDialog(false); setPresetName(''); }}
+                            className="flex-1 py-1.5 px-3 bg-light-surface-accent dark:bg-dark-surface-accent rounded-lg hover:bg-light-surface dark:hover:bg-dark-surface transition-colors text-sm"
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            <div className="flex-1 overflow-y-auto pr-2 -mr-2">
+                {presets.length > 0 ? (
+                    <div className="space-y-2">
+                        {presets.map(preset => (
+                            <div key={preset.id} className="group p-3 bg-light-surface dark:bg-dark-surface rounded-xl border border-light-border dark:border-dark-border hover:border-brand-purple transition-all">
+                                <div className="flex items-start justify-between gap-2 mb-1">
+                                    <h3 className="font-medium text-sm text-light-text dark:text-dark-text flex-1">{preset.name}</h3>
+                                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button
+                                            onClick={() => onLoadPreset(preset)}
+                                            className="p-1 rounded-lg bg-brand-purple/10 text-brand-purple hover:bg-brand-purple/20 transition-colors"
+                                            title="Load preset"
+                                        >
+                                            <CornerUpLeftIcon className="w-3.5 h-3.5" />
+                                        </button>
+                                        <button
+                                            onClick={() => onDeletePreset(preset.id)}
+                                            className="p-1 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-colors"
+                                            title="Delete preset"
+                                        >
+                                            <TrashIcon className="w-3.5 h-3.5" />
+                                        </button>
+                                    </div>
+                                </div>
+                                <p className="text-xs text-light-text-muted dark:text-dark-text-muted line-clamp-2">{preset.prompt}</p>
+                                {preset.negativePrompt && (
+                                    <p className="text-xs text-red-500/70 dark:text-red-400/70 mt-1 line-clamp-1">
+                                        Negative: {preset.negativePrompt}
+                                    </p>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="text-center py-8">
+                        <StarIcon className="w-12 h-12 text-light-text-muted dark:text-dark-text-muted mx-auto mb-3 opacity-30" />
+                        <p className="text-sm text-light-text-muted dark:text-dark-text-muted">No saved presets yet</p>
+                        <p className="text-xs text-light-text-muted dark:text-dark-text-muted mt-1">Click "+ Save" to save your current prompt</p>
+                    </div>
+                )}
+            </div>
         </div>
     );
 }
@@ -1660,9 +1849,17 @@ export default function App() {
     const [isHistorySelectionMode, setIsHistorySelectionMode] = useState(false);
     const [selectedHistoryIds, setSelectedHistoryIds] = useState<Set<string>>(new Set());
     const [upscalingImageId, setUpscalingImageId] = useState<string | null>(null);
+    const [presets, setPresets] = useState<PromptPreset[]>([]);
+    const [sidebarTab, setSidebarTab] = useState<'history' | 'presets'>('history');
     const promptTextareaRef = useRef<HTMLTextAreaElement>(null);
 
     const t = useMemo(() => translations[language], [language]);
+
+    // Load presets from localStorage on mount
+    useEffect(() => {
+        const loadedPresets = presetsService.loadPresets();
+        setPresets(loadedPresets);
+    }, []);
     
     const showToast = useCallback((message: string, type: 'success' | 'error') => {
         setToast({ id: Date.now(), message, type });
@@ -1996,6 +2193,64 @@ export default function App() {
         showToast(t.downloadStarted, 'success');
     };
 
+    // Preset handlers
+    const handleSavePreset = useCallback((name: string, prompt: string, negativePrompt?: string) => {
+        try {
+            const newPreset = presetsService.addPreset(name, prompt, negativePrompt);
+            setPresets(presetsService.loadPresets());
+            showToast('Preset saved successfully!', 'success');
+        } catch (error: any) {
+            showToast(error.message || 'Failed to save preset', 'error');
+        }
+    }, [showToast]);
+
+    const handleLoadPreset = useCallback((preset: PromptPreset) => {
+        setEditedPrompt(preset.prompt);
+        if (preset.negativePrompt) {
+            setNegativePrompt(preset.negativePrompt);
+        }
+        showToast(`Loaded preset: ${preset.name}`, 'success');
+    }, [showToast]);
+
+    const handleDeletePreset = useCallback((id: string) => {
+        presetsService.deletePreset(id);
+        setPresets(presetsService.loadPresets());
+        showToast('Preset deleted', 'success');
+    }, [showToast]);
+
+    const handleExportPresets = useCallback(() => {
+        try {
+            const json = presetsService.exportPresets();
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `generentolo-presets-${Date.now()}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            showToast('Presets exported successfully!', 'success');
+        } catch (error) {
+            showToast('Failed to export presets', 'error');
+        }
+    }, [showToast]);
+
+    const handleImportPresets = useCallback((file: File) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const content = e.target?.result as string;
+                presetsService.importPresets(content);
+                setPresets(presetsService.loadPresets());
+                showToast('Presets imported successfully!', 'success');
+            } catch (error) {
+                showToast('Failed to import presets. Invalid file format.', 'error');
+            }
+        };
+        reader.readAsText(file);
+    }, [showToast]);
+
     const handleUpscale = useCallback(async (image: GeneratedImage, scale: 2 | 4) => {
         if (!upscaleService.isUpscalingEnabled()) {
             showToast(t.upscaleFailed, 'error');
@@ -2220,20 +2475,61 @@ export default function App() {
                              </div>
                         </div>
 
-                        <aside className="flex-1 min-h-0">
-                            <HistoryPanel 
-                                history={history} 
-                                onSelect={handleSelectHistory} 
-                                onZoom={setZoomedImage} 
-                                onDelete={handleDeleteHistoryItem} 
-                                onClearAll={handleClearAllHistory}
-                                isSelectionMode={isHistorySelectionMode}
-                                selectedIds={selectedHistoryIds}
-                                onEnterSelectionMode={handleEnterHistorySelectionMode}
-                                onCancelSelectionMode={handleCancelHistorySelectionMode}
-                                onToggleSelection={handleToggleHistorySelection}
-                                onDeleteSelected={handleDeleteSelectedHistoryItems}
-                            />
+                        <aside className="flex-1 min-h-0 flex flex-col gap-3">
+                            {/* Tabs */}
+                            <div className="flex gap-2 bg-light-surface/50 dark:bg-dark-surface/30 backdrop-blur-xl rounded-2xl p-1">
+                                <button
+                                    onClick={() => setSidebarTab('history')}
+                                    className={`flex-1 py-2 px-4 rounded-xl text-sm font-medium transition-all ${
+                                        sidebarTab === 'history'
+                                            ? 'bg-light-surface dark:bg-dark-surface text-light-text dark:text-dark-text shadow-sm'
+                                            : 'text-light-text-muted dark:text-dark-text-muted hover:bg-light-surface/50 dark:hover:bg-dark-surface/50'
+                                    }`}
+                                >
+                                    History
+                                </button>
+                                <button
+                                    onClick={() => setSidebarTab('presets')}
+                                    className={`flex-1 py-2 px-4 rounded-xl text-sm font-medium transition-all ${
+                                        sidebarTab === 'presets'
+                                            ? 'bg-light-surface dark:bg-dark-surface text-light-text dark:text-dark-text shadow-sm'
+                                            : 'text-light-text-muted dark:text-dark-text-muted hover:bg-light-surface/50 dark:hover:bg-dark-surface/50'
+                                    }`}
+                                >
+                                    <StarIcon className="w-4 h-4 inline-block mr-1 -mt-0.5" filled={sidebarTab === 'presets'} />
+                                    Presets
+                                </button>
+                            </div>
+
+                            {/* Content */}
+                            <div className="flex-1 min-h-0">
+                                {sidebarTab === 'history' ? (
+                                    <HistoryPanel
+                                        history={history}
+                                        onSelect={handleSelectHistory}
+                                        onZoom={setZoomedImage}
+                                        onDelete={handleDeleteHistoryItem}
+                                        onClearAll={handleClearAllHistory}
+                                        isSelectionMode={isHistorySelectionMode}
+                                        selectedIds={selectedHistoryIds}
+                                        onEnterSelectionMode={handleEnterHistorySelectionMode}
+                                        onCancelSelectionMode={handleCancelHistorySelectionMode}
+                                        onToggleSelection={handleToggleHistorySelection}
+                                        onDeleteSelected={handleDeleteSelectedHistoryItems}
+                                    />
+                                ) : (
+                                    <PresetsPanel
+                                        presets={presets}
+                                        onLoadPreset={handleLoadPreset}
+                                        onDeletePreset={handleDeletePreset}
+                                        onSavePreset={handleSavePreset}
+                                        onExport={handleExportPresets}
+                                        onImport={handleImportPresets}
+                                        currentPrompt={editedPrompt}
+                                        currentNegativePrompt={negativePrompt}
+                                    />
+                                )}
+                            </div>
                         </aside>
                     </div>
                 </main>

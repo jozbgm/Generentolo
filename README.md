@@ -1,4 +1,4 @@
-# 🎨 Generentolo v0.5 Beta
+# 🎨 Generentolo v0.6 Beta
 
 **Professional AI-Powered Image Generation Web Application**
 
@@ -317,6 +317,47 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 ## 📋 Changelog
+
+### v0.6 Beta (January 2025)
+**Productivity & Organization Features:**
+- ⭐ **Prompt Presets System** - Save and reuse your favorite prompts
+  - Save up to 50 presets with custom names
+  - Store both main prompt and negative prompt
+  - Quick load presets with one click
+  - Export/Import presets as JSON for backup and sharing
+  - LocalStorage-based (no account needed)
+  - Smart UI with tabs: History / Presets
+- 📜 **Infinite Scroll History** - Browse unlimited generations smoothly
+  - Loads 30 images initially, then 20 more per scroll
+  - Performance-optimized with IntersectionObserver
+  - Image counter shows loaded count (e.g., "Showing 50 of 150 images")
+  - Smooth loading spinner when fetching more
+- 🖼️ **Image Navigation in Lightbox**
+  - Navigate between images with arrow keys (← →)
+  - Click navigation arrows on desktop
+  - Swipe left/right on mobile (50px threshold)
+  - Image counter (e.g., "2/4") in top-left
+  - Circular navigation (loops back to first/last)
+  - Works with both current images and history
+- ✏️ **Prompt Textarea Enhancements**
+  - Paste button to quickly insert clipboard content
+  - Clear button to delete all text at once
+  - Buttons appear/hide intelligently
+  - Hover effects and smooth transitions
+
+**UX Improvements:**
+- 🎯 Tab-based sidebar (History / Presets) with smooth switching
+- 💾 All presets data stored locally in browser
+- 🔄 Smart preset management (add, load, delete, export, import)
+- ⚡ Keyboard navigation support in lightbox
+- 📱 Touch-optimized swipe gestures for mobile
+
+**Technical:**
+- New service: `presetsService.ts` for preset management
+- IntersectionObserver for infinite scroll implementation
+- Touch event handlers for mobile swipe detection
+- LocalStorage persistence with max 50 presets limit
+- JSON export/import for preset portability
 
 ### v0.5 Beta (January 2025)
 **Visual & Animation Overhaul:**
