@@ -498,9 +498,8 @@ const ReferencePanel: React.FC<{
                 className={`rounded-xl transition-all relative ${isDraggingStructure ? 'border-2 border-dashed border-brand-blue bg-brand-blue/10 p-1' : 'border-2 border-transparent'}`}
             >
                 <div className="relative group shadow-[0_0_8px_2px_rgba(59,130,246,0.5)] rounded-xl">
-                     <div className="absolute top-2 left-2 px-2 py-1 bg-brand-blue/80 text-white text-xs rounded-full font-semibold backdrop-blur-sm z-10 flex items-center gap-1">
+                     <div className="absolute top-2 left-2 px-2 py-1 bg-brand-blue/80 text-white text-xs rounded-full font-semibold backdrop-blur-sm z-10">
                         STRUCTURE
-                        <Tooltip text={t.structureTooltip} />
                      </div>
                     {structureImage ? (
                         <StyleImagePreview file={structureImage} onRemove={onRemoveStructureImage} />
@@ -567,34 +566,6 @@ const ToolSelectionModal: React.FC<ToolSelectionModalProps> = ({ isOpen, onClose
                     <button onClick={handleSave} className="px-4 py-2 rounded-lg bg-gradient-to-r from-brand-blue to-brand-purple text-white text-sm font-semibold hover:opacity-90 transition-opacity">{t.save} ({selected.size})</button>
                 </div>
             </div>
-        </div>
-    );
-};
-
-const Tooltip: React.FC<{ text: string }> = ({ text }) => {
-    const [isOpen, setIsOpen] = useState(false);
-
-    return (
-        <div className="relative flex items-center">
-            <button
-                type="button"
-                onClick={(e: React.MouseEvent) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setIsOpen(!isOpen);
-                }}
-                onBlur={() => setTimeout(() => setIsOpen(false), 150)}
-                className="p-1 rounded-full hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors"
-                aria-label="Show info"
-            >
-                <InfoIcon className="w-4 h-4 text-light-text-muted dark:text-dark-text-muted" />
-            </button>
-            {isOpen && (
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max max-w-[200px] p-2 text-xs text-white bg-gray-900 dark:bg-gray-800 rounded-md shadow-lg z-[100] animate-fadeIn">
-                    {text}
-                    <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-gray-900 dark:border-t-gray-800"></div>
-                </div>
-            )}
         </div>
     );
 };
@@ -818,7 +789,6 @@ const ControlPanel: React.FC<ControlPanelProps> = (props) => {
                 <div className="relative">
                      <label htmlFor="negative-prompt" className="flex items-center gap-2 text-xs font-medium text-light-text-muted dark:text-dark-text-muted mb-1">
                         <span>{t.negativePromptLabel}</span>
-                        <Tooltip text={t.negativePromptTooltip} />
                         {isGeneratingNegativePrompt && <div className="w-3 h-3 border-2 border-brand-purple/50 border-t-transparent rounded-full animate-spin"></div>}
                     </label>
                     <textarea id="negative-prompt" value={negativePrompt} onChange={e => onNegativePromptChange(e.target.value)} rows={2} className="w-full p-2 pr-10 text-sm bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded-lg focus:ring-2 focus:ring-brand-purple focus:outline-none" placeholder={t.negativePromptPlaceholder} />
@@ -827,9 +797,8 @@ const ControlPanel: React.FC<ControlPanelProps> = (props) => {
                     </button>
                 </div>
                 <div>
-                    <label htmlFor="seed" className="flex items-center gap-2 text-xs font-medium text-light-text-muted dark:text-dark-text-muted mb-1">
-                        <span>{t.seedLabel}</span>
-                        <Tooltip text={t.seedTooltip} />
+                    <label htmlFor="seed" className="text-xs font-medium text-light-text-muted dark:text-dark-text-muted mb-1 block">
+                        {t.seedLabel}
                     </label>
                     <div className="flex gap-2">
                         <input id="seed" type="text" value={seed} onChange={e => onSeedChange(e.target.value.replace(/\D/g, ''))} placeholder={t.seedPlaceholder} className="w-full p-2 text-sm bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded-lg focus:ring-2 focus:ring-brand-purple focus:outline-none" />
@@ -840,9 +809,8 @@ const ControlPanel: React.FC<ControlPanelProps> = (props) => {
             </div>
 
             <div>
-                 <h3 className="font-semibold mb-3 text-light-text dark:text-dark-text flex items-center gap-2">
-                    <span>{t.aspectRatioTitle}</span>
-                    <Tooltip text={t.aspectRatioTooltip} />
+                 <h3 className="font-semibold mb-3 text-light-text dark:text-dark-text">
+                    {t.aspectRatioTitle}
                 </h3>
                 <div className="grid grid-cols-3 gap-2">
                     {aspectRatios.map(ratio => (
