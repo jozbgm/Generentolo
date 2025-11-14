@@ -280,7 +280,7 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                                 onChange={(e) => onPromptChange(e.target.value)}
                                 rows={3}
                                 placeholder={t.promptPlaceholder || "Describe what you want to generate..."}
-                                className="w-full px-3 lg:px-4 py-2 lg:py-2.5 pr-16 lg:pr-20 bg-transparent text-sm lg:text-base text-light-text dark:text-dark-text resize-none focus:ring-2 focus:ring-brand-purple/50 rounded-xl outline-none"
+                                className="w-full px-3 lg:px-4 py-2 lg:py-2.5 pr-16 lg:pr-20 bg-transparent text-sm lg:text-base text-light-text dark:text-dark-text resize-y min-h-[72px] max-h-[400px] focus:ring-2 focus:ring-brand-purple/50 rounded-xl outline-none"
                             />
                             <div className="absolute top-2 right-2 flex gap-1">
                                 <button
