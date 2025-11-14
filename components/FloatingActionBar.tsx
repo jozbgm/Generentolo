@@ -272,15 +272,55 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                 {/* Expanded Mode */}
                 {isExpanded && (
                     <div className="px-3 lg:px-4 py-2.5 lg:py-3 space-y-2 lg:space-y-3 animate-fadeIn">
-                        {/* Prompt Textarea */}
-                        <textarea
-                            ref={promptTextareaRef}
-                            value={prompt}
-                            onChange={(e) => onPromptChange(e.target.value)}
-                            rows={3}
-                            placeholder={t.promptPlaceholder || "Describe what you want to generate..."}
-                            className="w-full px-3 lg:px-4 py-2 lg:py-2.5 bg-transparent text-sm lg:text-base text-light-text dark:text-dark-text resize-none focus:ring-2 focus:ring-brand-purple/50 rounded-xl outline-none"
-                        />
+                        {/* Prompt Textarea with Paste/Clear buttons */}
+                        <div className="relative">
+                            <textarea
+                                ref={promptTextareaRef}
+                                value={prompt}
+                                onChange={(e) => onPromptChange(e.target.value)}
+                                rows={3}
+                                placeholder={t.promptPlaceholder || "Describe what you want to generate..."}
+                                className="w-full px-3 lg:px-4 py-2 lg:py-2.5 pr-16 lg:pr-20 bg-transparent text-sm lg:text-base text-light-text dark:text-dark-text resize-none focus:ring-2 focus:ring-brand-purple/50 rounded-xl outline-none"
+                            />
+                            <div className="absolute top-2 right-2 flex gap-1">
+                                <button
+                                    onClick={async () => {
+                                        try {
+                                            const text = await navigator.clipboard.readText();
+                                            onPromptChange(text);
+                                        } catch (err) {
+                                            console.error('Failed to read clipboard:', err);
+                                        }
+                                    }}
+                                    disabled={isLoading}
+                                    className="p-1.5 rounded-lg bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-all hover:scale-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    aria-label="Paste from clipboard"
+                                    title="Paste"
+                                >
+                                    <svg className="w-4 h-4 text-light-text-muted dark:text-dark-text-muted" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                    </svg>
+                                </button>
+                                {prompt && (
+                                    <button
+                                        onClick={() => {
+                                            onPromptChange('');
+                                            promptTextareaRef.current?.focus();
+                                        }}
+                                        disabled={isLoading}
+                                        className="p-1.5 rounded-lg bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border hover:bg-red-500/10 dark:hover:bg-red-500/20 transition-all hover:scale-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        aria-label="Clear prompt"
+                                        title="Clear"
+                                    >
+                                        <svg className="w-4 h-4 text-red-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                                        </svg>
+                                    </button>
+                                )}
+                            </div>
+                        </div>
 
                         {/* All Controls Row */}
                         <div className="flex items-center gap-1.5 lg:gap-2 flex-wrap">
