@@ -1804,7 +1804,7 @@ const InpaintEditor: React.FC<InpaintEditorProps> = ({ image, onClose, onSave })
 
 
 // --- Main App Component ---
-const MAX_HISTORY_ITEMS = 12;
+const MAX_HISTORY_ITEMS = 200; // Increased from 12 to support infinite scroll
 
 export default function App() {
     const [theme, setTheme] = useState<'dark' | 'light'>(getInitialTheme());
