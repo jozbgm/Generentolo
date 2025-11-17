@@ -8,6 +8,7 @@ export interface GeneratedImage {
   negativePrompt?: string;
   seed?: string;
   originalImageDataUrl?: string; // Original image before upscaling (for comparison)
+  isFavorite?: boolean; // v0.8: Bookmark/favorite system
 }
 
 export interface DynamicTool {

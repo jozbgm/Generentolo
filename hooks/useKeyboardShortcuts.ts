@@ -48,4 +48,5 @@ export const APP_SHORTCUTS = {
     OPEN_SETTINGS: { key: ',', ctrlKey: true, description: 'Open settings (Ctrl+,)' },
     FOCUS_PROMPT: { key: 'p', ctrlKey: true, description: 'Focus prompt field (Ctrl+P)' },
     TOGGLE_THEME: { key: 't', ctrlKey: true, shiftKey: true, description: 'Toggle theme (Ctrl+Shift+T)' },
+    HELP: { key: '?', shiftKey: true, description: 'Show keyboard shortcuts (?)' }, // v0.8
 };

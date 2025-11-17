@@ -10,7 +10,7 @@ import FloatingActionBar from './components/FloatingActionBar';
 // --- Localization ---
 const translations = {
   en: {
-    headerTitle: 'Generentolo v0.7 Beta',
+    headerTitle: 'Generentolo v0.8 Beta',
     headerSubtitle: 'Let me do it for you!',
     letMeDoForYou: 'Magic Prompt',
     refImagesTitle: 'Reference & Style Images',
@@ -113,7 +113,7 @@ const translations = {
 
   },
   it: {
-    headerTitle: 'Generentolo v0.7 Beta',
+    headerTitle: 'Generentolo v0.8 Beta',
     headerSubtitle: 'Let me do it for you!',
     letMeDoForYou: 'Magic Prompt',
     refImagesTitle: 'Immagini di Riferimento e Stile',
@@ -835,8 +835,10 @@ interface ImageDisplayProps {
     onEdit: (image: GeneratedImage) => void;
     onUpscale: (image: GeneratedImage, scale: 2 | 4) => void;
     upscalingImageId: string | null;
+    onReroll: (image: GeneratedImage) => void; // v0.8
+    onToggleFavorite: (imageId: string) => void; // v0.8
 }
-const ImageDisplay: React.FC<ImageDisplayProps> = ({ images, isLoading, onDownload, onZoom, onEdit, onUpscale, upscalingImageId }) => {
+const ImageDisplay: React.FC<ImageDisplayProps> = ({ images, isLoading, onDownload, onZoom, onEdit, onUpscale, upscalingImageId, onReroll, onToggleFavorite }) => {
     const { t } = useLocalization();
     const [showUpscaleMenu, setShowUpscaleMenu] = useState<string | null>(null);
 
@@ -868,6 +870,17 @@ const ImageDisplay: React.FC<ImageDisplayProps> = ({ images, isLoading, onDownlo
 
                                 <div className="absolute top-2 right-2 flex gap-2 items-center opacity-0 group-hover:opacity-100 transition-opacity">
                                     <span className="px-2 py-1 rounded-full bg-black/50 text-white text-xs font-mono backdrop-blur-sm">{image.aspectRatio}</span>
+
+                                    {/* v0.8: Favorite/Bookmark button */}
+                                    <button
+                                        onClick={() => onToggleFavorite(image.id)}
+                                        className={`p-2 rounded-full ${image.isFavorite ? 'bg-yellow-400 text-black' : 'bg-black/50 text-white'} hover:bg-yellow-400 hover:text-black transition-colors`}
+                                        aria-label={image.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+                                        title={image.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+                                    >
+                                        <StarIcon className="w-5 h-5" />
+                                    </button>
+
                                     <button onClick={() => onEdit(image)} className="p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors" aria-label={t.editAction}><BrushIcon className="w-5 h-5" /></button>
 
                                     {/* Upscale button with dropdown */}
@@ -918,6 +931,16 @@ const ImageDisplay: React.FC<ImageDisplayProps> = ({ images, isLoading, onDownlo
                                     )}
 
                                     <button onClick={() => onDownload(image)} className="p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors" aria-label="Download image"><DownloadIcon className="w-5 h-5" /></button>
+
+                                    {/* v0.8: Re-roll button */}
+                                    <button
+                                        onClick={() => onReroll(image)}
+                                        className="p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+                                        aria-label="Re-roll (generate variant)"
+                                        title="🎲 Generate variant with new seed"
+                                    >
+                                        <DiceIcon className="w-5 h-5" />
+                                    </button>
                                 </div>
                             </div>
                             );
@@ -1539,6 +1562,7 @@ const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ isOpen, onClose }) => {
         { keys: 'Ctrl+,', description: t.settingsTitle },
         { keys: 'Ctrl+P', description: 'Focus Prompt' },
         { keys: 'Ctrl+Shift+T', description: 'Toggle Theme' },
+        { keys: '?', description: 'Show this help' }, // v0.8
     ];
 
     return (
@@ -2196,6 +2220,60 @@ export default function App() {
         showToast(t.downloadStarted, 'success');
     };
 
+    // v0.8: Re-roll handler - regenerate with same settings but new seed
+    const handleReroll = useCallback(async (image: GeneratedImage) => {
+        setIsLoading(true);
+        setCurrentImages([]);
+        try {
+            // Use same prompt, aspect ratio, negativePrompt, but generate NEW seed
+            const newSeed = String(Math.floor(Math.random() * 1000000000));
+
+            const imageDataUrl = await geminiService.generateImage(
+                image.prompt,
+                image.aspectRatio,
+                referenceImages,
+                styleReferenceImage,
+                structureImage,
+                userApiKey,
+                image.negativePrompt,
+                newSeed, // NEW seed for variation
+                language,
+                preciseReference
+            );
+
+            const thumbnailDataUrl = await createThumbnailDataUrl(imageDataUrl);
+            const newImage: GeneratedImage = {
+                id: crypto.randomUUID(),
+                imageDataUrl,
+                thumbnailDataUrl,
+                prompt: image.prompt,
+                aspectRatio: image.aspectRatio,
+                negativePrompt: image.negativePrompt,
+                seed: newSeed,
+                timestamp: Date.now(),
+            };
+
+            setCurrentImages([newImage]);
+            setHistory(prev => [newImage, ...prev].slice(0, MAX_HISTORY_ITEMS));
+            showToast(language === 'it' ? '🎲 Variante generata!' : '🎲 Variant generated!', 'success');
+        } catch (error: any) {
+            console.error("Re-roll failed", error);
+            showToast(error.message || t.generationFailed, 'error');
+        } finally {
+            setIsLoading(false);
+        }
+    }, [referenceImages, styleReferenceImage, structureImage, userApiKey, language, preciseReference, showToast, t.generationFailed]);
+
+    // v0.8: Toggle favorite/bookmark
+    const handleToggleFavorite = useCallback((imageId: string) => {
+        setHistory(prev => prev.map(img =>
+            img.id === imageId ? { ...img, isFavorite: !img.isFavorite } : img
+        ));
+        setCurrentImages(prev => prev.map(img =>
+            img.id === imageId ? { ...img, isFavorite: !img.isFavorite } : img
+        ));
+    }, []);
+
     // Preset handlers
     const handleSavePreset = useCallback((name: string, prompt: string, negativePrompt?: string) => {
         try {
@@ -2390,6 +2468,7 @@ export default function App() {
         { ...APP_SHORTCUTS.OPEN_SETTINGS, action: () => setIsSettingsOpen(true) },
         { ...APP_SHORTCUTS.FOCUS_PROMPT, action: () => promptTextareaRef.current?.focus() },
         { ...APP_SHORTCUTS.TOGGLE_THEME, action: toggleTheme },
+        { ...APP_SHORTCUTS.HELP, action: () => setIsShortcutsOpen(true) }, // v0.8
     ], [isActionDisabled, handleGenerate, handleMagicPrompt, handleRandomizeSeed, handleResetInterface, toggleTheme]);
 
     useKeyboardShortcuts(shortcuts, !isLoading && !isEnhancing);
@@ -2417,7 +2496,7 @@ export default function App() {
                     {/* --- Main Content --- */}
                     <div className="flex-1 flex flex-col gap-4 lg:gap-6 min-w-0 lg:h-full">
                         <div className="flex-1 min-h-0 bg-light-surface/50 dark:bg-dark-surface/30 backdrop-blur-xl rounded-3xl overflow-hidden">
-                            <ImageDisplay images={currentImages} isLoading={isLoading} onDownload={handleDownload} onZoom={setZoomedImage} onEdit={setEditingImage} onUpscale={handleUpscale} upscalingImageId={upscalingImageId}/>
+                            <ImageDisplay images={currentImages} isLoading={isLoading} onDownload={handleDownload} onZoom={setZoomedImage} onEdit={setEditingImage} onUpscale={handleUpscale} upscalingImageId={upscalingImageId} onReroll={handleReroll} onToggleFavorite={handleToggleFavorite} />
                         </div>
 
                         <div className="flex-shrink-0 space-y-4 overflow-y-auto max-h-[300px] lg:max-h-[250px]">

@@ -356,6 +356,43 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                             </div>
                         </div>
 
+                        {/* v0.8: Live Quality Tips */}
+                        {prompt && (() => {
+                            const tips: string[] = [];
+                            const promptLower = prompt.toLowerCase();
+                            const wordCount = prompt.trim().split(/\s+/).length;
+
+                            // Too short
+                            if (wordCount < 3) {
+                                tips.push("💡 Add more details for better results");
+                            }
+                            // Missing lighting
+                            if (!promptLower.includes('light') && !promptLower.includes('glow') && !promptLower.includes('bright') && !promptLower.includes('dark') && !promptLower.includes('shadow')) {
+                                tips.push("💡 Try adding lighting details (e.g., 'golden hour', 'soft lighting')");
+                            }
+                            // Missing camera/composition
+                            if (!promptLower.includes('shot') && !promptLower.includes('angle') && !promptLower.includes('view') && !promptLower.includes('perspective') && !promptLower.includes('lens')) {
+                                tips.push("💡 Specify camera angle (e.g., 'low-angle shot', '85mm lens')");
+                            }
+                            // Missing mood/atmosphere
+                            if (!promptLower.includes('mood') && !promptLower.includes('atmosphere') && !promptLower.includes('feeling') && !promptLower.includes('vibe') && wordCount > 3) {
+                                tips.push("💡 Add mood/atmosphere (e.g., 'cinematic', 'dreamy', 'dramatic')");
+                            }
+
+                            // Show max 2 tips to avoid clutter
+                            const displayTips = tips.slice(0, 2);
+
+                            return displayTips.length > 0 ? (
+                                <div className="flex flex-wrap gap-1.5 text-xs text-brand-purple dark:text-brand-pink animate-fade-in">
+                                    {displayTips.map((tip, idx) => (
+                                        <span key={idx} className="px-2 py-1 bg-brand-purple/10 dark:bg-brand-pink/10 rounded-md">
+                                            {tip}
+                                        </span>
+                                    ))}
+                                </div>
+                            ) : null;
+                        })()}
+
                         {/* All Controls Row */}
                         <div className="flex items-center gap-1.5 lg:gap-2 flex-wrap">
                             {/* Quick Actions */}
