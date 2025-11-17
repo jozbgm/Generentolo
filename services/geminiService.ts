@@ -300,12 +300,25 @@ export const enhancePrompt = async (currentPrompt: string, imageFiles: File[], s
             }
         });
 
+        // Safety check: ensure result.text exists
+        if (!result || !result.text) {
+            console.warn('Enhance failed: no text returned, using original prompt');
+            return currentPrompt;
+        }
+
         const enhancedPrompt = result.text.trim();
 
-        // Fallback: if enhanced prompt is too long (>600 chars), it might cause IMAGE_OTHER
-        if (enhancedPrompt.length > 600) {
-            console.warn('Enhanced prompt too long, truncating to 600 chars');
-            return enhancedPrompt.substring(0, 597) + '...';
+        // Fallback: if enhanced prompt is too long (>400 chars), it might cause IMAGE_OTHER
+        // Reduced from 600 to be more conservative
+        if (enhancedPrompt.length > 400) {
+            console.warn('Enhanced prompt too long, truncating to 400 chars');
+            return enhancedPrompt.substring(0, 397) + '...';
+        }
+
+        // Fallback: if enhancement is too short or empty, use original
+        if (enhancedPrompt.length < 10) {
+            console.warn('Enhanced prompt too short, using original');
+            return currentPrompt;
         }
 
         return enhancedPrompt;
@@ -908,8 +921,8 @@ export const generateImage = async (prompt: string, aspectRatio: string, referen
         // STEP 5: Add Precise Reference guidance if enabled (v0.7 - Whisk-inspired feature)
         if (preciseReference && referenceFiles.length > 0) {
             const preciseReferenceGuidance = language === 'it'
-                ? `🎯 RIFERIMENTO PRECISO ATTIVATO: Mantieni ESATTAMENTE i tratti del viso originale, immutati e realistici. Preserva texture della pelle, pori visibili, colore degli occhi, forma del naso, struttura facciale, espressione. NON modificare acconciatura, colore dei capelli, lunghezza dei capelli. Massima fedeltà fotorealistica all'immagine di riferimento. Non alterare le caratteristiche facciali in alcun modo.`
-                : `🎯 PRECISE REFERENCE ENABLED: Keep the original person's face EXACTLY unchanged and realistic. Preserve skin texture, visible pores, eye color, nose shape, facial structure, expression. Do NOT change hairstyle, hair color, hair length. Maximum photorealistic fidelity to reference image. Do not alter facial features in any way.`;
+                ? `🎯 PRECISO: Mantieni IDENTICI i tratti del viso, pelle, occhi, naso, capelli dalle reference. Fedeltà massima.`
+                : `🎯 PRECISE: Keep face features, skin, eyes, nose, hair IDENTICAL to references. Maximum fidelity.`;
 
             instructionParts.push(preciseReferenceGuidance);
             console.log('🎯 Precise Reference Mode: ACTIVE');
