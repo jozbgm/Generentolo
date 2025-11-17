@@ -12,25 +12,28 @@ export default {
     extend: {
       colors: {
         'brand': {
-          'blue': '#5E8BFF',
-          'purple': '#8A78F4',
-          'pink': '#F075B6'
+          'yellow': '#FFD93D', // Banana yellow - primary accent
+          'magenta': '#FF006E', // Magenta/Fuschia - secondary
+          'cyan': '#00F5FF', // Bright cyan - accent
+          'blue': '#5E8BFF', // Legacy support
+          'purple': '#8A78F4', // Legacy support
+          'pink': '#F075B6' // Legacy support
         },
         'dark': {
-          'bg': '#0F101A',
-          'surface': '#181923', // For cards and panels
-          'surface-accent': '#2A2B3A', // For hover states, inputs
-          'text': '#E2E2E8',
-          'text-muted': '#8B8D9C',
-          'border': '#32333E'
+          'bg': '#0D0D0D', // Pure anthracite black
+          'surface': '#1A1A1A', // Pure anthracite grey for cards
+          'surface-accent': '#252525', // Lighter pure anthracite for hover
+          'text': '#F0F0F0',
+          'text-muted': '#A0A0A0',
+          'border': '#2D2D2D'
         },
         'light': {
-          'bg': '#F5F6FA',
+          'bg': '#FAFBFC',
           'surface': '#FFFFFF',
-          'surface-accent': '#E8EAF2',
-          'text': '#181923',
-          'text-muted': '#6A6C79',
-          'border': '#E4E5E9'
+          'surface-accent': '#F5F6F8',
+          'text': '#0A0B0F',
+          'text-muted': '#6B6C76',
+          'border': '#E5E6E9'
         },
       },
       keyframes: {

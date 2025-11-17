@@ -1,4 +1,4 @@
-# 🎨 Generentolo v0.7 Beta
+# 🎨 Generentolo v0.9.0 Beta
 
 **Professional AI-Powered Image Generation Web Application**
 
@@ -197,23 +197,24 @@ generentolo-v0.1-beta/
 
 ## 🎨 Design System
 
-### Color Palette
+### Color Palette (v0.9.0 - Bold & Creative)
 
 ```css
 /* Brand Colors */
---brand-blue: #5E8BFF;
---brand-purple: #8A78F4;
---brand-pink: #F075B6;
+--brand-yellow: #FFD93D;    /* Banana Yellow - Primary */
+--brand-magenta: #FF006E;   /* Magenta - Secondary */
+--brand-cyan: #00F5FF;      /* Bright Cyan - Accent */
 
-/* Dark Mode */
---dark-bg: #0F101A;
---dark-surface: #181923;
---dark-text: #E2E2E8;
+/* Dark Mode - Anthracite Grey */
+--dark-bg: #0A0B0F;
+--dark-surface: #16171D;
+--dark-surface-accent: #1F2027;
+--dark-text: #F0F0F3;
 
 /* Light Mode */
---light-bg: #F5F6FA;
+--light-bg: #FAFBFC;
 --light-surface: #FFFFFF;
---light-text: #181923;
+--light-text: #0A0B0F;
 ```
 
 ### Typography
@@ -321,6 +322,54 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 ## 📋 Changelog
+
+### v0.9.0 Beta (January 2025)
+**🎨 Bold Creative Redesign + Major Enhancements:**
+- **NEW: Modern Color Palette**
+  - Banana Yellow (#FFD93D) + Magenta (#FF006E) + Cyan (#00F5FF)
+  - Anthracite grey dark mode (#0A0B0F → #16171D)
+  - Bold, energetic, and professional aesthetic
+  - All gradient buttons updated (yellow → magenta)
+
+- **✨ Enhanced Prompt Enhancement**
+  - Aggressive systemInstruction forcing creativity
+  - Temperature increased (0.7/0.9 for standard, 1.2 for retry)
+  - Automatic retry if model returns identical prompt
+  - maxOutputTokens: 500 (was 300)
+  - Removed 400-character truncation
+  - Italian translations for prompt tips
+
+- **🎯 UI/UX Improvements**
+  - Fixed layout height alignment (all columns same height)
+  - Removed backdrop-blur artifact (dark horizontal bar)
+  - Hidden empty Creative Prompts section when not needed
+  - Cleaner, more polished interface
+
+**Technical:**
+- ControlNet structure guidance improvements
+- Better aspect ratio handling
+- High-res output (2048px) consistently applied
+
+### v0.8.1 Beta (January 2025)
+**🔖 Favorites & History Filtering:**
+- ⭐ **Favorites System** - Bookmark your best generations
+  - Star icon on each image (hover to reveal)
+  - Toggle favorite status with one click
+  - Yellow star indicator for favorited images
+  - Filter history to show only favorites
+  - Persistent across sessions (stored in IndexedDB)
+  - "All" / "⭐ Favorites" tabs in history sidebar
+  - Visual feedback with smooth transitions
+
+**UX Enhancements:**
+- 🎨 Better hover states on history images
+- 🔄 Instant filter switching with no reload
+- 💾 Favorites data synced with image metadata
+- ⚡ Performance optimized for large histories
+
+**Bug Fixes:**
+- Fixed favorite status persistence after page reload
+- Improved history image loading performance
 
 ### v0.7 Beta (January 2025)
 **🎯 Precise Reference Mode - Whisk-Inspired Feature:**

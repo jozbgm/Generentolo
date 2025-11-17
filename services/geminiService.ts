@@ -285,15 +285,6 @@ export const enhancePrompt = async (currentPrompt: string, imageFiles: File[], s
         const hasImages = imageParts.length > 0;
         const isShortPrompt = currentPrompt.trim().split(/\s+/).length <= 3; // Detect very short prompts (≤3 words)
 
-        // DEBUG: Log detection logic
-        console.log('🔍 Enhancement mode detection:', {
-            currentPrompt,
-            wordCount: currentPrompt.trim().split(/\s+/).length,
-            isShortPrompt,
-            hasImages,
-            willUseCinematicMode: isShortPrompt && !hasImages
-        });
-
         // Build context-aware instruction based on what images are present
         let imageContext = "";
         if (imageFiles.length > 0 && styleFile && structureFile) {
@@ -321,7 +312,6 @@ export const enhancePrompt = async (currentPrompt: string, imageFiles: File[], s
         // CINEMATIC ENHANCEMENT MODE: For very short prompts or text-only scenarios
         // Use structured JSON approach to force deep creative expansion
         if (isShortPrompt && !hasImages) {
-            console.log('🎬 CINEMATIC ENHANCEMENT MODE: Aggressive expansion for short text-only prompt');
 
             const cinematicSystemInstruction = language === 'it'
                 ? `Sei un AI Image Generation Prompt Engineer professionista. Il tuo compito è ricevere un soggetto semplice dall'utente ed espanderlo in un oggetto JSON strutturato, dettagliato e creativo. Questo JSON guiderà i modelli AI di generazione immagini (Midjourney, Stable Diffusion) a creare immagini con profondità, atmosfera e qualità artistica.
@@ -415,7 +405,6 @@ Return ONLY the complete JSON object.`;
                     });
 
                     if (!result || !result.text) {
-                        console.warn(`Cinematic enhance attempt ${attempt + 1}: no response`);
                         if (attempt === 1) return currentPrompt; // Last attempt failed
                         await new Promise(resolve => setTimeout(resolve, 1500));
                         continue;
@@ -433,26 +422,16 @@ Return ONLY the complete JSON object.`;
                         const jsonResponse = JSON.parse(cleanedText);
                         const enhancedPrompt = jsonResponse.caption || currentPrompt;
 
-                        console.log('🎬 Cinematic enhancement result:', {
-                            original: currentPrompt,
-                            enhanced: enhancedPrompt,
-                            fullJSON: jsonResponse
-                        });
-
                         return enhancedPrompt;
                     } catch (parseError) {
-                        console.warn(`JSON parse failed attempt ${attempt + 1}:`, parseError);
-
                         // Try extracting caption with regex fallback (try on ANY attempt, not just last)
                         const captionMatch = result.text.match(/"caption"\s*:\s*"([^"]+)"/);
                         if (captionMatch && captionMatch[1]) {
-                            console.log(`✅ Extracted caption via regex fallback (attempt ${attempt + 1}):`, captionMatch[1]);
                             return captionMatch[1];
                         }
 
                         // If last attempt and regex failed, give up
                         if (attempt === 1) {
-                            console.warn('⚠️ All cinematic attempts exhausted, no valid caption extracted');
                             // Don't return here - fall through to STANDARD mode
                             break;
                         }
@@ -460,8 +439,6 @@ Return ONLY the complete JSON object.`;
                         await new Promise(resolve => setTimeout(resolve, 1500));
                     }
                 } catch (apiError: any) {
-                    console.warn(`API call failed attempt ${attempt + 1}:`, apiError.message);
-
                     // If 503 overload, retry with delay
                     if (apiError.message?.includes('overload') || apiError.message?.includes('503')) {
                         if (attempt < 1) {
@@ -474,23 +451,20 @@ Return ONLY the complete JSON object.`;
                     break;
                 }
             }
-
-            // All retries failed, fallback to STANDARD mode
-            console.warn('🔄 Cinematic mode failed, falling back to STANDARD enhancement');
         }
 
         // STANDARD ENHANCEMENT MODE: For longer prompts or when images are present
         const systemInstruction = language === 'it'
-            ? `Sei un esperto di prompt per immagini pubblicitarie. ${imageContext}${hasImages ? 'Analizza TUTTE le immagini e migliora' : 'Migliora'} il prompt dell'utente. REGOLE: 1) MANTIENI intatti i soggetti/azioni/ambientazioni dell'utente. 2) AGGIUNGI dettagli tecnici (illuminazione, angolo, mood, color grading, texture, colori). ${hasImages ? '3) Se ci sono reference E style images: applica l\'estetica/colori/mood dello style alle reference. 4) Se c\'è structure image: menziona di mantenere la composizione spaziale. 5)' : '3)'} CONCISO: max 100-120 parole, evita ridondanze. Restituisci SOLO il prompt migliorato.`
-            : `You are an expert at advertising image prompts. ${imageContext}${hasImages ? 'Analyze ALL images and enhance' : 'Enhance'} the user's prompt. RULES: 1) KEEP user's subjects/actions/settings intact. 2) ADD technical details (lighting, angle, mood, color grading, textures, colors). ${hasImages ? '3) If there are reference AND style images: apply style\'s aesthetic/colors/mood to references. 4) If there\'s a structure image: mention maintaining spatial composition. 5)' : '3)'} CONCISE: max 100-120 words, avoid redundancy. Return ONLY the enhanced prompt.`;
+            ? `Sei un esperto di prompt per immagini pubblicitarie. ${imageContext}${hasImages ? 'Analizza TUTTE le immagini e migliora' : 'Migliora'} il prompt dell'utente. REGOLE OBBLIGATORIE: 1) MANTIENI intatti i soggetti/azioni/ambientazioni dell'utente. 2) DEVI SEMPRE AGGIUNGERE dettagli tecnici: illuminazione (es: soft natural light, golden hour, studio lighting), angolo camera (es: eye level, low angle, aerial view), mood/atmosfera (es: serene, dramatic, playful), color grading (es: warm tones, cool blues, vibrant), textures (es: smooth skin, rough fabric), colori specifici. 3) NON restituire MAI il prompt identico - DEVI migliorarlo. ${hasImages ? '4) Se ci sono reference E style images: applica l\'estetica/colori/mood dello style alle reference. 5) Se c\'è structure image: menziona di mantenere la composizione spaziale. 6)' : '4)'} CONCISO: max 100-120 parole, evita ridondanze. Restituisci SOLO il prompt migliorato, MAI quello originale.`
+            : `You are an expert at advertising image prompts. ${imageContext}${hasImages ? 'Analyze ALL images and enhance' : 'Enhance'} the user's prompt. MANDATORY RULES: 1) KEEP user's subjects/actions/settings intact. 2) You MUST ALWAYS ADD technical details: lighting (e.g., soft natural light, golden hour, studio lighting), camera angle (e.g., eye level, low angle, aerial view), mood/atmosphere (e.g., serene, dramatic, playful), color grading (e.g., warm tones, cool blues, vibrant), textures (e.g., smooth skin, rough fabric), specific colors. 3) NEVER return the identical prompt - you MUST enhance it. ${hasImages ? '4) If there are reference AND style images: apply style\'s aesthetic/colors/mood to references. 5) If there\'s a structure image: mention maintaining spatial composition. 6)' : '4)'} CONCISE: max 100-120 words, avoid redundancy. Return ONLY the enhanced prompt, NEVER the original.`;
 
         const result = await ai.models.generateContent({
             model: 'gemini-2.5-flash',
             contents: { parts: [...imageParts, { text: `User prompt to enhance: "${currentPrompt}"` }] },
             config: {
                 systemInstruction,
-                temperature: hasImages ? 0.3 : 0.5,
-                maxOutputTokens: 300
+                temperature: hasImages ? 0.7 : 0.9,
+                maxOutputTokens: 500
             }
         });
 
@@ -498,11 +472,28 @@ Return ONLY the complete JSON object.`;
             return currentPrompt;
         }
 
-        const enhancedPrompt = result.text.trim();
+        let enhancedPrompt = result.text.trim();
 
-        // Fallback: if enhanced prompt is too long (>400 chars), it might cause IMAGE_OTHER
-        if (enhancedPrompt.length > 400) {
-            return enhancedPrompt.substring(0, 397) + '...';
+        // If model returned identical prompt, force a more creative retry
+        if (enhancedPrompt === currentPrompt) {
+            console.warn('⚠️ Model returned identical prompt, forcing creative retry...');
+
+            const forceEnhancePrompt = language === 'it'
+                ? `Il prompt "${currentPrompt}" è troppo generico. Espandilo aggiungendo OBBLIGATORIAMENTE almeno 3 di questi dettagli: illuminazione (golden hour/studio/natural), angolo camera (low angle/aerial/close-up), mood (serene/dramatic/playful), colori (warm tones/vibrant/pastel), texture, atmosfera. Restituisci SOLO il prompt espanso, circa 50-80 parole.`
+                : `The prompt "${currentPrompt}" is too generic. Expand it by MANDATORILY adding at least 3 of these details: lighting (golden hour/studio/natural), camera angle (low angle/aerial/close-up), mood (serene/dramatic/playful), colors (warm tones/vibrant/pastel), texture, atmosphere. Return ONLY the expanded prompt, about 50-80 words.`;
+
+            const retryResult = await ai.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: { parts: [{ text: forceEnhancePrompt }] },
+                config: {
+                    temperature: 1.2,
+                    maxOutputTokens: 400
+                }
+            });
+
+            if (retryResult && retryResult.text) {
+                enhancedPrompt = retryResult.text.trim();
+            }
         }
 
         // Fallback: if enhancement is too short or empty, use original

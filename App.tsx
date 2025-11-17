@@ -10,7 +10,7 @@ import FloatingActionBar from './components/FloatingActionBar';
 // --- Localization ---
 const translations = {
   en: {
-    headerTitle: 'Generentolo v0.8.1 Beta',
+    headerTitle: 'Generentolo v0.9.0 Beta',
     headerSubtitle: 'Let me do it for you!',
     letMeDoForYou: 'Magic Prompt',
     refImagesTitle: 'Reference & Style Images',
@@ -116,7 +116,7 @@ const translations = {
 
   },
   it: {
-    headerTitle: 'Generentolo v0.8.1 Beta',
+    headerTitle: 'Generentolo v0.9.0 Beta',
     headerSubtitle: 'Let me do it for you!',
     letMeDoForYou: 'Magic Prompt',
     refImagesTitle: 'Immagini di Riferimento e Stile',
@@ -324,12 +324,12 @@ const Header: React.FC<HeaderProps> = ({ theme, toggleTheme, onOpenSettings, onO
         <header className="flex justify-between items-center p-4">
             <div>
                  <h1 className="text-xl font-bold flex items-center">
-                    <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-blue to-brand-purple">
+                    <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-yellow to-brand-magenta">
                         {t.headerTitle}
                     </span>
                 </h1>
                 <p className="text-xs text-light-text-muted dark:text-dark-text-muted">
-                    {t.headerSubtitle} Powered by <span className="font-bold text-yellow-400">JOZ</span> for <span className="font-bold text-brand-pink">Dugongo</span>
+                    {t.headerSubtitle} Powered by <span className="font-bold text-yellow-400">JOZ</span> for <span className="font-bold text-brand-magenta">Dugongo</span>
                 </p>
             </div>
             <div className="flex items-center gap-2">
@@ -461,7 +461,7 @@ const ReferencePanel: React.FC<{
             <h3 className="font-semibold text-light-text dark:text-dark-text">{t.refImagesTitle}</h3>
             <div 
                 onDragEnter={handleRefDragEnter} onDragLeave={handleRefDragLeave} onDragOver={handleDragOver} onDrop={handleRefDrop}
-                className={`rounded-xl transition-all relative ${isDraggingRef ? 'border-2 border-dashed border-brand-purple bg-brand-purple/10 p-1' : 'border-2 border-transparent'}`}
+                className={`rounded-xl transition-all relative ${isDraggingRef ? 'border-2 border-dashed border-brand-yellow bg-brand-purple/10 p-1' : 'border-2 border-transparent'}`}
             >
                 <div className="grid grid-cols-3 gap-3">
                     {referenceImages.map((file, index) => (
@@ -562,9 +562,9 @@ const ToolSelectionModal: React.FC<ToolSelectionModalProps> = ({ isOpen, onClose
                         {tool.options.map(option => {
                             const isSelected = selected.has(option);
                             return (
-                                <label key={option} className={`relative flex items-center p-3 rounded-lg border cursor-pointer transition-all ${isSelected ? 'border-brand-purple ring-2 ring-brand-purple' : 'border-light-border dark:border-dark-border hover:border-dark-text-muted'}`}>
+                                <label key={option} className={`relative flex items-center p-3 rounded-lg border cursor-pointer transition-all ${isSelected ? 'border-brand-yellow ring-2 ring-brand-purple' : 'border-light-border dark:border-dark-border hover:border-dark-text-muted'}`}>
                                     <input type="checkbox" checked={isSelected} onChange={() => handleToggle(option)} className="absolute opacity-0 w-0 h-0" />
-                                    {isSelected && <div className="absolute top-1 right-1 text-brand-purple"><CheckIcon className="w-4 h-4" /></div>}
+                                    {isSelected && <div className="absolute top-1 right-1 text-brand-yellow"><CheckIcon className="w-4 h-4" /></div>}
                                     <span className="text-sm select-none text-light-text dark:text-dark-text">{option}</span>
                                 </label>
                             );
@@ -573,7 +573,7 @@ const ToolSelectionModal: React.FC<ToolSelectionModalProps> = ({ isOpen, onClose
                 </div>
                 <div className="flex justify-end gap-3 p-4 border-t border-light-border dark:border-dark-border">
                     <button onClick={handleClear} className="px-4 py-2 rounded-lg border border-light-border dark:border-dark-border text-sm font-semibold hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors">{t.clearSelection}</button>
-                    <button onClick={handleSave} className="px-4 py-2 rounded-lg bg-gradient-to-r from-brand-blue to-brand-purple text-white text-sm font-semibold hover:opacity-90 transition-opacity">{t.save} ({selected.size})</button>
+                    <button onClick={handleSave} className="px-4 py-2 rounded-lg bg-gradient-to-r from-brand-yellow to-brand-magenta text-white text-sm font-semibold hover:opacity-90 transition-opacity">{t.save} ({selected.size})</button>
                 </div>
             </div>
         </div>
@@ -730,7 +730,7 @@ const ControlPanel: React.FC<ControlPanelProps> = (props) => {
         <div className="p-4 space-y-6">
             <div className="relative">
                 <div className={`absolute inset-0 bg-light-surface/50 dark:bg-dark-bg/50 z-10 flex items-center justify-center transition-opacity rounded-xl ${(isRewriting || isEnhancing) ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-                    <div className="w-5 h-5 border-2 border-brand-purple border-t-transparent rounded-full animate-spin"></div>
+                    <div className="w-5 h-5 border-2 border-brand-yellow border-t-transparent rounded-full animate-spin"></div>
                 </div>
                 <PromptTextarea
                     value={editedPrompt}
@@ -743,9 +743,9 @@ const ControlPanel: React.FC<ControlPanelProps> = (props) => {
             <button 
                 onClick={onMagicPrompt} 
                 disabled={isActionDisabled || (isPromptEmpty && !hasImages)} 
-                className="w-full text-center py-2 px-4 rounded-lg bg-light-surface dark:bg-dark-surface/50 border border-light-border dark:border-dark-border hover:border-brand-purple transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-dark-border font-semibold text-sm flex items-center justify-center gap-2"
+                className="w-full text-center py-2 px-4 rounded-lg bg-light-surface dark:bg-dark-surface/50 border border-light-border dark:border-dark-border hover:border-brand-yellow transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-dark-border font-semibold text-sm flex items-center justify-center gap-2"
             >
-                 <WandIcon className="w-4 h-4 text-brand-purple" />
+                 <WandIcon className="w-4 h-4 text-brand-yellow" />
                  <span>{isPromptEmpty ? t.createFromImage : t.enhancePrompt}</span>
             </button>
             
@@ -759,16 +759,16 @@ const ControlPanel: React.FC<ControlPanelProps> = (props) => {
                             const selectionCount = toolSettings[tool.name]?.length || 0;
                             return (
                                 <div key={tool.name}>
-                                    <button onClick={() => setEditingTool(tool)} className="w-full text-left p-2 bg-light-surface dark:bg-dark-surface/50 border border-light-border dark:border-dark-border rounded-lg hover:border-brand-purple transition-colors">
+                                    <button onClick={() => setEditingTool(tool)} className="w-full text-left p-2 bg-light-surface dark:bg-dark-surface/50 border border-light-border dark:border-dark-border rounded-lg hover:border-brand-yellow transition-colors">
                                         <div className="text-sm font-medium text-light-text-muted dark:text-dark-text-muted">{tool.label}</div>
-                                        <div className={`text-xs ${selectionCount > 0 ? 'text-brand-purple' : 'text-light-text-muted dark:text-dark-text-muted'}`}>{selectionCount > 0 ? `${selectionCount} selected` : t.chooseOptions}</div>
+                                        <div className={`text-xs ${selectionCount > 0 ? 'text-brand-yellow' : 'text-light-text-muted dark:text-dark-text-muted'}`}>{selectionCount > 0 ? `${selectionCount} selected` : t.chooseOptions}</div>
                                     </button>
                                 </div>
                             )
                         }) : (
                             <div className="col-span-2">
                                 {hasImages ? (
-                                    <button onClick={onGenerateTools} disabled={isActionDisabled} className="w-full text-center py-2 px-4 rounded-lg bg-light-surface dark:bg-dark-surface/50 border border-light-border dark:border-dark-border hover:border-brand-purple transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-sm">
+                                    <button onClick={onGenerateTools} disabled={isActionDisabled} className="w-full text-center py-2 px-4 rounded-lg bg-light-surface dark:bg-dark-surface/50 border border-light-border dark:border-dark-border hover:border-brand-yellow transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-sm">
                                         {t.generateTools}
                                     </button>
                                 ) : (
@@ -789,7 +789,7 @@ const ControlPanel: React.FC<ControlPanelProps> = (props) => {
                             <button
                                 key={num}
                                 onClick={() => onNumImagesChange(num)}
-                                className={`p-3 rounded-lg font-semibold text-center transition-colors ${numImages === num ? 'bg-gradient-to-r from-brand-blue to-brand-purple text-white' : 'bg-light-surface-accent dark:bg-dark-surface-accent hover:bg-light-surface-accent/70 dark:hover:bg-dark-surface-accent/70'}`}
+                                className={`p-3 rounded-lg font-semibold text-center transition-colors ${numImages === num ? 'bg-gradient-to-r from-brand-yellow to-brand-magenta text-white' : 'bg-light-surface-accent dark:bg-dark-surface-accent hover:bg-light-surface-accent/70 dark:hover:bg-dark-surface-accent/70'}`}
                             >
                                 {num}
                             </button>
@@ -799,10 +799,10 @@ const ControlPanel: React.FC<ControlPanelProps> = (props) => {
                 <div className="relative">
                      <label htmlFor="negative-prompt" className="flex items-center gap-2 text-xs font-medium text-light-text-muted dark:text-dark-text-muted mb-1">
                         <span>{t.negativePromptLabel}</span>
-                        {isGeneratingNegativePrompt && <div className="w-3 h-3 border-2 border-brand-purple/50 border-t-transparent rounded-full animate-spin"></div>}
+                        {isGeneratingNegativePrompt && <div className="w-3 h-3 border-2 border-brand-yellow/50 border-t-transparent rounded-full animate-spin"></div>}
                     </label>
                     <textarea id="negative-prompt" value={negativePrompt} onChange={e => onNegativePromptChange(e.target.value)} rows={2} className="w-full p-2 pr-10 text-sm bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded-lg focus:ring-2 focus:ring-brand-purple focus:outline-none" placeholder={t.negativePromptPlaceholder} />
-                    <button onClick={handleGenerateNegativePrompt} disabled={isActionDisabled || !editedPrompt} title={t.generateNegativePrompt} className="absolute bottom-2 right-2 p-1.5 rounded-full text-brand-purple hover:bg-brand-purple/20 transition-colors disabled:text-gray-400 disabled:hover:bg-transparent">
+                    <button onClick={handleGenerateNegativePrompt} disabled={isActionDisabled || !editedPrompt} title={t.generateNegativePrompt} className="absolute bottom-2 right-2 p-1.5 rounded-full text-brand-yellow hover:bg-brand-purple/20 transition-colors disabled:text-gray-400 disabled:hover:bg-transparent">
                         <WandIcon className="w-5 h-5"/>
                     </button>
                 </div>
@@ -824,7 +824,7 @@ const ControlPanel: React.FC<ControlPanelProps> = (props) => {
                 </h3>
                 <div className="grid grid-cols-3 gap-2">
                     {aspectRatios.map(ratio => (
-                        <button key={ratio} onClick={() => onAspectRatioChange(ratio)} className={`w-full py-2 rounded-lg text-sm font-medium transition-colors ${selectedAspectRatio === ratio ? 'bg-gradient-to-r from-brand-blue to-brand-purple text-white' : 'bg-light-surface dark:bg-dark-surface/50 border border-light-border dark:border-dark-border hover:border-dark-text-muted'}`}>{ratio}</button>
+                        <button key={ratio} onClick={() => onAspectRatioChange(ratio)} className={`w-full py-2 rounded-lg text-sm font-medium transition-colors ${selectedAspectRatio === ratio ? 'bg-gradient-to-r from-brand-yellow to-brand-magenta text-white' : 'bg-light-surface dark:bg-dark-surface/50 border border-light-border dark:border-dark-border hover:border-dark-text-muted'}`}>{ratio}</button>
                     ))}
                 </div>
             </div>
@@ -852,7 +852,7 @@ const ImageDisplay: React.FC<ImageDisplayProps> = ({ images, isLoading, onDownlo
         <div className="relative w-full h-full flex items-center justify-center bg-light-surface/50 dark:bg-dark-surface/30 rounded-2xl p-4">
             {isLoading && (
                 <div className="flex flex-col items-center text-light-text-muted dark:text-dark-text-muted">
-                    <div className="w-12 h-12 border-4 border-brand-purple border-t-transparent rounded-full animate-spin mb-4"></div>
+                    <div className="w-12 h-12 border-4 border-brand-yellow border-t-transparent rounded-full animate-spin mb-4"></div>
                     <p className="font-semibold">{t.generatingStatus}</p>
                     <p className="text-sm">{t.generatingSubtext}</p>
                 </div>
@@ -869,7 +869,7 @@ const ImageDisplay: React.FC<ImageDisplayProps> = ({ images, isLoading, onDownlo
                                 {/* Upscaling overlay */}
                                 {isUpscaling && (
                                     <div className="absolute inset-0 bg-black/60 rounded-md flex flex-col items-center justify-center">
-                                        <div className="w-12 h-12 border-4 border-brand-purple border-t-transparent rounded-full animate-spin mb-3"></div>
+                                        <div className="w-12 h-12 border-4 border-brand-yellow border-t-transparent rounded-full animate-spin mb-3"></div>
                                         <p className="text-white font-semibold">{t.upscaling}</p>
                                     </div>
                                 )}
@@ -1214,7 +1214,7 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
                         {/* Infinite scroll trigger */}
                         {displayCount < filteredHistory.length && (
                             <div ref={loadMoreRef} className="col-span-full py-4 text-center">
-                                <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-brand-purple"></div>
+                                <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-brand-yellow"></div>
                             </div>
                         )}
                     </div>
@@ -1270,14 +1270,14 @@ const PresetsPanel: React.FC<PresetsPanelProps> = ({
         <div className="h-full flex flex-col bg-light-surface/50 dark:bg-dark-surface/30 backdrop-blur-xl rounded-3xl p-4">
             <div className="flex justify-between items-center mb-4">
                 <h2 className="font-semibold text-light-text dark:text-dark-text flex items-center gap-2">
-                    <StarIcon className="w-5 h-5 text-brand-purple" filled />
+                    <StarIcon className="w-5 h-5 text-brand-yellow" filled />
                     Presets {presets.length > 0 && <span className="text-sm text-light-text-muted dark:text-dark-text-muted">({presets.length}/50)</span>}
                 </h2>
                 <div className="flex items-center gap-2">
                     <button
                         onClick={() => setShowSaveDialog(true)}
                         disabled={!currentPrompt.trim()}
-                        className="text-sm font-medium text-brand-purple hover:underline disabled:opacity-50 disabled:no-underline"
+                        className="text-sm font-medium text-brand-yellow hover:underline disabled:opacity-50 disabled:no-underline"
                         title="Save current prompt"
                     >
                         + Save
@@ -1302,7 +1302,7 @@ const PresetsPanel: React.FC<PresetsPanelProps> = ({
 
             {/* Save Dialog */}
             {showSaveDialog && (
-                <div className="mb-4 p-3 bg-light-surface dark:bg-dark-surface rounded-xl border border-brand-purple">
+                <div className="mb-4 p-3 bg-light-surface dark:bg-dark-surface rounded-xl border border-brand-yellow">
                     <input
                         type="text"
                         value={presetName}
@@ -1334,13 +1334,13 @@ const PresetsPanel: React.FC<PresetsPanelProps> = ({
                 {presets.length > 0 ? (
                     <div className="space-y-2">
                         {presets.map(preset => (
-                            <div key={preset.id} className="group p-3 bg-light-surface dark:bg-dark-surface rounded-xl border border-light-border dark:border-dark-border hover:border-brand-purple transition-all">
+                            <div key={preset.id} className="group p-3 bg-light-surface dark:bg-dark-surface rounded-xl border border-light-border dark:border-dark-border hover:border-brand-yellow transition-all">
                                 <div className="flex items-start justify-between gap-2 mb-1">
                                     <h3 className="font-medium text-sm text-light-text dark:text-dark-text flex-1">{preset.name}</h3>
                                     <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                         <button
                                             onClick={() => onLoadPreset(preset)}
-                                            className="p-1 rounded-lg bg-brand-purple/10 text-brand-purple hover:bg-brand-purple/20 transition-colors"
+                                            className="p-1 rounded-lg bg-brand-purple/10 text-brand-yellow hover:bg-brand-purple/20 transition-colors"
                                             title="Load preset"
                                         >
                                             <CornerUpLeftIcon className="w-3.5 h-3.5" />
@@ -1393,7 +1393,7 @@ const CreativePromptsPanel: React.FC<CreativePromptsPanelProps> = ({ prompts, on
                     <button 
                         onClick={onGenerate} 
                         disabled={isLoading}
-                        className="p-1.5 rounded-full text-brand-purple hover:bg-brand-purple/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="p-1.5 rounded-full text-brand-yellow hover:bg-brand-purple/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         title={t.generateSuggestions}
                     >
                         <ReloadIcon className="w-4 h-4" />
@@ -1414,7 +1414,7 @@ const CreativePromptsPanel: React.FC<CreativePromptsPanelProps> = ({ prompts, on
                             <button 
                                 key={`${index}-${prompt}`} 
                                 onClick={() => onSelectPrompt(prompt)}
-                                className={`text-left p-3 rounded-lg text-sm transition-all border ${isSelected ? 'bg-brand-purple/20 border-brand-purple text-light-text dark:text-dark-text font-medium' : 'bg-light-surface/50 dark:bg-dark-surface/50 border-transparent hover:border-dark-border text-light-text-muted dark:text-dark-text-muted'}`}
+                                className={`text-left p-3 rounded-lg text-sm transition-all border ${isSelected ? 'bg-brand-purple/20 border-brand-yellow text-light-text dark:text-dark-text font-medium' : 'bg-light-surface/50 dark:bg-dark-surface/50 border-transparent hover:border-dark-border text-light-text-muted dark:text-dark-text-muted'}`}
                             >
                                 {prompt}
                             </button>
@@ -1424,7 +1424,7 @@ const CreativePromptsPanel: React.FC<CreativePromptsPanelProps> = ({ prompts, on
             ) : (
                  <div className="text-center py-4">
                     {hasImages ? (
-                        <button onClick={onGenerate} className="text-center py-2 px-4 rounded-lg bg-light-surface dark:bg-dark-surface/50 border border-light-border dark:border-dark-border hover:border-brand-purple transition-colors font-semibold text-sm">
+                        <button onClick={onGenerate} className="text-center py-2 px-4 rounded-lg bg-light-surface dark:bg-dark-surface/50 border border-light-border dark:border-dark-border hover:border-brand-yellow transition-colors font-semibold text-sm">
                             {t.generateSuggestions}
                         </button>
                     ) : (
@@ -1460,7 +1460,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, onSave, 
                 </div>
                 <div className="mt-6 flex justify-end gap-3">
                     <button onClick={onClose} className="px-4 py-2 rounded-lg border border-light-border dark:border-dark-border text-sm font-semibold hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors">{t.cancel}</button>
-                    <button onClick={handleSave} className="px-4 py-2 rounded-lg bg-gradient-to-r from-brand-blue to-brand-purple text-white text-sm font-semibold hover:opacity-90 transition-opacity">{t.save}</button>
+                    <button onClick={handleSave} className="px-4 py-2 rounded-lg bg-gradient-to-r from-brand-yellow to-brand-magenta text-white text-sm font-semibold hover:opacity-90 transition-opacity">{t.save}</button>
                 </div>
             </div>
         </div>
@@ -1560,7 +1560,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
             <div className="bg-light-surface/90 dark:bg-dark-surface/90 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl w-full max-w-3xl max-h-[85vh] flex flex-col" onClick={e => e.stopPropagation()}>
                 <div className="flex items-center justify-between p-6 border-b border-light-border dark:border-dark-border">
                     <div className="flex items-center gap-3">
-                        <InfoIcon className="w-6 h-6 text-brand-purple" />
+                        <InfoIcon className="w-6 h-6 text-brand-yellow" />
                         <h2 className="text-2xl font-bold text-light-text dark:text-dark-text">{t.helpGuide}</h2>
                     </div>
                     <button onClick={onClose} className="p-2 rounded-full text-light-text-muted dark:text-dark-text-muted hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors">
@@ -1580,7 +1580,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                 </div>
 
                 <div className="flex justify-end p-6 border-t border-light-border dark:border-dark-border">
-                    <button onClick={onClose} className="px-6 py-3 rounded-lg bg-gradient-to-r from-brand-blue to-brand-purple text-white font-semibold hover:opacity-90 transition-opacity">
+                    <button onClick={onClose} className="px-6 py-3 rounded-lg bg-gradient-to-r from-brand-yellow to-brand-magenta text-white font-semibold hover:opacity-90 transition-opacity">
                         {t.cancel}
                     </button>
                 </div>
@@ -1630,7 +1630,7 @@ const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ isOpen, onClose }) => {
                     ))}
                 </div>
                 <div className="mt-6 flex justify-end">
-                    <button onClick={onClose} className="px-4 py-2 rounded-lg bg-gradient-to-r from-brand-blue to-brand-purple text-white text-sm font-semibold hover:opacity-90 transition-opacity">
+                    <button onClick={onClose} className="px-4 py-2 rounded-lg bg-gradient-to-r from-brand-yellow to-brand-magenta text-white text-sm font-semibold hover:opacity-90 transition-opacity">
                         {t.cancel}
                     </button>
                 </div>
@@ -1713,7 +1713,7 @@ ${message}`
                 </div>
                 <div className="mt-6 flex justify-end gap-3">
                     <button onClick={onClose} className="px-4 py-2 rounded-lg border border-light-border dark:border-dark-border text-sm font-semibold hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors">{t.cancel}</button>
-                    <button onClick={handleSend} className="px-4 py-2 rounded-lg bg-gradient-to-r from-brand-blue to-brand-purple text-white text-sm font-semibold hover:opacity-90 transition-opacity">{t.sendFeedback}</button>
+                    <button onClick={handleSend} className="px-4 py-2 rounded-lg bg-gradient-to-r from-brand-yellow to-brand-magenta text-white text-sm font-semibold hover:opacity-90 transition-opacity">{t.sendFeedback}</button>
                 </div>
             </div>
         </div>
@@ -1863,7 +1863,7 @@ const InpaintEditor: React.FC<InpaintEditorProps> = ({ image, onClose, onSave })
                 </div>
                 <div className="flex justify-end gap-3 p-4 border-t border-light-border dark:border-dark-border">
                     <button onClick={onClose} className="px-4 py-2 rounded-lg">{t.cancel}</button>
-                    <button onClick={handleSave} disabled={!inpaintPrompt || isLoading} className="px-4 py-2 rounded-lg bg-gradient-to-r from-brand-blue to-brand-purple text-white text-sm font-semibold disabled:opacity-50 flex items-center gap-2">
+                    <button onClick={handleSave} disabled={!inpaintPrompt || isLoading} className="px-4 py-2 rounded-lg bg-gradient-to-r from-brand-yellow to-brand-magenta text-white text-sm font-semibold disabled:opacity-50 flex items-center gap-2">
                         {isLoading && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>}
                         {isLoading ? t.generatingButton : t.generateButton}
                     </button>
@@ -2522,7 +2522,7 @@ export default function App() {
                 <Header theme={theme} toggleTheme={toggleTheme} onOpenSettings={() => setIsSettingsOpen(true)} onOpenFeedback={() => setIsFeedbackOpen(true)} onOpenShortcuts={() => setIsShortcutsOpen(true)} onOpenHelp={() => setIsHelpOpen(true)} />
                 <main className="flex-1 flex flex-col lg:flex-row gap-4 lg:gap-6 px-4 pt-4 pb-32 lg:pb-28 overflow-y-auto lg:overflow-hidden">
                     {/* --- Left Sidebar (only references/style/structure) --- */}
-                    <aside className="w-full lg:w-[280px] flex-shrink-0 bg-light-surface/50 dark:bg-dark-surface/30 backdrop-blur-xl rounded-3xl overflow-y-auto lg:h-full">
+                    <aside className="w-full lg:w-[280px] flex-shrink-0 bg-light-surface/50 dark:bg-dark-surface/30 backdrop-blur-xl rounded-3xl overflow-y-auto h-full">
                         <ReferencePanel
                             onAddImages={handleAddImages}
                             onRemoveImage={handleRemoveImage}
@@ -2537,13 +2537,14 @@ export default function App() {
                     </aside>
 
                     {/* --- Main Content --- */}
-                    <div className="flex-1 flex flex-col gap-4 lg:gap-6 min-w-0 lg:h-full">
-                        <div className="flex-1 min-h-0 bg-light-surface/50 dark:bg-dark-surface/30 backdrop-blur-xl rounded-3xl overflow-hidden">
+                    <div className="flex-1 flex flex-col gap-4 lg:gap-6 min-w-0 h-full">
+                        <div className="flex-1 min-h-0 bg-light-surface/50 dark:bg-dark-surface/30 rounded-3xl overflow-hidden">
                             <ImageDisplay images={currentImages} isLoading={isLoading} onDownload={handleDownload} onZoom={setZoomedImage} onEdit={setEditingImage} onUpscale={handleUpscale} upscalingImageId={upscalingImageId} onReroll={handleReroll} onToggleFavorite={handleToggleFavorite} />
                         </div>
 
-                        <div className="flex-shrink-0 space-y-4 overflow-y-auto max-h-[300px] lg:max-h-[250px]">
-                           {(referenceImages.length > 0 || !!styleReferenceImage) && (
+                        {((referenceImages.length > 0 || !!styleReferenceImage) || currentImages.length === 1) && (
+                            <div className="flex-shrink-0 space-y-4 overflow-y-auto max-h-[300px] lg:max-h-[250px]">
+                               {(referenceImages.length > 0 || !!styleReferenceImage) && (
                                 <CreativePromptsPanel 
                                     prompts={prompts} 
                                     onSelectPrompt={setEditedPrompt} 
@@ -2568,20 +2569,21 @@ export default function App() {
                                     </div>
                                 </div>
                             )}
-                        </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* --- Right Column (Buttons + History) --- */}
                     <div className="w-full lg:w-[320px] flex-shrink-0 flex flex-col gap-4">
                         <div className="space-y-4 p-4 bg-light-surface/50 dark:bg-dark-surface/30 backdrop-blur-xl rounded-3xl">
-                             <button onClick={handleGenerate} disabled={isActionDisabled} className="w-full flex justify-center items-center gap-2 bg-gradient-to-r from-brand-blue to-brand-purple text-white font-semibold py-3 rounded-xl hover:opacity-90 transition-all duration-300 hover:shadow-[0_0_20px_rgba(138,120,244,0.5)] disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none">
+                             <button onClick={handleGenerate} disabled={isActionDisabled} className="w-full flex justify-center items-center gap-2 bg-gradient-to-r from-brand-yellow to-brand-magenta text-white font-semibold py-3 rounded-xl hover:opacity-90 transition-all duration-300 hover:shadow-[0_0_20px_rgba(255,217,61,0.5)] disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none">
                                 {isLoading ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : <SparklesIcon className="w-5 h-5" />}
                                 <span>{isLoading ? t.generatingButton : t.generateButton}</span>
                             </button>
                              <div className="flex flex-col gap-3">
-                                <button onClick={handleLetMeDoForYou} disabled={isActionDisabled || prompts.length === 0} className="w-full p-[2px] bg-gradient-to-r from-brand-blue to-brand-purple rounded-xl disabled:opacity-50 group transition-all">
+                                <button onClick={handleLetMeDoForYou} disabled={isActionDisabled || prompts.length === 0} className="w-full p-[2px] bg-gradient-to-r from-brand-yellow to-brand-magenta rounded-xl disabled:opacity-50 group transition-all">
                                     <div className="w-full h-full bg-light-surface dark:bg-dark-surface-accent rounded-[10px] flex justify-center items-center gap-2 text-light-text dark:text-dark-text font-semibold py-2 transition-all group-hover:bg-opacity-80 disabled:group-hover:bg-opacity-100 dark:group-hover:bg-opacity-80">
-                                      <WandIcon className="w-4 h-4 text-brand-purple" />
+                                      <WandIcon className="w-4 h-4 text-brand-yellow" />
                                       <span className="text-sm">{t.letMeDoForYou}</span>
                                     </div>
                                 </button>
@@ -2593,7 +2595,7 @@ export default function App() {
                                 </button>
                                 <button onClick={handleResetInterface} title={t.resetInterface} disabled={isActionDisabled} className="w-full p-[2px] bg-gradient-to-r from-brand-pink to-fuchsia-500 rounded-xl disabled:opacity-50 group transition-all">
                                     <div className="w-full h-full bg-light-surface dark:bg-dark-surface-accent rounded-[10px] flex justify-center items-center gap-2 text-light-text dark:text-dark-text font-semibold py-2 transition-all group-hover:bg-opacity-80 disabled:group-hover:bg-opacity-100 dark:group-hover:bg-opacity-80">
-                                        <ReloadIcon className="w-4 h-4 text-brand-pink" />
+                                        <ReloadIcon className="w-4 h-4 text-brand-magenta" />
                                         <span className="text-sm">{t.resetInterface}</span>
                                     </div>
                                 </button>
