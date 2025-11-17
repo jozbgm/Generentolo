@@ -443,14 +443,18 @@ Return ONLY the complete JSON object.`;
                     } catch (parseError) {
                         console.warn(`JSON parse failed attempt ${attempt + 1}:`, parseError);
 
-                        // On last attempt, try extracting caption with regex fallback
+                        // Try extracting caption with regex fallback (try on ANY attempt, not just last)
+                        const captionMatch = result.text.match(/"caption"\s*:\s*"([^"]+)"/);
+                        if (captionMatch && captionMatch[1]) {
+                            console.log(`✅ Extracted caption via regex fallback (attempt ${attempt + 1}):`, captionMatch[1]);
+                            return captionMatch[1];
+                        }
+
+                        // If last attempt and regex failed, give up
                         if (attempt === 1) {
-                            const captionMatch = result.text.match(/"caption"\s*:\s*"([^"]+)"/);
-                            if (captionMatch && captionMatch[1]) {
-                                console.log('✅ Extracted caption via regex fallback:', captionMatch[1]);
-                                return captionMatch[1];
-                            }
-                            return currentPrompt;
+                            console.warn('⚠️ All cinematic attempts exhausted, no valid caption extracted');
+                            // Don't return here - fall through to STANDARD mode
+                            break;
                         }
 
                         await new Promise(resolve => setTimeout(resolve, 1500));
@@ -480,37 +484,61 @@ Return ONLY the complete JSON object.`;
             ? `Sei un esperto di prompt per immagini pubblicitarie. ${imageContext}${hasImages ? 'Analizza TUTTE le immagini e migliora' : 'Migliora'} il prompt dell'utente. REGOLE: 1) MANTIENI intatti i soggetti/azioni/ambientazioni dell'utente. 2) AGGIUNGI dettagli tecnici (illuminazione, angolo, mood, color grading, texture, colori). ${hasImages ? '3) Se ci sono reference E style images: applica l\'estetica/colori/mood dello style alle reference. 4) Se c\'è structure image: menziona di mantenere la composizione spaziale. 5)' : '3)'} CONCISO: max 100-120 parole, evita ridondanze. Restituisci SOLO il prompt migliorato.`
             : `You are an expert at advertising image prompts. ${imageContext}${hasImages ? 'Analyze ALL images and enhance' : 'Enhance'} the user's prompt. RULES: 1) KEEP user's subjects/actions/settings intact. 2) ADD technical details (lighting, angle, mood, color grading, textures, colors). ${hasImages ? '3) If there are reference AND style images: apply style\'s aesthetic/colors/mood to references. 4) If there\'s a structure image: mention maintaining spatial composition. 5)' : '3)'} CONCISE: max 100-120 words, avoid redundancy. Return ONLY the enhanced prompt.`;
 
-        const result = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: { parts: [...imageParts, { text: `User prompt to enhance: "${currentPrompt}"` }] },
-            config: {
-                systemInstruction,
-                temperature: hasImages ? 0.3 : 0.6, // Slightly higher temp for text-only
-                maxOutputTokens: 300
+        // Retry logic for STANDARD mode too (503 errors are common)
+        for (let attempt = 0; attempt < 2; attempt++) {
+            try {
+                const result = await ai.models.generateContent({
+                    model: 'gemini-2.5-flash',
+                    contents: { parts: [...imageParts, { text: `User prompt to enhance: "${currentPrompt}"` }] },
+                    config: {
+                        systemInstruction,
+                        temperature: hasImages ? 0.3 : 0.6,
+                        maxOutputTokens: 300
+                    }
+                });
+
+                // Safety check: ensure result.text exists
+                if (!result || !result.text) {
+                    console.warn(`Standard enhance attempt ${attempt + 1}: no text returned`);
+                    if (attempt === 1) return currentPrompt; // Last attempt failed
+                    await new Promise(resolve => setTimeout(resolve, 1500));
+                    continue;
+                }
+
+                const enhancedPrompt = result.text.trim();
+
+                // Fallback: if enhanced prompt is too long (>400 chars), it might cause IMAGE_OTHER
+                if (enhancedPrompt.length > 400) {
+                    console.warn('Enhanced prompt too long, truncating to 400 chars');
+                    return enhancedPrompt.substring(0, 397) + '...';
+                }
+
+                // Fallback: if enhancement is too short or empty, use original
+                if (enhancedPrompt.length < 10) {
+                    console.warn('Enhanced prompt too short, using original');
+                    return currentPrompt;
+                }
+
+                return enhancedPrompt;
+            } catch (apiError: any) {
+                console.warn(`Standard mode API call failed attempt ${attempt + 1}:`, apiError.message);
+
+                // If 503 overload, retry with delay
+                if (apiError.message?.includes('overload') || apiError.message?.includes('503')) {
+                    if (attempt < 1) {
+                        await new Promise(resolve => setTimeout(resolve, 2000));
+                        continue;
+                    }
+                }
+
+                // Last attempt failed, return original
+                if (attempt === 1) return currentPrompt;
             }
-        });
-
-        // Safety check: ensure result.text exists
-        if (!result || !result.text) {
-            console.warn('Enhance failed: no text returned, using original prompt');
-            return currentPrompt;
         }
 
-        const enhancedPrompt = result.text.trim();
-
-        // Fallback: if enhanced prompt is too long (>400 chars), it might cause IMAGE_OTHER
-        if (enhancedPrompt.length > 400) {
-            console.warn('Enhanced prompt too long, truncating to 400 chars');
-            return enhancedPrompt.substring(0, 397) + '...';
-        }
-
-        // Fallback: if enhancement is too short or empty, use original
-        if (enhancedPrompt.length < 10) {
-            console.warn('Enhanced prompt too short, using original');
-            return currentPrompt;
-        }
-
-        return enhancedPrompt;
+        // All retries exhausted
+        console.warn('⚠️ All STANDARD enhancement attempts failed, returning original prompt');
+        return currentPrompt;
     } catch (error) { throw handleError(error, language); }
 }
 
