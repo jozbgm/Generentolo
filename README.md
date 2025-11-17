@@ -19,7 +19,6 @@ A sophisticated web application for generating high-quality images using Google'
 - **Structure guide image** (ControlNet-like) to preserve spatial composition and depth
 - **NEW v0.7: 🎯 Precise Reference Mode** - Maximum fidelity to facial features
   - Preserves faces, skin texture, eye color, hairstyle EXACTLY as in reference
-  - Inspired by Google Whisk's Precise Mode
   - Toggle on/off for each generation
 - Advanced AI prompt engineering ensures all subjects are included in final output
 
@@ -372,12 +371,11 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - Improved history image loading performance
 
 ### v0.7 Beta (January 2025)
-**🎯 Precise Reference Mode - Whisk-Inspired Feature:**
+**🎯 Precise Reference Mode:**
 - **NEW: Precise Reference Checkbox** - Maximum fidelity to facial features
   - Preserves EXACTLY facial features, skin texture, eye color, nose shape
   - Maintains hair color, hairstyle, and length unchanged
   - Prevents AI from altering or reinterpreting faces
-  - Inspired by Google Whisk's Precise Mode feature
   - Works with multiple reference images
   - Toggle on/off with clear visual indicator
   - Smart prompt engineering for photorealistic accuracy
@@ -471,7 +469,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ### v0.3 Beta (January 2025)
 **Major UX Overhaul:**
-- 🎨 **Floating Action Bar** - wan.video-inspired floating menu for streamlined workflow
+- 🎨 **Floating Action Bar** - Floating menu for streamlined workflow
 - 📱 **Mobile Optimization** - Fully responsive with touch-friendly controls
 - ⚡ **Always-Accessible Controls** - Aspect ratio, num images, and Generate button always visible
 - 🎯 **Expanded Mode** - Write prompts with all controls accessible simultaneously

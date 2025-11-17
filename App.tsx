@@ -1883,7 +1883,7 @@ export default function App() {
     const [referenceImages, setReferenceImages] = useState<File[]>([]);
     const [styleReferenceImage, setStyleReferenceImage] = useState<File | null>(null);
     const [structureImage, setStructureImage] = useState<File | null>(null);
-    const [preciseReference, setPreciseReference] = useState<boolean>(false); // v0.7: Whisk-inspired Precise Mode
+    const [preciseReference, setPreciseReference] = useState<boolean>(false); // v0.7: Precise Reference Mode
     const [prompts, setPrompts] = useState<string[]>([]);
     const [isPromptsLoading, setIsPromptsLoading] = useState(false);
     const [editedPrompt, setEditedPrompt] = useState<string>('');

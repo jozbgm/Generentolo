@@ -1112,7 +1112,7 @@ export const generateImage = async (prompt: string, aspectRatio: string, referen
             instructionParts.push(structureGuidanceText);
         }
 
-        // STEP 5: Add Precise Reference guidance if enabled (v0.7 - Whisk-inspired feature)
+        // STEP 5: Add Precise Reference guidance if enabled (v0.7 feature)
         if (preciseReference && referenceFiles.length > 0) {
             const preciseReferenceGuidance = language === 'it'
                 ? `🎯 PRECISO: Mantieni IDENTICI i tratti del viso, pelle, occhi, naso, capelli dalle reference. Fedeltà massima.`
