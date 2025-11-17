@@ -30,6 +30,10 @@ interface FloatingActionBarProps {
     negativePrompt: string;
     onNegativePromptChange: (value: string) => void;
 
+    // v0.7: Precise Reference
+    preciseReference: boolean;
+    onPreciseReferenceChange: (enabled: boolean) => void;
+
     // Dynamic Tools
     dynamicTools: any[];
     onGenerateTools: () => void;
@@ -57,6 +61,8 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
     onRandomizeSeed,
     negativePrompt,
     onNegativePromptChange,
+    preciseReference,
+    onPreciseReferenceChange,
     dynamicTools,
     onGenerateTools,
     isToolsLoading,
@@ -258,6 +264,34 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                             <span>⚙️</span>
                         </button>
 
+                        {/* v0.7: Precise Reference Toggle Switch */}
+                        {hasReferences && (
+                            <div className="relative group/tooltip flex items-center gap-2 lg:gap-2.5 px-2 lg:px-3 py-1.5 lg:py-2 bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-lg">
+                                <span className="text-xs font-medium text-light-text dark:text-dark-text hidden sm:inline">
+                                    🎯 {t.preciseReference}
+                                </span>
+                                <button
+                                    onClick={() => onPreciseReferenceChange(!preciseReference)}
+                                    className={`relative inline-flex h-5 lg:h-6 w-9 lg:w-11 items-center rounded-full transition-all duration-300 ${
+                                        preciseReference
+                                            ? 'bg-yellow-400 shadow-[0_0_10px_rgba(250,204,21,0.5)]'
+                                            : 'bg-gray-300 dark:bg-gray-600'
+                                    }`}
+                                    disabled={isLoading}
+                                >
+                                    <span
+                                        className={`inline-block h-4 lg:h-5 w-4 lg:w-5 transform rounded-full bg-white shadow-lg transition-transform duration-300 ${
+                                            preciseReference ? 'translate-x-5 lg:translate-x-6' : 'translate-x-0.5'
+                                        }`}
+                                    />
+                                </button>
+                                {/* Tooltip */}
+                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-2 bg-black/90 text-white text-xs rounded-lg opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 pointer-events-none z-50">
+                                    {t.preciseReferenceTooltip}
+                                </div>
+                            </div>
+                        )}
+
                         {/* Primary Action - HERO BUTTON */}
                         <button
                             onClick={onGenerate}
@@ -425,6 +459,34 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                             >
                                 <span>⚙️</span>
                             </button>
+
+                            {/* v0.7: Precise Reference Toggle Switch (Expanded Mode) */}
+                            {hasReferences && (
+                                <div className="relative group/tooltip flex items-center gap-2 lg:gap-2.5 px-2 lg:px-3 py-1.5 bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-lg">
+                                    <span className="text-xs font-medium text-light-text dark:text-dark-text">
+                                        🎯 {t.preciseReference}
+                                    </span>
+                                    <button
+                                        onClick={() => onPreciseReferenceChange(!preciseReference)}
+                                        className={`relative inline-flex h-5 lg:h-6 w-9 lg:w-11 items-center rounded-full transition-all duration-300 ${
+                                            preciseReference
+                                                ? 'bg-yellow-400 shadow-[0_0_10px_rgba(250,204,21,0.5)]'
+                                                : 'bg-gray-300 dark:bg-gray-600'
+                                        }`}
+                                        disabled={isLoading}
+                                    >
+                                        <span
+                                            className={`inline-block h-4 lg:h-5 w-4 lg:w-5 transform rounded-full bg-white shadow-lg transition-transform duration-300 ${
+                                                preciseReference ? 'translate-x-5 lg:translate-x-6' : 'translate-x-0.5'
+                                            }`}
+                                        />
+                                    </button>
+                                    {/* Tooltip */}
+                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-2 bg-black/90 text-white text-xs rounded-lg opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 pointer-events-none z-50">
+                                        {t.preciseReferenceTooltip}
+                                    </div>
+                                </div>
+                            )}
 
                             <div className="flex-1" />
 

@@ -403,9 +403,7 @@ const ReferencePanel: React.FC<{
     onAddStructureImage: (file: File) => void;
     onRemoveStructureImage: () => void;
     structureImage: File | null;
-    preciseReference: boolean;
-    onPreciseReferenceChange: (enabled: boolean) => void;
-}> = ({ onAddImages, onRemoveImage, referenceImages, onAddStyleImage, onRemoveStyleImage, styleImage, onAddStructureImage, onRemoveStructureImage, structureImage, preciseReference, onPreciseReferenceChange }) => {
+}> = ({ onAddImages, onRemoveImage, referenceImages, onAddStyleImage, onRemoveStyleImage, styleImage, onAddStructureImage, onRemoveStructureImage, structureImage }) => {
     const { t } = useLocalization();
     const [isDraggingRef, setIsDraggingRef] = useState(false);
     const [isDraggingStyle, setIsDraggingStyle] = useState(false);
@@ -519,39 +517,6 @@ const ReferencePanel: React.FC<{
                     <input id="structure-file-upload" type="file" className="hidden" accept="image/*" onChange={handleStructureFileChange} />
                 </div>
             </div>
-
-            {/* Precise Reference Checkbox - v0.7 Feature */}
-            {referenceImages.length > 0 && (
-                <>
-                    <div className="border-t border-light-border dark:border-dark-border/50"></div>
-                    <label className="flex items-center gap-3 p-3 rounded-xl bg-light-surface/50 dark:bg-dark-surface/30 border border-light-border dark:border-dark-border cursor-pointer hover:border-brand-purple transition-colors group">
-                        <input
-                            type="checkbox"
-                            checked={preciseReference}
-                            onChange={(e) => onPreciseReferenceChange(e.target.checked)}
-                            className="w-5 h-5 rounded border-2 border-light-border dark:border-dark-border text-brand-purple focus:ring-2 focus:ring-brand-purple cursor-pointer"
-                        />
-                        <div className="flex-1">
-                            <div className="flex items-center gap-2">
-                                <span className="font-semibold text-light-text dark:text-dark-text group-hover:text-brand-purple transition-colors">
-                                    🎯 {t.preciseReference}
-                                </span>
-                                <div className="relative group/tooltip">
-                                    <InfoIcon className="w-4 h-4 text-light-text-muted dark:text-dark-text-muted cursor-help" />
-                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-2 bg-black/90 text-white text-xs rounded-lg opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 pointer-events-none z-50">
-                                        {t.preciseReferenceTooltip}
-                                    </div>
-                                </div>
-                            </div>
-                            <p className="text-xs text-light-text-muted dark:text-dark-text-muted mt-1">
-                                {t.language === 'it'
-                                    ? 'Mantiene identici i volti, la pelle e i capelli dalle reference'
-                                    : 'Keeps faces, skin and hair identical from references'}
-                            </p>
-                        </div>
-                    </label>
-                </>
-            )}
         </div>
     );
 };
@@ -2434,8 +2399,6 @@ export default function App() {
                             styleImage={styleReferenceImage}
                             onAddStructureImage={setStructureImage}
                             onRemoveStructureImage={() => setStructureImage(null)}
-                            preciseReference={preciseReference}
-                            onPreciseReferenceChange={setPreciseReference}
                             structureImage={structureImage}
                         />
                     </aside>
@@ -2585,6 +2548,8 @@ export default function App() {
                     onRandomizeSeed={handleRandomizeSeed}
                     negativePrompt={negativePrompt}
                     onNegativePromptChange={setNegativePrompt}
+                    preciseReference={preciseReference}
+                    onPreciseReferenceChange={setPreciseReference}
                     dynamicTools={dynamicTools}
                     onGenerateTools={handleGenerateDynamicTools}
                     isToolsLoading={isToolsLoading}
