@@ -493,13 +493,14 @@ Return ONLY the complete JSON object.`;
                     config: {
                         systemInstruction,
                         temperature: hasImages ? 0.5 : 0.8,
-                        maxOutputTokens: 300
+                        maxOutputTokens: 500  // Increased from 300 to account for thoughts tokens
                     }
                 });
 
                 // Safety check: ensure result.text exists
                 if (!result || !result.text) {
                     console.warn(`Standard enhance attempt ${attempt + 1}: no text returned`);
+                    console.log('Full API response:', JSON.stringify(result, null, 2));
                     if (attempt === 1) return currentPrompt; // Last attempt failed
                     await new Promise(resolve => setTimeout(resolve, 1500));
                     continue;
@@ -515,7 +516,15 @@ Return ONLY the complete JSON object.`;
                     'is fine', 'va bene', 'good as is', 'così va bene'
                 ];
                 const lowerPrompt = enhancedPrompt.toLowerCase();
-                const containsMetaPhrase = metaResponses.some(phrase => lowerPrompt.includes(phrase));
+
+                // Log for debugging
+                console.log(`📝 Enhanced prompt (attempt ${attempt + 1}):`, enhancedPrompt);
+
+                const containsMetaPhrase = metaResponses.some(phrase => {
+                    const found = lowerPrompt.includes(phrase);
+                    if (found) console.log(`🚫 Detected meta-phrase: "${phrase}"`);
+                    return found;
+                });
 
                 // If response contains meta-phrase, it's a refusal - retry or fallback
                 if (containsMetaPhrase) {
