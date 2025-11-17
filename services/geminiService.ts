@@ -493,7 +493,7 @@ Return ONLY the complete JSON object.`;
                     config: {
                         systemInstruction,
                         temperature: hasImages ? 0.5 : 0.8,
-                        maxOutputTokens: 500  // Increased from 300 to account for thoughts tokens
+                        maxOutputTokens: 1000  // Increased to 1000 to account for internal thoughts tokens (~500) + actual response
                     }
                 });
 
