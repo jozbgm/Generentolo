@@ -480,20 +480,20 @@ Return ONLY the complete JSON object.`;
         }
 
         // STANDARD ENHANCEMENT MODE: For longer prompts or when images are present
-        const systemInstruction = language === 'it'
-            ? `Sei un esperto di prompt per immagini pubblicitarie. ${imageContext}${hasImages ? 'Analizza TUTTE le immagini e migliora' : 'Migliora'} il prompt dell'utente. REGOLE CRITICHE: 1) MANTIENI intatti i soggetti/azioni/ambientazioni dell'utente. 2) AGGIUNGI SEMPRE dettagli tecnici concreti (es. "studio lighting setup con softbox, 50mm lens, shallow depth of field, golden hour color grading"). 3) VIETATO dire "il prompt è già buono/completo/dettagliato" - DEVI SEMPRE aggiungere dettagli. ${hasImages ? '4) Se ci sono reference E style images: applica estetica/colori/mood dello style. 5) Se c\'è structure: menziona composizione spaziale. 6)' : '4)'} CONCISO: max 100-120 parole. Restituisci SOLO il prompt migliorato, MAI meta-commenti.`
-            : `You are an expert at advertising image prompts. ${imageContext}${hasImages ? 'Analyze ALL images and enhance' : 'Enhance'} the user's prompt. CRITICAL RULES: 1) KEEP user's subjects/actions/settings intact. 2) ALWAYS ADD concrete technical details (e.g. "studio lighting setup with softbox, 50mm lens, shallow depth of field, golden hour color grading"). 3) FORBIDDEN to say "prompt is already good/complete/detailed" - you MUST ALWAYS add details. ${hasImages ? '4) If reference AND style images: apply style aesthetic/colors/mood. 5) If structure: mention spatial composition. 6)' : '4)'} CONCISE: max 100-120 words. Return ONLY enhanced prompt, NEVER meta-comments.`;
+        // OLD APPROACH: Put instructions directly in user message to avoid systemInstruction thoughts tokens
+        const enhanceInstructions = language === 'it'
+            ? `Migliora questo prompt per generazione immagini rendendolo più dettagliato e professionale. ${imageContext}MANTIENI il soggetto/azione originale. AGGIUNGI dettagli su: illuminazione (es. golden hour, softbox), angolo camera (es. 50mm lens, low-angle), mood, colori, texture. ${hasImages ? 'Se ci sono immagini di reference e style: applica lo stile visivo. ' : ''}CONCISO: max 100 parole. Restituisci SOLO il prompt migliorato.\n\nPrompt da migliorare: "${currentPrompt}"`
+            : `Enhance this image generation prompt to make it more detailed and professional. ${imageContext}KEEP the original subject/action. ADD details about: lighting (e.g. golden hour, softbox), camera angle (e.g. 50mm lens, low-angle), mood, colors, textures. ${hasImages ? 'If there are reference and style images: apply the visual style. ' : ''}CONCISE: max 100 words. Return ONLY the enhanced prompt.\n\nPrompt to enhance: "${currentPrompt}"`;
 
         // Retry logic for STANDARD mode too (503 errors are common)
         for (let attempt = 0; attempt < 2; attempt++) {
             try {
                 const result = await ai.models.generateContent({
                     model: 'gemini-2.5-flash',
-                    contents: { parts: [...imageParts, { text: `User prompt to enhance: "${currentPrompt}"` }] },
+                    contents: { parts: [...imageParts, { text: enhanceInstructions }] },
                     config: {
-                        systemInstruction,
                         temperature: hasImages ? 0.5 : 0.8,
-                        maxOutputTokens: 1000  // Increased to 1000 to account for internal thoughts tokens (~500) + actual response
+                        maxOutputTokens: 1000
                     }
                 });
 
