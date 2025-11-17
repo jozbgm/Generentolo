@@ -480,93 +480,37 @@ Return ONLY the complete JSON object.`;
         }
 
         // STANDARD ENHANCEMENT MODE: For longer prompts or when images are present
-        // OLD APPROACH: Put instructions directly in user message to avoid systemInstruction thoughts tokens
-        const enhanceInstructions = language === 'it'
-            ? `Migliora questo prompt per generazione immagini rendendolo più dettagliato e professionale. ${imageContext}MANTIENI il soggetto/azione originale. AGGIUNGI dettagli su: illuminazione (es. golden hour, softbox), angolo camera (es. 50mm lens, low-angle), mood, colori, texture. ${hasImages ? 'Se ci sono immagini di reference e style: applica lo stile visivo. ' : ''}CONCISO: max 100 parole. Restituisci SOLO il prompt migliorato.\n\nPrompt da migliorare: "${currentPrompt}"`
-            : `Enhance this image generation prompt to make it more detailed and professional. ${imageContext}KEEP the original subject/action. ADD details about: lighting (e.g. golden hour, softbox), camera angle (e.g. 50mm lens, low-angle), mood, colors, textures. ${hasImages ? 'If there are reference and style images: apply the visual style. ' : ''}CONCISE: max 100 words. Return ONLY the enhanced prompt.\n\nPrompt to enhance: "${currentPrompt}"`;
+        const systemInstruction = language === 'it'
+            ? `Sei un esperto di prompt per immagini pubblicitarie. ${imageContext}${hasImages ? 'Analizza TUTTE le immagini e migliora' : 'Migliora'} il prompt dell'utente. REGOLE: 1) MANTIENI intatti i soggetti/azioni/ambientazioni dell'utente. 2) AGGIUNGI dettagli tecnici (illuminazione, angolo, mood, color grading, texture, colori). ${hasImages ? '3) Se ci sono reference E style images: applica l\'estetica/colori/mood dello style alle reference. 4) Se c\'è structure image: menziona di mantenere la composizione spaziale. 5)' : '3)'} CONCISO: max 100-120 parole, evita ridondanze. Restituisci SOLO il prompt migliorato.`
+            : `You are an expert at advertising image prompts. ${imageContext}${hasImages ? 'Analyze ALL images and enhance' : 'Enhance'} the user's prompt. RULES: 1) KEEP user's subjects/actions/settings intact. 2) ADD technical details (lighting, angle, mood, color grading, textures, colors). ${hasImages ? '3) If there are reference AND style images: apply style\'s aesthetic/colors/mood to references. 4) If there\'s a structure image: mention maintaining spatial composition. 5)' : '3)'} CONCISE: max 100-120 words, avoid redundancy. Return ONLY the enhanced prompt.`;
 
-        // Retry logic for STANDARD mode too (503 errors are common)
-        for (let attempt = 0; attempt < 2; attempt++) {
-            try {
-                const result = await ai.models.generateContent({
-                    model: 'gemini-2.5-flash',
-                    contents: { parts: [...imageParts, { text: enhanceInstructions }] },
-                    config: {
-                        temperature: hasImages ? 0.7 : 1.0,  // Higher temperature to force creativity
-                        maxOutputTokens: 600  // Lower to force faster response, less thinking
-                    }
-                });
-
-                // Safety check: ensure result.text exists
-                if (!result || !result.text) {
-                    if (attempt === 1) return currentPrompt; // Last attempt failed
-                    await new Promise(resolve => setTimeout(resolve, 1500));
-                    continue;
-                }
-
-                let enhancedPrompt = result.text.trim();
-
-                // Check if model returned identical prompt (refusal)
-                if (enhancedPrompt === currentPrompt) {
-                    if (attempt < 1) {
-                        await new Promise(resolve => setTimeout(resolve, 1000));
-                        continue;
-                    }
-                    throw new Error(language === 'it'
-                        ? 'Il modello non è riuscito a migliorare il prompt. Riprova o modifica manualmente.'
-                        : 'Model failed to enhance prompt. Try again or edit manually.');
-                }
-
-                // Block meta-responses like "The prompt is already good/detailed"
-                const metaResponses = [
-                    'already', 'già', 'sufficiente', 'sufficient', 'good enough',
-                    'well-crafted', 'ben fatto', 'completo', 'complete', 'detailed enough',
-                    'optimal', 'ottimale', 'perfect', 'perfetto', 'no need', 'non serve',
-                    'is fine', 'va bene', 'good as is', 'così va bene'
-                ];
-                const lowerPrompt = enhancedPrompt.toLowerCase();
-                const containsMetaPhrase = metaResponses.some(phrase => lowerPrompt.includes(phrase));
-
-                // If response contains meta-phrase, it's a refusal - retry or fallback
-                if (containsMetaPhrase) {
-                    if (attempt < 1) {
-                        await new Promise(resolve => setTimeout(resolve, 1000));
-                        continue;
-                    }
-                    throw new Error(language === 'it'
-                        ? 'Il modello non è riuscito a migliorare il prompt. Riprova o modifica manualmente.'
-                        : 'Model failed to enhance prompt. Try again or edit manually.');
-                }
-
-                // Fallback: if enhanced prompt is too long (>400 chars), truncate
-                if (enhancedPrompt.length > 400) {
-                    return enhancedPrompt.substring(0, 397) + '...';
-                }
-
-                // Fallback: if enhancement is too short or empty, use original
-                if (enhancedPrompt.length < 10) {
-                    return currentPrompt;
-                }
-
-                return enhancedPrompt;
-            } catch (apiError: any) {
-
-                // If 503 overload, retry with delay
-                if (apiError.message?.includes('overload') || apiError.message?.includes('503')) {
-                    if (attempt < 1) {
-                        await new Promise(resolve => setTimeout(resolve, 2000));
-                        continue;
-                    }
-                }
-
-                // Last attempt failed, return original
-                if (attempt === 1) return currentPrompt;
+        const result = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: { parts: [...imageParts, { text: `User prompt to enhance: "${currentPrompt}"` }] },
+            config: {
+                systemInstruction,
+                temperature: hasImages ? 0.3 : 0.5,
+                maxOutputTokens: 300
             }
+        });
+
+        if (!result || !result.text) {
+            return currentPrompt;
         }
 
-        // All retries exhausted
-        console.warn('⚠️ All STANDARD enhancement attempts failed, returning original prompt');
-        return currentPrompt;
+        const enhancedPrompt = result.text.trim();
+
+        // Fallback: if enhanced prompt is too long (>400 chars), it might cause IMAGE_OTHER
+        if (enhancedPrompt.length > 400) {
+            return enhancedPrompt.substring(0, 397) + '...';
+        }
+
+        // Fallback: if enhancement is too short or empty, use original
+        if (enhancedPrompt.length < 10) {
+            return currentPrompt;
+        }
+
+        return enhancedPrompt;
     } catch (error) { throw handleError(error, language); }
 }
 
