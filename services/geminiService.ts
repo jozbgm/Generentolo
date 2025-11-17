@@ -481,8 +481,8 @@ Return ONLY the complete JSON object.`;
 
         // STANDARD ENHANCEMENT MODE: For longer prompts or when images are present
         const systemInstruction = language === 'it'
-            ? `Sei un esperto di prompt per immagini pubblicitarie. ${imageContext}${hasImages ? 'Analizza TUTTE le immagini e migliora' : 'Migliora'} il prompt dell'utente. REGOLE: 1) MANTIENI intatti i soggetti/azioni/ambientazioni dell'utente. 2) AGGIUNGI dettagli tecnici (illuminazione, angolo, mood, color grading, texture, colori). ${hasImages ? '3) Se ci sono reference E style images: applica l\'estetica/colori/mood dello style alle reference. 4) Se c\'è structure image: menziona di mantenere la composizione spaziale. 5)' : '3)'} CONCISO: max 100-120 parole, evita ridondanze. Restituisci SOLO il prompt migliorato.`
-            : `You are an expert at advertising image prompts. ${imageContext}${hasImages ? 'Analyze ALL images and enhance' : 'Enhance'} the user's prompt. RULES: 1) KEEP user's subjects/actions/settings intact. 2) ADD technical details (lighting, angle, mood, color grading, textures, colors). ${hasImages ? '3) If there are reference AND style images: apply style\'s aesthetic/colors/mood to references. 4) If there\'s a structure image: mention maintaining spatial composition. 5)' : '3)'} CONCISE: max 100-120 words, avoid redundancy. Return ONLY the enhanced prompt.`;
+            ? `Sei un esperto di prompt per immagini pubblicitarie. ${imageContext}${hasImages ? 'Analizza TUTTE le immagini e migliora' : 'Migliora'} il prompt dell'utente. REGOLE CRITICHE: 1) MANTIENI intatti i soggetti/azioni/ambientazioni dell'utente. 2) AGGIUNGI SEMPRE dettagli tecnici concreti (es. "studio lighting setup con softbox, 50mm lens, shallow depth of field, golden hour color grading"). 3) VIETATO dire "il prompt è già buono/completo/dettagliato" - DEVI SEMPRE aggiungere dettagli. ${hasImages ? '4) Se ci sono reference E style images: applica estetica/colori/mood dello style. 5) Se c\'è structure: menziona composizione spaziale. 6)' : '4)'} CONCISO: max 100-120 parole. Restituisci SOLO il prompt migliorato, MAI meta-commenti.`
+            : `You are an expert at advertising image prompts. ${imageContext}${hasImages ? 'Analyze ALL images and enhance' : 'Enhance'} the user's prompt. CRITICAL RULES: 1) KEEP user's subjects/actions/settings intact. 2) ALWAYS ADD concrete technical details (e.g. "studio lighting setup with softbox, 50mm lens, shallow depth of field, golden hour color grading"). 3) FORBIDDEN to say "prompt is already good/complete/detailed" - you MUST ALWAYS add details. ${hasImages ? '4) If reference AND style images: apply style aesthetic/colors/mood. 5) If structure: mention spatial composition. 6)' : '4)'} CONCISE: max 100-120 words. Return ONLY enhanced prompt, NEVER meta-comments.`;
 
         // Retry logic for STANDARD mode too (503 errors are common)
         for (let attempt = 0; attempt < 2; attempt++) {
@@ -506,6 +506,24 @@ Return ONLY the complete JSON object.`;
                 }
 
                 const enhancedPrompt = result.text.trim();
+
+                // Block meta-responses like "The prompt is already good/detailed"
+                const metaResponses = [
+                    'already', 'già', 'sufficiente', 'sufficient', 'good enough',
+                    'well-crafted', 'ben fatto', 'completo', 'complete', 'detailed enough'
+                ];
+                const lowerPrompt = enhancedPrompt.toLowerCase();
+                const isMetaResponse = metaResponses.some(phrase => lowerPrompt.includes(phrase));
+
+                if (isMetaResponse && enhancedPrompt.length < currentPrompt.length + 20) {
+                    console.warn('AI returned meta-comment, retrying...');
+                    if (attempt < 1) {
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                        continue;
+                    }
+                    // Last attempt, use original
+                    return currentPrompt;
+                }
 
                 // Fallback: if enhanced prompt is too long (>400 chars), it might cause IMAGE_OTHER
                 if (enhancedPrompt.length > 400) {
@@ -1132,19 +1150,19 @@ export const generateImage = async (prompt: string, aspectRatio: string, referen
         }
 
         // STEP 4: Add structure guidance if structure image is provided
-        // v0.7.2 OPTIMIZATION: Concise but effective ControlNet-style template guidance
+        // ControlNet-inspired: treat structure as spatial conditioning map
         if (structureFile) {
             // Add structure image to imageParts for visual reference
             imageParts.push(await fileToGenerativePart(structureFile));
 
-            // Concise yet aggressive guidance for millimeter-precise composition copying
+            // Aggressive ControlNet-style guidance: lock spatial layout, depth, edges
             const structureGuidanceText = referenceFiles.length > 0
                 ? (language === 'it'
-                    ? `🏗️ TEMPLATE: Ultima immagine = modello preciso. Copia ESATTAMENTE composizione, forma, dimensioni, angolo. Sovrapposizione millimetrica tipo ControlNet.`
-                    : `🏗️ TEMPLATE: Last image = precise model. Copy EXACTLY composition, shape, dimensions, angle. Millimeter overlay like ControlNet.`)
+                    ? `🏗️ CONTROLNET MODE: L'ultima immagine è una MAPPA DI CONDIZIONAMENTO SPAZIALE (come depth/edge map in ControlNet). Rispetta MILLIMETRICAMENTE: posizione di ogni elemento, profondità relativa, angolatura camera, linee di composizione, proporzioni geometriche. Sovrapposizione ESATTA degli elementi delle reference sulla struttura di questa mappa. IGNORA colori/stile della mappa, USA SOLO la sua geometria.`
+                    : `🏗️ CONTROLNET MODE: Last image is a SPATIAL CONDITIONING MAP (like depth/edge map in ControlNet). Respect MILLIMETER-PRECISE: position of each element, relative depth, camera angle, composition lines, geometric proportions. EXACT overlay of reference elements onto this map's structure. IGNORE map's colors/style, USE ONLY its geometry.`)
                 : (language === 'it'
-                    ? `🏗️ TEMPLATE: Immagine = modello preciso. Copia ESATTAMENTE composizione, forma, dimensioni, angolo. Sovrapposizione millimetrica tipo ControlNet.`
-                    : `🏗️ TEMPLATE: Image = precise model. Copy EXACTLY composition, shape, dimensions, angle. Millimeter overlay like ControlNet.`);
+                    ? `🏗️ CONTROLNET MODE: Immagine = MAPPA DI CONDIZIONAMENTO SPAZIALE. Rispetta ESATTAMENTE: layout, profondità, angolo, geometria. Sovrapposizione millimetrica.`
+                    : `🏗️ CONTROLNET MODE: Image = SPATIAL CONDITIONING MAP. Respect EXACTLY: layout, depth, angle, geometry. Millimeter overlay.`);
 
             instructionParts.push(structureGuidanceText);
         }
@@ -1170,7 +1188,7 @@ export const generateImage = async (prompt: string, aspectRatio: string, referen
 
         // CRITICAL: Images must come BEFORE text for proper reference interpretation
         const parts: any[] = [...imageParts, { text: fullPrompt }];
-        
+
         const config: any = {
             responseModalities: [Modality.IMAGE],
             outputOptions: {
@@ -1184,6 +1202,13 @@ export const generateImage = async (prompt: string, aspectRatio: string, referen
                 { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH },
             ],
         };
+
+        // Add native aspect_ratio support (skip for Auto)
+        if (aspectRatio !== 'Auto') {
+            config.imageConfig = {
+                aspectRatio: aspectRatio
+            };
+        }
 
         if (seed && /^\d+$/.test(seed)) {
             config.seed = parseInt(seed, 10);
