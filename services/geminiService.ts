@@ -266,8 +266,7 @@ export const enhancePrompt = async (currentPrompt: string, imageFiles: File[], s
     try {
         const ai = getAiClient(userApiKey);
 
-        // v0.7.1 FIX: Analyze ALL images (reference + style + structure) for richer enhancement
-        // BUT keep output concise to prevent IMAGE_OTHER errors
+        // Analyze ALL images (reference + style + structure) for richer enhancement
         const imageParts = [];
 
         // Add all reference images for comprehensive analysis
@@ -282,6 +281,9 @@ export const enhancePrompt = async (currentPrompt: string, imageFiles: File[], s
         if (structureFile) {
             imageParts.push(await fileToGenerativePart(structureFile));
         }
+
+        const hasImages = imageParts.length > 0;
+        const isShortPrompt = currentPrompt.trim().split(/\s+/).length <= 3; // Detect very short prompts (≤3 words)
 
         // Build context-aware instruction based on what images are present
         let imageContext = "";
@@ -307,9 +309,123 @@ export const enhancePrompt = async (currentPrompt: string, imageFiles: File[], s
                 : `You have guide images for style/structure. `;
         }
 
-        // v0.8.1: Support text-only enhancement when no images are present
-        const hasImages = imageParts.length > 0;
+        // CINEMATIC ENHANCEMENT MODE: For very short prompts or text-only scenarios
+        // Use structured JSON approach to force deep creative expansion
+        if (isShortPrompt && !hasImages) {
+            console.log('🎬 CINEMATIC ENHANCEMENT MODE: Aggressive expansion for short text-only prompt');
 
+            const cinematicSystemInstruction = language === 'it'
+                ? `Sei un AI Image Generation Prompt Engineer professionista. Il tuo compito è ricevere un soggetto semplice dall'utente ed espanderlo in un oggetto JSON strutturato, dettagliato e creativo. Questo JSON guiderà i modelli AI di generazione immagini (Midjourney, Stable Diffusion) a creare immagini con profondità, atmosfera e qualità artistica.
+
+**STRUTTURA JSON (9 campi obbligatori):**
+
+1. **"subject"**: Descrivi in dettaglio l'aspetto, abbigliamento, postura, azione, espressione e direzione dello sguardo del soggetto centrale.
+
+2. **"foreground"**: Elementi più vicini al viewer/camera, davanti o sotto il soggetto. Aggiungono stratificazione e profondità.
+
+3. **"midground"**: Piano dove si trova il soggetto e oggetti sullo stesso livello spaziale. Area principale della scena.
+
+4. **"background"**: Elementi più lontani nella scena, ambiente grandioso e senso di backstory.
+
+5. **"composition"**: Usa termini professionali di fotografia/arte. Es: regola dei terzi, soggetto centrato, simmetria, rapporto aureo, linee guida, orientamento verticale/orizzontale, stratificazione profondità, angolo basso/alto, ecc.
+
+6. **"visual_guidance"**: Come guidare l'occhio dello spettatore attraverso l'immagine ed enfatizzare il punto focale usando elementi visivi. Es: usando linee delle rocce che portano al soggetto, contrasto luce-ombra su pelle e vestiti, direzione sguardo, effetto silhouette nell'acqua, ecc.
+
+7. **"color_tone"**: Schema colori complessivo e sensazione. Es: toni pastello morbidi, palette terrosa smorzata, neon cyberpunk vibrante, monocromatico, alta saturazione, toni caldi, ecc. Puoi aggiungere colori accent.
+
+8. **"lighting_mood"**: Tipo, direzione e intensità della sorgente luminosa, e mood/atmosfera complessiva. Es: illuminazione naturale morbida, golden hour, luce diffusa diurna, drammatica illuminazione Rembrandt, misteriosa luce lunare, atmosfera serena, bagliore sottile di retroilluminazione, ecc.
+
+9. **"caption"**: Fonde tutti gli elementi chiave sopra in una singola frase coerente, vivida e narrativa. Questa frase è un prompt eccellente e pronto all'uso per la generazione di immagini. NON è una semplice stringa di parole chiave, ma una descrizione completa e grammaticalmente corretta della scena.
+
+**WORKFLOW:**
+1. Ricevi il soggetto semplice dall'utente
+2. Costruisci una scena completa e ricca di storia nella tua "immaginazione"
+3. Compila sistematicamente i dettagli della scena immaginata in ogni campo JSON
+4. Assicurati che tutti i campi siano coordinati e logicamente coerenti
+5. Distilla tutte le informazioni nella singola elegante frase del campo "caption"
+
+Restituisci SOLO l'oggetto JSON completo.`
+                : `You are a professional AI Image Generation Prompt Engineer. Your core task is to receive a simple subject from a user and expand it into a structured, detailed, and creative JSON object. This JSON object will serve as an advanced prompt to guide AI image generation models (such as Midjourney, Stable Diffusion) in creating images with depth, atmosphere, and artistic quality.
+
+**JSON STRUCTURE (9 required fields):**
+
+1. **"subject"**: Describe in detail the appearance, clothing, posture, action, expression, and gaze direction of the central character/subject.
+
+2. **"foreground"**: Elements closest to the viewer or "camera," in front of or below the subject. These add layers and depth to the image.
+
+3. **"midground"**: The plane where the subject is located and objects on the same spatial level. This is the main area of the scene.
+
+4. **"background"**: The furthest elements in the scene, providing grand environment and backstory.
+
+5. **"composition"**: Use professional photography and art terms. E.g.: rule of thirds, centered subject, symmetry, golden ratio, leading lines, vertical/horizontal orientation, depth layering, low/high angle shot, etc.
+
+6. **"visual_guidance"**: How to guide the viewer's eye through the image and emphasize the focal point using visual elements. E.g.: using rock lines leading to subject, light-shadow contrast on skin and clothing, subject's gaze direction, silhouette effect in water, etc.
+
+7. **"color_tone"**: Overall color scheme and feel. E.g.: soft pastel tones, muted earthy palette, vibrant cyberpunk neon, monochromatic, high saturation, warm tones, etc. You can add accent colors.
+
+8. **"lighting_mood"**: Type, direction, and intensity of light source, and overall mood/atmosphere. E.g.: soft natural lighting, golden hour, diffused daylight, dramatic Rembrandt lighting, mysterious moonlight, serene atmosphere, subtle backlight rim glow, etc.
+
+9. **"caption"**: Fuse all key elements above into a single, coherent, vivid, and narrative-driven sentence. This sentence is an excellent, ready-to-use image generation prompt. It's NOT a simple string of keywords, but a complete, grammatically correct description of the scene.
+
+**WORKFLOW:**
+1. Receive the simple subject from the user
+2. Construct a complete, story-rich scene in your "imagination"
+3. Systematically fill in the details of your envisioned scene into each JSON field
+4. Ensure all fields are coordinated and logically consistent
+5. Distill all information into the single elegant sentence in the "caption" field
+
+Return ONLY the complete JSON object.`;
+
+            const result = await ai.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: { parts: [{ text: `Subject: "${currentPrompt}"` }] },
+                config: {
+                    systemInstruction: cinematicSystemInstruction,
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: Type.OBJECT,
+                        properties: {
+                            subject: { type: Type.STRING },
+                            foreground: { type: Type.STRING },
+                            midground: { type: Type.STRING },
+                            background: { type: Type.STRING },
+                            composition: { type: Type.STRING },
+                            visual_guidance: { type: Type.STRING },
+                            color_tone: { type: Type.STRING },
+                            lighting_mood: { type: Type.STRING },
+                            caption: { type: Type.STRING }
+                        },
+                        required: ["subject", "foreground", "midground", "background", "composition", "visual_guidance", "color_tone", "lighting_mood", "caption"]
+                    },
+                    temperature: 0.8, // Higher creativity for short prompts
+                    maxOutputTokens: 1000
+                }
+            });
+
+            if (!result || !result.text) {
+                console.warn('Cinematic enhance failed: no response, using fallback');
+                return currentPrompt;
+            }
+
+            try {
+                const jsonResponse = JSON.parse(result.text.trim());
+                // Use the "caption" field as the enhanced prompt (it's the synthesized narrative)
+                const enhancedPrompt = jsonResponse.caption || currentPrompt;
+
+                console.log('🎬 Cinematic enhancement result:', {
+                    original: currentPrompt,
+                    enhanced: enhancedPrompt,
+                    fullJSON: jsonResponse
+                });
+
+                return enhancedPrompt;
+            } catch (parseError) {
+                console.warn('Failed to parse JSON response, using original prompt:', parseError);
+                return currentPrompt;
+            }
+        }
+
+        // STANDARD ENHANCEMENT MODE: For longer prompts or when images are present
         const systemInstruction = language === 'it'
             ? `Sei un esperto di prompt per immagini pubblicitarie. ${imageContext}${hasImages ? 'Analizza TUTTE le immagini e migliora' : 'Migliora'} il prompt dell'utente. REGOLE: 1) MANTIENI intatti i soggetti/azioni/ambientazioni dell'utente. 2) AGGIUNGI dettagli tecnici (illuminazione, angolo, mood, color grading, texture, colori). ${hasImages ? '3) Se ci sono reference E style images: applica l\'estetica/colori/mood dello style alle reference. 4) Se c\'è structure image: menziona di mantenere la composizione spaziale. 5)' : '3)'} CONCISO: max 100-120 parole, evita ridondanze. Restituisci SOLO il prompt migliorato.`
             : `You are an expert at advertising image prompts. ${imageContext}${hasImages ? 'Analyze ALL images and enhance' : 'Enhance'} the user's prompt. RULES: 1) KEEP user's subjects/actions/settings intact. 2) ADD technical details (lighting, angle, mood, color grading, textures, colors). ${hasImages ? '3) If there are reference AND style images: apply style\'s aesthetic/colors/mood to references. 4) If there\'s a structure image: mention maintaining spatial composition. 5)' : '3)'} CONCISE: max 100-120 words, avoid redundancy. Return ONLY the enhanced prompt.`;
@@ -319,8 +435,8 @@ export const enhancePrompt = async (currentPrompt: string, imageFiles: File[], s
             contents: { parts: [...imageParts, { text: `User prompt to enhance: "${currentPrompt}"` }] },
             config: {
                 systemInstruction,
-                temperature: hasImages ? 0.3 : 0.5, // v0.8.1: Higher temp for text-only to encourage enhancement
-                maxOutputTokens: 300 // Limit output length
+                temperature: hasImages ? 0.3 : 0.6, // Slightly higher temp for text-only
+                maxOutputTokens: 300
             }
         });
 
@@ -333,7 +449,6 @@ export const enhancePrompt = async (currentPrompt: string, imageFiles: File[], s
         const enhancedPrompt = result.text.trim();
 
         // Fallback: if enhanced prompt is too long (>400 chars), it might cause IMAGE_OTHER
-        // Reduced from 600 to be more conservative
         if (enhancedPrompt.length > 400) {
             console.warn('Enhanced prompt too long, truncating to 400 chars');
             return enhancedPrompt.substring(0, 397) + '...';
