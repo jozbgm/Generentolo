@@ -492,8 +492,8 @@ Return ONLY the complete JSON object.`;
                     model: 'gemini-2.5-flash',
                     contents: { parts: [...imageParts, { text: enhanceInstructions }] },
                     config: {
-                        temperature: hasImages ? 0.5 : 0.8,
-                        maxOutputTokens: 1000
+                        temperature: hasImages ? 0.7 : 1.0,  // Higher temperature to force creativity
+                        maxOutputTokens: 600  // Lower to force faster response, less thinking
                     }
                 });
 
@@ -505,6 +505,17 @@ Return ONLY the complete JSON object.`;
                 }
 
                 let enhancedPrompt = result.text.trim();
+
+                // Check if model returned identical prompt (refusal)
+                if (enhancedPrompt === currentPrompt) {
+                    if (attempt < 1) {
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                        continue;
+                    }
+                    throw new Error(language === 'it'
+                        ? 'Il modello non è riuscito a migliorare il prompt. Riprova o modifica manualmente.'
+                        : 'Model failed to enhance prompt. Try again or edit manually.');
+                }
 
                 // Block meta-responses like "The prompt is already good/detailed"
                 const metaResponses = [
