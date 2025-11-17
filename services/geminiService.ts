@@ -285,6 +285,15 @@ export const enhancePrompt = async (currentPrompt: string, imageFiles: File[], s
         const hasImages = imageParts.length > 0;
         const isShortPrompt = currentPrompt.trim().split(/\s+/).length <= 3; // Detect very short prompts (≤3 words)
 
+        // DEBUG: Log detection logic
+        console.log('🔍 Enhancement mode detection:', {
+            currentPrompt,
+            wordCount: currentPrompt.trim().split(/\s+/).length,
+            isShortPrompt,
+            hasImages,
+            willUseCinematicMode: isShortPrompt && !hasImages
+        });
+
         // Build context-aware instruction based on what images are present
         let imageContext = "";
         if (imageFiles.length > 0 && styleFile && structureFile) {
@@ -376,53 +385,94 @@ Restituisci SOLO l'oggetto JSON completo.`
 
 Return ONLY the complete JSON object.`;
 
-            const result = await ai.models.generateContent({
-                model: 'gemini-2.5-flash',
-                contents: { parts: [{ text: `Subject: "${currentPrompt}"` }] },
-                config: {
-                    systemInstruction: cinematicSystemInstruction,
-                    responseMimeType: "application/json",
-                    responseSchema: {
-                        type: Type.OBJECT,
-                        properties: {
-                            subject: { type: Type.STRING },
-                            foreground: { type: Type.STRING },
-                            midground: { type: Type.STRING },
-                            background: { type: Type.STRING },
-                            composition: { type: Type.STRING },
-                            visual_guidance: { type: Type.STRING },
-                            color_tone: { type: Type.STRING },
-                            lighting_mood: { type: Type.STRING },
-                            caption: { type: Type.STRING }
-                        },
-                        required: ["subject", "foreground", "midground", "background", "composition", "visual_guidance", "color_tone", "lighting_mood", "caption"]
-                    },
-                    temperature: 0.8, // Higher creativity for short prompts
-                    maxOutputTokens: 1000
+            // Retry with exponential backoff for API overload (503 errors)
+            for (let attempt = 0; attempt < 2; attempt++) {
+                try {
+                    const result = await ai.models.generateContent({
+                        model: 'gemini-2.5-flash',
+                        contents: { parts: [{ text: `Subject: "${currentPrompt}"` }] },
+                        config: {
+                            systemInstruction: cinematicSystemInstruction,
+                            responseMimeType: "application/json",
+                            responseSchema: {
+                                type: Type.OBJECT,
+                                properties: {
+                                    subject: { type: Type.STRING },
+                                    foreground: { type: Type.STRING },
+                                    midground: { type: Type.STRING },
+                                    background: { type: Type.STRING },
+                                    composition: { type: Type.STRING },
+                                    visual_guidance: { type: Type.STRING },
+                                    color_tone: { type: Type.STRING },
+                                    lighting_mood: { type: Type.STRING },
+                                    caption: { type: Type.STRING }
+                                },
+                                required: ["subject", "foreground", "midground", "background", "composition", "visual_guidance", "color_tone", "lighting_mood", "caption"]
+                            },
+                            temperature: 0.8,
+                            maxOutputTokens: 1000
+                        }
+                    });
+
+                    if (!result || !result.text) {
+                        console.warn(`Cinematic enhance attempt ${attempt + 1}: no response`);
+                        if (attempt === 1) return currentPrompt; // Last attempt failed
+                        await new Promise(resolve => setTimeout(resolve, 1500));
+                        continue;
+                    }
+
+                    try {
+                        // Try parsing with cleanup for common JSON issues
+                        let cleanedText = result.text.trim();
+
+                        // Fix common JSON corruption: remove trailing incomplete strings
+                        if (cleanedText.includes('Unterminated string')) {
+                            cleanedText = cleanedText.substring(0, cleanedText.lastIndexOf('"')) + '"}';
+                        }
+
+                        const jsonResponse = JSON.parse(cleanedText);
+                        const enhancedPrompt = jsonResponse.caption || currentPrompt;
+
+                        console.log('🎬 Cinematic enhancement result:', {
+                            original: currentPrompt,
+                            enhanced: enhancedPrompt,
+                            fullJSON: jsonResponse
+                        });
+
+                        return enhancedPrompt;
+                    } catch (parseError) {
+                        console.warn(`JSON parse failed attempt ${attempt + 1}:`, parseError);
+
+                        // On last attempt, try extracting caption with regex fallback
+                        if (attempt === 1) {
+                            const captionMatch = result.text.match(/"caption"\s*:\s*"([^"]+)"/);
+                            if (captionMatch && captionMatch[1]) {
+                                console.log('✅ Extracted caption via regex fallback:', captionMatch[1]);
+                                return captionMatch[1];
+                            }
+                            return currentPrompt;
+                        }
+
+                        await new Promise(resolve => setTimeout(resolve, 1500));
+                    }
+                } catch (apiError: any) {
+                    console.warn(`API call failed attempt ${attempt + 1}:`, apiError.message);
+
+                    // If 503 overload, retry with delay
+                    if (apiError.message?.includes('overload') || apiError.message?.includes('503')) {
+                        if (attempt < 1) {
+                            await new Promise(resolve => setTimeout(resolve, 2000));
+                            continue;
+                        }
+                    }
+
+                    // Other errors, break immediately
+                    break;
                 }
-            });
-
-            if (!result || !result.text) {
-                console.warn('Cinematic enhance failed: no response, using fallback');
-                return currentPrompt;
             }
 
-            try {
-                const jsonResponse = JSON.parse(result.text.trim());
-                // Use the "caption" field as the enhanced prompt (it's the synthesized narrative)
-                const enhancedPrompt = jsonResponse.caption || currentPrompt;
-
-                console.log('🎬 Cinematic enhancement result:', {
-                    original: currentPrompt,
-                    enhanced: enhancedPrompt,
-                    fullJSON: jsonResponse
-                });
-
-                return enhancedPrompt;
-            } catch (parseError) {
-                console.warn('Failed to parse JSON response, using original prompt:', parseError);
-                return currentPrompt;
-            }
+            // All retries failed, fallback to STANDARD mode
+            console.warn('🔄 Cinematic mode failed, falling back to STANDARD enhancement');
         }
 
         // STANDARD ENHANCEMENT MODE: For longer prompts or when images are present
