@@ -10,7 +10,7 @@ import FloatingActionBar from './components/FloatingActionBar';
 // --- Localization ---
 const translations = {
   en: {
-    headerTitle: 'Generentolo v0.8 Beta',
+    headerTitle: 'Generentolo v0.8.1 Beta',
     headerSubtitle: 'Let me do it for you!',
     letMeDoForYou: 'Magic Prompt',
     refImagesTitle: 'Reference & Style Images',
@@ -59,6 +59,9 @@ const translations = {
     historyCapped: 'History is limited to the last 12 creations.',
     clearHistory: 'Clear all history',
     confirmClearHistory: 'Are you sure you want to clear the entire history? This action cannot be undone.',
+    allHistory: 'All',
+    favoritesOnly: 'Favorites',
+    noFavorites: 'No favorites yet. Click the star icon on images to bookmark them.',
     generationPromptTitle: 'Generation Prompt',
     copy: 'Copy',
     copied: 'Copied!',
@@ -113,7 +116,7 @@ const translations = {
 
   },
   it: {
-    headerTitle: 'Generentolo v0.8 Beta',
+    headerTitle: 'Generentolo v0.8.1 Beta',
     headerSubtitle: 'Let me do it for you!',
     letMeDoForYou: 'Magic Prompt',
     refImagesTitle: 'Immagini di Riferimento e Stile',
@@ -162,6 +165,9 @@ const translations = {
   	historyCapped: 'La cronologia è limitata alle ultime 12 creazioni.',
     clearHistory: 'Svuota cronologia',
     confirmClearHistory: 'Sei sicuro di voler svuotare l\'intera cronologia? L\'azione è irreversibile.',
+    allHistory: 'Tutte',
+    favoritesOnly: 'Preferiti',
+    noFavorites: 'Nessun preferito. Clicca sulla stella per segnare le immagini.',
     generationPromptTitle: 'Prompt di Generazione',
     copy: 'Copia',
     copied: 'Copiato!',
@@ -1068,8 +1074,12 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
 }) => {
     const { t } = useLocalization();
     const [displayCount, setDisplayCount] = useState(30); // Show 30 images initially
+    const [showFavoritesOnly, setShowFavoritesOnly] = useState(false); // v0.8.1: Favorites filter
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     const loadMoreRef = useRef<HTMLDivElement>(null);
+
+    // v0.8.1: Filter history by favorites if enabled
+    const filteredHistory = showFavoritesOnly ? history.filter((img: GeneratedImage) => img.isFavorite) : history;
 
     // Infinite scroll observer
     useEffect(() => {
@@ -1080,9 +1090,9 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
 
         const observer = new IntersectionObserver(
             (entries) => {
-                if (entries[0].isIntersecting && displayCount < history.length) {
+                if (entries[0].isIntersecting && displayCount < filteredHistory.length) {
                     // Load 20 more images
-                    setDisplayCount(prev => Math.min(prev + 20, history.length));
+                    setDisplayCount(prev => Math.min(prev + 20, filteredHistory.length));
                 }
             },
             { root: container, threshold: 0.1 }
@@ -1090,20 +1100,25 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
 
         observer.observe(loadMoreTrigger);
         return () => observer.disconnect();
-    }, [displayCount, history.length]);
+    }, [displayCount, filteredHistory.length]);
 
-    // Reset display count when history changes significantly
+    // Reset display count when history changes significantly or filter changes
     useEffect(() => {
-        if (history.length < displayCount) {
-            setDisplayCount(Math.min(30, history.length));
+        if (filteredHistory.length < displayCount) {
+            setDisplayCount(Math.min(30, filteredHistory.length));
         }
-    }, [history.length]);
+    }, [history.length, showFavoritesOnly]);
 
-    const visibleHistory = history.slice(0, displayCount);
+    // Reset to initial page when toggling favorites filter
+    useEffect(() => {
+        setDisplayCount(30);
+    }, [showFavoritesOnly]);
+
+    const visibleHistory = filteredHistory.slice(0, displayCount);
 
     return (
         <div className="h-full flex flex-col bg-light-surface/50 dark:bg-dark-surface/30 backdrop-blur-xl rounded-3xl p-4">
-            <div className="flex justify-between items-center mb-4">
+            <div className="flex justify-between items-center mb-3">
               <h2 className="font-semibold text-light-text dark:text-dark-text">{t.historyTitle} {history.length > 0 && <span className="text-sm text-light-text-muted dark:text-dark-text-muted">({history.length})</span>}</h2>
               {history.length > 0 && (
                  <div className="flex items-center gap-2">
@@ -1127,8 +1142,36 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
                 </div>
               )}
             </div>
+
+            {/* v0.8.1: Favorites filter toggle */}
+            {history.length > 0 && (
+                <div className="flex gap-1 mb-3 bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-xl p-1">
+                    <button
+                        onClick={() => setShowFavoritesOnly(false)}
+                        className={`flex-1 px-3 py-1.5 text-sm font-medium rounded-lg transition-all ${
+                            !showFavoritesOnly
+                                ? 'bg-white dark:bg-dark-surface text-light-text dark:text-dark-text shadow-sm'
+                                : 'text-light-text-muted dark:text-dark-text-muted hover:text-light-text dark:hover:text-dark-text'
+                        }`}
+                    >
+                        {t.allHistory}
+                    </button>
+                    <button
+                        onClick={() => setShowFavoritesOnly(true)}
+                        className={`flex-1 px-3 py-1.5 text-sm font-medium rounded-lg transition-all flex items-center justify-center gap-1.5 ${
+                            showFavoritesOnly
+                                ? 'bg-white dark:bg-dark-surface text-light-text dark:text-dark-text shadow-sm'
+                                : 'text-light-text-muted dark:text-dark-text-muted hover:text-light-text dark:hover:text-dark-text'
+                        }`}
+                    >
+                        <StarIcon className="w-4 h-4" filled={showFavoritesOnly} />
+                        {t.favoritesOnly}
+                    </button>
+                </div>
+            )}
+
             <div ref={scrollContainerRef} className="flex-1 overflow-y-auto pr-2 -mr-2">
-                {history.length > 0 ? (
+                {filteredHistory.length > 0 ? (
                     <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-2 gap-3">
                         {visibleHistory.map(item => {
                             const isSelected = selectedIds.has(item.id);
@@ -1169,18 +1212,18 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
                             )
                         })}
                         {/* Infinite scroll trigger */}
-                        {displayCount < history.length && (
+                        {displayCount < filteredHistory.length && (
                             <div ref={loadMoreRef} className="col-span-full py-4 text-center">
                                 <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-brand-purple"></div>
                             </div>
                         )}
                     </div>
                 ) : (
-                    <p className="text-sm text-center text-light-text-muted dark:text-dark-text-muted">{t.historyEmpty}</p>
+                    <p className="text-sm text-center text-light-text-muted dark:text-dark-text-muted">{showFavoritesOnly ? t.noFavorites : t.historyEmpty}</p>
                 )}
             </div>
-            {displayCount < history.length && (
-                <p className="text-xs text-center text-light-text-muted dark:text-dark-text-muted mt-4 pt-2 border-t border-light-border/50 dark:border-dark-border/50">Showing {displayCount} of {history.length} images</p>
+            {displayCount < filteredHistory.length && (
+                <p className="text-xs text-center text-light-text-muted dark:text-dark-text-muted mt-4 pt-2 border-t border-light-border/50 dark:border-dark-border/50">Showing {displayCount} of {filteredHistory.length} images</p>
             )}
         </div>
     );
