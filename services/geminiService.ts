@@ -307,16 +307,19 @@ export const enhancePrompt = async (currentPrompt: string, imageFiles: File[], s
                 : `You have guide images for style/structure. `;
         }
 
+        // v0.8.1: Support text-only enhancement when no images are present
+        const hasImages = imageParts.length > 0;
+
         const systemInstruction = language === 'it'
-            ? `Sei un esperto di prompt per immagini pubblicitarie. ${imageContext}Analizza TUTTE le immagini e migliora il prompt dell'utente. REGOLE: 1) MANTIENI intatti i soggetti/azioni/ambientazioni dell'utente. 2) AGGIUNGI dettagli tecnici (illuminazione, angolo, mood, color grading). 3) Se ci sono reference E style images: applica l'estetica/colori/mood dello style alle reference. 4) Se c'è structure image: menziona di mantenere la composizione spaziale. 5) CONCISO: max 100-120 parole, evita ridondanze. Restituisci SOLO il prompt migliorato.`
-            : `You are an expert at advertising image prompts. ${imageContext}Analyze ALL images and enhance the user's prompt. RULES: 1) KEEP user's subjects/actions/settings intact. 2) ADD technical details (lighting, angle, mood, color grading). 3) If there are reference AND style images: apply style's aesthetic/colors/mood to references. 4) If there's a structure image: mention maintaining spatial composition. 5) CONCISE: max 100-120 words, avoid redundancy. Return ONLY the enhanced prompt.`;
+            ? `Sei un esperto di prompt per immagini pubblicitarie. ${imageContext}${hasImages ? 'Analizza TUTTE le immagini e migliora' : 'Migliora'} il prompt dell'utente. REGOLE: 1) MANTIENI intatti i soggetti/azioni/ambientazioni dell'utente. 2) AGGIUNGI dettagli tecnici (illuminazione, angolo, mood, color grading, texture, colori). ${hasImages ? '3) Se ci sono reference E style images: applica l\'estetica/colori/mood dello style alle reference. 4) Se c\'è structure image: menziona di mantenere la composizione spaziale. 5)' : '3)'} CONCISO: max 100-120 parole, evita ridondanze. Restituisci SOLO il prompt migliorato.`
+            : `You are an expert at advertising image prompts. ${imageContext}${hasImages ? 'Analyze ALL images and enhance' : 'Enhance'} the user's prompt. RULES: 1) KEEP user's subjects/actions/settings intact. 2) ADD technical details (lighting, angle, mood, color grading, textures, colors). ${hasImages ? '3) If there are reference AND style images: apply style\'s aesthetic/colors/mood to references. 4) If there\'s a structure image: mention maintaining spatial composition. 5)' : '3)'} CONCISE: max 100-120 words, avoid redundancy. Return ONLY the enhanced prompt.`;
 
         const result = await ai.models.generateContent({
             model: 'gemini-2.5-flash',
             contents: { parts: [...imageParts, { text: `User prompt to enhance: "${currentPrompt}"` }] },
             config: {
                 systemInstruction,
-                temperature: 0.3, // Lowered from 0.4 for more focused output
+                temperature: hasImages ? 0.3 : 0.5, // v0.8.1: Higher temp for text-only to encourage enhancement
                 maxOutputTokens: 300 // Limit output length
             }
         });
