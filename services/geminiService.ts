@@ -913,6 +913,7 @@ export const generateImage = async (prompt: string, aspectRatio: string, referen
 
         // Extract style description from style image (if provided) and add to prompt text
         // v0.7.1 FIX: Make explicit that style should be APPLIED to reference subjects
+        // v0.7.2 FIX: Log warning when style extraction fails
         let styleDescription = "";
         if (styleFile) {
             styleDescription = await extractStyleDescription(styleFile, userApiKey, language);
@@ -928,23 +929,26 @@ export const generateImage = async (prompt: string, aspectRatio: string, referen
                         ? `🎨 Stile: ${styleDescription}`
                         : `🎨 Style: ${styleDescription}`);
                 }
+            } else {
+                // Style extraction failed - log warning (user will still see style image in generation)
+                console.warn('⚠️ Style extraction failed, style image will be used visually without text description');
             }
         }
 
         // STEP 4: Add structure guidance if structure image is provided
-        // v0.7.1 FIX: Enhanced to act as PRECISE template/mask (ControlNet-style)
+        // v0.7.2 OPTIMIZATION: Concise but effective ControlNet-style template guidance
         if (structureFile) {
             // Add structure image to imageParts for visual reference
             imageParts.push(await fileToGenerativePart(structureFile));
 
-            // AGGRESSIVE guidance for millimeter-precise composition copying
+            // Concise yet aggressive guidance for millimeter-precise composition copying
             const structureGuidanceText = referenceFiles.length > 0
                 ? (language === 'it'
-                    ? `🏗️ TEMPLATE STRUTTURALE: L'ultima immagine è un MODELLO PRECISO. Copia ESATTAMENTE forma, posizione, dimensioni, angolazione e prospettiva. Come una maschera ControlNet: la composizione finale deve sovrapporre perfettamente questa struttura. Ogni elemento deve seguire le linee, i contorni e la profondità di campo della struttura al millimetro.`
-                    : `🏗️ STRUCTURAL TEMPLATE: Last image is a PRECISE MODEL. Copy EXACTLY shape, position, dimensions, angle and perspective. Like a ControlNet mask: the final composition must perfectly overlay this structure. Every element must follow the lines, contours and depth of field of the structure to the millimeter.`)
+                    ? `🏗️ TEMPLATE: Ultima immagine = modello preciso. Copia ESATTAMENTE composizione, forma, dimensioni, angolo. Sovrapposizione millimetrica tipo ControlNet.`
+                    : `🏗️ TEMPLATE: Last image = precise model. Copy EXACTLY composition, shape, dimensions, angle. Millimeter overlay like ControlNet.`)
                 : (language === 'it'
-                    ? `🏗️ TEMPLATE STRUTTURALE: Questa immagine è un MODELLO PRECISO. Copia ESATTAMENTE forma, posizione, dimensioni, angolazione e prospettiva. Come una maschera ControlNet: la composizione finale deve sovrapporre perfettamente questa struttura. Ogni elemento deve seguire le linee, i contorni e la profondità di campo al millimetro.`
-                    : `🏗️ STRUCTURAL TEMPLATE: This image is a PRECISE MODEL. Copy EXACTLY shape, position, dimensions, angle and perspective. Like a ControlNet mask: the final composition must perfectly overlay this structure. Every element must follow the lines, contours and depth of field to the millimeter.`);
+                    ? `🏗️ TEMPLATE: Immagine = modello preciso. Copia ESATTAMENTE composizione, forma, dimensioni, angolo. Sovrapposizione millimetrica tipo ControlNet.`
+                    : `🏗️ TEMPLATE: Image = precise model. Copy EXACTLY composition, shape, dimensions, angle. Millimeter overlay like ControlNet.`);
 
             instructionParts.push(structureGuidanceText);
         }

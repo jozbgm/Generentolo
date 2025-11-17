@@ -1912,12 +1912,12 @@ export default function App() {
 
     const toggleTheme = () => setTheme(prev => prev === 'dark' ? 'light' : 'dark');
 
-    const generateInitialPrompt = useCallback(async (refFiles: File[], styleFile: File | null) => {
-        if (refFiles.length === 0 && !styleFile && !structureImage) return;
+    const generateInitialPrompt = useCallback(async (refFiles: File[], styleFile: File | null, structFile: File | null) => {
+        if (refFiles.length === 0 && !styleFile && !structFile) return;
 
         setIsEnhancing(true);
         try {
-            const newPrompt = await geminiService.generateSinglePromptFromImage(refFiles, styleFile, structureImage, userApiKey, language);
+            const newPrompt = await geminiService.generateSinglePromptFromImage(refFiles, styleFile, structFile, userApiKey, language);
             setEditedPrompt(newPrompt);
         } catch (error: any) {
             console.error("Failed to generate initial prompt", error);
@@ -1925,7 +1925,7 @@ export default function App() {
         } finally {
             setIsEnhancing(false);
         }
-    }, [userApiKey, language, showToast, t.promptCreationFailed, structureImage]);
+    }, [userApiKey, language, showToast, t.promptCreationFailed]);
 
     useEffect(() => {
         const hasImages = referenceImages.length > 0 || styleReferenceImage;
@@ -2030,7 +2030,7 @@ export default function App() {
         } finally { 
             setIsLoading(false); 
         }
-    }, [referenceImages, styleReferenceImage, userApiKey, aspectRatio, showToast, t.generationFailed, language, editedPrompt, negativePrompt, seed, numImagesToGenerate]);
+    }, [referenceImages, styleReferenceImage, structureImage, preciseReference, userApiKey, aspectRatio, showToast, t.generationFailed, language, editedPrompt, negativePrompt, seed, numImagesToGenerate]);
 
     const handleLetMeDoForYou = useCallback(async () => {
         if (prompts.length === 0 || isLoading) return;
@@ -2177,11 +2177,11 @@ export default function App() {
     
     const handleMagicPrompt = useCallback(() => {
         if (editedPrompt.trim() === '') {
-            generateInitialPrompt(referenceImages, styleReferenceImage);
+            generateInitialPrompt(referenceImages, styleReferenceImage, structureImage);
         } else {
             handleEnhancePrompt();
         }
-    }, [editedPrompt, referenceImages, styleReferenceImage, generateInitialPrompt, handleEnhancePrompt]);
+    }, [editedPrompt, referenceImages, styleReferenceImage, structureImage, generateInitialPrompt, handleEnhancePrompt]);
 
     const handleDownload = (image: GeneratedImage) => {
         const downloadUrl = image.imageDataUrl || image.thumbnailDataUrl;
