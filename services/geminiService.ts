@@ -409,7 +409,7 @@ Return ONLY the complete JSON object.`;
                                 },
                                 required: ["subject", "foreground", "midground", "background", "composition", "visual_guidance", "color_tone", "lighting_mood", "caption"]
                             },
-                            temperature: 0.8,
+                            temperature: 1.0,
                             maxOutputTokens: 1000
                         }
                     });
@@ -492,7 +492,7 @@ Return ONLY the complete JSON object.`;
                     contents: { parts: [...imageParts, { text: `User prompt to enhance: "${currentPrompt}"` }] },
                     config: {
                         systemInstruction,
-                        temperature: hasImages ? 0.3 : 0.6,
+                        temperature: hasImages ? 0.5 : 0.8,
                         maxOutputTokens: 300
                     }
                 });
@@ -510,7 +510,8 @@ Return ONLY the complete JSON object.`;
                 // Block meta-responses like "The prompt is already good/detailed"
                 const metaResponses = [
                     'already', 'già', 'sufficiente', 'sufficient', 'good enough',
-                    'well-crafted', 'ben fatto', 'completo', 'complete', 'detailed enough'
+                    'well-crafted', 'ben fatto', 'completo', 'complete', 'detailed enough',
+                    'optimal', 'ottimale', 'perfect', 'perfetto', 'no need', 'non serve'
                 ];
                 const lowerPrompt = enhancedPrompt.toLowerCase();
                 const isMetaResponse = metaResponses.some(phrase => lowerPrompt.includes(phrase));
