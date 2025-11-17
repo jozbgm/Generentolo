@@ -265,30 +265,50 @@ export const generateSinglePromptFromImage = async (imageFiles: File[], styleFil
 export const enhancePrompt = async (currentPrompt: string, imageFiles: File[], styleFile: File | null, structureFile: File | null, userApiKey?: string | null, language: 'en' | 'it' = 'en'): Promise<string> => {
     try {
         const ai = getAiClient(userApiKey);
+
+        // OPTIMIZATION: Only analyze style/structure images, NOT all reference images
+        // This prevents duplicate information (images + descriptions of same images)
         const imageParts = [];
-        for (const file of imageFiles) {
-            imageParts.push(await fileToGenerativePart(file));
-        }
+
+        // Only add style image for analysis if present
         if (styleFile) {
             imageParts.push(await fileToGenerativePart(styleFile));
         }
+        // Only add structure image for analysis if present
         if (structureFile) {
             imageParts.push(await fileToGenerativePart(structureFile));
         }
 
+        // CRITICAL: Tell the model that reference images will be provided separately
+        const referenceNote = imageFiles.length > 0
+            ? (language === 'it'
+                ? `IMPORTANTE: L'utente ha già caricato ${imageFiles.length} immagine/i di riferimento che verranno fornite separatamente al momento della generazione. NON descrivere i soggetti di queste immagini. `
+                : `IMPORTANT: User has already uploaded ${imageFiles.length} reference image(s) which will be provided separately during generation. DO NOT describe the subjects of these images. `)
+            : "";
+
         const systemInstruction = language === 'it'
-            ? `Sei un esperto di prompt per la generazione di immagini pubblicitarie. Il tuo compito è migliorare il prompt dell'utente. REGOLA FONDAMENTALE: DEVI MANTENERE intatti tutti i soggetti principali, le azioni e le ambientazioni specificate dall'utente (es. se l'utente scrive "donna seduta su una panchina in palestra", la donna, la panchina e la palestra DEVONO rimanere nel prompt finale). Il tuo miglioramento deve AGGIUNGERE dettagli descrittivi, evocativi e professionali (come stile fotografico, illuminazione, angolo di ripresa, atmosfera) attorno alla richiesta originale, senza snaturarla. Analizza anche le immagini fornite per incorporare dettagli pertinenti di stile, soggetto e atmosfera. ${styleFile ? "Una delle immagini rappresenta lo stile da applicare." : ""} ${structureFile ? "L'ultima immagine è una guida strutturale: la generazione finale deve mantenere la stessa composizione spaziale e layout." : ""} Restituisci solo il prompt migliorato.`
-            : `You are an expert prompt engineer for advertising imagery. Your task is to enhance the user's prompt. CRITICAL RULE: You MUST KEEP all main subjects, actions, and settings specified by the user intact (e.g., if the user writes "woman sitting on a bench in a gym," the woman, the bench, and the gym MUST remain in the final prompt). Your enhancement should ADD descriptive, evocative, and professional details (like photographic style, lighting, camera angle, mood) around the original request, without distorting it. Also, analyze the provided images to incorporate relevant details of style, subject, and mood. ${styleFile ? "One of the images represents the style to apply." : ""} ${structureFile ? "The last image is a structural guide: the final generation must maintain the same spatial composition and layout." : ""} Return only the improved prompt.`;
+            ? `Sei un esperto di prompt per la generazione di immagini pubblicitarie. Il tuo compito è migliorare il prompt dell'utente SENZA duplicare informazioni dalle immagini di riferimento già caricate. ${referenceNote}REGOLA FONDAMENTALE: DEVI MANTENERE intatti tutti i soggetti principali, le azioni e le ambientazioni specificate dall'utente (es. se l'utente scrive "donna seduta su una panchina in palestra", la donna, la panchina e la palestra DEVONO rimanere nel prompt finale). Il tuo miglioramento deve AGGIUNGERE SOLO dettagli tecnici e creativi (come stile fotografico, illuminazione, angolo di ripresa, atmosfera, color grading, composizione) attorno alla richiesta originale, senza snaturarla. NON descrivere i soggetti presenti nelle reference images. ${styleFile ? "Incorpora gli elementi stilistici (palette colori, illuminazione, mood) dell'immagine di stile fornita." : ""} ${structureFile ? "L'immagine strutturale sarà usata per mantenere la composizione spaziale e il layout." : ""} Restituisci solo il prompt migliorato, CONCISO (max 150 parole).`
+            : `You are an expert prompt engineer for advertising imagery. Your task is to enhance the user's prompt WITHOUT duplicating information from already uploaded reference images. ${referenceNote}CRITICAL RULE: You MUST KEEP all main subjects, actions, and settings specified by the user intact (e.g., if the user writes "woman sitting on a bench in a gym," the woman, the bench, and the gym MUST remain in the final prompt). Your enhancement should ADD ONLY technical and creative details (like photographic style, lighting, camera angle, mood, color grading, composition) around the original request, without distorting it. DO NOT describe subjects present in reference images. ${styleFile ? "Incorporate stylistic elements (color palette, lighting, mood) from the provided style image." : ""} ${structureFile ? "The structural image will be used to maintain spatial composition and layout." : ""} Return only the improved prompt, CONCISE (max 150 words).`;
 
         const result = await ai.models.generateContent({
             model: 'gemini-2.5-flash',
             contents: { parts: [...imageParts, { text: `User prompt to enhance: "${currentPrompt}"` }] },
-            config: { 
-                systemInstruction, 
-                temperature: 0.4 
+            config: {
+                systemInstruction,
+                temperature: 0.3, // Lowered from 0.4 for more focused output
+                maxOutputTokens: 300 // Limit output length
             }
         });
-        return result.text.trim();
+
+        const enhancedPrompt = result.text.trim();
+
+        // Fallback: if enhanced prompt is too long (>600 chars), it might cause IMAGE_OTHER
+        if (enhancedPrompt.length > 600) {
+            console.warn('Enhanced prompt too long, truncating to 600 chars');
+            return enhancedPrompt.substring(0, 597) + '...';
+        }
+
+        return enhancedPrompt;
     } catch (error) { throw handleError(error, language); }
 }
 
@@ -790,39 +810,6 @@ const extractStyleDescription = async (styleFile: File, userApiKey: string | nul
         console.error("Failed to extract style description:", error);
         return "";
     }
-};
-
-// Helper function to implement retry logic with exponential backoff
-const retryWithBackoff = async <T>(
-    fn: () => Promise<T>,
-    maxRetries: number = 3,
-    initialDelay: number = 1000
-): Promise<T> => {
-    let lastError: any;
-    
-    for (let attempt = 0; attempt < maxRetries; attempt++) {
-        try {
-            return await fn();
-        } catch (error: any) {
-            lastError = error;
-            
-            // Don't retry if it's a safety block or authentication error
-            if (error.promptFeedback?.blockReason === 'SAFETY' || 
-                error.message?.includes('API Key') ||
-                error.message?.includes('authentication')) {
-                throw error;
-            }
-            
-            // If this is not the last attempt, wait before retrying
-            if (attempt < maxRetries - 1) {
-                const delay = initialDelay * Math.pow(2, attempt);
-                console.log(`Retry attempt ${attempt + 1}/${maxRetries} after ${delay}ms...`);
-                await new Promise(resolve => setTimeout(resolve, delay));
-            }
-        }
-    }
-    
-    throw lastError;
 };
 
 export const generateImage = async (prompt: string, aspectRatio: string, referenceFiles: File[], styleFile: File | null, structureFile: File | null, userApiKey: string | null, negativePrompt?: string, seed?: string, language: 'en' | 'it' = 'en'): Promise<string> => {
