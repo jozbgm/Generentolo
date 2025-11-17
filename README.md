@@ -1,4 +1,4 @@
-# 🎨 Generentolo v0.6 Beta
+# 🎨 Generentolo v0.7 Beta
 
 **Professional AI-Powered Image Generation Web Application**
 
@@ -16,7 +16,11 @@ A sophisticated web application for generating high-quality images using Google'
 ### 🖼️ **Multi-Reference Image Generation**
 - Upload up to **4 reference images** to combine elements intelligently
 - Separate **style reference image** for consistent visual branding
-- **NEW: Structure guide image** (ControlNet-like) to preserve spatial composition and depth
+- **Structure guide image** (ControlNet-like) to preserve spatial composition and depth
+- **NEW v0.7: 🎯 Precise Reference Mode** - Maximum fidelity to facial features
+  - Preserves faces, skin texture, eye color, hairstyle EXACTLY as in reference
+  - Inspired by Google Whisk's Precise Mode
+  - Toggle on/off for each generation
 - Advanced AI prompt engineering ensures all subjects are included in final output
 
 ### 🎯 **Professional Creative Controls**
@@ -317,6 +321,28 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 ## 📋 Changelog
+
+### v0.7 Beta (January 2025)
+**🎯 Precise Reference Mode - Whisk-Inspired Feature:**
+- **NEW: Precise Reference Checkbox** - Maximum fidelity to facial features
+  - Preserves EXACTLY facial features, skin texture, eye color, nose shape
+  - Maintains hair color, hairstyle, and length unchanged
+  - Prevents AI from altering or reinterpreting faces
+  - Inspired by Google Whisk's Precise Mode feature
+  - Works with multiple reference images
+  - Toggle on/off with clear visual indicator
+  - Smart prompt engineering for photorealistic accuracy
+
+**UX Improvements:**
+- Changed "Nano is generating" to "Generentolo is generating"
+- Better branding consistency throughout the app
+
+**Bug Fixes:**
+- Optimized `enhancePrompt()` to prevent IMAGE_OTHER errors
+  - No longer analyzes reference images during enhancement
+  - Only analyzes style/structure images
+  - Reduced prompt duplication with API
+  - More stable generation with Enhance + Generate workflow
 
 ### v0.6 Beta (January 2025)
 **Productivity & Organization Features:**

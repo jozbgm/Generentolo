@@ -10,7 +10,7 @@ import FloatingActionBar from './components/FloatingActionBar';
 // --- Localization ---
 const translations = {
   en: {
-    headerTitle: 'Generentolo v0.6 Beta',
+    headerTitle: 'Generentolo v0.7 Beta',
     headerSubtitle: 'Let me do it for you!',
     letMeDoForYou: 'Magic Prompt',
     refImagesTitle: 'Reference & Style Images',
@@ -20,6 +20,8 @@ const translations = {
     addStructureImage: 'Add / Drop Structure Image',
     addImage: 'Add / Drop Images',
     optional: 'Optional',
+    preciseReference: 'Precise Reference',
+    preciseReferenceTooltip: 'Preserves EXACTLY facial features, skin texture, eye color, and hairstyle from reference images without any modification. Maximum fidelity to original faces.',
     structureTooltip: 'Upload an image whose composition and structure will be preserved in the generation (like ControlNet depth map)',
     creativePromptsTitle: 'Creative Prompts',
     generateSuggestions: 'Generate Suggestions',
@@ -48,7 +50,7 @@ const translations = {
     aspectRatioTooltip: "Sets the width-to-height ratio of the final image. 'Auto' uses the aspect ratio of the reference image.",
     generateButton: 'Generate',
     generatingButton: 'Generating...',
-    generatingStatus: 'Nano is generating...',
+    generatingStatus: 'Generentolo is generating...',
     generatingSubtext: 'This can take a moment.',
     imageDisplayPlaceholderTitle: 'Your creations will appear here.',
     imageDisplayPlaceholderSubtext: 'Upload an image and generate to begin.',
@@ -111,7 +113,7 @@ const translations = {
 
   },
   it: {
-    headerTitle: 'Generentolo v0.6 Beta',
+    headerTitle: 'Generentolo v0.7 Beta',
     headerSubtitle: 'Let me do it for you!',
     letMeDoForYou: 'Magic Prompt',
     refImagesTitle: 'Immagini di Riferimento e Stile',
@@ -121,6 +123,8 @@ const translations = {
     addStructureImage: 'Aggiungi / Trascina Struttura',
     addImage: 'Aggiungi / Trascina Immagini',
     optional: 'Facoltativo',
+    preciseReference: 'Riferimento Preciso',
+    preciseReferenceTooltip: 'Preserva ESATTAMENTE i tratti del viso, texture della pelle, colore degli occhi e acconciatura dalle immagini di riferimento senza alcuna modifica. Massima fedeltà ai volti originali.',
     structureTooltip: 'Carica un\'immagine la cui composizione e struttura verranno preservate nella generazione (come depth map ControlNet)',
     creativePromptsTitle: 'Prompt Creativi',
     generateSuggestions: 'Genera Suggerimenti',
@@ -149,7 +153,7 @@ const translations = {
     aspectRatioTooltip: "Imposta il rapporto larghezza-altezza dell'immagine finale. 'Auto' usa le proporzioni dell'immagine di riferimento.",
     generateButton: 'Genera',
     generatingButton: 'In generazione...',
-    generatingStatus: 'Nano sta generando...',
+    generatingStatus: 'Generentolo sta generando...',
     generatingSubtext: 'Potrebbe volerci un momento.',
     imageDisplayPlaceholderTitle: 'Le tue creazioni appariranno qui.',
     imageDisplayPlaceholderSubtext: 'Carica un\'immagine e genera per iniziare.',
@@ -399,7 +403,9 @@ const ReferencePanel: React.FC<{
     onAddStructureImage: (file: File) => void;
     onRemoveStructureImage: () => void;
     structureImage: File | null;
-}> = ({ onAddImages, onRemoveImage, referenceImages, onAddStyleImage, onRemoveStyleImage, styleImage, onAddStructureImage, onRemoveStructureImage, structureImage }) => {
+    preciseReference: boolean;
+    onPreciseReferenceChange: (enabled: boolean) => void;
+}> = ({ onAddImages, onRemoveImage, referenceImages, onAddStyleImage, onRemoveStyleImage, styleImage, onAddStructureImage, onRemoveStructureImage, structureImage, preciseReference, onPreciseReferenceChange }) => {
     const { t } = useLocalization();
     const [isDraggingRef, setIsDraggingRef] = useState(false);
     const [isDraggingStyle, setIsDraggingStyle] = useState(false);
@@ -513,6 +519,39 @@ const ReferencePanel: React.FC<{
                     <input id="structure-file-upload" type="file" className="hidden" accept="image/*" onChange={handleStructureFileChange} />
                 </div>
             </div>
+
+            {/* Precise Reference Checkbox - v0.7 Feature */}
+            {referenceImages.length > 0 && (
+                <>
+                    <div className="border-t border-light-border dark:border-dark-border/50"></div>
+                    <label className="flex items-center gap-3 p-3 rounded-xl bg-light-surface/50 dark:bg-dark-surface/30 border border-light-border dark:border-dark-border cursor-pointer hover:border-brand-purple transition-colors group">
+                        <input
+                            type="checkbox"
+                            checked={preciseReference}
+                            onChange={(e) => onPreciseReferenceChange(e.target.checked)}
+                            className="w-5 h-5 rounded border-2 border-light-border dark:border-dark-border text-brand-purple focus:ring-2 focus:ring-brand-purple cursor-pointer"
+                        />
+                        <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                                <span className="font-semibold text-light-text dark:text-dark-text group-hover:text-brand-purple transition-colors">
+                                    🎯 {t.preciseReference}
+                                </span>
+                                <div className="relative group/tooltip">
+                                    <InfoIcon className="w-4 h-4 text-light-text-muted dark:text-dark-text-muted cursor-help" />
+                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-2 bg-black/90 text-white text-xs rounded-lg opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 pointer-events-none z-50">
+                                        {t.preciseReferenceTooltip}
+                                    </div>
+                                </div>
+                            </div>
+                            <p className="text-xs text-light-text-muted dark:text-dark-text-muted mt-1">
+                                {t.language === 'it'
+                                    ? 'Mantiene identici i volti, la pelle e i capelli dalle reference'
+                                    : 'Keeps faces, skin and hair identical from references'}
+                            </p>
+                        </div>
+                    </label>
+                </>
+            )}
         </div>
     );
 };
@@ -1812,6 +1851,7 @@ export default function App() {
     const [referenceImages, setReferenceImages] = useState<File[]>([]);
     const [styleReferenceImage, setStyleReferenceImage] = useState<File | null>(null);
     const [structureImage, setStructureImage] = useState<File | null>(null);
+    const [preciseReference, setPreciseReference] = useState<boolean>(false); // v0.7: Whisk-inspired Precise Mode
     const [prompts, setPrompts] = useState<string[]>([]);
     const [isPromptsLoading, setIsPromptsLoading] = useState(false);
     const [editedPrompt, setEditedPrompt] = useState<string>('');
@@ -1990,8 +2030,8 @@ export default function App() {
         try {
             const allReferenceFiles = [...referenceImages];
             
-            const generationPromises = Array(numImagesToGenerate).fill(0).map(() => 
-                geminiService.generateImage(editedPrompt, aspectRatio, allReferenceFiles, styleReferenceImage, structureImage, userApiKey, negativePrompt, seed, language)
+            const generationPromises = Array(numImagesToGenerate).fill(0).map(() =>
+                geminiService.generateImage(editedPrompt, aspectRatio, allReferenceFiles, styleReferenceImage, structureImage, userApiKey, negativePrompt, seed, language, preciseReference)
             );
             const imageDataUrls = await Promise.all(generationPromises);
 
@@ -2394,6 +2434,8 @@ export default function App() {
                             styleImage={styleReferenceImage}
                             onAddStructureImage={setStructureImage}
                             onRemoveStructureImage={() => setStructureImage(null)}
+                            preciseReference={preciseReference}
+                            onPreciseReferenceChange={setPreciseReference}
                             structureImage={structureImage}
                         />
                     </aside>

@@ -812,7 +812,7 @@ const extractStyleDescription = async (styleFile: File, userApiKey: string | nul
     }
 };
 
-export const generateImage = async (prompt: string, aspectRatio: string, referenceFiles: File[], styleFile: File | null, structureFile: File | null, userApiKey: string | null, negativePrompt?: string, seed?: string, language: 'en' | 'it' = 'en'): Promise<string> => {
+export const generateImage = async (prompt: string, aspectRatio: string, referenceFiles: File[], styleFile: File | null, structureFile: File | null, userApiKey: string | null, negativePrompt?: string, seed?: string, language: 'en' | 'it' = 'en', preciseReference: boolean = false): Promise<string> => {
     try {
         const ai = getAiClient(userApiKey);
 
@@ -903,6 +903,16 @@ export const generateImage = async (prompt: string, aspectRatio: string, referen
                     : `🏗️ STRUCTURE: The provided image is a structural guide. Maintain the same spatial composition, layout and geometry. Preserve positions, proportions and perspective.`);
 
             instructionParts.push(structureGuidanceText);
+        }
+
+        // STEP 5: Add Precise Reference guidance if enabled (v0.7 - Whisk-inspired feature)
+        if (preciseReference && referenceFiles.length > 0) {
+            const preciseReferenceGuidance = language === 'it'
+                ? `🎯 RIFERIMENTO PRECISO ATTIVATO: Mantieni ESATTAMENTE i tratti del viso originale, immutati e realistici. Preserva texture della pelle, pori visibili, colore degli occhi, forma del naso, struttura facciale, espressione. NON modificare acconciatura, colore dei capelli, lunghezza dei capelli. Massima fedeltà fotorealistica all'immagine di riferimento. Non alterare le caratteristiche facciali in alcun modo.`
+                : `🎯 PRECISE REFERENCE ENABLED: Keep the original person's face EXACTLY unchanged and realistic. Preserve skin texture, visible pores, eye color, nose shape, facial structure, expression. Do NOT change hairstyle, hair color, hair length. Maximum photorealistic fidelity to reference image. Do not alter facial features in any way.`;
+
+            instructionParts.push(preciseReferenceGuidance);
+            console.log('🎯 Precise Reference Mode: ACTIVE');
         }
 
         // Build full prompt with enriched user prompt
