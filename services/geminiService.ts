@@ -266,29 +266,50 @@ export const enhancePrompt = async (currentPrompt: string, imageFiles: File[], s
     try {
         const ai = getAiClient(userApiKey);
 
-        // OPTIMIZATION: Only analyze style/structure images, NOT all reference images
-        // This prevents duplicate information (images + descriptions of same images)
+        // v0.7.1 FIX: Analyze ALL images (reference + style + structure) for richer enhancement
+        // BUT keep output concise to prevent IMAGE_OTHER errors
         const imageParts = [];
 
-        // Only add style image for analysis if present
+        // Add all reference images for comprehensive analysis
+        for (const file of imageFiles) {
+            imageParts.push(await fileToGenerativePart(file));
+        }
+        // Add style image if present
         if (styleFile) {
             imageParts.push(await fileToGenerativePart(styleFile));
         }
-        // Only add structure image for analysis if present
+        // Add structure image if present
         if (structureFile) {
             imageParts.push(await fileToGenerativePart(structureFile));
         }
 
-        // CRITICAL: Tell the model that reference images will be provided separately
-        const referenceNote = imageFiles.length > 0
-            ? (language === 'it'
-                ? `IMPORTANTE: L'utente ha già caricato ${imageFiles.length} immagine/i di riferimento che verranno fornite separatamente al momento della generazione. NON descrivere i soggetti di queste immagini. `
-                : `IMPORTANT: User has already uploaded ${imageFiles.length} reference image(s) which will be provided separately during generation. DO NOT describe the subjects of these images. `)
-            : "";
+        // Build context-aware instruction based on what images are present
+        let imageContext = "";
+        if (imageFiles.length > 0 && styleFile && structureFile) {
+            imageContext = language === 'it'
+                ? `Hai ${imageFiles.length} immagine/i di riferimento (soggetti principali), 1 immagine di stile (estetica/colori/mood) e 1 immagine strutturale (composizione/layout). `
+                : `You have ${imageFiles.length} reference image(s) (main subjects), 1 style image (aesthetic/colors/mood), and 1 structure image (composition/layout). `;
+        } else if (imageFiles.length > 0 && styleFile) {
+            imageContext = language === 'it'
+                ? `Hai ${imageFiles.length} immagine/i di riferimento (soggetti) e 1 immagine di stile (estetica/colori). `
+                : `You have ${imageFiles.length} reference image(s) (subjects) and 1 style image (aesthetic/colors). `;
+        } else if (imageFiles.length > 0 && structureFile) {
+            imageContext = language === 'it'
+                ? `Hai ${imageFiles.length} immagine/i di riferimento (soggetti) e 1 immagine strutturale (composizione). `
+                : `You have ${imageFiles.length} reference image(s) (subjects) and 1 structure image (composition). `;
+        } else if (imageFiles.length > 0) {
+            imageContext = language === 'it'
+                ? `Hai ${imageFiles.length} immagine/i di riferimento. `
+                : `You have ${imageFiles.length} reference image(s). `;
+        } else if (styleFile || structureFile) {
+            imageContext = language === 'it'
+                ? `Hai immagini guida per stile/struttura. `
+                : `You have guide images for style/structure. `;
+        }
 
         const systemInstruction = language === 'it'
-            ? `Sei un esperto di prompt per la generazione di immagini pubblicitarie. Il tuo compito è migliorare il prompt dell'utente SENZA duplicare informazioni dalle immagini di riferimento già caricate. ${referenceNote}REGOLA FONDAMENTALE: DEVI MANTENERE intatti tutti i soggetti principali, le azioni e le ambientazioni specificate dall'utente (es. se l'utente scrive "donna seduta su una panchina in palestra", la donna, la panchina e la palestra DEVONO rimanere nel prompt finale). Il tuo miglioramento deve AGGIUNGERE SOLO dettagli tecnici e creativi (come stile fotografico, illuminazione, angolo di ripresa, atmosfera, color grading, composizione) attorno alla richiesta originale, senza snaturarla. NON descrivere i soggetti presenti nelle reference images. ${styleFile ? "Incorpora gli elementi stilistici (palette colori, illuminazione, mood) dell'immagine di stile fornita." : ""} ${structureFile ? "L'immagine strutturale sarà usata per mantenere la composizione spaziale e il layout." : ""} Restituisci solo il prompt migliorato, CONCISO (max 150 parole).`
-            : `You are an expert prompt engineer for advertising imagery. Your task is to enhance the user's prompt WITHOUT duplicating information from already uploaded reference images. ${referenceNote}CRITICAL RULE: You MUST KEEP all main subjects, actions, and settings specified by the user intact (e.g., if the user writes "woman sitting on a bench in a gym," the woman, the bench, and the gym MUST remain in the final prompt). Your enhancement should ADD ONLY technical and creative details (like photographic style, lighting, camera angle, mood, color grading, composition) around the original request, without distorting it. DO NOT describe subjects present in reference images. ${styleFile ? "Incorporate stylistic elements (color palette, lighting, mood) from the provided style image." : ""} ${structureFile ? "The structural image will be used to maintain spatial composition and layout." : ""} Return only the improved prompt, CONCISE (max 150 words).`;
+            ? `Sei un esperto di prompt per immagini pubblicitarie. ${imageContext}Analizza TUTTE le immagini e migliora il prompt dell'utente. REGOLE: 1) MANTIENI intatti i soggetti/azioni/ambientazioni dell'utente. 2) AGGIUNGI dettagli tecnici (illuminazione, angolo, mood, color grading). 3) Se ci sono reference E style images: applica l'estetica/colori/mood dello style alle reference. 4) Se c'è structure image: menziona di mantenere la composizione spaziale. 5) CONCISO: max 100-120 parole, evita ridondanze. Restituisci SOLO il prompt migliorato.`
+            : `You are an expert at advertising image prompts. ${imageContext}Analyze ALL images and enhance the user's prompt. RULES: 1) KEEP user's subjects/actions/settings intact. 2) ADD technical details (lighting, angle, mood, color grading). 3) If there are reference AND style images: apply style's aesthetic/colors/mood to references. 4) If there's a structure image: mention maintaining spatial composition. 5) CONCISE: max 100-120 words, avoid redundancy. Return ONLY the enhanced prompt.`;
 
         const result = await ai.models.generateContent({
             model: 'gemini-2.5-flash',
@@ -891,29 +912,39 @@ export const generateImage = async (prompt: string, aspectRatio: string, referen
         }
 
         // Extract style description from style image (if provided) and add to prompt text
+        // v0.7.1 FIX: Make explicit that style should be APPLIED to reference subjects
         let styleDescription = "";
         if (styleFile) {
             styleDescription = await extractStyleDescription(styleFile, userApiKey, language);
             if (styleDescription) {
-                instructionParts.push(language === 'it'
-                    ? `Stile: ${styleDescription}`
-                    : `Style: ${styleDescription}`);
+                // If there are reference images, explicitly tell AI to apply style TO them
+                if (referenceFiles.length > 0) {
+                    instructionParts.push(language === 'it'
+                        ? `🎨 APPLICA STILE: Usa i soggetti dalle immagini di riferimento MA con questo stile: ${styleDescription}. I prodotti/persone restano quelli delle reference, ma adotta palette, illuminazione e mood dello stile.`
+                        : `🎨 APPLY STYLE: Use subjects from reference images BUT with this style: ${styleDescription}. Products/people remain from references, but adopt palette, lighting and mood from style.`);
+                } else {
+                    // No references, just apply the style to the prompt
+                    instructionParts.push(language === 'it'
+                        ? `🎨 Stile: ${styleDescription}`
+                        : `🎨 Style: ${styleDescription}`);
+                }
             }
         }
 
-        // STEP 4: Add structure guidance if structure image is provided (optimized from ~300 to ~120 chars)
+        // STEP 4: Add structure guidance if structure image is provided
+        // v0.7.1 FIX: Enhanced to act as PRECISE template/mask (ControlNet-style)
         if (structureFile) {
             // Add structure image to imageParts for visual reference
             imageParts.push(await fileToGenerativePart(structureFile));
 
-            // Adatta la guidance in base al numero di immagini totali
+            // AGGRESSIVE guidance for millimeter-precise composition copying
             const structureGuidanceText = referenceFiles.length > 0
                 ? (language === 'it'
-                    ? `🏗️ STRUTTURA: L'ultima immagine è una guida strutturale. Mantieni la stessa composizione spaziale, layout e geometria. Preserva posizioni, proporzioni e prospettiva.`
-                    : `🏗️ STRUCTURE: Last image is a structural guide. Maintain the same spatial composition, layout and geometry. Preserve positions, proportions and perspective.`)
+                    ? `🏗️ TEMPLATE STRUTTURALE: L'ultima immagine è un MODELLO PRECISO. Copia ESATTAMENTE forma, posizione, dimensioni, angolazione e prospettiva. Come una maschera ControlNet: la composizione finale deve sovrapporre perfettamente questa struttura. Ogni elemento deve seguire le linee, i contorni e la profondità di campo della struttura al millimetro.`
+                    : `🏗️ STRUCTURAL TEMPLATE: Last image is a PRECISE MODEL. Copy EXACTLY shape, position, dimensions, angle and perspective. Like a ControlNet mask: the final composition must perfectly overlay this structure. Every element must follow the lines, contours and depth of field of the structure to the millimeter.`)
                 : (language === 'it'
-                    ? `🏗️ STRUTTURA: L'immagine fornita è una guida strutturale. Mantieni la stessa composizione spaziale, layout e geometria. Preserva posizioni, proporzioni e prospettiva.`
-                    : `🏗️ STRUCTURE: The provided image is a structural guide. Maintain the same spatial composition, layout and geometry. Preserve positions, proportions and perspective.`);
+                    ? `🏗️ TEMPLATE STRUTTURALE: Questa immagine è un MODELLO PRECISO. Copia ESATTAMENTE forma, posizione, dimensioni, angolazione e prospettiva. Come una maschera ControlNet: la composizione finale deve sovrapporre perfettamente questa struttura. Ogni elemento deve seguire le linee, i contorni e la profondità di campo al millimetro.`
+                    : `🏗️ STRUCTURAL TEMPLATE: This image is a PRECISE MODEL. Copy EXACTLY shape, position, dimensions, angle and perspective. Like a ControlNet mask: the final composition must perfectly overlay this structure. Every element must follow the lines, contours and depth of field to the millimeter.`);
 
             instructionParts.push(structureGuidanceText);
         }
