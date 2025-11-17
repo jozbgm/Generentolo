@@ -2154,8 +2154,19 @@ export default function App() {
         if (!editedPrompt) return;
         setIsEnhancing(true);
         try {
+            console.log('🔄 Starting enhance with prompt:', editedPrompt);
             const enhanced = await geminiService.enhancePrompt(editedPrompt, referenceImages, styleReferenceImage, structureImage, userApiKey, language);
+            console.log('✅ Enhanced result:', enhanced);
+
+            // Always update, even if same (to trigger re-render and show user feedback)
             setEditedPrompt(enhanced);
+
+            // Show success feedback
+            if (enhanced === editedPrompt) {
+                showToast(language === 'it' ? 'Prompt già ottimale!' : 'Prompt already optimal!', 'success');
+            } else {
+                showToast(language === 'it' ? 'Prompt migliorato!' : 'Prompt enhanced!', 'success');
+            }
         } catch (error: any) {
             console.error("Prompt enhancement failed", error);
             showToast(error.message || t.promptEnhancementFailed, 'error');
