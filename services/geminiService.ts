@@ -499,8 +499,6 @@ Return ONLY the complete JSON object.`;
 
                 // Safety check: ensure result.text exists
                 if (!result || !result.text) {
-                    console.warn(`Standard enhance attempt ${attempt + 1}: no text returned`);
-                    console.log('Full API response:', JSON.stringify(result, null, 2));
                     if (attempt === 1) return currentPrompt; // Last attempt failed
                     await new Promise(resolve => setTimeout(resolve, 1500));
                     continue;
@@ -516,45 +514,31 @@ Return ONLY the complete JSON object.`;
                     'is fine', 'va bene', 'good as is', 'così va bene'
                 ];
                 const lowerPrompt = enhancedPrompt.toLowerCase();
-
-                // Log for debugging
-                console.log(`📝 Enhanced prompt (attempt ${attempt + 1}):`, enhancedPrompt);
-
-                const containsMetaPhrase = metaResponses.some(phrase => {
-                    const found = lowerPrompt.includes(phrase);
-                    if (found) console.log(`🚫 Detected meta-phrase: "${phrase}"`);
-                    return found;
-                });
+                const containsMetaPhrase = metaResponses.some(phrase => lowerPrompt.includes(phrase));
 
                 // If response contains meta-phrase, it's a refusal - retry or fallback
                 if (containsMetaPhrase) {
-                    console.warn(`⚠️ Meta-response detected: "${enhancedPrompt}"`);
                     if (attempt < 1) {
-                        console.warn('Retrying with higher temperature...');
                         await new Promise(resolve => setTimeout(resolve, 1000));
                         continue;
                     }
-                    // Last attempt: throw error to notify user instead of silently returning original
                     throw new Error(language === 'it'
                         ? 'Il modello non è riuscito a migliorare il prompt. Riprova o modifica manualmente.'
                         : 'Model failed to enhance prompt. Try again or edit manually.');
                 }
 
-                // Fallback: if enhanced prompt is too long (>400 chars), it might cause IMAGE_OTHER
+                // Fallback: if enhanced prompt is too long (>400 chars), truncate
                 if (enhancedPrompt.length > 400) {
-                    console.warn('Enhanced prompt too long, truncating to 400 chars');
                     return enhancedPrompt.substring(0, 397) + '...';
                 }
 
                 // Fallback: if enhancement is too short or empty, use original
                 if (enhancedPrompt.length < 10) {
-                    console.warn('Enhanced prompt too short, using original');
                     return currentPrompt;
                 }
 
                 return enhancedPrompt;
             } catch (apiError: any) {
-                console.warn(`Standard mode API call failed attempt ${attempt + 1}:`, apiError.message);
 
                 // If 503 overload, retry with delay
                 if (apiError.message?.includes('overload') || apiError.message?.includes('503')) {
