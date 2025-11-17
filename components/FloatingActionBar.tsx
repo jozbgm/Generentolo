@@ -361,22 +361,23 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                             const tips: string[] = [];
                             const promptLower = prompt.toLowerCase();
                             const wordCount = prompt.trim().split(/\s+/).length;
+                            const isItalian = t.language === 'it';
 
                             // Too short
                             if (wordCount < 3) {
-                                tips.push("💡 Add more details for better results");
+                                tips.push(isItalian ? "💡 Aggiungi più dettagli per risultati migliori" : "💡 Add more details for better results");
                             }
                             // Missing lighting
-                            if (!promptLower.includes('light') && !promptLower.includes('glow') && !promptLower.includes('bright') && !promptLower.includes('dark') && !promptLower.includes('shadow')) {
-                                tips.push("💡 Try adding lighting details (e.g., 'golden hour', 'soft lighting')");
+                            if (!promptLower.includes('light') && !promptLower.includes('luce') && !promptLower.includes('glow') && !promptLower.includes('bright') && !promptLower.includes('dark') && !promptLower.includes('shadow') && !promptLower.includes('ombra')) {
+                                tips.push(isItalian ? "💡 Prova ad aggiungere dettagli di illuminazione (es. 'golden hour', 'luce soffusa')" : "💡 Try adding lighting details (e.g., 'golden hour', 'soft lighting')");
                             }
                             // Missing camera/composition
-                            if (!promptLower.includes('shot') && !promptLower.includes('angle') && !promptLower.includes('view') && !promptLower.includes('perspective') && !promptLower.includes('lens')) {
-                                tips.push("💡 Specify camera angle (e.g., 'low-angle shot', '85mm lens')");
+                            if (!promptLower.includes('shot') && !promptLower.includes('angle') && !promptLower.includes('angolo') && !promptLower.includes('view') && !promptLower.includes('perspective') && !promptLower.includes('prospettiva') && !promptLower.includes('lens') && !promptLower.includes('obiettivo')) {
+                                tips.push(isItalian ? "💡 Specifica l'angolo della camera (es. 'inquadratura dal basso', 'obiettivo 85mm')" : "💡 Specify camera angle (e.g., 'low-angle shot', '85mm lens')");
                             }
                             // Missing mood/atmosphere
-                            if (!promptLower.includes('mood') && !promptLower.includes('atmosphere') && !promptLower.includes('feeling') && !promptLower.includes('vibe') && wordCount > 3) {
-                                tips.push("💡 Add mood/atmosphere (e.g., 'cinematic', 'dreamy', 'dramatic')");
+                            if (!promptLower.includes('mood') && !promptLower.includes('atmosphere') && !promptLower.includes('atmosfera') && !promptLower.includes('feeling') && !promptLower.includes('vibe') && wordCount > 3) {
+                                tips.push(isItalian ? "💡 Aggiungi mood/atmosfera (es. 'cinematico', 'onirico', 'drammatico')" : "💡 Add mood/atmosphere (e.g., 'cinematic', 'dreamy', 'dramatic')");
                             }
 
                             // Show max 2 tips to avoid clutter

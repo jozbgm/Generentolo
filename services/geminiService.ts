@@ -505,25 +505,30 @@ Return ONLY the complete JSON object.`;
                     continue;
                 }
 
-                const enhancedPrompt = result.text.trim();
+                let enhancedPrompt = result.text.trim();
 
                 // Block meta-responses like "The prompt is already good/detailed"
                 const metaResponses = [
                     'already', 'già', 'sufficiente', 'sufficient', 'good enough',
                     'well-crafted', 'ben fatto', 'completo', 'complete', 'detailed enough',
-                    'optimal', 'ottimale', 'perfect', 'perfetto', 'no need', 'non serve'
+                    'optimal', 'ottimale', 'perfect', 'perfetto', 'no need', 'non serve',
+                    'is fine', 'va bene', 'good as is', 'così va bene'
                 ];
                 const lowerPrompt = enhancedPrompt.toLowerCase();
-                const isMetaResponse = metaResponses.some(phrase => lowerPrompt.includes(phrase));
+                const containsMetaPhrase = metaResponses.some(phrase => lowerPrompt.includes(phrase));
 
-                if (isMetaResponse && enhancedPrompt.length < currentPrompt.length + 20) {
-                    console.warn('AI returned meta-comment, retrying...');
+                // If response contains meta-phrase, it's a refusal - retry or fallback
+                if (containsMetaPhrase) {
+                    console.warn(`⚠️ Meta-response detected: "${enhancedPrompt}"`);
                     if (attempt < 1) {
+                        console.warn('Retrying with higher temperature...');
                         await new Promise(resolve => setTimeout(resolve, 1000));
                         continue;
                     }
-                    // Last attempt, use original
-                    return currentPrompt;
+                    // Last attempt: throw error to notify user instead of silently returning original
+                    throw new Error(language === 'it'
+                        ? 'Il modello non è riuscito a migliorare il prompt. Riprova o modifica manualmente.'
+                        : 'Model failed to enhance prompt. Try again or edit manually.');
                 }
 
                 // Fallback: if enhanced prompt is too long (>400 chars), it might cause IMAGE_OTHER
