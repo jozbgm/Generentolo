@@ -1,5 +1,6 @@
 import { GoogleGenAI, Type, Modality, HarmCategory, HarmBlockThreshold } from "@google/genai";
 import { DynamicTool } from '../types';
+import { enhancePromptV2 } from './enhancePromptNew';
 
 const DEFAULT_API_KEY = import.meta.env.VITE_API_KEY;
 
@@ -7,7 +8,7 @@ if (!DEFAULT_API_KEY) {
   console.warn("VITE_API_KEY environment variable not set. Users must provide their own API key.");
 }
 
-const getAiClient = (userApiKey?: string | null) => {
+export const getAiClient = (userApiKey?: string | null) => {
     const apiKey = userApiKey || DEFAULT_API_KEY;
     if (!apiKey) {
         // This case should ideally not be hit if the env key is set.
@@ -49,7 +50,7 @@ const handleError = (error: any, language: 'en' | 'it'): Error => {
 }
 
 
-const fileToGenerativePart = async (file: File) => {
+export const fileToGenerativePart = async (file: File) => {
   const base64EncodedDataPromise = new Promise<string>((resolve) => {
     const reader = new FileReader();
     reader.onloadend = () => resolve((reader.result as string).split(',')[1]);
@@ -264,245 +265,13 @@ export const generateSinglePromptFromImage = async (imageFiles: File[], styleFil
 
 export const enhancePrompt = async (currentPrompt: string, imageFiles: File[], styleFile: File | null, structureFile: File | null, userApiKey?: string | null, language: 'en' | 'it' = 'en'): Promise<string> => {
     try {
-        const ai = getAiClient(userApiKey);
-
-        // Analyze ALL images (reference + style + structure) for richer enhancement
-        const imageParts = [];
-
-        // Add all reference images for comprehensive analysis
-        for (const file of imageFiles) {
-            imageParts.push(await fileToGenerativePart(file));
-        }
-        // Add style image if present
-        if (styleFile) {
-            imageParts.push(await fileToGenerativePart(styleFile));
-        }
-        // Add structure image if present
-        if (structureFile) {
-            imageParts.push(await fileToGenerativePart(structureFile));
-        }
-
-        const hasImages = imageParts.length > 0;
-        const isShortPrompt = currentPrompt.trim().split(/\s+/).length <= 3; // Detect very short prompts (≤3 words)
-
-        // Build context-aware instruction based on what images are present
-        let imageContext = "";
-        if (imageFiles.length > 0 && styleFile && structureFile) {
-            imageContext = language === 'it'
-                ? `Hai ${imageFiles.length} immagine/i di riferimento (soggetti principali), 1 immagine di stile (estetica/colori/mood) e 1 immagine strutturale (composizione/layout). `
-                : `You have ${imageFiles.length} reference image(s) (main subjects), 1 style image (aesthetic/colors/mood), and 1 structure image (composition/layout). `;
-        } else if (imageFiles.length > 0 && styleFile) {
-            imageContext = language === 'it'
-                ? `Hai ${imageFiles.length} immagine/i di riferimento (soggetti) e 1 immagine di stile (estetica/colori). `
-                : `You have ${imageFiles.length} reference image(s) (subjects) and 1 style image (aesthetic/colors). `;
-        } else if (imageFiles.length > 0 && structureFile) {
-            imageContext = language === 'it'
-                ? `Hai ${imageFiles.length} immagine/i di riferimento (soggetti) e 1 immagine strutturale (composizione). `
-                : `You have ${imageFiles.length} reference image(s) (subjects) and 1 structure image (composition). `;
-        } else if (imageFiles.length > 0) {
-            imageContext = language === 'it'
-                ? `Hai ${imageFiles.length} immagine/i di riferimento. `
-                : `You have ${imageFiles.length} reference image(s). `;
-        } else if (styleFile || structureFile) {
-            imageContext = language === 'it'
-                ? `Hai immagini guida per stile/struttura. `
-                : `You have guide images for style/structure. `;
-        }
-
-        // CINEMATIC ENHANCEMENT MODE: For very short prompts or text-only scenarios
-        // Use structured JSON approach to force deep creative expansion
-        if (isShortPrompt && !hasImages) {
-
-            const cinematicSystemInstruction = language === 'it'
-                ? `Sei un AI Image Generation Prompt Engineer professionista. Il tuo compito è ricevere un soggetto semplice dall'utente ed espanderlo in un oggetto JSON strutturato, dettagliato e creativo. Questo JSON guiderà i modelli AI di generazione immagini (Midjourney, Stable Diffusion) a creare immagini con profondità, atmosfera e qualità artistica.
-
-**STRUTTURA JSON (9 campi obbligatori):**
-
-1. **"subject"**: Descrivi in dettaglio l'aspetto, abbigliamento, postura, azione, espressione e direzione dello sguardo del soggetto centrale.
-
-2. **"foreground"**: Elementi più vicini al viewer/camera, davanti o sotto il soggetto. Aggiungono stratificazione e profondità.
-
-3. **"midground"**: Piano dove si trova il soggetto e oggetti sullo stesso livello spaziale. Area principale della scena.
-
-4. **"background"**: Elementi più lontani nella scena, ambiente grandioso e senso di backstory.
-
-5. **"composition"**: Usa termini professionali di fotografia/arte. Es: regola dei terzi, soggetto centrato, simmetria, rapporto aureo, linee guida, orientamento verticale/orizzontale, stratificazione profondità, angolo basso/alto, ecc.
-
-6. **"visual_guidance"**: Come guidare l'occhio dello spettatore attraverso l'immagine ed enfatizzare il punto focale usando elementi visivi. Es: usando linee delle rocce che portano al soggetto, contrasto luce-ombra su pelle e vestiti, direzione sguardo, effetto silhouette nell'acqua, ecc.
-
-7. **"color_tone"**: Schema colori complessivo e sensazione. Es: toni pastello morbidi, palette terrosa smorzata, neon cyberpunk vibrante, monocromatico, alta saturazione, toni caldi, ecc. Puoi aggiungere colori accent.
-
-8. **"lighting_mood"**: Tipo, direzione e intensità della sorgente luminosa, e mood/atmosfera complessiva. Es: illuminazione naturale morbida, golden hour, luce diffusa diurna, drammatica illuminazione Rembrandt, misteriosa luce lunare, atmosfera serena, bagliore sottile di retroilluminazione, ecc.
-
-9. **"caption"**: Fonde tutti gli elementi chiave sopra in una singola frase coerente, vivida e narrativa. Questa frase è un prompt eccellente e pronto all'uso per la generazione di immagini. NON è una semplice stringa di parole chiave, ma una descrizione completa e grammaticalmente corretta della scena.
-
-**WORKFLOW:**
-1. Ricevi il soggetto semplice dall'utente
-2. Costruisci una scena completa e ricca di storia nella tua "immaginazione"
-3. Compila sistematicamente i dettagli della scena immaginata in ogni campo JSON
-4. Assicurati che tutti i campi siano coordinati e logicamente coerenti
-5. Distilla tutte le informazioni nella singola elegante frase del campo "caption"
-
-Restituisci SOLO l'oggetto JSON completo.`
-                : `You are a professional AI Image Generation Prompt Engineer. Your core task is to receive a simple subject from a user and expand it into a structured, detailed, and creative JSON object. This JSON object will serve as an advanced prompt to guide AI image generation models (such as Midjourney, Stable Diffusion) in creating images with depth, atmosphere, and artistic quality.
-
-**JSON STRUCTURE (9 required fields):**
-
-1. **"subject"**: Describe in detail the appearance, clothing, posture, action, expression, and gaze direction of the central character/subject.
-
-2. **"foreground"**: Elements closest to the viewer or "camera," in front of or below the subject. These add layers and depth to the image.
-
-3. **"midground"**: The plane where the subject is located and objects on the same spatial level. This is the main area of the scene.
-
-4. **"background"**: The furthest elements in the scene, providing grand environment and backstory.
-
-5. **"composition"**: Use professional photography and art terms. E.g.: rule of thirds, centered subject, symmetry, golden ratio, leading lines, vertical/horizontal orientation, depth layering, low/high angle shot, etc.
-
-6. **"visual_guidance"**: How to guide the viewer's eye through the image and emphasize the focal point using visual elements. E.g.: using rock lines leading to subject, light-shadow contrast on skin and clothing, subject's gaze direction, silhouette effect in water, etc.
-
-7. **"color_tone"**: Overall color scheme and feel. E.g.: soft pastel tones, muted earthy palette, vibrant cyberpunk neon, monochromatic, high saturation, warm tones, etc. You can add accent colors.
-
-8. **"lighting_mood"**: Type, direction, and intensity of light source, and overall mood/atmosphere. E.g.: soft natural lighting, golden hour, diffused daylight, dramatic Rembrandt lighting, mysterious moonlight, serene atmosphere, subtle backlight rim glow, etc.
-
-9. **"caption"**: Fuse all key elements above into a single, coherent, vivid, and narrative-driven sentence. This sentence is an excellent, ready-to-use image generation prompt. It's NOT a simple string of keywords, but a complete, grammatically correct description of the scene.
-
-**WORKFLOW:**
-1. Receive the simple subject from the user
-2. Construct a complete, story-rich scene in your "imagination"
-3. Systematically fill in the details of your envisioned scene into each JSON field
-4. Ensure all fields are coordinated and logically consistent
-5. Distill all information into the single elegant sentence in the "caption" field
-
-Return ONLY the complete JSON object.`;
-
-            // Retry with exponential backoff for API overload (503 errors)
-            for (let attempt = 0; attempt < 2; attempt++) {
-                try {
-                    const result = await ai.models.generateContent({
-                        model: 'gemini-2.5-flash',
-                        contents: { parts: [{ text: `Subject: "${currentPrompt}"` }] },
-                        config: {
-                            systemInstruction: cinematicSystemInstruction,
-                            responseMimeType: "application/json",
-                            responseSchema: {
-                                type: Type.OBJECT,
-                                properties: {
-                                    subject: { type: Type.STRING },
-                                    foreground: { type: Type.STRING },
-                                    midground: { type: Type.STRING },
-                                    background: { type: Type.STRING },
-                                    composition: { type: Type.STRING },
-                                    visual_guidance: { type: Type.STRING },
-                                    color_tone: { type: Type.STRING },
-                                    lighting_mood: { type: Type.STRING },
-                                    caption: { type: Type.STRING }
-                                },
-                                required: ["subject", "foreground", "midground", "background", "composition", "visual_guidance", "color_tone", "lighting_mood", "caption"]
-                            },
-                            temperature: 1.0,
-                            maxOutputTokens: 1000
-                        }
-                    });
-
-                    if (!result || !result.text) {
-                        if (attempt === 1) return currentPrompt; // Last attempt failed
-                        await new Promise(resolve => setTimeout(resolve, 1500));
-                        continue;
-                    }
-
-                    try {
-                        // Try parsing with cleanup for common JSON issues
-                        let cleanedText = result.text.trim();
-
-                        // Fix common JSON corruption: remove trailing incomplete strings
-                        if (cleanedText.includes('Unterminated string')) {
-                            cleanedText = cleanedText.substring(0, cleanedText.lastIndexOf('"')) + '"}';
-                        }
-
-                        const jsonResponse = JSON.parse(cleanedText);
-                        const enhancedPrompt = jsonResponse.caption || currentPrompt;
-
-                        return enhancedPrompt;
-                    } catch (parseError) {
-                        // Try extracting caption with regex fallback (try on ANY attempt, not just last)
-                        const captionMatch = result.text.match(/"caption"\s*:\s*"([^"]+)"/);
-                        if (captionMatch && captionMatch[1]) {
-                            return captionMatch[1];
-                        }
-
-                        // If last attempt and regex failed, give up
-                        if (attempt === 1) {
-                            // Don't return here - fall through to STANDARD mode
-                            break;
-                        }
-
-                        await new Promise(resolve => setTimeout(resolve, 1500));
-                    }
-                } catch (apiError: any) {
-                    // If 503 overload, retry with delay
-                    if (apiError.message?.includes('overload') || apiError.message?.includes('503')) {
-                        if (attempt < 1) {
-                            await new Promise(resolve => setTimeout(resolve, 2000));
-                            continue;
-                        }
-                    }
-
-                    // Other errors, break immediately
-                    break;
-                }
-            }
-        }
-
-        // STANDARD ENHANCEMENT MODE: For longer prompts or when images are present
-        const systemInstruction = language === 'it'
-            ? `Sei un esperto di prompt per immagini pubblicitarie. ${imageContext}${hasImages ? 'Analizza TUTTE le immagini e migliora' : 'Migliora'} il prompt dell'utente. REGOLE OBBLIGATORIE: 1) MANTIENI intatti i soggetti/azioni/ambientazioni dell'utente. 2) DEVI SEMPRE AGGIUNGERE dettagli tecnici: illuminazione (es: soft natural light, golden hour, studio lighting), angolo camera (es: eye level, low angle, aerial view), mood/atmosfera (es: serene, dramatic, playful), color grading (es: warm tones, cool blues, vibrant), textures (es: smooth skin, rough fabric), colori specifici. 3) NON restituire MAI il prompt identico - DEVI migliorarlo. ${hasImages ? '4) Se ci sono reference E style images: applica l\'estetica/colori/mood dello style alle reference. 5) Se c\'è structure image: menziona di mantenere la composizione spaziale. 6)' : '4)'} CONCISO: max 100-120 parole, evita ridondanze. Restituisci SOLO il prompt migliorato, MAI quello originale.`
-            : `You are an expert at advertising image prompts. ${imageContext}${hasImages ? 'Analyze ALL images and enhance' : 'Enhance'} the user's prompt. MANDATORY RULES: 1) KEEP user's subjects/actions/settings intact. 2) You MUST ALWAYS ADD technical details: lighting (e.g., soft natural light, golden hour, studio lighting), camera angle (e.g., eye level, low angle, aerial view), mood/atmosphere (e.g., serene, dramatic, playful), color grading (e.g., warm tones, cool blues, vibrant), textures (e.g., smooth skin, rough fabric), specific colors. 3) NEVER return the identical prompt - you MUST enhance it. ${hasImages ? '4) If there are reference AND style images: apply style\'s aesthetic/colors/mood to references. 5) If there\'s a structure image: mention maintaining spatial composition. 6)' : '4)'} CONCISE: max 100-120 words, avoid redundancy. Return ONLY the enhanced prompt, NEVER the original.`;
-
-        const result = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: { parts: [...imageParts, { text: `User prompt to enhance: "${currentPrompt}"` }] },
-            config: {
-                systemInstruction,
-                temperature: hasImages ? 0.7 : 0.9,
-                maxOutputTokens: 500
-            }
-        });
-
-        if (!result || !result.text) {
-            return currentPrompt;
-        }
-
-        let enhancedPrompt = result.text.trim();
-
-        // If model returned identical prompt, force a more creative retry
-        if (enhancedPrompt === currentPrompt) {
-            console.warn('⚠️ Model returned identical prompt, forcing creative retry...');
-
-            const forceEnhancePrompt = language === 'it'
-                ? `Il prompt "${currentPrompt}" è troppo generico. Espandilo aggiungendo OBBLIGATORIAMENTE almeno 3 di questi dettagli: illuminazione (golden hour/studio/natural), angolo camera (low angle/aerial/close-up), mood (serene/dramatic/playful), colori (warm tones/vibrant/pastel), texture, atmosfera. Restituisci SOLO il prompt espanso, circa 50-80 parole.`
-                : `The prompt "${currentPrompt}" is too generic. Expand it by MANDATORILY adding at least 3 of these details: lighting (golden hour/studio/natural), camera angle (low angle/aerial/close-up), mood (serene/dramatic/playful), colors (warm tones/vibrant/pastel), texture, atmosphere. Return ONLY the expanded prompt, about 50-80 words.`;
-
-            const retryResult = await ai.models.generateContent({
-                model: 'gemini-2.5-flash',
-                contents: { parts: [{ text: forceEnhancePrompt }] },
-                config: {
-                    temperature: 1.2,
-                    maxOutputTokens: 400
-                }
-            });
-
-            if (retryResult && retryResult.text) {
-                enhancedPrompt = retryResult.text.trim();
-            }
-        }
-
-        // Fallback: if enhancement is too short or empty, use original
-        if (enhancedPrompt.length < 10) {
-            return currentPrompt;
-        }
-
-        return enhancedPrompt;
-    } catch (error) { throw handleError(error, language); }
+        // Use new revolutionary v2 system
+        const result = await enhancePromptV2(currentPrompt, imageFiles, styleFile, structureFile, userApiKey, language);
+        return result.enhancedPrompt;
+    } catch (error) {
+        console.error('❌ Enhancement v2 failed, returning original:', error);
+        return currentPrompt;
+    }
 }
 
 export const generateDynamicToolsFromImage = async (imageFiles: File[], styleFile: File | null, structureFile: File | null, userApiKey?: string | null, language: 'en' | 'it' = 'en'): Promise<DynamicTool[]> => {
