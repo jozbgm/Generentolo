@@ -356,46 +356,108 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                             </div>
                         </div>
 
-                        {/* v0.8: Live Quality Tips (CLICKABLE!) */}
+                        {/* v0.9: Smart Contextual Hints (CLICKABLE!) */}
                         {prompt && (() => {
-                            const tips: Array<{ text: string; example: string }> = [];
+                            const tips: Array<{ text: string; example: string; icon: string }> = [];
                             const promptLower = prompt.toLowerCase();
                             const wordCount = prompt.trim().split(/\s+/).length;
                             const isItalian = t.language === 'it';
 
-                            // Too short - no specific example, just encouragement
-                            if (wordCount < 3) {
+                            // CONTEXTUAL HINTS: Analyze what user is writing and suggest relevant additions
+
+                            // People/Person detected
+                            if (promptLower.match(/\b(woman|man|girl|boy|person|model|donna|uomo|ragazza|ragazzo|persona|modella)\b/)) {
+                                if (!promptLower.match(/\b(pose|posing|standing|sitting|looking|smiling|posa|in piedi|seduto|guardando|sorridendo)\b/)) {
+                                    tips.push({
+                                        icon: '🧍',
+                                        text: isItalian ? "Posa" : "Pose",
+                                        example: isItalian ? "posa sicura, sguardo verso camera, sorriso naturale" : "confident pose, looking at camera, natural smile"
+                                    });
+                                }
+                                if (!promptLower.match(/\b(outfit|dress|wearing|abbigliamento|vestito|indossa)\b/)) {
+                                    tips.push({
+                                        icon: '👗',
+                                        text: isItalian ? "Abbigliamento" : "Outfit",
+                                        example: isItalian ? "elegante outfit business casual, vestito moderno" : "elegant business casual outfit, modern dress"
+                                    });
+                                }
+                            }
+
+                            // Animals detected
+                            if (promptLower.match(/\b(cat|dog|bird|animal|kitten|puppy|gatto|cane|uccello|animale|gattino|cucciolo)\b/)) {
+                                if (!promptLower.match(/\b(playing|sleeping|running|jumping|eating|giocando|dormendo|correndo|saltando|mangiando)\b/)) {
+                                    tips.push({
+                                        icon: '🐾',
+                                        text: isItalian ? "Azione" : "Action",
+                                        example: isItalian ? "giocando con filo di lana, stiracchiandosi al sole" : "playing with yarn, stretching in sunlight"
+                                    });
+                                }
+                            }
+
+                            // Product detected
+                            if (promptLower.match(/\b(bottle|product|package|box|container|cosmetic|bottiglia|prodotto|confezione|scatola|cosmetico)\b/)) {
+                                if (!promptLower.match(/\b(surface|background|table|marble|wood|superficie|sfondo|tavolo|marmo|legno)\b/)) {
+                                    tips.push({
+                                        icon: '📦',
+                                        text: isItalian ? "Superficie" : "Surface",
+                                        example: isItalian ? "su piano di marmo bianco, sfondo minimalista neutro" : "on white marble surface, minimal neutral background"
+                                    });
+                                }
+                                if (!promptLower.match(/\b(droplet|water|ice|reflection|goccia|acqua|ghiaccio|riflesso)\b/)) {
+                                    tips.push({
+                                        icon: '💧',
+                                        text: isItalian ? "Dettagli" : "Details",
+                                        example: isItalian ? "con gocce d'acqua, riflessi lucidi sulla superficie" : "with water droplets, glossy surface reflections"
+                                    });
+                                }
+                            }
+
+                            // Food detected
+                            if (promptLower.match(/\b(food|meal|dish|pizza|burger|pasta|dessert|cibo|piatto|dolce)\b/)) {
+                                if (!promptLower.match(/\b(fresh|hot|steam|garnish|fresco|caldo|vapore|guarnizione)\b/)) {
+                                    tips.push({
+                                        icon: '🍽️',
+                                        text: isItalian ? "Presentazione" : "Presentation",
+                                        example: isItalian ? "appena sfornato, vapore visibile, guarnizione fresca" : "freshly cooked, visible steam, fresh garnish"
+                                    });
+                                }
+                            }
+
+                            // Landscape/Scene detected
+                            if (promptLower.match(/\b(landscape|mountain|beach|forest|city|street|paesaggio|montagna|spiaggia|foresta|città|strada)\b/)) {
+                                if (!promptLower.match(/\b(sunset|sunrise|dawn|dusk|golden hour|tramonto|alba|crepuscolo)\b/)) {
+                                    tips.push({
+                                        icon: '🌅',
+                                        text: isItalian ? "Momento" : "Time",
+                                        example: isItalian ? "al tramonto dorato, luce calda del crepuscolo" : "at golden sunset, warm twilight light"
+                                    });
+                                }
+                            }
+
+                            // ALWAYS SUGGEST: Missing technical photography terms
+                            if (!promptLower.match(/\b(shot|angle|lens|camera|8k|photography|professional|inquadratura|angolo|obiettivo|fotografia|professionale)\b/) && wordCount >= 3) {
                                 tips.push({
-                                    text: isItalian ? "💡 Aggiungi più dettagli" : "💡 Add more details",
-                                    example: '' // No auto-add for this one
+                                    icon: '📸',
+                                    text: isItalian ? "Camera" : "Camera",
+                                    example: isItalian ? "foto professionale, obiettivo 85mm, inquadratura bilanciata" : "professional photography, 85mm lens, balanced composition"
                                 });
                             }
-                            // Missing lighting
-                            if (!promptLower.includes('light') && !promptLower.includes('luce') && !promptLower.includes('glow') && !promptLower.includes('bright') && !promptLower.includes('dark') && !promptLower.includes('shadow') && !promptLower.includes('ombra')) {
+
+                            // ALWAYS SUGGEST: Missing lighting if no light-related terms
+                            if (!promptLower.match(/\b(light|lighting|glow|bright|dark|shadow|golden hour|studio|luce|illuminazione|bagliore|ombra|dorato)\b/) && wordCount >= 3) {
                                 tips.push({
-                                    text: isItalian ? "💡 Illuminazione" : "💡 Lighting",
-                                    example: isItalian ? "golden hour light, luce soffusa da studio" : "golden hour light, soft studio lighting"
+                                    icon: '💡',
+                                    text: isItalian ? "Illuminazione" : "Lighting",
+                                    example: isItalian ? "luce naturale dorata, illuminazione da studio professionale" : "golden natural light, professional studio lighting"
                                 });
                             }
-                            // Missing camera/composition
-                            if (!promptLower.includes('shot') && !promptLower.includes('angle') && !promptLower.includes('angolo') && !promptLower.includes('view') && !promptLower.includes('perspective') && !promptLower.includes('prospettiva') && !promptLower.includes('lens') && !promptLower.includes('obiettivo')) {
+
+                            // ALWAYS SUGGEST: Missing mood/quality if very basic prompt
+                            if (!promptLower.match(/\b(cinematic|dramatic|serene|moody|vibrant|hyperrealistic|8k|cinematico|drammatico|sereno|vivace|iper-realistico)\b/) && wordCount >= 4) {
                                 tips.push({
-                                    text: isItalian ? "💡 Angolo camera" : "💡 Camera angle",
-                                    example: isItalian ? "inquadratura dal basso, obiettivo 85mm" : "low-angle shot, 85mm lens"
-                                });
-                            }
-                            // Missing mood/atmosphere
-                            if (!promptLower.includes('mood') && !promptLower.includes('atmosphere') && !promptLower.includes('atmosfera') && !promptLower.includes('feeling') && !promptLower.includes('vibe') && wordCount > 3) {
-                                tips.push({
-                                    text: isItalian ? "💡 Mood" : "💡 Mood",
-                                    example: isItalian ? "atmosfera cinematografica, mood drammatico" : "cinematic atmosphere, dramatic mood"
-                                });
-                            }
-                            // Missing quality/professional terms
-                            if (!promptLower.includes('professional') && !promptLower.includes('8k') && !promptLower.includes('quality') && !promptLower.includes('photography') && !promptLower.includes('photorealistic') && wordCount > 3) {
-                                tips.push({
-                                    text: isItalian ? "💡 Qualità" : "💡 Quality",
-                                    example: isItalian ? "fotografia professionale, 8K ultra HD, iper-realistico" : "professional photography, 8K ultra HD, hyper-realistic"
+                                    icon: '✨',
+                                    text: isItalian ? "Qualità" : "Quality",
+                                    example: isItalian ? "iper-realistico, 8K ultra HD, mood cinematografico" : "hyper-realistic, 8K ultra HD, cinematic mood"
                                 });
                             }
 
@@ -408,23 +470,16 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                                         <button
                                             key={idx}
                                             onClick={() => {
-                                                if (tip.example) {
-                                                    // Add the example to the prompt
-                                                    const newPrompt = prompt.trim() + (prompt.trim().endsWith(',') ? ' ' : ', ') + tip.example;
-                                                    onPromptChange(newPrompt);
-                                                    // Focus textarea
-                                                    setTimeout(() => promptTextareaRef.current?.focus(), 100);
-                                                }
+                                                // Add the example to the prompt
+                                                const newPrompt = prompt.trim() + (prompt.trim().endsWith(',') ? ' ' : ', ') + tip.example;
+                                                onPromptChange(newPrompt);
+                                                // Focus textarea
+                                                setTimeout(() => promptTextareaRef.current?.focus(), 100);
                                             }}
-                                            disabled={!tip.example}
-                                            className={`px-2 py-1 rounded-md transition-all duration-150 ${
-                                                tip.example
-                                                    ? 'bg-brand-yellow/20 dark:bg-brand-yellow/10 text-brand-yellow dark:text-brand-yellow hover:bg-brand-yellow/30 dark:hover:bg-brand-yellow/20 hover:scale-105 active:scale-95 cursor-pointer'
-                                                    : 'bg-brand-purple/10 dark:bg-brand-pink/10 text-brand-purple dark:text-brand-pink cursor-default'
-                                            }`}
-                                            title={tip.example ? (isItalian ? `Clicca per aggiungere: ${tip.example}` : `Click to add: ${tip.example}`) : undefined}
+                                            className="px-2 py-1 rounded-md transition-all duration-150 bg-brand-yellow/20 dark:bg-brand-yellow/10 text-brand-yellow dark:text-brand-yellow hover:bg-brand-yellow/30 dark:hover:bg-brand-yellow/20 hover:scale-105 active:scale-95 cursor-pointer"
+                                            title={isItalian ? `Clicca per aggiungere: ${tip.example}` : `Click to add: ${tip.example}`}
                                         >
-                                            {tip.text}
+                                            {tip.icon} {tip.text}
                                         </button>
                                     ))}
                                 </div>
