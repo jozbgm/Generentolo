@@ -356,39 +356,76 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                             </div>
                         </div>
 
-                        {/* v0.8: Live Quality Tips */}
+                        {/* v0.8: Live Quality Tips (CLICKABLE!) */}
                         {prompt && (() => {
-                            const tips: string[] = [];
+                            const tips: Array<{ text: string; example: string }> = [];
                             const promptLower = prompt.toLowerCase();
                             const wordCount = prompt.trim().split(/\s+/).length;
                             const isItalian = t.language === 'it';
 
-                            // Too short
+                            // Too short - no specific example, just encouragement
                             if (wordCount < 3) {
-                                tips.push(isItalian ? "💡 Aggiungi più dettagli per risultati migliori" : "💡 Add more details for better results");
+                                tips.push({
+                                    text: isItalian ? "💡 Aggiungi più dettagli" : "💡 Add more details",
+                                    example: '' // No auto-add for this one
+                                });
                             }
                             // Missing lighting
                             if (!promptLower.includes('light') && !promptLower.includes('luce') && !promptLower.includes('glow') && !promptLower.includes('bright') && !promptLower.includes('dark') && !promptLower.includes('shadow') && !promptLower.includes('ombra')) {
-                                tips.push(isItalian ? "💡 Prova ad aggiungere dettagli di illuminazione (es. 'golden hour', 'luce soffusa')" : "💡 Try adding lighting details (e.g., 'golden hour', 'soft lighting')");
+                                tips.push({
+                                    text: isItalian ? "💡 Illuminazione" : "💡 Lighting",
+                                    example: isItalian ? "golden hour light, luce soffusa da studio" : "golden hour light, soft studio lighting"
+                                });
                             }
                             // Missing camera/composition
                             if (!promptLower.includes('shot') && !promptLower.includes('angle') && !promptLower.includes('angolo') && !promptLower.includes('view') && !promptLower.includes('perspective') && !promptLower.includes('prospettiva') && !promptLower.includes('lens') && !promptLower.includes('obiettivo')) {
-                                tips.push(isItalian ? "💡 Specifica l'angolo della camera (es. 'inquadratura dal basso', 'obiettivo 85mm')" : "💡 Specify camera angle (e.g., 'low-angle shot', '85mm lens')");
+                                tips.push({
+                                    text: isItalian ? "💡 Angolo camera" : "💡 Camera angle",
+                                    example: isItalian ? "inquadratura dal basso, obiettivo 85mm" : "low-angle shot, 85mm lens"
+                                });
                             }
                             // Missing mood/atmosphere
                             if (!promptLower.includes('mood') && !promptLower.includes('atmosphere') && !promptLower.includes('atmosfera') && !promptLower.includes('feeling') && !promptLower.includes('vibe') && wordCount > 3) {
-                                tips.push(isItalian ? "💡 Aggiungi mood/atmosfera (es. 'cinematico', 'onirico', 'drammatico')" : "💡 Add mood/atmosphere (e.g., 'cinematic', 'dreamy', 'dramatic')");
+                                tips.push({
+                                    text: isItalian ? "💡 Mood" : "💡 Mood",
+                                    example: isItalian ? "atmosfera cinematografica, mood drammatico" : "cinematic atmosphere, dramatic mood"
+                                });
+                            }
+                            // Missing quality/professional terms
+                            if (!promptLower.includes('professional') && !promptLower.includes('8k') && !promptLower.includes('quality') && !promptLower.includes('photography') && !promptLower.includes('photorealistic') && wordCount > 3) {
+                                tips.push({
+                                    text: isItalian ? "💡 Qualità" : "💡 Quality",
+                                    example: isItalian ? "fotografia professionale, 8K ultra HD, iper-realistico" : "professional photography, 8K ultra HD, hyper-realistic"
+                                });
                             }
 
-                            // Show max 2 tips to avoid clutter
-                            const displayTips = tips.slice(0, 2);
+                            // Show max 3 tips to avoid clutter
+                            const displayTips = tips.slice(0, 3);
 
                             return displayTips.length > 0 ? (
-                                <div className="flex flex-wrap gap-1.5 text-xs text-brand-purple dark:text-brand-pink animate-fade-in">
+                                <div className="flex flex-wrap gap-1.5 text-xs animate-fade-in">
                                     {displayTips.map((tip, idx) => (
-                                        <span key={idx} className="px-2 py-1 bg-brand-purple/10 dark:bg-brand-pink/10 rounded-md">
-                                            {tip}
-                                        </span>
+                                        <button
+                                            key={idx}
+                                            onClick={() => {
+                                                if (tip.example) {
+                                                    // Add the example to the prompt
+                                                    const newPrompt = prompt.trim() + (prompt.trim().endsWith(',') ? ' ' : ', ') + tip.example;
+                                                    onPromptChange(newPrompt);
+                                                    // Focus textarea
+                                                    setTimeout(() => promptTextareaRef.current?.focus(), 100);
+                                                }
+                                            }}
+                                            disabled={!tip.example}
+                                            className={`px-2 py-1 rounded-md transition-all duration-150 ${
+                                                tip.example
+                                                    ? 'bg-brand-yellow/20 dark:bg-brand-yellow/10 text-brand-yellow dark:text-brand-yellow hover:bg-brand-yellow/30 dark:hover:bg-brand-yellow/20 hover:scale-105 active:scale-95 cursor-pointer'
+                                                    : 'bg-brand-purple/10 dark:bg-brand-pink/10 text-brand-purple dark:text-brand-pink cursor-default'
+                                            }`}
+                                            title={tip.example ? (isItalian ? `Clicca per aggiungere: ${tip.example}` : `Click to add: ${tip.example}`) : undefined}
+                                        >
+                                            {tip.text}
+                                        </button>
                                     ))}
                                 </div>
                             ) : null;
