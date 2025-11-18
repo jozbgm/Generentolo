@@ -12,7 +12,6 @@ const translations = {
   en: {
     headerTitle: 'Generentolo v0.9.1 Beta',
     headerSubtitle: 'Let me do it for you!',
-    letMeDoForYou: 'Magic Prompt',
     refImagesTitle: 'Reference & Style Images',
     styleRefTitle: 'Style Reference',
     structureRefTitle: 'Structure Guide',
@@ -117,7 +116,6 @@ const translations = {
   it: {
     headerTitle: 'Generentolo v0.9.1 Beta',
     headerSubtitle: 'Let me do it for you!',
-    letMeDoForYou: 'Magic Prompt',
     refImagesTitle: 'Immagini di Riferimento e Stile',
     styleRefTitle: 'Riferimento Stile',
     structureRefTitle: 'Guida Struttura',
@@ -2088,47 +2086,6 @@ export default function App() {
         }
     }, [referenceImages, styleReferenceImage, structureImage, preciseReference, userApiKey, aspectRatio, showToast, t.generationFailed, language, editedPrompt, negativePrompt, seed, numImagesToGenerate]);
 
-    const handleLetMeDoForYou = useCallback(async () => {
-        if (prompts.length === 0 || isLoading) return;
-        
-        const randomPrompt = prompts[Math.floor(Math.random() * prompts.length)];
-    
-        let toolSelectionsString = '';
-        if (dynamicTools.length > 0) {
-            const selections: string[] = [];
-            dynamicTools.forEach(tool => {
-                if (Math.random() > 0.5 && tool.options.length > 0) {
-                    const randomOption = tool.options[Math.floor(Math.random() * tool.options.length)];
-                    selections.push(`${tool.label}: (${randomOption})`);
-                }
-            });
-            toolSelectionsString = selections.join(', ');
-        }
-    
-        let finalPrompt = randomPrompt;
-        if (toolSelectionsString) {
-            try {
-                finalPrompt = await geminiService.rewritePromptWithOptions(randomPrompt, toolSelectionsString, userApiKey, language);
-            } catch (e) {
-                console.error("Rewrite failed during 'Let Me Do For You', falling back.", e);
-                const conjunction = language === 'it' ? ', con ' : ', with ';
-                finalPrompt = `${randomPrompt}${conjunction}${toolSelectionsString}`;
-            }
-        }
-        
-        setEditedPrompt(finalPrompt);
-        setNegativePrompt('');
-    
-        const randomSeed = String(Math.floor(Math.random() * 1000000000));
-        setSeed(randomSeed);
-    
-        setTimeout(() => {
-            setNumImagesToGenerate(1); // Reset to 1 for this action
-            handleGenerate();
-        }, 100);
-    
-    }, [prompts, isLoading, dynamicTools, userApiKey, language, handleGenerate]);
-
     // Image navigation in lightbox
     const getImageNavigation = useCallback(() => {
         if (!zoomedImage) return { prev: null, next: null, current: 0, total: 0 };
@@ -2556,12 +2513,6 @@ export default function App() {
                                 <span>{isLoading ? t.generatingButton : t.generateButton}</span>
                             </button>
                              <div className="flex flex-col gap-3">
-                                <button onClick={handleLetMeDoForYou} disabled={isActionDisabled || prompts.length === 0} className="w-full p-[2px] bg-gradient-to-r from-brand-yellow to-brand-magenta rounded-xl disabled:opacity-50 group transition-all">
-                                    <div className="w-full h-full bg-light-surface dark:bg-dark-surface-accent rounded-[10px] flex justify-center items-center gap-2 text-light-text dark:text-dark-text font-semibold py-2 transition-all group-hover:bg-opacity-80 disabled:group-hover:bg-opacity-100 dark:group-hover:bg-opacity-80">
-                                      <WandIcon className="w-4 h-4 text-brand-yellow" />
-                                      <span className="text-sm">{t.letMeDoForYou}</span>
-                                    </div>
-                                </button>
                                 <button onClick={handleUseAsReference} disabled={isActionDisabled || currentImages.length === 0 || referenceImages.length >= MAX_USER_IMAGES} className="w-full p-[2px] bg-gradient-to-r from-yellow-400 to-amber-500 rounded-xl disabled:opacity-50 group transition-all">
                                    <div className="w-full h-full bg-light-surface dark:bg-dark-surface-accent rounded-[10px] flex justify-center items-center gap-2 text-light-text dark:text-dark-text font-semibold py-2 transition-all group-hover:bg-opacity-80 disabled:group-hover:bg-opacity-100 dark:group-hover:bg-opacity-80">
                                         <CornerUpLeftIcon className="w-4 h-4 text-yellow-500" />
