@@ -1,4 +1,4 @@
-# 🎨 Generentolo v0.9.0 Beta
+# 🎨 Generentolo v0.9.1 Beta
 
 **Professional AI-Powered Image Generation Web Application**
 
@@ -321,6 +321,44 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 ## 📋 Changelog
+
+### v0.9.1 Beta (January 2025)
+**🚀 Revolutionary Prompt Enhancement System + Smart Contextual Hints:**
+- **NEW: Prompt Enhancement v2.0**
+  - Complete rewrite based on industry best practices
+  - Two-step process: Image Analysis → Prompt Enhancement
+  - Vision-aware: analyzes ALL images before enhancing
+  - CO-STAR Framework (Context, Objective, Style, Tone, Audience, Response)
+  - Self-evaluation: validates quality before returning (score 0-100)
+  - Platform-optimized for Gemini Image Generation
+  - Advertising-focused: hyper-realistic default, professional photography language
+  - Never returns "already optimal" - always enhances
+
+- **🧠 Smart Contextual Hints**
+  - Hints change dynamically based on what you write
+  - People detected → suggests Pose + Outfit
+  - Animals detected → suggests Action (playing, stretching)
+  - Products detected → suggests Surface + Details (droplets, reflections)
+  - Food detected → suggests Presentation (steam, garnish)
+  - Landscapes detected → suggests Time of day (golden hour, sunset)
+  - All hints are CLICKABLE - one click adds suggestion to prompt
+  - Max 3 hints shown to avoid clutter
+  - Bilingual: Italian + English detection
+
+- **✨ Enhancement Quality Improvements**
+  - Removed "already optimal" message completely
+  - Shows "✨ Prompt migliorato!" on every enhancement
+  - Aggressive retry logic with temperature 0.85 → 1.2
+  - Quality validation: length, technical terms, photo quality
+  - Fallback template-based enhancement if main system fails
+  - 70-130 words optimal length enforced
+
+**Technical:**
+- services/enhancePromptNew.ts: new enhancement engine (431 lines)
+- FloatingActionBar.tsx: smart contextual hints system
+- Image captioning with vision model (temp 0.4 for accuracy)
+- CO-STAR system instruction with self-evaluation
+- Quality scoring: word count, technical terms, photo indicators
 
 ### v0.9.0 Beta (January 2025)
 **🎨 Bold Creative Redesign + Major Enhancements:**
