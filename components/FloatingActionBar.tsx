@@ -10,7 +10,6 @@ interface FloatingActionBarProps {
     // Actions
     onGenerate: () => void;
     onEnhancePrompt: () => void;
-    onMagicPrompt: () => void;
     onGenerate3Prompts: () => void;
 
     // State
@@ -46,7 +45,6 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
     promptTextareaRef,
     onGenerate,
     onEnhancePrompt,
-    onMagicPrompt,
     onGenerate3Prompts,
     isLoading,
     isEnhancing,
@@ -495,13 +493,6 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                                 className="px-2 lg:px-3 py-1.5 bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-lg text-xs hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 active:scale-95 transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                             >
                                 ✨ <span className="hidden sm:inline">Enhance</span>
-                            </button>
-                            <button
-                                onClick={onMagicPrompt}
-                                disabled={isEnhancing || !hasReferences}
-                                className="px-2 lg:px-3 py-1.5 bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-lg text-xs hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 active:scale-95 transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-                            >
-                                🪄 <span className="hidden sm:inline">Magic</span>
                             </button>
                             <button
                                 onClick={onGenerate3Prompts}

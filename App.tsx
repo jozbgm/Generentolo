@@ -28,7 +28,6 @@ const translations = {
     suggestionsPlaceholder: "Click 'Generate Suggestions' to get creative ideas.",
     promptsLoading: 'Upload an image to generate prompts.',
     promptPlaceholder: 'Write your prompt or generate one from images...',
-    magicPromptButton: 'Your prompt suck? Let me do it for you!',
     createFromImage: 'Create from Images',
     enhancePrompt: 'Enhance Prompt',
     professionalToolsTitle: 'Professional Tools',
@@ -134,7 +133,6 @@ const translations = {
     suggestionsPlaceholder: "Clicca 'Genera Suggerimenti' per ottenere idee creative.",
     promptsLoading: 'Carica un\'immagine per generare i prompt.',
     promptPlaceholder: 'Scrivi il tuo prompt o creane uno dalle immagini...',
-    magicPromptButton: 'Il tuo prompt fa cagher? Ci penso io!',
     createFromImage: 'Crea da Immagini',
     enhancePrompt: 'Migliora Prompt',
     professionalToolsTitle: 'Strumenti Professionali',
@@ -584,7 +582,6 @@ interface ControlPanelProps {
     dynamicTools: DynamicTool[];
     selectedAspectRatio: string;
     onAspectRatioChange: (ratio: string) => void;
-    onMagicPrompt: () => void;
     onGenerateTools: () => void;
     isLoading: boolean;
     isToolsLoading: boolean;
@@ -666,7 +663,7 @@ const PromptTextarea = React.memo<{
 
 const ControlPanel: React.FC<ControlPanelProps> = (props) => {
     const {
-        dynamicTools, selectedAspectRatio, onAspectRatioChange, onMagicPrompt, onGenerateTools,
+        dynamicTools, selectedAspectRatio, onAspectRatioChange, onGenerateTools,
         isLoading, isToolsLoading, isEnhancing, referenceImages, styleReferenceImage, numImages, onNumImagesChange,
         userApiKey, language, editedPrompt, onEditedPromptChange, negativePrompt, onNegativePromptChange, seed, onSeedChange, onRandomizeSeed, onCopySeed, promptTextareaRef
     } = props;
@@ -740,14 +737,6 @@ const ControlPanel: React.FC<ControlPanelProps> = (props) => {
                     textareaRef={promptTextareaRef}
                 />
             </div>
-            <button 
-                onClick={onMagicPrompt} 
-                disabled={isActionDisabled || (isPromptEmpty && !hasImages)} 
-                className="w-full text-center py-2 px-4 rounded-lg bg-light-surface dark:bg-dark-surface/50 border border-light-border dark:border-dark-border hover:border-brand-yellow transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-dark-border font-semibold text-sm flex items-center justify-center gap-2"
-            >
-                 <WandIcon className="w-4 h-4 text-brand-yellow" />
-                 <span>{isPromptEmpty ? t.createFromImage : t.enhancePrompt}</span>
-            </button>
             
             <div>
                 <h3 className="font-semibold mb-3 text-light-text dark:text-dark-text">{t.professionalToolsTitle}</h3>
@@ -2235,14 +2224,6 @@ export default function App() {
             setIsEnhancing(false);
         }
     }, [editedPrompt, referenceImages, styleReferenceImage, structureImage, userApiKey, language, showToast, t.promptEnhancementFailed]);
-    
-    const handleMagicPrompt = useCallback(() => {
-        if (editedPrompt.trim() === '') {
-            generateInitialPrompt(referenceImages, styleReferenceImage, structureImage);
-        } else {
-            handleEnhancePrompt();
-        }
-    }, [editedPrompt, referenceImages, styleReferenceImage, structureImage, generateInitialPrompt, handleEnhancePrompt]);
 
     const handleDownload = (image: GeneratedImage) => {
         const downloadUrl = image.imageDataUrl || image.thumbnailDataUrl;
@@ -2499,14 +2480,14 @@ export default function App() {
     // Keyboard shortcuts
     const shortcuts = useMemo(() => [
         { ...APP_SHORTCUTS.GENERATE, action: () => !isActionDisabled && handleGenerate() },
-        { ...APP_SHORTCUTS.ENHANCE_PROMPT, action: () => !isActionDisabled && handleMagicPrompt() },
+        { ...APP_SHORTCUTS.ENHANCE_PROMPT, action: () => !isActionDisabled && handleEnhancePrompt() },
         { ...APP_SHORTCUTS.RANDOM_SEED, action: handleRandomizeSeed },
         { ...APP_SHORTCUTS.CLEAR_INTERFACE, action: handleResetInterface },
         { ...APP_SHORTCUTS.OPEN_SETTINGS, action: () => setIsSettingsOpen(true) },
         { ...APP_SHORTCUTS.FOCUS_PROMPT, action: () => promptTextareaRef.current?.focus() },
         { ...APP_SHORTCUTS.TOGGLE_THEME, action: toggleTheme },
         { ...APP_SHORTCUTS.HELP, action: () => setIsShortcutsOpen(true) }, // v0.8
-    ], [isActionDisabled, handleGenerate, handleMagicPrompt, handleRandomizeSeed, handleResetInterface, toggleTheme]);
+    ], [isActionDisabled, handleGenerate, handleEnhancePrompt, handleRandomizeSeed, handleResetInterface, toggleTheme]);
 
     useKeyboardShortcuts(shortcuts, !isLoading && !isEnhancing);
 
@@ -2662,7 +2643,6 @@ export default function App() {
                     promptTextareaRef={promptTextareaRef}
                     onGenerate={handleGenerate}
                     onEnhancePrompt={handleEnhancePrompt}
-                    onMagicPrompt={handleMagicPrompt}
                     onGenerate3Prompts={handleGenerateCreativePrompts}
                     isLoading={isLoading}
                     isEnhancing={isEnhancing}
