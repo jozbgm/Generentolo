@@ -6,7 +6,25 @@ interface PromptLibraryProps {
     isOpen: boolean;
     onClose: () => void;
     onUsePrompt: (prompt: string) => void;
-    t: any; // translations object
+    t: {
+        promptLibraryTitle: string;
+        promptLibrarySearch: string;
+        promptLibraryTemplates: string;
+        promptLibraryTemplate: string;
+        promptLibraryAvailable: string;
+        promptLibraryNoResults: string;
+        promptLibraryNoResultsDesc: string;
+        promptLibraryCopy: string;
+        promptLibraryCopied: string;
+        promptLibraryUse: string;
+        promptLibraryCategoryAll: string;
+        promptLibraryCategoryCombine: string;
+        promptLibraryCategoryStyle: string;
+        promptLibraryCategoryPeople: string;
+        promptLibraryCategoryEnvironment: string;
+        promptLibraryCategoryEdit: string;
+        promptLibraryCategoryCreative: string;
+    };
 }
 
 const PromptLibrary: React.FC<PromptLibraryProps> = ({ isOpen, onClose, onUsePrompt, t }) => {
