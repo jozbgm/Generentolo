@@ -113,6 +113,24 @@ const translations = {
     upscaleQuota: 'Upscales remaining',
     upscaleQuotaExceeded: 'Monthly quota exceeded',
     compareImages: 'Compare Before/After',
+    // Prompt Library
+    promptLibraryTitle: 'Prompt Library',
+    promptLibrarySearch: 'Search prompts by title, description, or tags...',
+    promptLibraryTemplates: 'templates',
+    promptLibraryTemplate: 'template',
+    promptLibraryAvailable: 'available',
+    promptLibraryNoResults: 'No prompts found',
+    promptLibraryNoResultsDesc: 'Try adjusting your search or selecting a different category',
+    promptLibraryCopy: 'Copy',
+    promptLibraryCopied: 'Copied!',
+    promptLibraryUse: 'Use Prompt',
+    promptLibraryCategoryAll: 'All',
+    promptLibraryCategoryCombine: 'Combine & Merge',
+    promptLibraryCategoryStyle: 'Style & Transform',
+    promptLibraryCategoryPeople: 'People & Characters',
+    promptLibraryCategoryEnvironment: 'Environment & Scene',
+    promptLibraryCategoryEdit: 'Edit & Modify',
+    promptLibraryCategoryCreative: 'Creative & Fun',
 
   },
   it: {
@@ -217,6 +235,24 @@ const translations = {
     upscaleQuota: 'Upscale rimanenti',
     upscaleQuotaExceeded: 'Quota mensile esaurita',
     compareImages: 'Confronta Prima/Dopo',
+    // Prompt Library
+    promptLibraryTitle: 'Libreria Prompt',
+    promptLibrarySearch: 'Cerca prompt per titolo, descrizione o tag...',
+    promptLibraryTemplates: 'template',
+    promptLibraryTemplate: 'template',
+    promptLibraryAvailable: 'disponibili',
+    promptLibraryNoResults: 'Nessun prompt trovato',
+    promptLibraryNoResultsDesc: 'Prova a modificare la ricerca o seleziona una categoria diversa',
+    promptLibraryCopy: 'Copia',
+    promptLibraryCopied: 'Copiato!',
+    promptLibraryUse: 'Usa Prompt',
+    promptLibraryCategoryAll: 'Tutti',
+    promptLibraryCategoryCombine: 'Combina e Unisci',
+    promptLibraryCategoryStyle: 'Stile e Trasforma',
+    promptLibraryCategoryPeople: 'Persone e Personaggi',
+    promptLibraryCategoryEnvironment: 'Ambiente e Scena',
+    promptLibraryCategoryEdit: 'Modifica e Ritocca',
+    promptLibraryCategoryCreative: 'Creativo e Divertente',
   }
 };
 
@@ -334,7 +370,7 @@ const Header: React.FC<HeaderProps> = ({ theme, toggleTheme, onOpenSettings, onO
             <div className="flex items-center gap-2">
                 <button
                     onClick={onOpenPromptLibrary}
-                    className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-brand-purple to-brand-pink text-white text-sm font-medium hover:opacity-90 hover:scale-105 active:scale-95 transition-all duration-200 shadow-md flex items-center gap-2"
+                    className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-brand-yellow to-brand-magenta text-white text-sm font-semibold hover:opacity-90 transition-all duration-300 hover:shadow-[0_0_20px_rgba(255,217,61,0.5)] flex items-center gap-2"
                     title="Prompt Library"
                 >
                     <SparklesIcon className="w-4 h-4" />
@@ -493,12 +529,12 @@ const ReferencePanel: React.FC<{
                 onDragEnter={handleStyleDragEnter} onDragLeave={handleStyleDragLeave} onDragOver={handleDragOver} onDrop={handleStyleDrop}
                 className={`rounded-xl transition-all relative ${isDraggingStyle ? 'border-2 border-dashed border-brand-pink bg-brand-pink/10 p-1' : 'border-2 border-transparent'}`}
             >
-                <div className="relative group shadow-[0_0_8px_2px_rgba(217,70,239,0.5)] rounded-xl">
-                     <div className="absolute top-2 left-2 px-2 py-1 bg-brand-pink/80 text-white text-xs rounded-full font-semibold backdrop-blur-sm z-10">STYLE</div>
+                <div className="relative group shadow-[0_0_8px_2px_rgba(255,217,61,0.5)] rounded-xl">
+                     <div className="absolute top-2 left-2 px-2 py-1 bg-brand-yellow/90 text-black text-xs rounded-full font-semibold backdrop-blur-sm z-10">STYLE</div>
                     {styleImage ? (
                         <StyleImagePreview file={styleImage} onRemove={onRemoveStyleImage} />
                     ) : (
-                        <label htmlFor="style-file-upload" className="cursor-pointer w-full bg-light-surface dark:bg-dark-surface/50 border-2 border-dashed border-light-border dark:border-dark-border rounded-xl flex flex-col justify-center items-center text-light-text-muted dark:text-dark-text-muted hover:border-brand-pink transition-colors p-6 text-center">
+                        <label htmlFor="style-file-upload" className="cursor-pointer w-full bg-light-surface dark:bg-dark-surface/50 border-2 border-dashed border-light-border dark:border-dark-border rounded-xl flex flex-col justify-center items-center text-light-text-muted dark:text-dark-text-muted hover:border-brand-yellow transition-colors p-6 text-center">
                             <UploadIcon className="w-8 h-8 mb-2" />
                             <span className="text-sm font-medium">{t.addStyleImage}</span>
                             <span className="text-xs mt-1">{t.styleRefTitle} ({t.optional})</span>
@@ -514,14 +550,14 @@ const ReferencePanel: React.FC<{
                 onDragEnter={handleStructureDragEnter} onDragLeave={handleStructureDragLeave} onDragOver={handleDragOver} onDrop={handleStructureDrop}
                 className={`rounded-xl transition-all relative ${isDraggingStructure ? 'border-2 border-dashed border-brand-blue bg-brand-blue/10 p-1' : 'border-2 border-transparent'}`}
             >
-                <div className="relative group shadow-[0_0_8px_2px_rgba(59,130,246,0.5)] rounded-xl">
-                     <div className="absolute top-2 left-2 px-2 py-1 bg-brand-blue/80 text-white text-xs rounded-full font-semibold backdrop-blur-sm z-10">
+                <div className="relative group shadow-[0_0_8px_2px_rgba(255,0,110,0.5)] rounded-xl">
+                     <div className="absolute top-2 left-2 px-2 py-1 bg-brand-magenta/90 text-white text-xs rounded-full font-semibold backdrop-blur-sm z-10">
                         STRUCTURE
                      </div>
                     {structureImage ? (
                         <StyleImagePreview file={structureImage} onRemove={onRemoveStructureImage} />
                     ) : (
-                        <label htmlFor="structure-file-upload" className="cursor-pointer w-full bg-light-surface dark:bg-dark-surface/50 border-2 border-dashed border-light-border dark:border-dark-border rounded-xl flex flex-col justify-center items-center text-light-text-muted dark:text-dark-text-muted hover:border-brand-blue transition-colors p-6 text-center">
+                        <label htmlFor="structure-file-upload" className="cursor-pointer w-full bg-light-surface dark:bg-dark-surface/50 border-2 border-dashed border-light-border dark:border-dark-border rounded-xl flex flex-col justify-center items-center text-light-text-muted dark:text-dark-text-muted hover:border-brand-magenta transition-colors p-6 text-center">
                             <UploadIcon className="w-8 h-8 mb-2" />
                             <span className="text-sm font-medium">{t.addStructureImage}</span>
                             <span className="text-xs mt-1">{t.structureRefTitle} ({t.optional})</span>
@@ -2639,6 +2675,7 @@ export default function App() {
                         setEditedPrompt(prompt);
                         promptTextareaRef.current?.focus();
                     }}
+                    t={t}
                 />
 
                 {editingImage && <InpaintEditor image={editingImage} onClose={() => setEditingImage(null)} onSave={handleInpaint} />}
