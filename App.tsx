@@ -4,14 +4,15 @@ import * as geminiService from './services/geminiService';
 import * as upscaleService from './services/upscaleService';
 import * as presetsService from './services/presetsService';
 import { useKeyboardShortcuts, APP_SHORTCUTS } from './hooks/useKeyboardShortcuts';
-import { SunIcon, MoonIcon, UploadIcon, DownloadIcon, ZoomInIcon, SparklesIcon, CopyIcon, SettingsIcon, XIcon, CheckIcon, LanguageIcon, WandIcon, InfoIcon, AlertTriangleIcon, BrushIcon, DiceIcon, TrashIcon, ReloadIcon, EnvelopeIcon, StarIcon, CornerUpLeftIcon, UpscaleIcon, ChevronLeftIcon, ChevronRightIcon } from './components/icons';
+import { SunIcon, MoonIcon, UploadIcon, DownloadIcon, ZoomInIcon, SparklesIcon, CopyIcon, SettingsIcon, XIcon, CheckIcon, LanguageIcon, WandIcon, InfoIcon, AlertTriangleIcon, BrushIcon, DiceIcon, TrashIcon, ReloadIcon, EnvelopeIcon, StarIcon, CornerUpLeftIcon, UpscaleIcon, ChevronLeftIcon, ChevronRightIcon, SearchIcon } from './components/icons';
 import FloatingActionBar from './components/FloatingActionBar';
 import ZoomableImage from './components/ZoomableImage';
+import PromptLibrary from './components/PromptLibrary';
 
 // --- Localization ---
 const translations = {
   en: {
-    headerTitle: 'Generentolo v0.9.1 Beta',
+    headerTitle: 'Generentolo v0.9.2 Beta',
     headerSubtitle: 'Let me do it for you!',
     refImagesTitle: 'Reference & Style Images',
     styleRefTitle: 'Style Reference',
@@ -115,7 +116,7 @@ const translations = {
 
   },
   it: {
-    headerTitle: 'Generentolo v0.9.1 Beta',
+    headerTitle: 'Generentolo v0.9.2 Beta',
     headerSubtitle: 'Let me do it for you!',
     refImagesTitle: 'Immagini di Riferimento e Stile',
     styleRefTitle: 'Riferimento Stile',
@@ -313,8 +314,9 @@ interface HeaderProps {
     onOpenFeedback: () => void;
     onOpenShortcuts: () => void;
     onOpenHelp: () => void;
+    onOpenPromptLibrary: () => void;
 }
-const Header: React.FC<HeaderProps> = ({ theme, toggleTheme, onOpenSettings, onOpenFeedback, onOpenShortcuts, onOpenHelp }) => {
+const Header: React.FC<HeaderProps> = ({ theme, toggleTheme, onOpenSettings, onOpenFeedback, onOpenShortcuts, onOpenHelp, onOpenPromptLibrary }) => {
     const { t, language, setLanguage } = useLocalization();
     const toggleLanguage = () => setLanguage(language === 'en' ? 'it' : 'en');
     return (
@@ -330,6 +332,14 @@ const Header: React.FC<HeaderProps> = ({ theme, toggleTheme, onOpenSettings, onO
                 </p>
             </div>
             <div className="flex items-center gap-2">
+                <button
+                    onClick={onOpenPromptLibrary}
+                    className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-brand-purple to-brand-pink text-white text-sm font-medium hover:opacity-90 hover:scale-105 active:scale-95 transition-all duration-200 shadow-md flex items-center gap-2"
+                    title="Prompt Library"
+                >
+                    <SparklesIcon className="w-4 h-4" />
+                    <span className="hidden sm:inline">Prompts</span>
+                </button>
                 <button onClick={onOpenHelp} className="p-2 rounded-full text-light-text-muted dark:text-dark-text-muted hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors" title="Help Guide">
                     <InfoIcon className="w-5 h-5" />
                 </button>
@@ -1891,6 +1901,7 @@ export default function App() {
     const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
     const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
     const [isHelpOpen, setIsHelpOpen] = useState(false);
+    const [isPromptLibraryOpen, setIsPromptLibraryOpen] = useState(false);
     const [userApiKey, setUserApiKey] = useState<string>('');
     const [toast, setToast] = useState<{ id: number; message: string; type: 'success' | 'error' } | null>(null);
     const [isHistorySelectionMode, setIsHistorySelectionMode] = useState(false);
@@ -2452,7 +2463,7 @@ export default function App() {
     return (
         <LanguageContext.Provider value={{ language, setLanguage, t }}>
             <div className="h-screen w-screen bg-light-bg dark:bg-dark-bg text-light-text dark:text-dark-text flex flex-col font-sans">
-                <Header theme={theme} toggleTheme={toggleTheme} onOpenSettings={() => setIsSettingsOpen(true)} onOpenFeedback={() => setIsFeedbackOpen(true)} onOpenShortcuts={() => setIsShortcutsOpen(true)} onOpenHelp={() => setIsHelpOpen(true)} />
+                <Header theme={theme} toggleTheme={toggleTheme} onOpenSettings={() => setIsSettingsOpen(true)} onOpenFeedback={() => setIsFeedbackOpen(true)} onOpenShortcuts={() => setIsShortcutsOpen(true)} onOpenHelp={() => setIsHelpOpen(true)} onOpenPromptLibrary={() => setIsPromptLibraryOpen(true)} />
                 <main className="flex-1 flex flex-col lg:flex-row gap-4 lg:gap-6 px-4 pt-4 pb-32 lg:pb-28 overflow-y-auto lg:overflow-hidden">
                     {/* --- Left Sidebar (only references/style/structure) --- */}
                     <aside className="w-full lg:w-[280px] flex-shrink-0 bg-light-surface/50 dark:bg-dark-surface/30 backdrop-blur-xl rounded-3xl overflow-y-auto h-full">
@@ -2620,7 +2631,16 @@ export default function App() {
                 <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
                 <ShortcutsModal isOpen={isShortcutsOpen} onClose={() => setIsShortcutsOpen(false)} />
                 <FeedbackModal isOpen={isFeedbackOpen} onClose={() => setIsFeedbackOpen(false)} />
-                
+
+                <PromptLibrary
+                    isOpen={isPromptLibraryOpen}
+                    onClose={() => setIsPromptLibraryOpen(false)}
+                    onUsePrompt={(prompt) => {
+                        setEditedPrompt(prompt);
+                        promptTextareaRef.current?.focus();
+                    }}
+                />
+
                 {editingImage && <InpaintEditor image={editingImage} onClose={() => setEditingImage(null)} onSave={handleInpaint} />}
 
                 {toast && (
