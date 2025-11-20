@@ -63,10 +63,10 @@ const PromptLibrary: React.FC<PromptLibraryProps> = ({ isOpen, onClose, onUsePro
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
-            <div className="relative w-full max-w-6xl max-h-[90vh] bg-light-surface dark:bg-dark-surface rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-scaleIn">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn" onClick={onClose}>
+            <div className="relative w-full max-w-6xl h-[90vh] bg-light-surface dark:bg-dark-surface rounded-2xl shadow-2xl flex flex-col animate-scaleIn" onClick={(e) => e.stopPropagation()}>
                 {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b border-light-border dark:border-dark-border">
+                <div className="flex items-center justify-between p-6 border-b border-light-border dark:border-dark-border flex-shrink-0">
                     <div>
                         <h2 className="text-2xl font-bold text-light-text dark:text-dark-text mb-1">
                             Prompt Library
@@ -85,7 +85,7 @@ const PromptLibrary: React.FC<PromptLibraryProps> = ({ isOpen, onClose, onUsePro
                 </div>
 
                 {/* Search Bar */}
-                <div className="p-4 border-b border-light-border dark:border-dark-border">
+                <div className="p-4 border-b border-light-border dark:border-dark-border flex-shrink-0">
                     <div className="relative">
                         <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-light-text-muted dark:text-dark-text-muted" />
                         <input
@@ -99,7 +99,7 @@ const PromptLibrary: React.FC<PromptLibraryProps> = ({ isOpen, onClose, onUsePro
                 </div>
 
                 {/* Category Tabs */}
-                <div className="flex gap-2 px-4 py-3 overflow-x-auto border-b border-light-border dark:border-dark-border scrollbar-thin">
+                <div className="flex gap-2 px-4 py-3 overflow-x-auto border-b border-light-border dark:border-dark-border flex-shrink-0 hide-scrollbar">
                     {PROMPT_CATEGORIES.map(category => (
                         <button
                             key={category.id}
@@ -117,7 +117,7 @@ const PromptLibrary: React.FC<PromptLibraryProps> = ({ isOpen, onClose, onUsePro
                 </div>
 
                 {/* Prompt Grid */}
-                <div className="flex-1 overflow-y-auto p-6">
+                <div className="flex-1 overflow-y-auto p-6 min-h-0 prompt-library-scroll">
                     {filteredPrompts.length === 0 ? (
                         <div className="flex flex-col items-center justify-center h-full text-center py-12">
                             <div className="text-6xl mb-4 opacity-30">🔍</div>
