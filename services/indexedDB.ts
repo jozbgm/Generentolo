@@ -22,158 +22,276 @@ interface HistoryMetadata {
 
 class IndexedDBService {
     private db: IDBDatabase | null = null;
+    private isAvailable: boolean = true;
 
     async init(): Promise<void> {
+        // Check if IndexedDB is available
+        if (!('indexedDB' in window)) {
+            this.isAvailable = false;
+            console.warn('IndexedDB not available. Storage features will be limited.');
+            return Promise.resolve();
+        }
+
         return new Promise((resolve, reject) => {
-            const request = indexedDB.open(DB_NAME, DB_VERSION);
+            try {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
 
-            request.onerror = () => reject(request.error);
-            request.onsuccess = () => {
-                this.db = request.result;
-                resolve();
-            };
+                request.onerror = () => {
+                    console.error('IndexedDB error:', request.error);
+                    this.isAvailable = false;
+                    // Don't reject - allow app to continue without IndexedDB
+                    resolve();
+                };
 
-            request.onupgradeneeded = (event: IDBVersionChangeEvent) => {
-                const db = (event.target as IDBOpenDBRequest).result;
-                
-                // Create images store
-                if (!db.objectStoreNames.contains(STORE_NAME)) {
-                    const imageStore = db.createObjectStore(STORE_NAME, { keyPath: 'id' });
-                    imageStore.createIndex('timestamp', 'timestamp', { unique: false });
-                }
+                request.onsuccess = () => {
+                    this.db = request.result;
+                    this.isAvailable = true;
+                    resolve();
+                };
 
-                // Create history metadata store
-                if (!db.objectStoreNames.contains(HISTORY_STORE)) {
-                    const historyStore = db.createObjectStore(HISTORY_STORE, { keyPath: 'id' });
-                    historyStore.createIndex('timestamp', 'timestamp', { unique: false });
-                }
-            };
+                request.onupgradeneeded = (event: IDBVersionChangeEvent) => {
+                    const db = (event.target as IDBOpenDBRequest).result;
+
+                    // Create images store
+                    if (!db.objectStoreNames.contains(STORE_NAME)) {
+                        const imageStore = db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+                        imageStore.createIndex('timestamp', 'timestamp', { unique: false });
+                    }
+
+                    // Create history metadata store
+                    if (!db.objectStoreNames.contains(HISTORY_STORE)) {
+                        const historyStore = db.createObjectStore(HISTORY_STORE, { keyPath: 'id' });
+                        historyStore.createIndex('timestamp', 'timestamp', { unique: false });
+                    }
+                };
+
+                request.onblocked = () => {
+                    console.warn('IndexedDB blocked. Please close other tabs with this app.');
+                };
+            } catch (error) {
+                console.error('IndexedDB initialization failed:', error);
+                this.isAvailable = false;
+                resolve(); // Don't reject - allow app to continue
+            }
         });
+    }
+
+    private checkAvailability(): boolean {
+        if (!this.isAvailable || !this.db) {
+            console.warn('IndexedDB not available. Operation skipped.');
+            return false;
+        }
+        return true;
     }
 
     async saveImage(imageData: ImageData): Promise<void> {
         if (!this.db) await this.init();
-        return new Promise((resolve, reject) => {
-            const transaction = this.db!.transaction([STORE_NAME], 'readwrite');
-            const store = transaction.objectStore(STORE_NAME);
-            const request = store.put(imageData);
+        if (!this.checkAvailability()) return Promise.resolve();
 
-            request.onsuccess = () => resolve();
-            request.onerror = () => reject(request.error);
+        return new Promise((resolve, reject) => {
+            try {
+                const transaction = this.db!.transaction([STORE_NAME], 'readwrite');
+                const store = transaction.objectStore(STORE_NAME);
+                const request = store.put(imageData);
+
+                request.onsuccess = () => resolve();
+                request.onerror = () => {
+                    console.error('Failed to save image to IndexedDB:', request.error);
+                    // Resolve instead of reject to not break app flow
+                    resolve();
+                };
+
+                transaction.onerror = () => {
+                    console.error('Transaction error while saving image:', transaction.error);
+                    resolve();
+                };
+            } catch (error) {
+                console.error('Error in saveImage:', error);
+                resolve();
+            }
         });
     }
 
     async saveHistoryMetadata(metadata: HistoryMetadata): Promise<void> {
         if (!this.db) await this.init();
-        return new Promise((resolve, reject) => {
-            const transaction = this.db!.transaction([HISTORY_STORE], 'readwrite');
-            const store = transaction.objectStore(HISTORY_STORE);
-            const request = store.put(metadata);
+        if (!this.checkAvailability()) return Promise.resolve();
 
-            request.onsuccess = () => resolve();
-            request.onerror = () => reject(request.error);
+        return new Promise((resolve) => {
+            try {
+                const transaction = this.db!.transaction([HISTORY_STORE], 'readwrite');
+                const store = transaction.objectStore(HISTORY_STORE);
+                const request = store.put(metadata);
+
+                request.onsuccess = () => resolve();
+                request.onerror = () => {
+                    console.error('Failed to save history metadata:', request.error);
+                    resolve();
+                };
+            } catch (error) {
+                console.error('Error in saveHistoryMetadata:', error);
+                resolve();
+            }
         });
     }
 
     async getImage(id: string): Promise<ImageData | null> {
         if (!this.db) await this.init();
-        return new Promise((resolve, reject) => {
-            const transaction = this.db!.transaction([STORE_NAME], 'readonly');
-            const store = transaction.objectStore(STORE_NAME);
-            const request = store.get(id);
+        if (!this.checkAvailability()) return Promise.resolve(null);
 
-            request.onsuccess = () => resolve(request.result || null);
-            request.onerror = () => reject(request.error);
+        return new Promise((resolve) => {
+            try {
+                const transaction = this.db!.transaction([STORE_NAME], 'readonly');
+                const store = transaction.objectStore(STORE_NAME);
+                const request = store.get(id);
+
+                request.onsuccess = () => resolve(request.result || null);
+                request.onerror = () => {
+                    console.error('Failed to get image:', request.error);
+                    resolve(null);
+                };
+            } catch (error) {
+                console.error('Error in getImage:', error);
+                resolve(null);
+            }
         });
     }
 
     async getAllHistory(): Promise<HistoryMetadata[]> {
         if (!this.db) await this.init();
-        return new Promise((resolve, reject) => {
-            const transaction = this.db!.transaction([HISTORY_STORE], 'readonly');
-            const store = transaction.objectStore(HISTORY_STORE);
-            const index = store.index('timestamp');
-            const request = index.openCursor(null, 'prev'); // Get newest first
+        if (!this.checkAvailability()) return Promise.resolve([]);
 
-            const results: HistoryMetadata[] = [];
-            request.onsuccess = (event) => {
-                const cursor = (event.target as IDBRequest).result;
-                if (cursor) {
-                    results.push(cursor.value);
-                    cursor.continue();
-                } else {
-                    resolve(results);
-                }
-            };
-            request.onerror = () => reject(request.error);
+        return new Promise((resolve) => {
+            try {
+                const transaction = this.db!.transaction([HISTORY_STORE], 'readonly');
+                const store = transaction.objectStore(HISTORY_STORE);
+                const index = store.index('timestamp');
+                const request = index.openCursor(null, 'prev'); // Get newest first
+
+                const results: HistoryMetadata[] = [];
+                request.onsuccess = (event) => {
+                    const cursor = (event.target as IDBRequest).result;
+                    if (cursor) {
+                        results.push(cursor.value);
+                        cursor.continue();
+                    } else {
+                        resolve(results);
+                    }
+                };
+                request.onerror = () => {
+                    console.error('Failed to get history:', request.error);
+                    resolve([]);
+                };
+            } catch (error) {
+                console.error('Error in getAllHistory:', error);
+                resolve([]);
+            }
         });
     }
 
     async deleteImage(id: string): Promise<void> {
         if (!this.db) await this.init();
-        return new Promise((resolve, reject) => {
-            const transaction = this.db!.transaction([STORE_NAME, HISTORY_STORE], 'readwrite');
-            
-            // Delete from both stores
-            const imageStore = transaction.objectStore(STORE_NAME);
-            const historyStore = transaction.objectStore(HISTORY_STORE);
-            
-            imageStore.delete(id);
-            historyStore.delete(id);
+        if (!this.checkAvailability()) return Promise.resolve();
 
-            transaction.oncomplete = () => resolve();
-            transaction.onerror = () => reject(transaction.error);
+        return new Promise((resolve) => {
+            try {
+                const transaction = this.db!.transaction([STORE_NAME, HISTORY_STORE], 'readwrite');
+
+                // Delete from both stores
+                const imageStore = transaction.objectStore(STORE_NAME);
+                const historyStore = transaction.objectStore(HISTORY_STORE);
+
+                imageStore.delete(id);
+                historyStore.delete(id);
+
+                transaction.oncomplete = () => resolve();
+                transaction.onerror = () => {
+                    console.error('Failed to delete image:', transaction.error);
+                    resolve();
+                };
+            } catch (error) {
+                console.error('Error in deleteImage:', error);
+                resolve();
+            }
         });
     }
 
     async clearAll(): Promise<void> {
         if (!this.db) await this.init();
-        return new Promise((resolve, reject) => {
-            const transaction = this.db!.transaction([STORE_NAME, HISTORY_STORE], 'readwrite');
-            
-            transaction.objectStore(STORE_NAME).clear();
-            transaction.objectStore(HISTORY_STORE).clear();
+        if (!this.checkAvailability()) return Promise.resolve();
 
-            transaction.oncomplete = () => resolve();
-            transaction.onerror = () => reject(transaction.error);
+        return new Promise((resolve) => {
+            try {
+                const transaction = this.db!.transaction([STORE_NAME, HISTORY_STORE], 'readwrite');
+
+                transaction.objectStore(STORE_NAME).clear();
+                transaction.objectStore(HISTORY_STORE).clear();
+
+                transaction.oncomplete = () => resolve();
+                transaction.onerror = () => {
+                    console.error('Failed to clear storage:', transaction.error);
+                    resolve();
+                };
+            } catch (error) {
+                console.error('Error in clearAll:', error);
+                resolve();
+            }
         });
     }
 
     async deleteMultiple(ids: string[]): Promise<void> {
         if (!this.db) await this.init();
-        return new Promise((resolve, reject) => {
-            const transaction = this.db!.transaction([STORE_NAME, HISTORY_STORE], 'readwrite');
-            const imageStore = transaction.objectStore(STORE_NAME);
-            const historyStore = transaction.objectStore(HISTORY_STORE);
+        if (!this.checkAvailability()) return Promise.resolve();
 
-            ids.forEach(id => {
-                imageStore.delete(id);
-                historyStore.delete(id);
-            });
+        return new Promise((resolve) => {
+            try {
+                const transaction = this.db!.transaction([STORE_NAME, HISTORY_STORE], 'readwrite');
+                const imageStore = transaction.objectStore(STORE_NAME);
+                const historyStore = transaction.objectStore(HISTORY_STORE);
 
-            transaction.oncomplete = () => resolve();
-            transaction.onerror = () => reject(transaction.error);
+                ids.forEach(id => {
+                    imageStore.delete(id);
+                    historyStore.delete(id);
+                });
+
+                transaction.oncomplete = () => resolve();
+                transaction.onerror = () => {
+                    console.error('Failed to delete multiple images:', transaction.error);
+                    resolve();
+                };
+            } catch (error) {
+                console.error('Error in deleteMultiple:', error);
+                resolve();
+            }
         });
     }
 
     async getStorageSize(): Promise<number> {
         if (!this.db) await this.init();
-        
-        return new Promise((resolve, reject) => {
-            const transaction = this.db!.transaction([STORE_NAME], 'readonly');
-            const store = transaction.objectStore(STORE_NAME);
-            const request = store.getAll();
+        if (!this.checkAvailability()) return Promise.resolve(0);
 
-            request.onsuccess = () => {
-                const items = request.result;
-                let totalSize = 0;
-                items.forEach((item: ImageData) => {
-                    totalSize += (item.fullImageData?.length || 0) + (item.thumbnailData?.length || 0);
-                });
-                // Convert to MB
-                resolve(totalSize / (1024 * 1024));
-            };
-            request.onerror = () => reject(request.error);
+        return new Promise((resolve) => {
+            try {
+                const transaction = this.db!.transaction([STORE_NAME], 'readonly');
+                const store = transaction.objectStore(STORE_NAME);
+                const request = store.getAll();
+
+                request.onsuccess = () => {
+                    const items = request.result;
+                    let totalSize = 0;
+                    items.forEach((item: ImageData) => {
+                        totalSize += (item.fullImageData?.length || 0) + (item.thumbnailData?.length || 0);
+                    });
+                    // Convert to MB
+                    resolve(totalSize / (1024 * 1024));
+                };
+                request.onerror = () => {
+                    console.error('Failed to get storage size:', request.error);
+                    resolve(0);
+                };
+            } catch (error) {
+                console.error('Error in getStorageSize:', error);
+                resolve(0);
+            }
         });
     }
 }
