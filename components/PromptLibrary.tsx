@@ -177,20 +177,20 @@ const PromptLibrary: React.FC<PromptLibraryProps> = ({ isOpen, onClose, onUsePro
                     {/* Tabs Container */}
                     <div
                         ref={tabsContainerRef}
-                        className="flex gap-2 px-4 md:px-12 py-3 overflow-x-auto hide-scrollbar"
+                        className="flex gap-1.5 md:gap-2 px-4 md:px-12 py-3 overflow-x-auto hide-scrollbar"
                         onScroll={checkScroll}
                     >
                         {PROMPT_CATEGORIES.map(category => (
                             <button
                                 key={category.id}
                                 onClick={() => setSelectedCategory(category.id)}
-                                className={`flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 rounded-lg whitespace-nowrap transition-all text-sm md:text-base ${
+                                className={`flex items-center gap-1 md:gap-1.5 px-2 md:px-3 py-1.5 md:py-2 rounded-lg whitespace-nowrap transition-all text-sm md:text-base ${
                                     selectedCategory === category.id
                                         ? 'bg-gradient-to-r from-brand-purple to-brand-pink text-white shadow-lg'
                                         : 'bg-light-surface-accent dark:bg-dark-surface-accent text-light-text dark:text-dark-text hover:bg-light-border dark:hover:bg-dark-border'
                                 }`}
                             >
-                                <span className="text-sm md:text-base">{category.icon}</span>
+                                <span className="text-xs md:text-sm">{category.icon}</span>
                                 <span className="text-xs md:text-sm font-medium">{getCategoryName(category.id)}</span>
                             </button>
                         ))}
