@@ -6,6 +6,7 @@ import * as presetsService from './services/presetsService';
 import { useKeyboardShortcuts, APP_SHORTCUTS } from './hooks/useKeyboardShortcuts';
 import { SunIcon, MoonIcon, UploadIcon, DownloadIcon, ZoomInIcon, SparklesIcon, CopyIcon, SettingsIcon, XIcon, CheckIcon, LanguageIcon, WandIcon, InfoIcon, AlertTriangleIcon, BrushIcon, DiceIcon, TrashIcon, ReloadIcon, EnvelopeIcon, StarIcon, CornerUpLeftIcon, UpscaleIcon, ChevronLeftIcon, ChevronRightIcon } from './components/icons';
 import FloatingActionBar from './components/FloatingActionBar';
+import ZoomableImage from './components/ZoomableImage';
 
 // --- Localization ---
 const translations = {
@@ -2675,7 +2676,10 @@ export default function App() {
                                         alt={zoomedImage.prompt}
                                     />
                                 ) : (
-                                    <img src={zoomedImage.imageDataUrl || zoomedImage.thumbnailDataUrl} alt={zoomedImage.prompt} className="max-w-[90vw] max-h-[90vh] object-contain rounded-lg shadow-2xl" />
+                                    <ZoomableImage
+                                        src={zoomedImage.imageDataUrl || zoomedImage.thumbnailDataUrl!}
+                                        alt={zoomedImage.prompt}
+                                    />
                                 )}
 
                                 {/* Top bar with counter, download and close */}
