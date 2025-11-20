@@ -1,3 +1,6 @@
+export type ModelType = 'gemini-2.5-flash-image' | 'gemini-3-pro-image-preview';
+export type ResolutionType = '1k' | '2k' | '4k';
+
 export interface GeneratedImage {
   id: string;
   imageDataUrl?: string; // Full resolution, optional for items loaded from storage
@@ -9,6 +12,9 @@ export interface GeneratedImage {
   seed?: string;
   originalImageDataUrl?: string; // Original image before upscaling (for comparison)
   isFavorite?: boolean; // v0.8: Bookmark/favorite system
+  model?: ModelType; // v1.0: Model used for generation
+  resolution?: ResolutionType; // v1.0: Resolution used (only for PRO model)
+  estimatedCost?: number; // v1.0: Estimated cost in USD
 }
 
 export interface DynamicTool {
@@ -23,4 +29,11 @@ export interface PromptPreset {
   prompt: string;
   negativePrompt?: string;
   timestamp: number;
+}
+
+export interface TextInImageConfig {
+  enabled: boolean;
+  text?: string;
+  position?: 'top' | 'center' | 'bottom' | 'overlay';
+  fontStyle?: 'bold' | 'italic' | 'calligraphy' | 'modern' | 'vintage';
 }

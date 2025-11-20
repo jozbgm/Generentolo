@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, createContext, useContext, useRef } from 'react';
-import { GeneratedImage, DynamicTool, PromptPreset } from './types';
+import { GeneratedImage, DynamicTool, PromptPreset, ModelType, ResolutionType, TextInImageConfig } from './types';
 import * as geminiService from './services/geminiService';
 import * as upscaleService from './services/upscaleService';
 import * as presetsService from './services/presetsService';
@@ -12,7 +12,7 @@ import PromptLibrary from './components/PromptLibrary';
 // --- Localization ---
 const translations = {
   en: {
-    headerTitle: 'Generentolo v0.9.2 Beta',
+    headerTitle: 'Generentolo PRO v1.0',
     headerSubtitle: 'Let me do it for you!',
     refImagesTitle: 'Reference & Style Images',
     styleRefTitle: 'Style Reference',
@@ -48,6 +48,30 @@ const translations = {
     numImagesTitle: 'Number of Images',
     aspectRatioTitle: 'Aspect Ratio',
     aspectRatioTooltip: "Sets the width-to-height ratio of the final image. 'Auto' uses the aspect ratio of the reference image.",
+    modelTitle: 'Model',
+    modelFlash: 'Flash (Fast & Cheap)',
+    modelPro: 'PRO (High Quality)',
+    modelTooltip: "Flash: Fast and economical ($0.04/image). PRO: High quality with 4K support ($0.13-$0.24/image).",
+    resolutionTitle: 'Resolution',
+    resolution1k: '1K (Standard)',
+    resolution2k: '2K (High)',
+    resolution4k: '4K (Ultra)',
+    resolutionTooltip: "PRO model only. Higher resolution = better quality but slower and more expensive.",
+    estimatedCost: 'Estimated Cost',
+    textInImageTitle: 'Text in Image',
+    textInImageEnable: 'Add Text',
+    textInImagePlaceholder: 'Enter text to display...',
+    textPosition: 'Position',
+    textPositionTop: 'Top',
+    textPositionCenter: 'Center',
+    textPositionBottom: 'Bottom',
+    textPositionOverlay: 'Overlay',
+    fontStyle: 'Font Style',
+    fontBold: 'Bold',
+    fontItalic: 'Italic',
+    fontCalligraphy: 'Calligraphy',
+    fontModern: 'Modern',
+    fontVintage: 'Vintage',
     generateButton: 'Generate',
     generatingButton: 'Generating...',
     generatingStatus: 'Generentolo is generating...',
@@ -137,7 +161,7 @@ const translations = {
 
   },
   it: {
-    headerTitle: 'Generentolo v0.9.2 Beta',
+    headerTitle: 'Generentolo PRO v1.0',
     headerSubtitle: 'Let me do it for you!',
     refImagesTitle: 'Immagini di Riferimento e Stile',
     styleRefTitle: 'Riferimento Stile',
@@ -173,6 +197,30 @@ const translations = {
     numImagesTitle: 'Numero di Immagini',
     aspectRatioTitle: 'Proporzioni',
     aspectRatioTooltip: "Imposta il rapporto larghezza-altezza dell'immagine finale. 'Auto' usa le proporzioni dell'immagine di riferimento.",
+    modelTitle: 'Modello',
+    modelFlash: 'Flash (Veloce & Economico)',
+    modelPro: 'PRO (Alta Qualità)',
+    modelTooltip: "Flash: Veloce ed economico ($0.04/immagine). PRO: Alta qualità con supporto 4K ($0.13-$0.24/immagine).",
+    resolutionTitle: 'Risoluzione',
+    resolution1k: '1K (Standard)',
+    resolution2k: '2K (Alta)',
+    resolution4k: '4K (Ultra)',
+    resolutionTooltip: "Solo modello PRO. Risoluzione maggiore = qualità migliore ma più lento e costoso.",
+    estimatedCost: 'Costo Stimato',
+    textInImageTitle: 'Testo nell\'Immagine',
+    textInImageEnable: 'Aggiungi Testo',
+    textInImagePlaceholder: 'Inserisci il testo da mostrare...',
+    textPosition: 'Posizione',
+    textPositionTop: 'Alto',
+    textPositionCenter: 'Centro',
+    textPositionBottom: 'Basso',
+    textPositionOverlay: 'Sovrapposto',
+    fontStyle: 'Stile Font',
+    fontBold: 'Grassetto',
+    fontItalic: 'Corsivo',
+    fontCalligraphy: 'Calligrafia',
+    fontModern: 'Moderno',
+    fontVintage: 'Vintage',
     generateButton: 'Genera',
     generatingButton: 'In generazione...',
     generatingStatus: 'Generentolo sta generando...',
@@ -343,7 +391,7 @@ const createThumbnailDataUrl = (dataUrl: string, maxSize = 256): Promise<string>
 
 
 // --- Child Components ---
-const MAX_USER_IMAGES = 4;
+const MAX_USER_IMAGES = 14; // v1.0: Increased for Nano Banana PRO support (up to 14 reference images)
 
 const SkeletonLoader: React.FC<{ className?: string }> = ({ className }) => (
     <div className={`bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-lg animate-pulse ${className}`} />
@@ -652,6 +700,13 @@ interface ControlPanelProps {
     onRandomizeSeed: () => void;
     onCopySeed: () => void;
     promptTextareaRef: React.RefObject<HTMLTextAreaElement>;
+    // v1.0: PRO features
+    selectedModel: ModelType;
+    onModelChange: (model: ModelType) => void;
+    selectedResolution: ResolutionType;
+    onResolutionChange: (resolution: ResolutionType) => void;
+    textInImageConfig: TextInImageConfig;
+    onTextInImageConfigChange: (config: TextInImageConfig) => void;
 }
 // Memoized Prompt Textarea to prevent flickering
 const PromptTextarea = React.memo<{
@@ -716,7 +771,9 @@ const ControlPanel: React.FC<ControlPanelProps> = (props) => {
     const {
         dynamicTools, selectedAspectRatio, onAspectRatioChange, onGenerateTools,
         isLoading, isToolsLoading, isEnhancing, referenceImages, styleReferenceImage, numImages, onNumImagesChange,
-        userApiKey, language, editedPrompt, onEditedPromptChange, negativePrompt, onNegativePromptChange, seed, onSeedChange, onRandomizeSeed, onCopySeed, promptTextareaRef
+        userApiKey, language, editedPrompt, onEditedPromptChange, negativePrompt, onNegativePromptChange, seed, onSeedChange, onRandomizeSeed, onCopySeed, promptTextareaRef,
+        // v1.0: PRO features
+        selectedModel, onModelChange, selectedResolution, onResolutionChange, textInImageConfig, onTextInImageConfigChange
     } = props;
     const { t } = useLocalization();
     const [toolSettings, setToolSettings] = useState<Record<string, string[]>>({});
@@ -817,6 +874,67 @@ const ControlPanel: React.FC<ControlPanelProps> = (props) => {
                             </div>
                         )}
                     </div>
+
+                    {/* v1.0: Text-in-Image Controls */}
+                    {selectedModel === 'gemini-3-pro-image-preview' && (
+                        <div className="mt-4 p-3 rounded-lg bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/30">
+                            <div className="flex items-center justify-between mb-2">
+                                <h4 className="text-sm font-semibold text-light-text dark:text-dark-text">{t.textInImageTitle}</h4>
+                                <label className="relative inline-flex items-center cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={textInImageConfig.enabled}
+                                        onChange={(e) => onTextInImageConfigChange({ ...textInImageConfig, enabled: e.target.checked })}
+                                        className="sr-only peer"
+                                    />
+                                    <div className="w-9 h-5 bg-light-surface-accent dark:bg-dark-surface-accent rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-gradient-to-r peer-checked:from-brand-yellow peer-checked:to-brand-magenta after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all"></div>
+                                </label>
+                            </div>
+
+                            {textInImageConfig.enabled && (
+                                <div className="space-y-2">
+                                    <input
+                                        type="text"
+                                        value={textInImageConfig.text || ''}
+                                        onChange={(e) => onTextInImageConfigChange({ ...textInImageConfig, text: e.target.value })}
+                                        placeholder={t.textInImagePlaceholder}
+                                        className="w-full p-2 text-sm bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded-lg focus:ring-2 focus:ring-brand-purple focus:outline-none"
+                                    />
+
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <div>
+                                            <label className="text-xs text-light-text-muted dark:text-dark-text-muted mb-1 block">{t.textPosition}</label>
+                                            <select
+                                                value={textInImageConfig.position || 'center'}
+                                                onChange={(e) => onTextInImageConfigChange({ ...textInImageConfig, position: e.target.value as any })}
+                                                className="w-full p-2 text-sm bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded-lg focus:ring-2 focus:ring-brand-purple focus:outline-none"
+                                            >
+                                                <option value="top">{t.textPositionTop}</option>
+                                                <option value="center">{t.textPositionCenter}</option>
+                                                <option value="bottom">{t.textPositionBottom}</option>
+                                                <option value="overlay">{t.textPositionOverlay}</option>
+                                            </select>
+                                        </div>
+
+                                        <div>
+                                            <label className="text-xs text-light-text-muted dark:text-dark-text-muted mb-1 block">{t.fontStyle}</label>
+                                            <select
+                                                value={textInImageConfig.fontStyle || 'modern'}
+                                                onChange={(e) => onTextInImageConfigChange({ ...textInImageConfig, fontStyle: e.target.value as any })}
+                                                className="w-full p-2 text-sm bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded-lg focus:ring-2 focus:ring-brand-purple focus:outline-none"
+                                            >
+                                                <option value="bold">{t.fontBold}</option>
+                                                <option value="italic">{t.fontItalic}</option>
+                                                <option value="calligraphy">{t.fontCalligraphy}</option>
+                                                <option value="modern">{t.fontModern}</option>
+                                                <option value="vintage">{t.fontVintage}</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -868,6 +986,54 @@ const ControlPanel: React.FC<ControlPanelProps> = (props) => {
                     ))}
                 </div>
             </div>
+
+            {/* v1.0: Model Selector */}
+            <div>
+                <div className="flex items-center gap-2 mb-3">
+                    <h3 className="font-semibold text-xs sm:text-sm text-light-text dark:text-dark-text">{t.modelTitle}</h3>
+                    <InfoIcon className="w-3 h-3 sm:w-4 sm:h-4 text-light-text-muted dark:text-dark-text-muted cursor-help" title={t.modelTooltip} />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                    <button onClick={() => onModelChange('gemini-2.5-flash-image')} className={`w-full py-2 sm:py-2.5 px-2 sm:px-3 rounded-lg text-xs sm:text-sm font-medium transition-all ${selectedModel === 'gemini-2.5-flash-image' ? 'bg-gradient-to-r from-brand-yellow to-brand-magenta text-white shadow-lg' : 'bg-light-surface dark:bg-dark-surface/50 border border-light-border dark:border-dark-border hover:border-dark-text-muted'}`}>
+                        <div className="flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5">
+                            <SparklesIcon className="w-4 h-4" />
+                            <span className="text-[10px] sm:text-xs leading-tight">{t.modelFlash}</span>
+                        </div>
+                    </button>
+                    <button onClick={() => onModelChange('gemini-3-pro-image-preview')} className={`w-full py-2 sm:py-2.5 px-2 sm:px-3 rounded-lg text-xs sm:text-sm font-medium transition-all ${selectedModel === 'gemini-3-pro-image-preview' ? 'bg-gradient-to-r from-brand-yellow to-brand-magenta text-white shadow-lg' : 'bg-light-surface dark:bg-dark-surface/50 border border-light-border dark:border-dark-border hover:border-dark-text-muted'}`}>
+                        <div className="flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5">
+                            <StarIcon className="w-4 h-4" />
+                            <span className="text-[10px] sm:text-xs leading-tight">{t.modelPro}</span>
+                        </div>
+                    </button>
+                </div>
+            </div>
+
+            {/* v1.0: Resolution Selector (only for PRO model) */}
+            {selectedModel === 'gemini-3-pro-image-preview' && (
+                <div>
+                    <div className="flex items-center gap-2 mb-3">
+                        <h3 className="font-semibold text-xs sm:text-sm text-light-text dark:text-dark-text">{t.resolutionTitle}</h3>
+                        <InfoIcon className="w-3 h-3 sm:w-4 sm:h-4 text-light-text-muted dark:text-dark-text-muted cursor-help" title={t.resolutionTooltip} />
+                    </div>
+                    <div className="grid grid-cols-3 gap-2">
+                        <button onClick={() => onResolutionChange('1k')} className={`w-full py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${selectedResolution === '1k' ? 'bg-gradient-to-r from-brand-yellow to-brand-magenta text-white' : 'bg-light-surface dark:bg-dark-surface/50 border border-light-border dark:border-dark-border hover:border-dark-text-muted'}`}>{t.resolution1k}</button>
+                        <button onClick={() => onResolutionChange('2k')} className={`w-full py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${selectedResolution === '2k' ? 'bg-gradient-to-r from-brand-yellow to-brand-magenta text-white' : 'bg-light-surface dark:bg-dark-surface/50 border border-light-border dark:border-dark-border hover:border-dark-text-muted'}`}>{t.resolution2k}</button>
+                        <button onClick={() => onResolutionChange('4k')} className={`w-full py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${selectedResolution === '4k' ? 'bg-gradient-to-r from-brand-yellow to-brand-magenta text-white' : 'bg-light-surface dark:bg-dark-surface/50 border border-light-border dark:border-dark-border hover:border-dark-text-muted'}`}>{t.resolution4k}</button>
+                    </div>
+                </div>
+            )}
+
+            {/* v1.0: Estimated Cost Display */}
+            <div className="p-2.5 sm:p-3 rounded-lg bg-gradient-to-r from-yellow-500/10 to-amber-500/10 border border-yellow-500/30">
+                <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs sm:text-sm font-medium text-light-text dark:text-dark-text whitespace-nowrap">{t.estimatedCost}:</span>
+                    <span className="text-base sm:text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-yellow-500 to-amber-500">
+                        ${geminiService.calculateEstimatedCost(selectedModel, selectedResolution, referenceImages.length + (styleReferenceImage ? 1 : 0)).toFixed(3)}
+                    </span>
+                </div>
+            </div>
+
             <ToolSelectionModal isOpen={!!editingTool} onClose={() => setEditingTool(null)} tool={editingTool} initialSelections={editingTool ? toolSettings[editingTool.name] : []} onSave={handleToolSave} />
         </div>
     );
@@ -1931,6 +2097,15 @@ export default function App() {
     const [seed, setSeed] = useState<string>('');
     const [dynamicTools, setDynamicTools] = useState<DynamicTool[]>([]);
     const [aspectRatio, setAspectRatio] = useState<string>('1:1');
+    // v1.0: New PRO features states
+    const [selectedModel, setSelectedModel] = useState<ModelType>('gemini-2.5-flash-image');
+    const [selectedResolution, setSelectedResolution] = useState<ResolutionType>('2k');
+    const [textInImageConfig, setTextInImageConfig] = useState<TextInImageConfig>({
+        enabled: false,
+        text: '',
+        position: 'center',
+        fontStyle: 'modern'
+    });
     const [currentImages, setCurrentImages] = useState<GeneratedImage[]>([]);
     const [history, setHistory] = useState<GeneratedImage[]>([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -2102,9 +2277,31 @@ export default function App() {
         setCurrentImages([]);
         try {
             const allReferenceFiles = [...referenceImages];
-            
+
+            // v1.0: Calculate estimated cost
+            const estimatedCost = geminiService.calculateEstimatedCost(
+                selectedModel,
+                selectedResolution,
+                allReferenceFiles.length + (styleReferenceImage ? 1 : 0) + (structureImage ? 1 : 0)
+            );
+            console.log(`💰 Estimated cost: $${estimatedCost.toFixed(3)}`);
+
             const generationPromises = Array(numImagesToGenerate).fill(0).map(() =>
-                geminiService.generateImage(editedPrompt, aspectRatio, allReferenceFiles, styleReferenceImage, structureImage, userApiKey, negativePrompt, seed, language, preciseReference)
+                geminiService.generateImage(
+                    editedPrompt,
+                    aspectRatio,
+                    allReferenceFiles,
+                    styleReferenceImage,
+                    structureImage,
+                    userApiKey,
+                    negativePrompt,
+                    seed,
+                    language,
+                    preciseReference,
+                    selectedModel, // v1.0: Pass selected model
+                    selectedResolution, // v1.0: Pass selected resolution
+                    textInImageConfig // v1.0: Pass text-in-image config
+                )
             );
             const imageDataUrls = await Promise.all(generationPromises);
 
@@ -2126,19 +2323,22 @@ export default function App() {
                         negativePrompt,
                         seed,
                         timestamp: Date.now(),
+                        model: selectedModel, // v1.0: Store model used
+                        resolution: selectedResolution, // v1.0: Store resolution used
+                        estimatedCost // v1.0: Store estimated cost
                     });
                 })
             );
-            
+
             setCurrentImages(newImages);
             setHistory(prev => [...newImages, ...prev].slice(0, MAX_HISTORY_ITEMS));
-        } catch (error: any) { 
-            console.error("Image generation failed", error); 
+        } catch (error: any) {
+            console.error("Image generation failed", error);
             showToast(error.message || t.generationFailed, 'error');
-        } finally { 
-            setIsLoading(false); 
+        } finally {
+            setIsLoading(false);
         }
-    }, [referenceImages, styleReferenceImage, structureImage, preciseReference, userApiKey, aspectRatio, showToast, t.generationFailed, language, editedPrompt, negativePrompt, seed, numImagesToGenerate]);
+    }, [referenceImages, styleReferenceImage, structureImage, preciseReference, userApiKey, aspectRatio, showToast, t.generationFailed, language, editedPrompt, negativePrompt, seed, numImagesToGenerate, selectedModel, selectedResolution, textInImageConfig]);
 
     // Image navigation in lightbox
     const getImageNavigation = useCallback(() => {
@@ -2168,14 +2368,42 @@ export default function App() {
         };
     }, [zoomedImage, currentImages, history]);
 
-    const navigateImage = useCallback((direction: 'prev' | 'next') => {
-        const nav = getImageNavigation();
-        if (direction === 'prev' && nav.prev) {
-            setZoomedImage(nav.prev);
-        } else if (direction === 'next' && nav.next) {
-            setZoomedImage(nav.next);
+    // Handle zoom with full resolution loading
+    const handleZoom = useCallback(async (image: GeneratedImage) => {
+        // If image already has full resolution, use it directly
+        if (image.imageDataUrl) {
+            setZoomedImage(image);
+            return;
         }
-    }, [getImageNavigation]);
+
+        // Otherwise, load full resolution from IndexedDB
+        try {
+            const fullImageData = await indexedDBService.getImage(image.id);
+            if (fullImageData && fullImageData.fullImageData) {
+                // Create new image object with full resolution
+                const fullResImage: GeneratedImage = {
+                    ...image,
+                    imageDataUrl: fullImageData.fullImageData
+                };
+                setZoomedImage(fullResImage);
+            } else {
+                // Fallback to thumbnail if full res not available
+                setZoomedImage(image);
+            }
+        } catch (error) {
+            console.error('Failed to load full resolution image:', error);
+            // Fallback to thumbnail
+            setZoomedImage(image);
+        }
+    }, []);
+
+    const navigateImage = useCallback(async (direction: 'prev' | 'next') => {
+        const nav = getImageNavigation();
+        const targetImage = direction === 'prev' ? nav.prev : nav.next;
+        if (targetImage) {
+            await handleZoom(targetImage);
+        }
+    }, [getImageNavigation, handleZoom]);
 
     // Keyboard navigation
     useEffect(() => {
@@ -2525,7 +2753,7 @@ export default function App() {
                     {/* --- Main Content --- */}
                     <div className="flex-1 flex flex-col gap-4 lg:gap-6 min-w-0 h-full">
                         <div className="flex-1 min-h-0 bg-light-surface/50 dark:bg-dark-surface/30 rounded-3xl overflow-hidden">
-                            <ImageDisplay images={currentImages} isLoading={isLoading} onDownload={handleDownload} onZoom={setZoomedImage} onEdit={setEditingImage} onUpscale={handleUpscale} upscalingImageId={upscalingImageId} onReroll={handleReroll} onToggleFavorite={handleToggleFavorite} />
+                            <ImageDisplay images={currentImages} isLoading={isLoading} onDownload={handleDownload} onZoom={handleZoom} onEdit={setEditingImage} onUpscale={handleUpscale} upscalingImageId={upscalingImageId} onReroll={handleReroll} onToggleFavorite={handleToggleFavorite} />
                         </div>
 
                         {((referenceImages.length > 0 || !!styleReferenceImage) || currentImages.length === 1) && (
@@ -2614,7 +2842,7 @@ export default function App() {
                                     <HistoryPanel
                                         history={history}
                                         onSelect={handleSelectHistory}
-                                        onZoom={setZoomedImage}
+                                        onZoom={handleZoom}
                                         onDelete={handleDeleteHistoryItem}
                                         onClearAll={handleClearAllHistory}
                                         isSelectionMode={isHistorySelectionMode}
@@ -2667,6 +2895,13 @@ export default function App() {
                     dynamicTools={dynamicTools}
                     onGenerateTools={handleGenerateDynamicTools}
                     isToolsLoading={isToolsLoading}
+                    selectedModel={selectedModel}
+                    onModelChange={setSelectedModel}
+                    selectedResolution={selectedResolution}
+                    onResolutionChange={setSelectedResolution}
+                    textInImageConfig={textInImageConfig}
+                    onTextInImageConfigChange={setTextInImageConfig}
+                    referenceImagesCount={referenceImages.length + (styleReferenceImage ? 1 : 0) + (structureImage ? 1 : 0)}
                 />
 
                 <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} onSave={handleSaveApiKey} currentApiKey={userApiKey} />

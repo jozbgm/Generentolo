@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { useLocalization } from '../App';
+import { ModelType, ResolutionType, TextInImageConfig } from '../types';
 
 interface FloatingActionBarProps {
     // Prompt
@@ -37,6 +38,15 @@ interface FloatingActionBarProps {
     dynamicTools: any[];
     onGenerateTools: () => void;
     isToolsLoading: boolean;
+
+    // v1.0: PRO features
+    selectedModel: ModelType;
+    onModelChange: (model: ModelType) => void;
+    selectedResolution: ResolutionType;
+    onResolutionChange: (resolution: ResolutionType) => void;
+    textInImageConfig: TextInImageConfig;
+    onTextInImageConfigChange: (config: TextInImageConfig) => void;
+    referenceImagesCount: number; // For cost calculation
 }
 
 const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
@@ -64,12 +74,23 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
     dynamicTools,
     onGenerateTools,
     isToolsLoading,
+    // v1.0: PRO features
+    selectedModel,
+    onModelChange,
+    selectedResolution,
+    onResolutionChange,
+    textInImageConfig,
+    onTextInImageConfigChange,
+    referenceImagesCount,
 }) => {
     const { t } = useLocalization();
     const [isExpanded, setIsExpanded] = useState(false);
     const [showAspectMenu, setShowAspectMenu] = useState(false);
     const [showNumImagesMenu, setShowNumImagesMenu] = useState(false);
     const [showAdvancedPanel, setShowAdvancedPanel] = useState(false);
+    // v1.0: Model/Resolution dropdowns
+    const [showModelMenu, setShowModelMenu] = useState(false);
+    const [showResolutionMenu, setShowResolutionMenu] = useState(false);
 
     const aspectRatios = ["Auto", "1:1", "16:9", "9:16", "4:3", "3:4", "21:9"];
     const numImagesOptions = [1, 2, 3, 4];
@@ -262,11 +283,108 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                             <span>⚙️</span>
                         </button>
 
+                        {/* v1.0: Model Selector Dropdown */}
+                        <div className="relative z-[70]">
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setShowModelMenu(!showModelMenu);
+                                    setShowAspectMenu(false);
+                                    setShowNumImagesMenu(false);
+                                    setShowResolutionMenu(false);
+                                }}
+                                className="flex items-center gap-1 lg:gap-1.5 px-2 lg:px-3 py-1.5 lg:py-2 bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-lg text-xs text-light-text dark:text-dark-text hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 active:scale-95 transition-all duration-150 whitespace-nowrap"
+                            >
+                                <span>{selectedModel === 'gemini-2.5-flash-image' ? '⚡' : '⭐'}</span>
+                                <span className="hidden sm:inline">{selectedModel === 'gemini-2.5-flash-image' ? 'Flash' : 'PRO'}</span>
+                            </button>
+                            {showModelMenu && (
+                                <>
+                                    <div className="fixed inset-0 z-[65]" onClick={() => setShowModelMenu(false)} />
+                                    <div className="absolute bottom-full mb-2 right-0 bg-light-surface dark:bg-dark-surface rounded-xl shadow-2xl p-2 min-w-[140px] border border-light-border dark:border-dark-border z-[70] animate-slideDown">
+                                        <button
+                                            onClick={() => {
+                                                onModelChange('gemini-2.5-flash-image');
+                                                setShowModelMenu(false);
+                                            }}
+                                            className={`w-full px-3 py-2 text-left text-sm rounded-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 transition-all duration-150 flex items-center gap-2 ${selectedModel === 'gemini-2.5-flash-image' ? 'bg-brand-purple/20 text-brand-purple' : 'text-light-text dark:text-dark-text'}`}
+                                        >
+                                            <span>⚡</span>
+                                            <span>{t.modelFlash}</span>
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                onModelChange('gemini-3-pro-image-preview');
+                                                setShowModelMenu(false);
+                                            }}
+                                            className={`w-full px-3 py-2 text-left text-sm rounded-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 transition-all duration-150 flex items-center gap-2 ${selectedModel === 'gemini-3-pro-image-preview' ? 'bg-brand-purple/20 text-brand-purple' : 'text-light-text dark:text-dark-text'}`}
+                                        >
+                                            <span>⭐</span>
+                                            <span>{t.modelPro}</span>
+                                        </button>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+
+                        {/* v1.0: Resolution Selector Dropdown (only for PRO model) */}
+                        {selectedModel === 'gemini-3-pro-image-preview' && (
+                            <div className="relative z-[70]">
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setShowResolutionMenu(!showResolutionMenu);
+                                        setShowAspectMenu(false);
+                                        setShowNumImagesMenu(false);
+                                        setShowModelMenu(false);
+                                    }}
+                                    className="flex items-center gap-1 lg:gap-1.5 px-2 lg:px-3 py-1.5 lg:py-2 bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-lg text-xs text-light-text dark:text-dark-text hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 active:scale-95 transition-all duration-150 whitespace-nowrap"
+                                >
+                                    <span className="hidden sm:inline">📏</span>
+                                    <span>{selectedResolution.toUpperCase()}</span>
+                                </button>
+                                {showResolutionMenu && (
+                                    <>
+                                        <div className="fixed inset-0 z-[65]" onClick={() => setShowResolutionMenu(false)} />
+                                        <div className="absolute bottom-full mb-2 right-0 bg-light-surface dark:bg-dark-surface rounded-xl shadow-2xl p-2 min-w-[100px] border border-light-border dark:border-dark-border z-[70] animate-slideDown">
+                                            <button
+                                                onClick={() => {
+                                                    onResolutionChange('1k');
+                                                    setShowResolutionMenu(false);
+                                                }}
+                                                className={`w-full px-3 py-1.5 text-left text-sm rounded-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 transition-all duration-150 ${selectedResolution === '1k' ? 'bg-brand-purple/20 text-brand-purple' : 'text-light-text dark:text-dark-text'}`}
+                                            >
+                                                {t.resolution1k}
+                                            </button>
+                                            <button
+                                                onClick={() => {
+                                                    onResolutionChange('2k');
+                                                    setShowResolutionMenu(false);
+                                                }}
+                                                className={`w-full px-3 py-1.5 text-left text-sm rounded-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 transition-all duration-150 ${selectedResolution === '2k' ? 'bg-brand-purple/20 text-brand-purple' : 'text-light-text dark:text-dark-text'}`}
+                                            >
+                                                {t.resolution2k}
+                                            </button>
+                                            <button
+                                                onClick={() => {
+                                                    onResolutionChange('4k');
+                                                    setShowResolutionMenu(false);
+                                                }}
+                                                className={`w-full px-3 py-1.5 text-left text-sm rounded-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 transition-all duration-150 ${selectedResolution === '4k' ? 'bg-brand-purple/20 text-brand-purple' : 'text-light-text dark:text-dark-text'}`}
+                                            >
+                                                {t.resolution4k}
+                                            </button>
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                        )}
+
                         {/* v0.7: Precise Reference Toggle Switch */}
                         {hasReferences && (
                             <div className="relative group/tooltip flex items-center gap-2 lg:gap-2.5 px-2 lg:px-3 py-1.5 lg:py-2 bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-lg">
-                                <span className="text-xs font-medium text-light-text dark:text-dark-text hidden sm:inline">
-                                    🎯 {t.preciseReference}
+                                <span className="text-base lg:text-lg" title={t.preciseReferenceTooltip}>
+                                    👨
                                 </span>
                                 <button
                                     onClick={() => onPreciseReferenceChange(!preciseReference)}
@@ -289,6 +407,20 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                                 </div>
                             </div>
                         )}
+
+                        {/* v1.0: Estimated Cost Badge */}
+                        <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-gradient-to-r from-yellow-500/10 to-amber-500/10 border border-yellow-500/30 rounded-lg">
+                            <span className="text-xs font-bold bg-clip-text text-transparent bg-gradient-to-r from-yellow-500 to-amber-500">
+                                ${(() => {
+                                    // Calculate cost dynamically
+                                    if (selectedModel === 'gemini-2.5-flash-image') return '0.04';
+                                    const inputCost = referenceImagesCount * 0.067;
+                                    const promptCost = 0.002;
+                                    const outputCost = selectedResolution === '4k' ? 0.24 : 0.134;
+                                    return (inputCost + promptCost + outputCost).toFixed(3);
+                                })()}
+                            </span>
+                        </div>
 
                         {/* Primary Action - HERO BUTTON */}
                         <button
@@ -581,11 +713,120 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                                 <span>⚙️</span>
                             </button>
 
+                            {/* v1.0: Model Selector (Expanded Mode) */}
+                            <div className="relative z-[70]">
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setShowModelMenu(!showModelMenu);
+                                        setShowAspectMenu(false);
+                                        setShowNumImagesMenu(false);
+                                        setShowResolutionMenu(false);
+                                    }}
+                                    className="flex items-center gap-1 lg:gap-1.5 px-2 lg:px-3 py-1.5 bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-lg text-xs text-light-text dark:text-dark-text hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 active:scale-95 transition-all duration-150 whitespace-nowrap"
+                                >
+                                    <span>{selectedModel === 'gemini-2.5-flash-image' ? '⚡' : '⭐'}</span>
+                                    <span className="hidden sm:inline">{selectedModel === 'gemini-2.5-flash-image' ? 'Flash' : 'PRO'}</span>
+                                </button>
+                                {showModelMenu && (
+                                    <>
+                                        <div className="fixed inset-0 z-[65]" onClick={() => setShowModelMenu(false)} />
+                                        <div className="absolute bottom-full mb-2 left-0 bg-light-surface dark:bg-dark-surface rounded-xl shadow-2xl p-2 min-w-[140px] border border-light-border dark:border-dark-border z-[70] animate-slideDown">
+                                            <button
+                                                onClick={() => {
+                                                    onModelChange('gemini-2.5-flash-image');
+                                                    setShowModelMenu(false);
+                                                }}
+                                                className={`w-full px-3 py-2 text-left text-sm rounded-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 transition-all duration-150 flex items-center gap-2 ${selectedModel === 'gemini-2.5-flash-image' ? 'bg-brand-purple/20 text-brand-purple' : 'text-light-text dark:text-dark-text'}`}
+                                            >
+                                                <span>⚡</span>
+                                                <span>{t.modelFlash}</span>
+                                            </button>
+                                            <button
+                                                onClick={() => {
+                                                    onModelChange('gemini-3-pro-image-preview');
+                                                    setShowModelMenu(false);
+                                                }}
+                                                className={`w-full px-3 py-2 text-left text-sm rounded-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 transition-all duration-150 flex items-center gap-2 ${selectedModel === 'gemini-3-pro-image-preview' ? 'bg-brand-purple/20 text-brand-purple' : 'text-light-text dark:text-dark-text'}`}
+                                            >
+                                                <span>⭐</span>
+                                                <span>{t.modelPro}</span>
+                                            </button>
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+
+                            {/* v1.0: Resolution Selector (Expanded Mode - only for PRO) */}
+                            {selectedModel === 'gemini-3-pro-image-preview' && (
+                                <div className="relative z-[70]">
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setShowResolutionMenu(!showResolutionMenu);
+                                            setShowAspectMenu(false);
+                                            setShowNumImagesMenu(false);
+                                            setShowModelMenu(false);
+                                        }}
+                                        className="flex items-center gap-1 lg:gap-1.5 px-2 lg:px-3 py-1.5 bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-lg text-xs text-light-text dark:text-dark-text hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 active:scale-95 transition-all duration-150 whitespace-nowrap"
+                                    >
+                                        <span>{selectedResolution.toUpperCase()}</span>
+                                    </button>
+                                    {showResolutionMenu && (
+                                        <>
+                                            <div className="fixed inset-0 z-[65]" onClick={() => setShowResolutionMenu(false)} />
+                                            <div className="absolute bottom-full mb-2 left-0 bg-light-surface dark:bg-dark-surface rounded-xl shadow-2xl p-2 min-w-[100px] border border-light-border dark:border-dark-border z-[70] animate-slideDown">
+                                                <button
+                                                    onClick={() => {
+                                                        onResolutionChange('1k');
+                                                        setShowResolutionMenu(false);
+                                                    }}
+                                                    className={`w-full px-3 py-1.5 text-left text-sm rounded-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 transition-all duration-150 ${selectedResolution === '1k' ? 'bg-brand-purple/20 text-brand-purple' : 'text-light-text dark:text-dark-text'}`}
+                                                >
+                                                    {t.resolution1k}
+                                                </button>
+                                                <button
+                                                    onClick={() => {
+                                                        onResolutionChange('2k');
+                                                        setShowResolutionMenu(false);
+                                                    }}
+                                                    className={`w-full px-3 py-1.5 text-left text-sm rounded-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 transition-all duration-150 ${selectedResolution === '2k' ? 'bg-brand-purple/20 text-brand-purple' : 'text-light-text dark:text-dark-text'}`}
+                                                >
+                                                    {t.resolution2k}
+                                                </button>
+                                                <button
+                                                    onClick={() => {
+                                                        onResolutionChange('4k');
+                                                        setShowResolutionMenu(false);
+                                                    }}
+                                                    className={`w-full px-3 py-1.5 text-left text-sm rounded-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 transition-all duration-150 ${selectedResolution === '4k' ? 'bg-brand-purple/20 text-brand-purple' : 'text-light-text dark:text-dark-text'}`}
+                                                >
+                                                    {t.resolution4k}
+                                                </button>
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* v1.0: Estimated Cost Badge (Expanded Mode) */}
+                            <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-gradient-to-r from-yellow-500/10 to-amber-500/10 border border-yellow-500/30 rounded-lg">
+                                <span className="text-xs font-bold bg-clip-text text-transparent bg-gradient-to-r from-yellow-500 to-amber-500">
+                                    ${(() => {
+                                        if (selectedModel === 'gemini-2.5-flash-image') return '0.04';
+                                        const inputCost = referenceImagesCount * 0.067;
+                                        const promptCost = 0.002;
+                                        const outputCost = selectedResolution === '4k' ? 0.24 : 0.134;
+                                        return (inputCost + promptCost + outputCost).toFixed(3);
+                                    })()}
+                                </span>
+                            </div>
+
                             {/* v0.7: Precise Reference Toggle Switch (Expanded Mode) */}
                             {hasReferences && (
                                 <div className="relative group/tooltip flex items-center gap-2 lg:gap-2.5 px-2 lg:px-3 py-1.5 bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-lg">
-                                    <span className="text-xs font-medium text-light-text dark:text-dark-text">
-                                        🎯 {t.preciseReference}
+                                    <span className="text-base lg:text-lg" title={t.preciseReferenceTooltip}>
+                                        👨
                                     </span>
                                     <button
                                         onClick={() => onPreciseReferenceChange(!preciseReference)}
@@ -623,7 +864,7 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                             <button
                                 onClick={onGenerate}
                                 disabled={isLoading}
-                                className="relative px-4 lg:px-6 py-2 lg:py-2.5 bg-gradient-to-r from-brand-purple via-brand-pink to-brand-purple bg-[length:200%_100%] hover:bg-[position:100%_0] hover:scale-110 active:scale-95 rounded-xl font-bold text-white text-xs lg:text-sm shadow-[0_0_20px_rgba(138,120,244,0.5)] hover:shadow-[0_0_30px_rgba(138,120,244,0.8)] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:shadow-lg whitespace-nowrap"
+                                className="relative px-4 lg:px-6 py-2 lg:py-2.5 bg-gradient-to-r from-brand-yellow via-brand-magenta to-brand-yellow bg-[length:200%_100%] hover:bg-[position:100%_0] hover:scale-110 active:scale-95 rounded-xl font-bold text-white text-xs lg:text-sm shadow-[0_0_20px_rgba(255,217,61,0.5)] hover:shadow-[0_0_30px_rgba(255,217,61,0.8)] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:shadow-lg whitespace-nowrap"
                             >
                                 {isLoading ? <span className="inline-block animate-pulse">⏳</span> : "⚡"} <span className="hidden sm:inline">{isLoading ? "Generating..." : "Generate"}</span>
                             </button>

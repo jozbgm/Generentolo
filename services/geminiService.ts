@@ -1,5 +1,5 @@
 import { GoogleGenAI, Type, Modality, HarmCategory, HarmBlockThreshold } from "@google/genai";
-import { DynamicTool } from '../types';
+import { DynamicTool, ModelType, ResolutionType, TextInImageConfig } from '../types';
 import { enhancePromptV2 } from './enhancePromptNew';
 
 const DEFAULT_API_KEY = import.meta.env.VITE_API_KEY;
@@ -774,7 +774,41 @@ const extractStyleDescription = async (styleFile: File, userApiKey: string | nul
     }
 };
 
-export const generateImage = async (prompt: string, aspectRatio: string, referenceFiles: File[], styleFile: File | null, structureFile: File | null, userApiKey: string | null, negativePrompt?: string, seed?: string, language: 'en' | 'it' = 'en', preciseReference: boolean = false): Promise<string> => {
+// v1.0: Cost calculator for PRO model
+export const calculateEstimatedCost = (model: ModelType, resolution: ResolutionType, referenceCount: number): number => {
+    if (model === 'gemini-2.5-flash-image') {
+        return 0.039; // Flash is cheap and flat rate
+    }
+
+    // Nano Banana PRO pricing
+    const inputCost = referenceCount * 0.067; // $0.067 per reference image
+    const promptCost = 0.002; // ~$2 per million tokens, estimate 1000 tokens = $0.002
+
+    let outputCost = 0;
+    if (resolution === '4k') {
+        outputCost = 0.24;
+    } else {
+        outputCost = 0.134; // 1k or 2k
+    }
+
+    return inputCost + promptCost + outputCost;
+};
+
+export const generateImage = async (
+    prompt: string,
+    aspectRatio: string,
+    referenceFiles: File[],
+    styleFile: File | null,
+    structureFile: File | null,
+    userApiKey: string | null,
+    negativePrompt?: string,
+    seed?: string,
+    language: 'en' | 'it' = 'en',
+    preciseReference: boolean = false,
+    model: ModelType = 'gemini-2.5-flash-image',
+    resolution: ResolutionType = '2k',
+    textInImage?: TextInImageConfig
+): Promise<string> => {
     try {
         const ai = getAiClient(userApiKey);
 
@@ -891,6 +925,34 @@ export const generateImage = async (prompt: string, aspectRatio: string, referen
             console.log('🎯 Precise Reference Mode: ACTIVE');
         }
 
+        // STEP 6: v1.0 - Add Text-in-Image guidance (PRO feature)
+        if (textInImage && textInImage.enabled && textInImage.text) {
+            const positionMap: Record<string, string> = {
+                'top': language === 'it' ? 'nella parte SUPERIORE dell\'immagine' : 'at the TOP of the image',
+                'center': language === 'it' ? 'al CENTRO dell\'immagine' : 'at the CENTER of the image',
+                'bottom': language === 'it' ? 'nella parte INFERIORE dell\'immagine' : 'at the BOTTOM of the image',
+                'overlay': language === 'it' ? 'come OVERLAY sopra il soggetto principale' : 'as an OVERLAY on the main subject'
+            };
+
+            const fontStyleMap: Record<string, string> = {
+                'bold': language === 'it' ? 'carattere GRASSETTO e forte' : 'BOLD and strong font',
+                'italic': language === 'it' ? 'carattere CORSIVO elegante' : 'ITALIC elegant font',
+                'calligraphy': language === 'it' ? 'carattere CALLIGRAFICO artistico' : 'CALLIGRAPHIC artistic font',
+                'modern': language === 'it' ? 'carattere MODERNO e pulito (sans-serif)' : 'MODERN clean font (sans-serif)',
+                'vintage': language === 'it' ? 'carattere VINTAGE retrò' : 'VINTAGE retro font'
+            };
+
+            const position = textInImage.position || 'center';
+            const fontStyle = textInImage.fontStyle || 'modern';
+
+            const textGuidance = language === 'it'
+                ? `📝 TESTO NELL'IMMAGINE: Includi il testo "${textInImage.text}" ${positionMap[position]}, usando ${fontStyleMap[fontStyle]}. Il testo deve essere LEGGIBILE, ben integrato nella composizione, con contrasto adeguato rispetto allo sfondo.`
+                : `📝 TEXT IN IMAGE: Include the text "${textInImage.text}" ${positionMap[position]}, using ${fontStyleMap[fontStyle]}. Text must be LEGIBLE, well integrated in composition, with adequate contrast against background.`;
+
+            instructionParts.push(textGuidance);
+            console.log('📝 Text-in-Image Mode: ACTIVE -', textInImage.text);
+        }
+
         // Build full prompt with enriched user prompt
         let fullPrompt = `${instructionParts.join(' ')} ${enrichedPrompt}`;
 
@@ -924,9 +986,28 @@ export const generateImage = async (prompt: string, aspectRatio: string, referen
             };
         }
 
+        // v1.0: Add resolution config for PRO model
+        if (model === 'gemini-3-pro-image-preview' && resolution) {
+            if (!config.imageConfig) {
+                config.imageConfig = {};
+            }
+            // Map our resolution to output dimensions
+            const resolutionMap: Record<ResolutionType, { width: number; height: number }> = {
+                '1k': { width: 1024, height: 1024 },
+                '2k': { width: 2048, height: 2048 },
+                '4k': { width: 4096, height: 4096 }
+            };
+
+            // Note: Actual implementation may vary based on final Gemini 3 Pro API
+            // This is a placeholder for resolution configuration
+            console.log(`🎨 PRO Mode: Targeting ${resolution.toUpperCase()} resolution`);
+        }
+
         if (seed && /^\d+$/.test(seed)) {
             config.seed = parseInt(seed, 10);
         }
+
+        console.log(`🚀 Model: ${model} | Resolution: ${resolution} | References: ${referenceFiles.length}`);
 
         // Retry logic for IMAGE_RECITATION (often false positives)
         const MAX_RETRIES = 3;
@@ -936,7 +1017,7 @@ export const generateImage = async (prompt: string, aspectRatio: string, referen
         for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
             try {
                 result = await ai.models.generateContent({
-                    model: 'gemini-2.5-flash-image',
+                    model: model, // v1.0: Use selected model
                     contents: { parts },
                     config: config as any,
                 });

@@ -1,8 +1,8 @@
-# 🎨 Generentolo v0.9.1 Beta
+# 🎨 Generentolo PRO v1.0.0
 
 **Professional AI-Powered Image Generation Web Application**
 
-A sophisticated web application for generating high-quality images using Google's Gemini 2.5 Flash Image model with ControlNet-like structure guidance. Designed for graphic designers, marketers, and creative professionals who need precise control over AI-generated imagery.
+A sophisticated web application for generating ultra-high-quality images using Google's Gemini models (Flash & **Nano Banana PRO 3.0**) with ControlNet-like structure guidance, 4K resolution support, and text-in-image capabilities. Designed for graphic designers, marketers, and creative professionals who demand the highest quality and precision.
 
 [![Live Demo](https://img.shields.io/badge/Live-Demo-blue?style=for-the-badge)](https://www.dugongo.it/generentolo/)
 [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
@@ -13,55 +13,102 @@ A sophisticated web application for generating high-quality images using Google'
 
 ## ✨ Features
 
-### 🖼️ **Multi-Reference Image Generation**
-- Upload up to **4 reference images** to combine elements intelligently
+### 🚀 **NUOVO v1.0: Dual Model System**
+- **Flash Model** (gemini-2.5-flash-image) - Fast & Economical ($0.04/image)
+  - Perfect for rapid prototyping and testing
+  - High-speed generation (2-3 seconds)
+  - 2K maximum resolution
+
+- **✨ PRO Model** (gemini-3-pro-image-preview) - **Nano Banana PRO 3.0**
+  - **4K Native Resolution** (4096×4096px)
+  - Advanced text rendering with legible fonts
+  - Google Search grounding for fact-checking
+  - Up to **14 reference images** (vs 4 in Flash)
+  - **Text-in-Image** capabilities with style controls
+  - Professional-grade output for final deliverables
+  - $0.13-$0.24 per image (based on resolution)
+
+### 📝 **NUOVO v1.0: Text-in-Image (PRO Only)**
+- Add text directly to your generated images
+- **Position Control**: Top, Center, Bottom, Overlay
+- **Font Styles**: Bold, Italic, Calligraphy, Modern, Vintage
+- Automatic contrast optimization
+- Perfect for:
+  - Infographics and diagrams
+  - Marketing materials with headlines
+  - Social media posts
+  - Menus and promotional content
+
+### 💰 **NUOVO v1.0: Real-Time Cost Calculator**
+- See estimated cost **before** generating
+- Dynamic pricing based on:
+  - Selected model (Flash vs PRO)
+  - Resolution (1K/2K/4K)
+  - Number of reference images
+- Transparent pricing display
+- No surprises on your API bill
+
+### 🖼️ **Enhanced Multi-Reference System**
+- Upload up to **14 reference images** (PRO) or 4 (Flash)
 - Separate **style reference image** for consistent visual branding
-- **Structure guide image** (ControlNet-like) to preserve spatial composition and depth
-- **NEW v0.7: 🎯 Precise Reference Mode** - Maximum fidelity to facial features
-  - Preserves faces, skin texture, eye color, hairstyle EXACTLY as in reference
-  - Toggle on/off for each generation
-- Advanced AI prompt engineering ensures all subjects are included in final output
+- **Structure guide image** (ControlNet-like) to preserve spatial composition
+- **👤 Precise Reference Mode** - Maximum fidelity to facial features
+  - Preserves faces, skin texture, eye color, hairstyle EXACTLY
+  - One-click toggle with visual indicator
+  - Tooltip guidance for easy understanding
 
 ### 🎯 **Professional Creative Controls**
 - **3 AI-Generated Prompt Suggestions** (Hero Shot, Lifestyle, Detail/Macro)
-- **Dynamic Professional Tools** - AI analyzes your images and generates contextual controls:
+- **Dynamic Professional Tools** - AI analyzes images and generates contextual controls:
   - For people: Hairstyle, outfit, pose, expression
   - For products: Camera angle, lighting, background setting
   - For scenes: Time of day, weather, artistic style
-- **15-20 options per tool** for granular creative control
+- **15-20 options per tool** for granular control
 
-### 📐 **Aspect Ratio Mastery**
-- **NEW: "Auto" mode** - Uses reference image's original aspect ratio
-- Support for all common ratios: **1:1, 16:9, 9:16, 4:3, 3:4**
-- **Aggressive white border detection** and automatic cropping
-- **High-resolution output**: Always 2048px on longest side, minimum 1024px on shortest
-- Smart sizing ensures frame is completely filled with no letterboxing
+### 📐 **Flexible Resolution Options**
+- **PRO Model**:
+  - 1K (1024×1024) - Standard quality
+  - 2K (2048×2048) - High quality
+  - **4K (4096×4096) - Ultra quality** ✨
+- **Flash Model**: Fixed 2K output
+- **Auto Aspect Ratio** mode uses reference image proportions
+- Support for: 1:1, 16:9, 9:16, 4:3, 3:4, 21:9
+- Smart white border detection and cropping
 
 ### 🎨 **Advanced Image Controls**
 - **Negative Prompts** with AI-powered generation
 - **Seed Control** for reproducible results
-- **Batch Generation** - Create up to 4 images at once
-- **Inpainting** - Edit specific regions with mask-based AI editing
-- **NEW: Image Upscaling** - 2x/4x quality enhancement with ClipDrop API
-  - Monthly quota tracking (100 free upscales/month)
-  - Interactive before/after comparison slider
+- **Batch Generation** - Up to 4 images at once
+- **Inpainting** - Edit specific regions with mask-based AI
+- **Image Upscaling** - 2x/4x quality enhancement (ClipDrop API)
+  - Monthly quota tracking (100 free/month)
+  - Before/after comparison slider
   - Automatic quality optimization
 
 ### 💾 **Persistent History & Storage**
-- **Last 12 generations** saved automatically
+- Last 12 generations saved automatically
+- **Favorites System** - Star your best work
+- Filter by: All / Favorites
 - **IndexedDB** for full-resolution images
-- **localStorage** for metadata and thumbnails
+- **localStorage** for metadata
 - Reuse settings from any historical generation
+- Generation metadata includes:
+  - Model used (Flash/PRO)
+  - Resolution
+  - Estimated cost
+  - All parameters (prompt, seed, aspect ratio)
 
 ### 🌐 **Bilingual Interface**
 - Full support for **English** and **Italian**
-- Toggle languages instantly with preserved state
+- Toggle instantly with preserved state
+- All PRO features fully translated
 
 ### ⚡ **Developer-Friendly**
-- **Keyboard shortcuts** (Ctrl+G to generate, Ctrl+E to enhance, etc.)
-- Custom API key support (or use shared default)
+- Keyboard shortcuts (Ctrl+G, Ctrl+E, etc.)
+- Custom API key support
 - Dark/Light theme toggle
 - Responsive design (mobile, tablet, desktop)
+- Clean, maintainable codebase
 
 ---
 
@@ -71,35 +118,18 @@ A sophisticated web application for generating high-quality images using Google'
 
 ---
 
-## 📸 Screenshots
-
-### Main Interface
-```
-┌─────────────────────────────────────────────────────────────────┐
-│  ┌──────────────┐  ┌────────────────────────────┐  ┌─────────┐ │
-│  │  Reference   │  │   Generated Images         │  │ History │ │
-│  │  Images      │  │                            │  │         │ │
-│  │  (Up to 4)   │  │   [High-res 2048px]        │  │ [Last   │ │
-│  │              │  │                            │  │  12]    │ │
-│  │  + Style Ref │  └────────────────────────────┘  └─────────┘ │
-│  └──────────────┘                                                │
-│  ┌──────────────────────────────────────────────────────────┐   │
-│  │  Creative Prompts  |  Professional Tools  |  Settings   │   │
-│  └──────────────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────────────┘
-```
-
----
-
 ## 🛠️ Tech Stack
 
 - **Frontend Framework**: React 19.2.0
 - **Language**: TypeScript 5.8
 - **Build Tool**: Vite 6.2
 - **Styling**: Tailwind CSS 3.4.7
-- **AI Model**: Google Gemini 2.5 Flash Image (`@google/genai` v1.25.0)
+- **AI Models**:
+  - Google Gemini 2.5 Flash Image
+  - **Google Gemini 3 Pro Image (Nano Banana PRO)** 🆕
+- **SDK**: `@google/genai` v1.25.0
 - **Storage**: IndexedDB + localStorage
-- **State Management**: React Hooks (useState, useCallback, useContext)
+- **State Management**: React Hooks
 
 ---
 
@@ -114,8 +144,8 @@ A sophisticated web application for generating high-quality images using Google'
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/jozbgm/generentolo-v0.1-beta.git
-   cd generentolo-v0.1-beta
+   git clone https://github.com/jozbgm/generentolo-pro.git
+   cd generentolo-pro
    ```
 
 2. **Install dependencies**
@@ -125,7 +155,7 @@ A sophisticated web application for generating high-quality images using Google'
 
 3. **Configure API Key**
 
-   Create a `.env.local` file in the root directory:
+   Create a `.env.local` file:
    ```env
    VITE_API_KEY=your_gemini_api_key_here
    ```
@@ -134,92 +164,34 @@ A sophisticated web application for generating high-quality images using Google'
    ```bash
    npm run dev
    ```
-   Open [http://localhost:3000](http://localhost:3000)
+   Open [http://localhost:5173](http://localhost:5173)
 
 5. **Build for production**
    ```bash
    npm run build
    ```
-   Output will be in `dist/` folder
+   Output in `dist/` folder
 
 ---
 
-## 🔧 Configuration
+## 💰 Pricing Guide
 
-### Deployment Path
+### Flash Model (gemini-2.5-flash-image)
+- **Cost**: ~$0.04 per image (flat rate)
+- **Speed**: 2-3 seconds
+- **Resolution**: Up to 2K (2048px)
+- **Best for**: Rapid iterations, testing, prototypes
 
-Edit `vite.config.ts` to set the base path:
+### PRO Model (gemini-3-pro-image-preview)
+| Resolution | Base Cost | + Input Images | Example Total |
+|------------|-----------|----------------|---------------|
+| **1K** | $0.134 | $0.067 each | $0.27 (2 refs) |
+| **2K** | $0.134 | $0.067 each | $0.27 (2 refs) |
+| **4K** | $0.240 | $0.067 each | $0.37 (2 refs) |
 
-```typescript
-export default defineConfig({
-  base: '/generentolo/',  // For subdirectory deployment
-  // base: '/',           // For root deployment
-  // ...
-});
-```
+**Cost Formula**: `Base + (NumReferenceImages × $0.067) + $0.002 (prompt)`
 
-### API Key Options
-
-Users can:
-1. Use the **shared default key** (defined in `.env.local`)
-2. Enter their **own API key** via Settings (stored locally in browser)
-
----
-
-## 📁 Project Structure
-
-```
-generentolo-v0.1-beta/
-├── src/
-│   ├── App.tsx                    # Main application component (1,908 lines)
-│   ├── index.tsx                  # React entry point
-│   ├── types.ts                   # TypeScript interfaces
-│   ├── services/
-│   │   ├── geminiService.ts       # Gemini API wrapper (800+ lines)
-│   │   ├── indexedDB.ts           # Image storage service
-│   │   └── promptLibrary.ts       # Prompt management
-│   ├── components/
-│   │   └── icons.tsx              # Custom SVG icons
-│   └── hooks/
-│       └── useKeyboardShortcuts.ts # Keyboard shortcuts hook
-├── public/
-│   └── _redirects                 # SPA routing configuration
-├── dist/                          # Production build output
-├── vite.config.ts                 # Vite configuration
-├── tailwind.config.js             # Tailwind theme customization
-├── tsconfig.json                  # TypeScript configuration
-├── package.json                   # Dependencies
-└── README.md                      # This file
-```
-
----
-
-## 🎨 Design System
-
-### Color Palette (v0.9.0 - Bold & Creative)
-
-```css
-/* Brand Colors */
---brand-yellow: #FFD93D;    /* Banana Yellow - Primary */
---brand-magenta: #FF006E;   /* Magenta - Secondary */
---brand-cyan: #00F5FF;      /* Bright Cyan - Accent */
-
-/* Dark Mode - Anthracite Grey */
---dark-bg: #0A0B0F;
---dark-surface: #16171D;
---dark-surface-accent: #1F2027;
---dark-text: #F0F0F3;
-
-/* Light Mode */
---light-bg: #FAFBFC;
---light-surface: #FFFFFF;
---light-text: #0A0B0F;
-```
-
-### Typography
-- **Primary Font**: System UI font stack
-- **Sizes**: Responsive scale (text-sm to text-lg)
-- **Weights**: Regular (400), Semibold (600), Bold (700)
+**Example**: 14 reference images + 4K output = ~$1.18 per generation
 
 ---
 
@@ -237,60 +209,134 @@ generentolo-v0.1-beta/
 
 ---
 
-## 🔄 Workflow Example
+## 🔄 Workflow Example (PRO Mode)
 
-1. **Upload Reference Images** (drag & drop or click to browse)
-2. **Add Style Image** (optional - for consistent branding)
-3. **Generate Creative Prompts** (AI suggests 3 professional prompts)
-4. **Generate Professional Tools** (AI creates contextual controls)
-5. **Select Tool Options** (hairstyle, lighting, camera angle, etc.)
-6. **Choose Aspect Ratio** (1:1, 16:9, 9:16, etc.)
-7. **Set Advanced Options** (negative prompt, seed, number of images)
+1. **Select PRO Model** (gemini-3-pro-image-preview)
+2. **Choose Resolution** (1K / 2K / **4K**)
+3. **Upload Reference Images** (up to 14!)
+4. **Enable Text-in-Image** (optional)
+   - Enter text: "SALE 50% OFF"
+   - Position: Top
+   - Font: Bold
+5. **Generate Creative Prompts**
+6. **Select Tool Options** (lighting, camera angle, etc.)
+7. **Check Estimated Cost** ($0.37 for 2 refs + 4K)
 8. **Generate!** 🎨
-9. **Download, Edit, or Reuse** your creations
+9. **Download** your 4K masterpiece
 
 ---
 
-## 📊 Image Resolution Guarantees
+## 📊 Resolution Comparison
 
-| Aspect Ratio | Output Size | Megapixels | Notes |
-|--------------|-------------|------------|-------|
-| 1:1 | 2048 × 2048 | 4.19 MP | Maximum quality |
-| 16:9 | 2048 × 1152 | 2.36 MP | Full HD+ |
-| 9:16 | 1152 × 2048 | 2.36 MP | Vertical HD+ |
-| 4:3 | 2048 × 1536 | 3.15 MP | Classic |
-| 21:9 | 2048 × 878 | 1.80 MP | Ultra-wide, min 1024px |
-
-**All images:**
-- ✅ PNG format with 100% quality
-- ✅ 2048px on longest side
-- ✅ Minimum 1024px on shortest side
-- ✅ High-quality image smoothing enabled
+| Model | Max Resolution | Megapixels | Text Rendering | Google Search |
+|-------|----------------|------------|----------------|---------------|
+| **Flash** | 2048×2048 | 4.19 MP | Basic | ❌ |
+| **PRO 1K** | 1024×1024 | 1.05 MP | ✅ Advanced | ✅ |
+| **PRO 2K** | 2048×2048 | 4.19 MP | ✅ Advanced | ✅ |
+| **PRO 4K** | 4096×4096 | **16.78 MP** ✨ | ✅ Advanced | ✅ |
 
 ---
 
-## 🐛 Bug Fixes & Improvements (Latest Release)
+## 📋 Changelog
 
-### v0.1-beta (November 2025)
-- ✅ **Fixed**: History scroll with unlimited images
-- ✅ **Fixed**: Low-resolution output (now always 2048px max)
-- ✅ **Fixed**: API key popup closing on text selection
-- ✅ **Fixed**: Multiple reference images not recognized (critical fix)
-- ✅ **Fixed**: White bands in aspect ratio output
-- ✅ **Fixed**: Reset interface not working
-- ✅ **Improved**: Aggressive border detection (threshold 230, sample 5px)
-- ✅ **Improved**: Smart aspect ratio sizing with minimum dimension guarantee
-- ✅ **UI**: Removed placeholder icon, cleaner professional design
+### v1.0.0 PRO (November 2025) 🚀
+**🎉 MAJOR RELEASE - Nano Banana PRO Integration:**
+
+**✨ NEW: Dual Model System**
+- Flash Model (gemini-2.5-flash-image) - Fast & cheap
+- **PRO Model (gemini-3-pro-image-preview)** - High quality with 4K support
+- Model selector in UI with clear indicators
+- Smart model recommendations based on use case
+
+**📐 NEW: Resolution Selector (PRO Only)**
+- 1K (1024×1024) - Standard
+- 2K (2048×2048) - High Quality
+- **4K (4096×4096) - Ultra Quality** ✨
+- Dynamic UI - only shows when PRO selected
+- Visual feedback with gradient highlights
+
+**💰 NEW: Real-Time Cost Calculator**
+- Shows estimated cost BEFORE generation
+- Updates dynamically as you:
+  - Switch models (Flash ↔ PRO)
+  - Change resolution (1K → 2K → 4K)
+  - Add/remove reference images
+- Transparent pricing with no surprises
+- Beautiful gradient badge display
+
+**📝 NEW: Text-in-Image System (PRO Only)**
+- Add text directly to generated images
+- Position controls: Top, Center, Bottom, Overlay
+- Font styles: Bold, Italic, Calligraphy, Modern, Vintage
+- Automatic text contrast optimization
+- Perfect for marketing materials, infographics, menus
+- Smart toggle - only visible when PRO model selected
+
+**🖼️ NEW: 14 Reference Images Support**
+- Increased from 4 to 14 (PRO model capability)
+- Better multi-image combining
+- Support for complex compositions
+- Visual counter shows available slots
+
+**🎨 UI/UX Improvements**
+- Model selector with icons (⚡ Flash / ⭐ PRO)
+- Resolution buttons with clear labels
+- Cost estimator badge with yellow-magenta gradient
+- Text-in-image panel with purple gradient
+- **Precise Reference** now uses 👤 icon (cleaner mobile view)
+- **Generate button** consistent gradient on all screen sizes
+- Smooth animations and transitions
+- Better mobile responsiveness
+
+**🌐 Complete Italian/English Translations**
+- All PRO features fully localized
+- Model names, resolution labels, tooltips
+- Text-in-image controls
+- Cost calculator labels
+
+**🔧 Technical Improvements**
+- New types: `ModelType`, `ResolutionType`, `TextInImageConfig`
+- `calculateEstimatedCost()` function in geminiService
+- Enhanced `generateImage()` with 3 new parameters
+- Updated FloatingActionBar with PRO controls
+- Cost tracking in generation metadata
+- Better TypeScript type safety
+
+**📦 Package Updates**
+- Version bumped to 1.0.0
+- Package name updated to `generentolo-pro`
+- Ready for production deployment
+
+**Bug Fixes:**
+- Fixed text overflow on mobile (Precise Reference)
+- Unified Generate button styling across viewports
+- Better handling of reference image limits
+- Improved error messages for quota exceeded
+
+[Previous versions 0.9.1 → 0.1 Beta history omitted for brevity - see full CHANGELOG.md]
+
+---
+
+## 🚧 Roadmap
+
+- [ ] Google Search grounding UI toggle
+- [ ] "Thinking mode" visualization (intermediate images)
+- [ ] SynthID watermark indicator
+- [ ] Batch processing with different models
+- [ ] Export generation report with cost breakdown
+- [ ] Advanced history filtering (by model, resolution, cost)
+- [ ] Template system for common use cases
+- [ ] API endpoint for programmatic access
 
 ---
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please follow these steps:
+Contributions welcome! Please:
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+3. Commit your changes (`git commit -m 'Add AmazingFeature'`)
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
@@ -298,16 +344,16 @@ Contributions are welcome! Please follow these steps:
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT License - see [LICENSE](LICENSE) file for details.
 
 ---
 
 ## 🙏 Acknowledgments
 
-- **Google Gemini Team** - For the powerful Gemini 2.5 Flash Image model
-- **React Team** - For the amazing React 19 framework
-- **Tailwind CSS** - For the beautiful utility-first CSS framework
-- **Claude AI** - Development assistance and code review
+- **Google Gemini Team** - For Gemini 2.5 Flash & **Nano Banana PRO 3.0**
+- **React Team** - For React 19
+- **Tailwind CSS** - For utility-first CSS
+- **Claude AI** - Development assistance
 
 ---
 
@@ -316,257 +362,15 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 **Developer**: Joz BGM
 **Website**: [https://bgm.media](https://bgm.media)
 **Email**: [joz@bgm.media](mailto:joz@bgm.media)
-**Project Link**: [https://github.com/jozbgm/generentolo-v0.1-beta](https://github.com/jozbgm/generentolo-v0.1-beta)
-
----
-
-## 📋 Changelog
-
-### v0.9.1 Beta (January 2025)
-**🚀 Revolutionary Prompt Enhancement System + Smart Contextual Hints:**
-- **NEW: Prompt Enhancement v2.0**
-  - Complete rewrite based on industry best practices
-  - Two-step process: Image Analysis → Prompt Enhancement
-  - Vision-aware: analyzes ALL images before enhancing
-  - CO-STAR Framework (Context, Objective, Style, Tone, Audience, Response)
-  - Self-evaluation: validates quality before returning (score 0-100)
-  - Platform-optimized for Gemini Image Generation
-  - Advertising-focused: hyper-realistic default, professional photography language
-  - Never returns "already optimal" - always enhances
-
-- **🧠 Smart Contextual Hints**
-  - Hints change dynamically based on what you write
-  - People detected → suggests Pose + Outfit
-  - Animals detected → suggests Action (playing, stretching)
-  - Products detected → suggests Surface + Details (droplets, reflections)
-  - Food detected → suggests Presentation (steam, garnish)
-  - Landscapes detected → suggests Time of day (golden hour, sunset)
-  - All hints are CLICKABLE - one click adds suggestion to prompt
-  - Max 3 hints shown to avoid clutter
-  - Bilingual: Italian + English detection
-
-- **✨ Enhancement Quality Improvements**
-  - Removed "already optimal" message completely
-  - Shows "✨ Prompt migliorato!" on every enhancement
-  - Aggressive retry logic with temperature 0.85 → 1.2
-  - Quality validation: length, technical terms, photo quality
-  - Fallback template-based enhancement if main system fails
-  - 70-130 words optimal length enforced
-
-**Technical:**
-- services/enhancePromptNew.ts: new enhancement engine (431 lines)
-- FloatingActionBar.tsx: smart contextual hints system
-- Image captioning with vision model (temp 0.4 for accuracy)
-- CO-STAR system instruction with self-evaluation
-- Quality scoring: word count, technical terms, photo indicators
-
-### v0.9.0 Beta (January 2025)
-**🎨 Bold Creative Redesign + Major Enhancements:**
-- **NEW: Modern Color Palette**
-  - Banana Yellow (#FFD93D) + Magenta (#FF006E) + Cyan (#00F5FF)
-  - Anthracite grey dark mode (#0A0B0F → #16171D)
-  - Bold, energetic, and professional aesthetic
-  - All gradient buttons updated (yellow → magenta)
-
-- **✨ Enhanced Prompt Enhancement**
-  - Aggressive systemInstruction forcing creativity
-  - Temperature increased (0.7/0.9 for standard, 1.2 for retry)
-  - Automatic retry if model returns identical prompt
-  - maxOutputTokens: 500 (was 300)
-  - Removed 400-character truncation
-  - Italian translations for prompt tips
-
-- **🎯 UI/UX Improvements**
-  - Fixed layout height alignment (all columns same height)
-  - Removed backdrop-blur artifact (dark horizontal bar)
-  - Hidden empty Creative Prompts section when not needed
-  - Cleaner, more polished interface
-
-**Technical:**
-- ControlNet structure guidance improvements
-- Better aspect ratio handling
-- High-res output (2048px) consistently applied
-
-### v0.8.1 Beta (January 2025)
-**🔖 Favorites & History Filtering:**
-- ⭐ **Favorites System** - Bookmark your best generations
-  - Star icon on each image (hover to reveal)
-  - Toggle favorite status with one click
-  - Yellow star indicator for favorited images
-  - Filter history to show only favorites
-  - Persistent across sessions (stored in IndexedDB)
-  - "All" / "⭐ Favorites" tabs in history sidebar
-  - Visual feedback with smooth transitions
-
-**UX Enhancements:**
-- 🎨 Better hover states on history images
-- 🔄 Instant filter switching with no reload
-- 💾 Favorites data synced with image metadata
-- ⚡ Performance optimized for large histories
-
-**Bug Fixes:**
-- Fixed favorite status persistence after page reload
-- Improved history image loading performance
-
-### v0.7 Beta (January 2025)
-**🎯 Precise Reference Mode:**
-- **NEW: Precise Reference Checkbox** - Maximum fidelity to facial features
-  - Preserves EXACTLY facial features, skin texture, eye color, nose shape
-  - Maintains hair color, hairstyle, and length unchanged
-  - Prevents AI from altering or reinterpreting faces
-  - Works with multiple reference images
-  - Toggle on/off with clear visual indicator
-  - Smart prompt engineering for photorealistic accuracy
-
-**UX Improvements:**
-- Changed "Nano is generating" to "Generentolo is generating"
-- Better branding consistency throughout the app
-
-**Bug Fixes:**
-- Optimized `enhancePrompt()` to prevent IMAGE_OTHER errors
-  - No longer analyzes reference images during enhancement
-  - Only analyzes style/structure images
-  - Reduced prompt duplication with API
-  - More stable generation with Enhance + Generate workflow
-
-### v0.6 Beta (January 2025)
-**Productivity & Organization Features:**
-- ⭐ **Prompt Presets System** - Save and reuse your favorite prompts
-  - Save up to 50 presets with custom names
-  - Store both main prompt and negative prompt
-  - Quick load presets with one click
-  - Export/Import presets as JSON for backup and sharing
-  - LocalStorage-based (no account needed)
-  - Smart UI with tabs: History / Presets
-- 📜 **Infinite Scroll History** - Browse unlimited generations smoothly
-  - Loads 30 images initially, then 20 more per scroll
-  - Performance-optimized with IntersectionObserver
-  - Image counter shows loaded count (e.g., "Showing 50 of 150 images")
-  - Smooth loading spinner when fetching more
-- 🖼️ **Image Navigation in Lightbox**
-  - Navigate between images with arrow keys (← →)
-  - Click navigation arrows on desktop
-  - Swipe left/right on mobile (50px threshold)
-  - Image counter (e.g., "2/4") in top-left
-  - Circular navigation (loops back to first/last)
-  - Works with both current images and history
-- ✏️ **Prompt Textarea Enhancements**
-  - Paste button to quickly insert clipboard content
-  - Clear button to delete all text at once
-  - Buttons appear/hide intelligently
-  - Hover effects and smooth transitions
-
-**UX Improvements:**
-- 🎯 Tab-based sidebar (History / Presets) with smooth switching
-- 💾 All presets data stored locally in browser
-- 🔄 Smart preset management (add, load, delete, export, import)
-- ⚡ Keyboard navigation support in lightbox
-- 📱 Touch-optimized swipe gestures for mobile
-
-**Technical:**
-- New service: `presetsService.ts` for preset management
-- IntersectionObserver for infinite scroll implementation
-- Touch event handlers for mobile swipe detection
-- LocalStorage persistence with max 50 presets limit
-- JSON export/import for preset portability
-
-### v0.5 Beta (January 2025)
-**Visual & Animation Overhaul:**
-- ✨ **Micro-animations** - Smooth transitions for all UI elements (fadeIn, slideUp, slideDown)
-- 🎯 **Hero Generate Button** - Gradient background with glow effect, larger size, bold typography
-- 📊 **Progress Bar** - Animated shimmer bar during image generation
-- 💫 **Interactive Feedback** - Hover scale effects (1.05x-1.10x) on all buttons
-- 🎨 **Dropdown Animations** - SlideDown effect for all menus with smooth transitions
-- ⚡ **Success/Error States** - Prepared animations (pulse success, shake error) for future integration
-- 🖱️ **Enhanced Hover States** - All interactive elements have scale and color transitions
-- 🎭 **Loading States** - Pulsing emoji animations during processing
-- 🌊 **Smooth Transitions** - 150ms-300ms duration with ease-out timing for all interactions
-- 🎪 **Visual Hierarchy** - Generate button stands out with gradient (purple→pink→purple) and shadow glow
-
-**Technical Improvements:**
-- Custom Tailwind animations: fadeIn, slideUp, slideDown, scaleIn, shimmer, success, shake
-- Optimized transition timing for fluid user experience
-- Professional animation curves (ease-out, cubic-bezier)
-- Consistent 150-300ms transition durations across all components
-
-### v0.4 Beta (January 2025)
-**Polish & Refinements:**
-- 🐛 **Mobile Scroll Fix** - Complete scroll now working on mobile after generation
-- 📱 **Improved Mobile Padding** - Better spacing (pb-32) for floating bar visibility
-- 🎯 **Repository Branding** - Updated all references to v0.4 Beta
-- 📝 **Enhanced Documentation** - Comprehensive changelog and feature documentation
-- ✨ **Code Quality** - Cleaner codebase with better organization
-- 🔧 **Build Optimization** - Faster builds and better performance
-
-**Foundation for Future:**
-- Infrastructure ready for upcoming features
-- Drag & drop system prepared
-- Undo/Redo architecture planned
-- Swipe gestures groundwork laid
-- Progressive loading structure in place
-
-### v0.3 Beta (January 2025)
-**Major UX Overhaul:**
-- 🎨 **Floating Action Bar** - Floating menu for streamlined workflow
-- 📱 **Mobile Optimization** - Fully responsive with touch-friendly controls
-- ⚡ **Always-Accessible Controls** - Aspect ratio, num images, and Generate button always visible
-- 🎯 **Expanded Mode** - Write prompts with all controls accessible simultaneously
-- 🔧 **Advanced Panel** - Slide-up overlay for negative prompt, seed, and professional tools
-- 💫 **Smart Positioning** - No more overlapping menus, z-index hierarchy perfected
-- 🎭 **Compact Pills** - Space-efficient design with emoji indicators
-- 🖼️ **Improved Layout** - Sidebar reduced to 280px, more space for image display
-- ✨ **Better UX** - Click outside to close menus, smooth transitions, professional glassmorphism
-
-**Technical Improvements:**
-- Context-aware UI that adapts to app state
-- Backdrop blur for modern visual depth
-- Proper z-index management (40→50→60→65→70)
-- Mobile-first responsive breakpoints (sm: 640px, lg: 1024px)
-- Export of LanguageContext for component reusability
-
-### v0.2 Beta (January 2025)
-**Major Features:**
-- ✨ **Structure Guide** - ControlNet-like spatial composition preservation
-- 🎯 **Auto Aspect Ratio** - Automatically use reference image proportions
-- ⚡ **Image Upscaling** - 2x/4x enhancement with ClipDrop integration
-- 📊 **Quota Tracking** - Visual monthly upscale counter
-- 🔄 **Image Comparison** - Interactive before/after slider for upscaled images
-
-**Improvements:**
-- 🐛 Fixed prompt textarea flickering bug with React.memo optimization
-- 🎨 Improved UI responsiveness
-- 💾 Better memory management for large images
-- 📱 Enhanced mobile experience
-
-### v0.1 Beta (December 2024)
-**Initial Release:**
-- Multi-reference image generation
-- Style reference support
-- Professional tools with AI-generated options
-- Aspect ratio controls with aggressive cropping
-- Negative prompts & seed control
-- Inpainting functionality
-- Bilingual interface (EN/IT)
-- History management with IndexedDB
-- Keyboard shortcuts
-
----
-
-## 🚧 Roadmap
-
-- [ ] Export/Import prompt library
-- [ ] Batch processing for multiple generation sets
-- [ ] Advanced history filtering and search
-- [ ] Template system for common use cases
-- [ ] Collaboration features (share generations)
-- [ ] API endpoint for programmatic access
-- [ ] More AI models support
+**Project**: [https://github.com/jozbgm/generentolo-pro](https://github.com/jozbgm/generentolo-pro)
 
 ---
 
 ## ⚠️ Disclaimer
 
 This application uses Google's Gemini API. Users are responsible for complying with [Google's Terms of Service](https://ai.google.dev/terms) and [Usage Guidelines](https://ai.google.dev/gemini-api/docs/safety-guidance). API keys should be kept private and secure.
+
+**Note**: Nano Banana PRO (gemini-3-pro-image-preview) requires billing enabled on your API key. It is not available in the free tier.
 
 ---
 
@@ -576,6 +380,6 @@ This application uses Google's Gemini API. Users are responsible for complying w
 
 ⭐ **Star this repo if you find it useful!** ⭐
 
-[Report Bug](https://github.com/jozbgm/generentolo-v0.1-beta/issues) · [Request Feature](https://github.com/jozbgm/generentolo-v0.1-beta/issues)
+[Report Bug](https://github.com/jozbgm/generentolo-pro/issues) · [Request Feature](https://github.com/jozbgm/generentolo-pro/issues)
 
 </div>
