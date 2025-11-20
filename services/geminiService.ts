@@ -928,11 +928,47 @@ export const generateImage = async (prompt: string, aspectRatio: string, referen
             config.seed = parseInt(seed, 10);
         }
 
-        const result = await ai.models.generateContent({
-            model: 'gemini-2.5-flash-image',
-            contents: { parts },
-            config: config as any,
-        });
+        // Retry logic for IMAGE_RECITATION (often false positives)
+        const MAX_RETRIES = 3;
+        let lastError: any = null;
+        let result: any = null;
+
+        for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+            try {
+                result = await ai.models.generateContent({
+                    model: 'gemini-2.5-flash-image',
+                    contents: { parts },
+                    config: config as any,
+                });
+
+                // Check for IMAGE_RECITATION before processing
+                const candidate = result.candidates?.[0];
+                const finishReason = candidate?.finishReason;
+
+                if (finishReason === 'IMAGE_RECITATION' && attempt < MAX_RETRIES - 1) {
+                    console.warn(`⚠️ IMAGE_RECITATION on attempt ${attempt + 1}/${MAX_RETRIES}, retrying...`);
+                    // Wait before retry (exponential backoff: 500ms, 1000ms, 2000ms)
+                    await new Promise(resolve => setTimeout(resolve, 500 * Math.pow(2, attempt)));
+                    continue; // Retry
+                }
+
+                // If we got here, either success or final attempt with error
+                break;
+            } catch (error) {
+                lastError = error;
+                if (attempt < MAX_RETRIES - 1) {
+                    console.warn(`⚠️ Error on attempt ${attempt + 1}/${MAX_RETRIES}, retrying...`, error);
+                    await new Promise(resolve => setTimeout(resolve, 500 * Math.pow(2, attempt)));
+                    continue;
+                }
+                // Final attempt failed, throw error
+                throw error;
+            }
+        }
+
+        if (!result) {
+            throw lastError || new Error('Failed to generate content after retries');
+        }
 
         const candidate = result.candidates?.[0];
         if (!candidate || !candidate.content || !candidate.content.parts) {
@@ -972,9 +1008,23 @@ export const generateImage = async (prompt: string, aspectRatio: string, referen
             if (result.candidates && result.candidates.length > 0) {
                 const finishReason = result.candidates[0]?.finishReason;
                 if (finishReason && finishReason !== 'STOP') {
+                    // IMAGE_RECITATION means copyrighted content detected (but often false positives)
+                    if (finishReason === 'IMAGE_RECITATION') {
+                        const message = language === 'it'
+                            ? `⚠️ Generazione bloccata dopo 3 tentativi. Il sistema anti-copyright di Gemini ha rilevato possibili contenuti protetti, anche se potrebbe essere un falso positivo.\n\nSuggerimenti:\n• Riprova (a volte funziona al secondo tentativo)\n• Se usi nomi di brand/personaggi famosi, prova con descrizioni più generiche\n• Se il problema persiste con prompt generici, potrebbe essere un bug temporaneo di Gemini`
+                            : `⚠️ Generation blocked after 3 attempts. Gemini's anti-copyright system detected possible protected content, though this might be a false positive.\n\nSuggestions:\n• Try again (sometimes works on second try)\n• If using brand names/famous characters, try more generic descriptions\n• If the issue persists with generic prompts, it might be a temporary Gemini bug`;
+                        throw new Error(message);
+                    }
+
+                    // Other finish reasons
+                    const hasImages = imageParts.length > 0;
                     const message = language === 'it'
-                        ? `Generazione interrotta (${finishReason}). Il modello potrebbe non riuscire a combinare queste immagini. Prova con: 1) Immagini più semplici 2) Prompt più breve 3) Meno immagini di riferimento.`
-                        : `Generation stopped (${finishReason}). The model may not be able to combine these images. Try: 1) Simpler images 2) Shorter prompt 3) Fewer reference images.`;
+                        ? (hasImages
+                            ? `Generazione interrotta (${finishReason}). Il modello potrebbe non riuscire a combinare queste immagini. Prova con: 1) Immagini più semplici 2) Prompt più breve 3) Meno immagini di riferimento.`
+                            : `Generazione interrotta (${finishReason}). Prova con: 1) Prompt più breve e semplice 2) Descrizioni meno specifiche 3) Evita riferimenti a contenuti protetti.`)
+                        : (hasImages
+                            ? `Generation stopped (${finishReason}). The model may not be able to combine these images. Try: 1) Simpler images 2) Shorter prompt 3) Fewer reference images.`
+                            : `Generation stopped (${finishReason}). Try: 1) Shorter, simpler prompt 2) Less specific descriptions 3) Avoid copyrighted content references.`);
                     throw new Error(message);
                 }
             }
