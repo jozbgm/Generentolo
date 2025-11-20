@@ -197,14 +197,15 @@ const PromptLibrary: React.FC<PromptLibraryProps> = ({ isOpen, onClose, onUsePro
                             <button
                                 key={category.id}
                                 onClick={() => setSelectedCategory(category.id)}
+                                title={getCategoryName(category.id)}
                                 className={`flex items-center gap-1 md:gap-1.5 px-2 md:px-3 py-1.5 md:py-2 rounded-lg whitespace-nowrap transition-all text-sm md:text-base ${
                                     selectedCategory === category.id
                                         ? 'bg-gradient-to-r from-brand-purple to-brand-pink text-white shadow-lg'
                                         : 'bg-light-surface-accent dark:bg-dark-surface-accent text-light-text dark:text-dark-text hover:bg-light-border dark:hover:bg-dark-border'
                                 }`}
                             >
-                                <span className="text-xs md:text-sm">{category.icon}</span>
-                                <span className="text-xs md:text-sm font-medium">{getCategoryName(category.id)}</span>
+                                <span className="text-base md:text-sm">{category.icon}</span>
+                                <span className="hidden lg:inline text-xs md:text-sm font-medium">{getCategoryName(category.id)}</span>
                             </button>
                         ))}
                     </div>
