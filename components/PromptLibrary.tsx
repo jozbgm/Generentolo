@@ -176,12 +176,12 @@ const PromptLibrary: React.FC<PromptLibraryProps> = ({ isOpen, onClose, onUsePro
                 </div>
 
                 {/* Category Tabs with Arrows */}
-                <div className="relative border-b border-light-border dark:border-dark-border flex-shrink-0">
+                <div className="relative border-b border-light-border dark:border-dark-border flex-shrink-0 overflow-hidden">
                     {/* Left Arrow */}
                     {showLeftArrow && (
                         <button
                             onClick={() => scrollTabs('left')}
-                            className="absolute left-0 top-1/2 -translate-y-1/2 z-10 p-1 md:p-2 bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border rounded-r-lg shadow-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors"
+                            className="absolute left-0 top-1/2 -translate-y-1/2 z-10 p-1 md:p-2 bg-light-surface dark:bg-dark-surface border-r border-t border-b border-light-border dark:border-dark-border rounded-r-lg shadow-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors"
                         >
                             <ChevronLeftIcon className="w-4 h-4 md:w-5 md:h-5 text-light-text dark:text-dark-text" />
                         </button>
@@ -190,7 +190,7 @@ const PromptLibrary: React.FC<PromptLibraryProps> = ({ isOpen, onClose, onUsePro
                     {/* Tabs Container */}
                     <div
                         ref={tabsContainerRef}
-                        className="flex gap-1.5 md:gap-2 px-4 md:px-12 py-3 overflow-x-auto hide-scrollbar"
+                        className="flex gap-1.5 md:gap-2 px-4 md:px-8 py-3 overflow-x-auto hide-scrollbar"
                         onScroll={checkScroll}
                     >
                         {PROMPT_CATEGORIES.map(category => (
@@ -213,7 +213,7 @@ const PromptLibrary: React.FC<PromptLibraryProps> = ({ isOpen, onClose, onUsePro
                     {showRightArrow && (
                         <button
                             onClick={() => scrollTabs('right')}
-                            className="absolute right-0 top-1/2 -translate-y-1/2 z-10 p-1 md:p-2 bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border rounded-l-lg shadow-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors"
+                            className="absolute right-0 top-1/2 -translate-y-1/2 z-10 p-1 md:p-2 bg-light-surface dark:bg-dark-surface border-l border-t border-b border-light-border dark:border-dark-border rounded-l-lg shadow-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors"
                         >
                             <ChevronRightIcon className="w-4 h-4 md:w-5 md:h-5 text-light-text dark:text-dark-text" />
                         </button>
