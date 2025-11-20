@@ -24,6 +24,9 @@ interface PromptLibraryProps {
         promptLibraryCategoryEnvironment: string;
         promptLibraryCategoryEdit: string;
         promptLibraryCategoryCreative: string;
+        promptLibraryDifficultyEasy: string;
+        promptLibraryDifficultyMedium: string;
+        promptLibraryDifficultyAdvanced: string;
     };
 }
 
@@ -69,6 +72,16 @@ const PromptLibrary: React.FC<PromptLibraryProps> = ({ isOpen, onClose, onUsePro
             case 'edit': return t.promptLibraryCategoryEdit;
             case 'creative': return t.promptLibraryCategoryCreative;
             default: return categoryId;
+        }
+    };
+
+    // Get translated difficulty name
+    const getDifficultyName = (difficulty?: string) => {
+        switch (difficulty) {
+            case 'easy': return t.promptLibraryDifficultyEasy;
+            case 'medium': return t.promptLibraryDifficultyMedium;
+            case 'advanced': return t.promptLibraryDifficultyAdvanced;
+            default: return difficulty || '';
         }
     };
 
@@ -233,7 +246,7 @@ const PromptLibrary: React.FC<PromptLibraryProps> = ({ isOpen, onClose, onUsePro
                                         </h3>
                                         {template.difficulty && (
                                             <span className={`px-2 py-0.5 md:py-1 text-xs font-medium rounded-md flex-shrink-0 ${getDifficultyColor(template.difficulty)}`}>
-                                                {template.difficulty}
+                                                {getDifficultyName(template.difficulty)}
                                             </span>
                                         )}
                                     </div>

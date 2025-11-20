@@ -131,6 +131,9 @@ const translations = {
     promptLibraryCategoryEnvironment: 'Environment & Scene',
     promptLibraryCategoryEdit: 'Edit & Modify',
     promptLibraryCategoryCreative: 'Creative & Fun',
+    promptLibraryDifficultyEasy: 'easy',
+    promptLibraryDifficultyMedium: 'medium',
+    promptLibraryDifficultyAdvanced: 'advanced',
 
   },
   it: {
@@ -253,6 +256,9 @@ const translations = {
     promptLibraryCategoryEnvironment: 'Ambiente e Scena',
     promptLibraryCategoryEdit: 'Modifica e Ritocca',
     promptLibraryCategoryCreative: 'Creativo e Divertente',
+    promptLibraryDifficultyEasy: 'facile',
+    promptLibraryDifficultyMedium: 'medio',
+    promptLibraryDifficultyAdvanced: 'avanzato',
   }
 };
 
