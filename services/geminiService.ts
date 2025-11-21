@@ -981,16 +981,11 @@ export const generateImage = async (
             };
         }
 
-        // v1.0: Add resolution config for PRO model using native imageSize parameter
-        // Docs: https://ai.google.dev/gemini-api/docs/image-generation
-        // imageSize accepts: "1K", "2K", "4K" (uppercase K required)
+        // v1.0: Resolution for PRO model
+        // NOTE: imageSize is NOT supported in GenerateContentConfig.imageConfig (only in GenerateImagesConfig for Imagen)
+        // For Gemini Image models, resolution may need to be controlled via prompt or is not yet configurable
         if (model === 'gemini-3-pro-image-preview' && resolution) {
-            if (!config.imageConfig) {
-                config.imageConfig = {};
-            }
-            // Use native imageSize parameter - must be uppercase K
-            config.imageConfig.imageSize = resolution.toUpperCase(); // "1k" -> "1K"
-            console.log(`🎨 PRO Mode: Native imageSize = ${resolution.toUpperCase()}`);
+            console.log(`🎨 PRO Mode: Target resolution ${resolution.toUpperCase()} (via model default, not API param)`);
         }
 
         if (seed && /^\d+$/.test(seed)) {
