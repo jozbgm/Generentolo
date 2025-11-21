@@ -11,6 +11,7 @@ export interface PromptTemplate {
 
 export const PROMPT_CATEGORIES = [
     { id: 'all', name: 'All', icon: '✨' },
+    { id: 'pro', name: 'PRO Features', icon: '⭐' },
     { id: 'combine', name: 'Combine & Merge', icon: '🔗' },
     { id: 'style', name: 'Style & Transform', icon: '🎨' },
     { id: 'people', name: 'People & Characters', icon: '👤' },
@@ -20,6 +21,116 @@ export const PROMPT_CATEGORIES = [
 ] as const;
 
 export const PROMPT_LIBRARY: PromptTemplate[] = [
+    // PRO FEATURES - Nano Banana Pro Exclusive
+    {
+        id: 'pro-infographic',
+        title: 'Professional Infographic',
+        category: 'pro',
+        prompt: 'Create a wide infographic titled "[YOUR TITLE]" with a clean, modern flat design. Include: a main header with bold sans-serif typography, 4-5 numbered steps with short captions, relevant icons for each section, arrows showing flow/progression, and a cohesive color palette of [colors]. Use clear visual hierarchy, adequate whitespace, and ensure all text is crisp and legible. 4K resolution, professional quality.',
+        description: 'Create professional infographics with legible text (PRO 4K)',
+        tags: ['infographic', 'text', '4k', 'pro'],
+        difficulty: 'medium'
+    },
+    {
+        id: 'pro-marketing-poster',
+        title: 'Marketing Poster with Text',
+        category: 'pro',
+        prompt: 'Create a striking marketing poster featuring the text "[YOUR HEADLINE]" in bold, modern typography at the top. Include a subheadline "[YOUR SUBTEXT]" in a complementary lighter font below. The background should be [description of visual/product]. Use a [color scheme] color palette with high contrast for text readability. Professional advertising quality, 4K resolution, print-ready.',
+        description: 'Marketing materials with perfect text rendering (PRO)',
+        tags: ['marketing', 'poster', 'text', 'advertising'],
+        difficulty: 'easy'
+    },
+    {
+        id: 'pro-product-label',
+        title: 'Product Label Design',
+        category: 'pro',
+        prompt: 'Design a professional product label for [PRODUCT TYPE]. Include the brand name "[BRAND]" in elegant typography, product name "[PRODUCT NAME]" prominently displayed, and key details like "[DETAILS]". Use a [style: minimalist/vintage/modern/luxury] aesthetic with [color scheme]. Ensure all text is sharp, legible, and properly aligned. High-resolution, print-ready quality.',
+        description: 'Design product labels with crisp typography (PRO)',
+        tags: ['label', 'packaging', 'branding', 'text'],
+        difficulty: 'medium'
+    },
+    {
+        id: 'pro-social-quote',
+        title: 'Social Media Quote Card',
+        category: 'pro',
+        prompt: 'Create an inspiring social media quote card with the text: "[YOUR QUOTE]" - [AUTHOR]. Use elegant [font style: serif/sans-serif/script] typography centered on a [background: gradient/photo/pattern] background. Add subtle decorative elements like quotation marks or lines. Instagram-ready square format (1:1), vibrant colors, high contrast for readability.',
+        description: 'Beautiful quote cards for social media (PRO text)',
+        tags: ['social', 'quote', 'instagram', 'text'],
+        difficulty: 'easy'
+    },
+    {
+        id: 'pro-menu-design',
+        title: 'Restaurant Menu Design',
+        category: 'pro',
+        prompt: 'Design an elegant restaurant menu for [CUISINE TYPE]. Include sections: "[SECTION 1]", "[SECTION 2]", "[SECTION 3]". Each section should have 3-4 dish names with brief descriptions and prices. Use [style: rustic/modern/elegant/casual] typography with a [color scheme] palette. Include subtle decorative elements. All text must be perfectly legible and professionally typeset. A4 format, print-ready.',
+        description: 'Professional menu with multiple text sections (PRO)',
+        tags: ['menu', 'restaurant', 'typography', 'design'],
+        difficulty: 'advanced'
+    },
+    {
+        id: 'pro-diagram-technical',
+        title: 'Technical Diagram with Labels',
+        category: 'pro',
+        prompt: 'Create a detailed technical diagram of [SUBJECT/PRODUCT/CONCEPT] with numbered labels pointing to key components. Include a legend with explanations for each numbered part: 1. [Part 1], 2. [Part 2], 3. [Part 3], etc. Use clean lines, professional colors, and ensure all text labels are crisp and readable. Technical illustration style, educational quality, 4K resolution.',
+        description: 'Technical diagrams with clear labeling (PRO 4K)',
+        tags: ['technical', 'diagram', 'labels', 'educational'],
+        difficulty: 'advanced'
+    },
+    {
+        id: 'pro-book-cover',
+        title: 'Book Cover Design',
+        category: 'pro',
+        prompt: 'Design a compelling book cover for a [GENRE] book titled "[BOOK TITLE]" by [AUTHOR NAME]. The cover should feature [visual description] with the title in [font style] typography prominently displayed. Include author name at the bottom in a complementary font. Use a [mood: dark/bright/mysterious/romantic] color palette. Professional publishing quality, high-resolution.',
+        description: 'Professional book covers with title typography (PRO)',
+        tags: ['book', 'cover', 'publishing', 'typography'],
+        difficulty: 'medium'
+    },
+    {
+        id: 'pro-certificate',
+        title: 'Certificate/Award Design',
+        category: 'pro',
+        prompt: 'Design an elegant certificate of [TYPE: achievement/completion/appreciation] with the title "[CERTIFICATE TITLE]" in decorative typography. Include placeholder text: "Awarded to [NAME]", "For [REASON]", "Date: [DATE]", and signature lines. Use a [formal/modern/creative] design with [gold/silver/bronze] accents, decorative borders, and official-looking elements. Print-ready, high-resolution.',
+        description: 'Formal certificates with elegant typography (PRO)',
+        tags: ['certificate', 'award', 'formal', 'typography'],
+        difficulty: 'easy'
+    },
+    {
+        id: 'pro-logo-text',
+        title: 'Logo with Text',
+        category: 'pro',
+        prompt: 'Create a professional logo for "[BRAND NAME]" in the [INDUSTRY] industry. The logo should combine a [icon/symbol description] with the brand name in [font style: bold sans-serif/elegant serif/playful/minimalist] typography. Use a color palette of [colors]. The design should be clean, memorable, and work at various sizes. Include variations: icon only, text only, and combined. Vector-style, high-resolution.',
+        description: 'Brand logos with integrated typography (PRO)',
+        tags: ['logo', 'branding', 'identity', 'text'],
+        difficulty: 'medium'
+    },
+    {
+        id: 'pro-meme-text',
+        title: 'Meme with Impact Text',
+        category: 'pro',
+        prompt: 'Create a meme image showing [SCENE/SITUATION DESCRIPTION]. Add impact text at the top: "[TOP TEXT]" and at the bottom: "[BOTTOM TEXT]" in bold white Impact font with black outline. The image should be humorous and relatable. Ensure text is perfectly readable against the background. Square format, social media ready.',
+        description: 'Classic meme format with perfect impact text (PRO)',
+        tags: ['meme', 'humor', 'social', 'impact'],
+        difficulty: 'easy'
+    },
+    {
+        id: 'pro-photorealistic-4k',
+        title: '4K Photorealistic Scene',
+        category: 'pro',
+        prompt: 'A photorealistic [shot type: wide/medium/close-up] of [SUBJECT] [ACTION/POSE] in [SETTING/LOCATION]. Captured during [TIME: golden hour/blue hour/midday/night] with [LIGHTING: natural/studio/dramatic/soft] lighting. Shot with [CAMERA: 85mm portrait lens/35mm wide/50mm standard] at f/[APERTURE], creating [EFFECT: soft bokeh/deep focus/shallow depth]. Ultra-high detail, 4K resolution, professional photography quality.',
+        description: 'Ultra-detailed 4K photorealistic images (PRO)',
+        tags: ['4k', 'photorealistic', 'professional', 'photography'],
+        difficulty: 'medium'
+    },
+    {
+        id: 'pro-multi-reference',
+        title: 'Multi-Reference Composite',
+        category: 'pro',
+        prompt: 'Create a cohesive scene combining elements from all reference images. Take the [ELEMENT] from [Image1], the [ELEMENT] from [Image2], the [ELEMENT] from [Image3], and [continue for all images]. Blend all elements naturally with consistent lighting, perspective, and style. The final composition should tell a unified visual story. Photorealistic, seamless integration, 4K resolution.',
+        description: 'Combine up to 14 reference images (PRO exclusive)',
+        tags: ['multi-reference', 'composite', '14-images', 'pro'],
+        difficulty: 'advanced'
+    },
+
     // COMBINE & MERGE
     {
         id: 'combine-images',

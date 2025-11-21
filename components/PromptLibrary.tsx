@@ -18,6 +18,7 @@ interface PromptLibraryProps {
         promptLibraryCopied: string;
         promptLibraryUse: string;
         promptLibraryCategoryAll: string;
+        promptLibraryCategoryPro: string;
         promptLibraryCategoryCombine: string;
         promptLibraryCategoryStyle: string;
         promptLibraryCategoryPeople: string;
@@ -65,6 +66,7 @@ const PromptLibrary: React.FC<PromptLibraryProps> = ({ isOpen, onClose, onUsePro
     const getCategoryName = (categoryId: string) => {
         switch (categoryId) {
             case 'all': return t.promptLibraryCategoryAll;
+            case 'pro': return t.promptLibraryCategoryPro;
             case 'combine': return t.promptLibraryCategoryCombine;
             case 'style': return t.promptLibraryCategoryStyle;
             case 'people': return t.promptLibraryCategoryPeople;
