@@ -419,34 +419,25 @@ export const rewritePromptWithStyleImage = async (currentPrompt: string, styleFi
 
 // Helper function to get ULTRA-AGGRESSIVE aspect ratio composition guidance
 const getAspectRatioGuidance = (aspectRatio: string, language: 'en' | 'it' = 'en'): string => {
-    // Handle "Auto" aspect ratio - use reference image's aspect ratio
+    // v1.0 UPDATE: Now using native imageConfig.aspectRatio parameter for specific ratios
+    // Text guidance is only needed for "Auto" mode (to match reference image aspect ratio)
+    // For specific ratios (1:1, 16:9, etc.) the API handles it natively - no text tricks needed!
+
     if (aspectRatio === 'Auto') {
+        // Auto mode: tell the model to match reference image's aspect ratio
         if (language === 'it') {
-            return "⚠️ IMPORTANTE - MANTIENI LE PROPORZIONI DELL'IMMAGINE DI RIFERIMENTO: Usa le stesse proporzioni (aspect ratio) dell'immagine caricata. RIEMPI TUTTO IL FOTOGRAMMA: NO bande bianche, NO bordi vuoti! ESTENDI la scena da bordo a bordo.";
+            return "Mantieni le stesse proporzioni dell'immagine di riferimento. Riempi tutto il fotogramma senza bande vuote.";
         } else {
-            return "⚠️ CRITICAL - MAINTAIN REFERENCE IMAGE ASPECT RATIO: Use the same aspect ratio as the uploaded reference image. FILL ENTIRE FRAME: NO white bars, NO empty borders! EXTEND scene edge-to-edge.";
+            return "Match the aspect ratio of the reference image. Fill the entire frame with no empty borders.";
         }
     }
 
-    const [w, h] = aspectRatio.split(':').map(Number);
-    const ratio = w / h;
-
+    // For specific aspect ratios, the native imageConfig.aspectRatio handles it
+    // We only add a minimal reminder to fill the frame (helps avoid white bars)
     if (language === 'it') {
-        if (ratio >= 1.2) { // Landscape (4:3 = 1.333, 16:9 = 1.777, etc)
-            return "⚠️ IMPORTANTE - RIEMPI TUTTO IL FOTOGRAMMA ORIZZONTALE: NO bande bianche, NO bordi vuoti, NO letterboxing! ESTENDI la scena da BORDO A BORDO orizzontalmente. Composizione PANORAMICA AMPIA che occupa TUTTA la larghezza. Crop stretto. Wall-to-wall. Edge-to-edge. ZERO spazio vuoto ai lati.";
-        } else if (ratio <= 0.85) { // Portrait (3:4 = 0.75, 9:16 = 0.5625, etc)
-            return "⚠️ IMPORTANTE - RIEMPI TUTTO IL FOTOGRAMMA VERTICALE: NO bande bianche, NO bordi vuoti, NO pillarboxing! ESTENDI la scena da ALTO A BASSO verticalmente. Composizione VERTICALE ALTA che occupa TUTTA l'altezza. Crop stretto. Top-to-bottom. Edge-to-edge. ZERO spazio vuoto sopra/sotto.";
-        } else { // Square-ish (1:1 and close ratios)
-            return "⚠️ IMPORTANTE - RIEMPI TUTTO IL FOTOGRAMMA QUADRATO: NO bande bianche, NO bordi vuoti! ESTENDI la scena da bordo a bordo in TUTTE le direzioni. Tight crop. Edge-to-edge. ZERO spazio vuoto.";
-        }
+        return "Riempi tutto il fotogramma senza bordi vuoti.";
     } else {
-        if (ratio >= 1.2) { // Landscape (4:3 = 1.333, 16:9 = 1.777, etc)
-            return "⚠️ CRITICAL - FILL ENTIRE HORIZONTAL FRAME: NO white bars, NO empty borders, NO letterboxing! EXTEND scene EDGE-TO-EDGE horizontally. WIDE PANORAMIC composition occupying FULL width. Tight crop. Wall-to-wall. ZERO empty space on sides.";
-        } else if (ratio <= 0.85) { // Portrait (3:4 = 0.75, 9:16 = 0.5625, etc)
-            return "⚠️ CRITICAL - FILL ENTIRE VERTICAL FRAME: NO white bars, NO empty borders, NO pillarboxing! EXTEND scene TOP-TO-BOTTOM vertically. TALL VERTICAL composition occupying FULL height. Tight crop. Edge-to-edge. ZERO empty space above/below.";
-        } else { // Square (1:1 and close ratios)
-            return "⚠️ CRITICAL - FILL ENTIRE SQUARE FRAME: NO white bars, NO empty borders! EXTEND scene edge-to-edge in ALL directions. Tight crop. ZERO empty space.";
-        }
+        return "Fill the entire frame with no empty borders.";
     }
 };
 
@@ -838,29 +829,12 @@ export const generateImage = async (
             enrichedPrompt = await enrichPromptWithImageReferences(prompt, referenceFiles, userApiKey, language);
         }
 
-        // STEP 1.5: Detect EDITING intent (single reference + edit keywords)
-        // When editing, we need a CLEAN prompt without extra instructions that confuse the model
+        // v1.0: Aspect ratio is now handled natively via imageConfig.aspectRatio
+        // Text guidance is minimal - just a reminder to fill the frame
+        const aspectRatioGuidance = getAspectRatioGuidance(aspectRatio, language);
+        const instructionParts: string[] = [aspectRatioGuidance];
+
         const promptLower = prompt.toLowerCase();
-        const editKeywords = [
-            'replace', 'change', 'modify', 'edit', 'remove', 'delete', 'swap', 'add', 'put',
-            'make it', 'make the', 'turn into', 'convert to', 'transform',
-            'sostituisci', 'cambia', 'modifica', 'rimuovi', 'elimina', 'togli', 'aggiungi', 'metti',
-            'rendilo', 'rendi il', 'rendi la', 'trasforma in', 'converti'
-        ];
-        const isEditingMode = referenceFiles.length === 1 && editKeywords.some(kw => promptLower.includes(kw));
-
-        if (isEditingMode) {
-            console.log('✏️ EDITING MODE detected - using clean prompt for better results');
-        }
-
-        const instructionParts: string[] = [];
-
-        // Only add aspect ratio guidance for GENERATION (not editing)
-        // For editing, the model should preserve the original image's aspect ratio naturally
-        if (!isEditingMode) {
-            const aspectRatioGuidance = getAspectRatioGuidance(aspectRatio, language);
-            instructionParts.push(aspectRatioGuidance);
-        }
 
         // STEP 2: Optimized multi-image combining guidance (reduced from ~400 to ~150 chars)
         if (referenceFiles.length > 1) {
@@ -973,27 +947,15 @@ export const generateImage = async (
         }
 
         // Build full prompt with enriched user prompt
-        let fullPrompt: string;
-
-        if (isEditingMode) {
-            // EDITING MODE: Clean prompt with preservation instruction
-            // Best practice from Nano Banana docs: specify what to keep unchanged
-            const preserveInstruction = language === 'it'
-                ? 'Mantieni invariato tutto il resto dell\'immagine.'
-                : 'Keep the rest of the image unchanged.';
-            fullPrompt = `${enrichedPrompt}. ${preserveInstruction}`;
-        } else {
-            // GENERATION MODE: Full instructions + user prompt
-            fullPrompt = instructionParts.length > 0
-                ? `${instructionParts.join(' ')} ${enrichedPrompt}`
-                : enrichedPrompt;
-        }
+        let fullPrompt = instructionParts.length > 0
+            ? `${instructionParts.join(' ')} ${enrichedPrompt}`
+            : enrichedPrompt;
 
         if (negativePrompt && negativePrompt.trim() !== '') {
             fullPrompt += ` --no ${negativePrompt.trim()}`;
         }
 
-        console.log(`📏 Prompt length: ${fullPrompt.length} chars | Mode: ${isEditingMode ? 'EDITING' : 'GENERATION'}`);
+        console.log(`📏 Prompt length: ${fullPrompt.length} chars`);
 
         // CRITICAL: Images must come BEFORE text for proper reference interpretation
         const parts: any[] = [...imageParts, { text: fullPrompt }];
@@ -1019,21 +981,16 @@ export const generateImage = async (
             };
         }
 
-        // v1.0: Add resolution config for PRO model
+        // v1.0: Add resolution config for PRO model using native imageSize parameter
+        // Docs: https://ai.google.dev/gemini-api/docs/image-generation
+        // imageSize accepts: "1K", "2K", "4K" (uppercase K required)
         if (model === 'gemini-3-pro-image-preview' && resolution) {
             if (!config.imageConfig) {
                 config.imageConfig = {};
             }
-            // Map our resolution to output dimensions
-            const resolutionMap: Record<ResolutionType, { width: number; height: number }> = {
-                '1k': { width: 1024, height: 1024 },
-                '2k': { width: 2048, height: 2048 },
-                '4k': { width: 4096, height: 4096 }
-            };
-
-            // Note: Actual implementation may vary based on final Gemini 3 Pro API
-            // This is a placeholder for resolution configuration
-            console.log(`🎨 PRO Mode: Targeting ${resolution.toUpperCase()} resolution`);
+            // Use native imageSize parameter - must be uppercase K
+            config.imageConfig.imageSize = resolution.toUpperCase(); // "1k" -> "1K"
+            console.log(`🎨 PRO Mode: Native imageSize = ${resolution.toUpperCase()}`);
         }
 
         if (seed && /^\d+$/.test(seed)) {
