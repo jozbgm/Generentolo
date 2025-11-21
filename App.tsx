@@ -166,6 +166,8 @@ const translations = {
     costPrompt: 'Prompt',
     costTotal: 'Total',
     costDisclaimer: '* Estimate based on official Google pricing',
+    // Edit detection warning
+    editSuggestionToast: 'Tip: For specific edits like "replace X with Y", use the Inpaint tool (click on generated image → Inpaint) for better results.',
 
   },
   it: {
@@ -323,6 +325,8 @@ const translations = {
     costPrompt: 'Prompt',
     costTotal: 'Totale',
     costDisclaimer: '* Stima basata sui prezzi ufficiali Google',
+    // Edit detection warning
+    editSuggestionToast: 'Suggerimento: Per modifiche specifiche come "sostituisci X con Y", usa lo strumento Inpaint (clicca sull\'immagine generata → Inpaint) per risultati migliori.',
   }
 };
 
@@ -2289,6 +2293,19 @@ export default function App() {
     const handleGenerate = useCallback(async () => {
         if (referenceImages.length === 0 && !editedPrompt && !styleReferenceImage) return;
 
+        // Detect edit-intent keywords and show helpful suggestion
+        if (referenceImages.length > 0 && editedPrompt) {
+            const promptLower = editedPrompt.toLowerCase();
+            const editKeywords = [
+                'replace', 'change', 'modify', 'edit', 'remove', 'delete', 'swap',
+                'sostituisci', 'cambia', 'modifica', 'rimuovi', 'elimina', 'togli'
+            ];
+            const hasEditIntent = editKeywords.some(kw => promptLower.includes(kw));
+            if (hasEditIntent) {
+                showToast(t.editSuggestionToast, 'success');
+            }
+        }
+
         setIsLoading(true);
         setCurrentImages([]);
         try {
@@ -2354,7 +2371,7 @@ export default function App() {
         } finally {
             setIsLoading(false);
         }
-    }, [referenceImages, styleReferenceImage, structureImage, preciseReference, userApiKey, aspectRatio, showToast, t.generationFailed, language, editedPrompt, negativePrompt, seed, numImagesToGenerate, selectedModel, selectedResolution, textInImageConfig]);
+    }, [referenceImages, styleReferenceImage, structureImage, preciseReference, userApiKey, aspectRatio, showToast, t.generationFailed, t.editSuggestionToast, language, editedPrompt, negativePrompt, seed, numImagesToGenerate, selectedModel, selectedResolution, textInImageConfig]);
 
     // Image navigation in lightbox
     const getImageNavigation = useCallback(() => {
