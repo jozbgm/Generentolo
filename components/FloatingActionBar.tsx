@@ -408,16 +408,18 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                             </div>
                         )}
 
-                        {/* v1.0: Estimated Cost Badge */}
+                        {/* v1.0: Estimated Cost Badge - Real-time pricing */}
                         <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-gradient-to-r from-yellow-500/10 to-amber-500/10 border border-yellow-500/30 rounded-lg">
                             <span className="text-xs font-bold bg-clip-text text-transparent bg-gradient-to-r from-yellow-500 to-amber-500">
                                 ${(() => {
-                                    // Calculate cost dynamically
-                                    if (selectedModel === 'gemini-2.5-flash-image') return '0.04';
-                                    const inputCost = referenceImagesCount * 0.067;
-                                    const promptCost = 0.002;
-                                    const outputCost = selectedResolution === '4k' ? 0.24 : 0.134;
-                                    return (inputCost + promptCost + outputCost).toFixed(3);
+                                    // Flash model: flat rate ~$0.04
+                                    if (selectedModel === 'gemini-2.5-flash-image') return '0.039';
+                                    // PRO model: dynamic pricing based on resolution + references
+                                    // Pricing: https://ai.google.dev/gemini-api/docs/pricing#gemini-3-pro-image-preview
+                                    const inputImageCost = referenceImagesCount * 0.0011; // $0.0011 per reference image
+                                    const promptCost = 0.002; // ~$2/1M tokens, ~1000 tokens = $0.002
+                                    const outputCost = selectedResolution === '4k' ? 0.24 : 0.134; // 4K=$0.24, 1K-2K=$0.134
+                                    return (inputImageCost + promptCost + outputCost).toFixed(3);
                                 })()}
                             </span>
                         </div>
@@ -809,15 +811,17 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                                 </div>
                             )}
 
-                            {/* v1.0: Estimated Cost Badge (Expanded Mode) */}
+                            {/* v1.0: Estimated Cost Badge (Expanded Mode) - Real-time pricing */}
                             <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-gradient-to-r from-yellow-500/10 to-amber-500/10 border border-yellow-500/30 rounded-lg">
                                 <span className="text-xs font-bold bg-clip-text text-transparent bg-gradient-to-r from-yellow-500 to-amber-500">
                                     ${(() => {
-                                        if (selectedModel === 'gemini-2.5-flash-image') return '0.04';
-                                        const inputCost = referenceImagesCount * 0.067;
+                                        // Flash model: flat rate ~$0.04
+                                        if (selectedModel === 'gemini-2.5-flash-image') return '0.039';
+                                        // PRO model: dynamic pricing based on resolution + references
+                                        const inputImageCost = referenceImagesCount * 0.0011; // $0.0011 per reference image
                                         const promptCost = 0.002;
                                         const outputCost = selectedResolution === '4k' ? 0.24 : 0.134;
-                                        return (inputCost + promptCost + outputCost).toFixed(3);
+                                        return (inputImageCost + promptCost + outputCost).toFixed(3);
                                     })()}
                                 </span>
                             </div>
