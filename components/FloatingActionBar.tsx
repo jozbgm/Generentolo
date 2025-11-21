@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { useLocalization } from '../App';
 import { ModelType, ResolutionType, TextInImageConfig } from '../types';
+import CostCalculator from './CostCalculator';
 
 interface FloatingActionBarProps {
     // Prompt
@@ -47,6 +48,8 @@ interface FloatingActionBarProps {
     textInImageConfig: TextInImageConfig;
     onTextInImageConfigChange: (config: TextInImageConfig) => void;
     referenceImagesCount: number; // For cost calculation
+    styleImageCount: number; // 0 or 1
+    structureImageCount: number; // 0 or 1
 }
 
 const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
@@ -82,6 +85,8 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
     textInImageConfig,
     onTextInImageConfigChange,
     referenceImagesCount,
+    styleImageCount,
+    structureImageCount,
 }) => {
     const { t } = useLocalization();
     const [isExpanded, setIsExpanded] = useState(false);
@@ -409,20 +414,14 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                         )}
 
                         {/* v1.0: Estimated Cost Badge - Real-time pricing */}
-                        <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-gradient-to-r from-yellow-500/10 to-amber-500/10 border border-yellow-500/30 rounded-lg">
-                            <span className="text-xs font-bold bg-clip-text text-transparent bg-gradient-to-r from-yellow-500 to-amber-500">
-                                ${(() => {
-                                    // Flash model: flat rate ~$0.04
-                                    if (selectedModel === 'gemini-2.5-flash-image') return '0.039';
-                                    // PRO model: dynamic pricing based on resolution + references
-                                    // Pricing: https://ai.google.dev/gemini-api/docs/pricing#gemini-3-pro-image-preview
-                                    const inputImageCost = referenceImagesCount * 0.0011; // $0.0011 per reference image
-                                    const promptCost = 0.002; // ~$2/1M tokens, ~1000 tokens = $0.002
-                                    const outputCost = selectedResolution === '4k' ? 0.24 : 0.134; // 4K=$0.24, 1K-2K=$0.134
-                                    return (inputImageCost + promptCost + outputCost).toFixed(3);
-                                })()}
-                            </span>
-                        </div>
+                        <CostCalculator
+                            model={selectedModel}
+                            resolution={selectedResolution}
+                            referenceCount={referenceImagesCount}
+                            styleImageCount={styleImageCount}
+                            structureImageCount={structureImageCount}
+                            compact={true}
+                        />
 
                         {/* Primary Action - HERO BUTTON */}
                         <button
@@ -812,19 +811,14 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                             )}
 
                             {/* v1.0: Estimated Cost Badge (Expanded Mode) - Real-time pricing */}
-                            <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-gradient-to-r from-yellow-500/10 to-amber-500/10 border border-yellow-500/30 rounded-lg">
-                                <span className="text-xs font-bold bg-clip-text text-transparent bg-gradient-to-r from-yellow-500 to-amber-500">
-                                    ${(() => {
-                                        // Flash model: flat rate ~$0.04
-                                        if (selectedModel === 'gemini-2.5-flash-image') return '0.039';
-                                        // PRO model: dynamic pricing based on resolution + references
-                                        const inputImageCost = referenceImagesCount * 0.0011; // $0.0011 per reference image
-                                        const promptCost = 0.002;
-                                        const outputCost = selectedResolution === '4k' ? 0.24 : 0.134;
-                                        return (inputImageCost + promptCost + outputCost).toFixed(3);
-                                    })()}
-                                </span>
-                            </div>
+                            <CostCalculator
+                                model={selectedModel}
+                                resolution={selectedResolution}
+                                referenceCount={referenceImagesCount}
+                                styleImageCount={styleImageCount}
+                                structureImageCount={structureImageCount}
+                                compact={true}
+                            />
 
                             {/* v0.7: Precise Reference Toggle Switch (Expanded Mode) */}
                             {hasReferences && (

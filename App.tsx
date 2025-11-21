@@ -2903,7 +2903,9 @@ export default function App() {
                     onResolutionChange={setSelectedResolution}
                     textInImageConfig={textInImageConfig}
                     onTextInImageConfigChange={setTextInImageConfig}
-                    referenceImagesCount={referenceImages.length + (styleReferenceImage ? 1 : 0) + (structureImage ? 1 : 0)}
+                    referenceImagesCount={referenceImages.length}
+                    styleImageCount={styleReferenceImage ? 1 : 0}
+                    structureImageCount={structureImage ? 1 : 0}
                 />
 
                 <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} onSave={handleSaveApiKey} currentApiKey={userApiKey} />
