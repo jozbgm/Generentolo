@@ -775,23 +775,24 @@ const extractStyleDescription = async (styleFile: File, userApiKey: string | nul
 };
 
 // v1.0: Cost calculator for PRO model
+// Pricing from: https://ai.google.dev/gemini-api/docs/pricing#gemini-3-pro-image-preview
 export const calculateEstimatedCost = (model: ModelType, resolution: ResolutionType, referenceCount: number): number => {
     if (model === 'gemini-2.5-flash-image') {
         return 0.039; // Flash is cheap and flat rate
     }
 
-    // Nano Banana PRO pricing
-    const inputCost = referenceCount * 0.067; // $0.067 per reference image
+    // Nano Banana PRO pricing (Standard tier)
+    const inputImageCost = referenceCount * 0.0011; // $0.0011 per reference image
     const promptCost = 0.002; // ~$2 per million tokens, estimate 1000 tokens = $0.002
 
     let outputCost = 0;
     if (resolution === '4k') {
-        outputCost = 0.24;
+        outputCost = 0.24; // $0.24 per 4K image
     } else {
-        outputCost = 0.134; // 1k or 2k
+        outputCost = 0.134; // $0.134 per 1K-2K image
     }
 
-    return inputCost + promptCost + outputCost;
+    return inputImageCost + promptCost + outputCost;
 };
 
 export const generateImage = async (
