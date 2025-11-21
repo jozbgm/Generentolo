@@ -31,6 +31,14 @@ interface CostCalculatorProps {
     styleImageCount: number; // 0 or 1
     structureImageCount: number; // 0 or 1
     compact?: boolean; // Compact mode for collapsed bar
+    t: {
+        costEstimate: string;
+        costOutput: string;
+        costInputImages: string;
+        costPrompt: string;
+        costTotal: string;
+        costDisclaimer: string;
+    };
 }
 
 interface CostBreakdown {
@@ -82,7 +90,8 @@ const CostCalculator: React.FC<CostCalculatorProps> = ({
     referenceCount,
     styleImageCount,
     structureImageCount,
-    compact = false
+    compact = false,
+    t
 }) => {
     const [showTooltip, setShowTooltip] = useState(false);
 
@@ -119,7 +128,7 @@ const CostCalculator: React.FC<CostCalculatorProps> = ({
                         <div className="text-xs space-y-2">
                             {/* Header */}
                             <div className="flex justify-between items-center pb-2 border-b border-dark-border">
-                                <span className="font-semibold text-dark-text">Cost Estimate</span>
+                                <span className="font-semibold text-dark-text">{t.costEstimate}</span>
                                 <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${isFlash ? 'bg-cyan-500/20 text-cyan-400' : 'bg-yellow-500/20 text-yellow-400'}`}>
                                     {modelName}
                                 </span>
@@ -128,13 +137,13 @@ const CostCalculator: React.FC<CostCalculatorProps> = ({
                             {/* Breakdown */}
                             <div className="space-y-1.5 text-dark-text-muted">
                                 <div className="flex justify-between">
-                                    <span>Output ({isFlash ? '2K' : resolution.toUpperCase()}):</span>
+                                    <span>{t.costOutput} ({isFlash ? '2K' : resolution.toUpperCase()}):</span>
                                     <span className="text-dark-text">{formatPrice(breakdown.outputCost)}</span>
                                 </div>
 
                                 {!isFlash && (
                                     <div className="flex justify-between">
-                                        <span>Input Images ({breakdown.totalImages}):</span>
+                                        <span>{t.costInputImages} ({breakdown.totalImages}):</span>
                                         <span className="text-dark-text">
                                             {breakdown.totalImages > 0 ? formatPrice(breakdown.inputImagesCost, 4) : '$0.000'}
                                         </span>
@@ -142,14 +151,14 @@ const CostCalculator: React.FC<CostCalculatorProps> = ({
                                 )}
 
                                 <div className="flex justify-between">
-                                    <span>Prompt (~{ESTIMATED_PROMPT_TOKENS} tokens):</span>
+                                    <span>{t.costPrompt} (~{ESTIMATED_PROMPT_TOKENS} tokens):</span>
                                     <span className="text-dark-text">{formatPrice(breakdown.promptCost, 4)}</span>
                                 </div>
                             </div>
 
                             {/* Total */}
                             <div className="flex justify-between pt-2 border-t border-dark-border font-bold text-sm">
-                                <span className="text-dark-text">Total:</span>
+                                <span className="text-dark-text">{t.costTotal}:</span>
                                 <span className="bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-amber-400">
                                     {formatPrice(breakdown.total)}
                                 </span>
@@ -157,7 +166,7 @@ const CostCalculator: React.FC<CostCalculatorProps> = ({
 
                             {/* Info */}
                             <div className="pt-1 text-[10px] text-dark-text-muted opacity-70">
-                                * Estimate based on official Google pricing
+                                {t.costDisclaimer}
                             </div>
                         </div>
 

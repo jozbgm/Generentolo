@@ -159,6 +159,13 @@ const translations = {
     promptLibraryDifficultyEasy: 'easy',
     promptLibraryDifficultyMedium: 'medium',
     promptLibraryDifficultyAdvanced: 'advanced',
+    // Cost Calculator
+    costEstimate: 'Cost Estimate',
+    costOutput: 'Output',
+    costInputImages: 'Input Images',
+    costPrompt: 'Prompt',
+    costTotal: 'Total',
+    costDisclaimer: '* Estimate based on official Google pricing',
 
   },
   it: {
@@ -309,6 +316,13 @@ const translations = {
     promptLibraryDifficultyEasy: 'facile',
     promptLibraryDifficultyMedium: 'medio',
     promptLibraryDifficultyAdvanced: 'avanzato',
+    // Cost Calculator
+    costEstimate: 'Stima Costo',
+    costOutput: 'Output',
+    costInputImages: 'Immagini Input',
+    costPrompt: 'Prompt',
+    costTotal: 'Totale',
+    costDisclaimer: '* Stima basata sui prezzi ufficiali Google',
   }
 };
 

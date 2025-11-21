@@ -421,6 +421,7 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                             styleImageCount={styleImageCount}
                             structureImageCount={structureImageCount}
                             compact={true}
+                            t={t}
                         />
 
                         {/* Primary Action - HERO BUTTON */}
@@ -818,6 +819,7 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                                 styleImageCount={styleImageCount}
                                 structureImageCount={structureImageCount}
                                 compact={true}
+                                t={t}
                             />
 
                             {/* v0.7: Precise Reference Toggle Switch (Expanded Mode) */}
