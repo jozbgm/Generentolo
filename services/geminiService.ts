@@ -962,10 +962,8 @@ export const generateImage = async (
 
         const config: any = {
             responseModalities: [Modality.IMAGE],
-            outputOptions: {
-                mimeType: 'image/png',
-                compressionQuality: 100
-            },
+            // NOTE: outputOptions/outputMimeType NOT supported in GenerateContentConfig
+            // Gemini Image models return PNG by default (verified in SDK types)
             safetySettings: [
                 { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH },
                 { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH },
