@@ -2751,13 +2751,13 @@ export default function App() {
                     </aside>
 
                     {/* --- Main Content --- */}
-                    <div className="flex-1 flex flex-col gap-4 lg:gap-6 min-w-0 h-full">
+                    <div className="flex-1 flex flex-col gap-2 lg:gap-6 min-w-0 h-full">
                         <div className="flex-1 min-h-0 bg-light-surface/50 dark:bg-dark-surface/30 rounded-3xl overflow-hidden">
                             <ImageDisplay images={currentImages} isLoading={isLoading} onDownload={handleDownload} onZoom={handleZoom} onEdit={setEditingImage} onUpscale={handleUpscale} upscalingImageId={upscalingImageId} onReroll={handleReroll} onToggleFavorite={handleToggleFavorite} />
                         </div>
 
                         {((referenceImages.length > 0 || !!styleReferenceImage) || currentImages.length === 1) && (
-                            <div className="flex-shrink-0 space-y-4 overflow-y-auto max-h-[300px] lg:max-h-[250px]">
+                            <div className="flex-shrink-0 space-y-2 lg:space-y-4 overflow-y-auto max-h-[300px] lg:max-h-[250px]">
                                {(referenceImages.length > 0 || !!styleReferenceImage) && (
                                 <CreativePromptsPanel 
                                     prompts={prompts} 

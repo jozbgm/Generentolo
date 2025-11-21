@@ -195,11 +195,11 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                 )}
                 {/* Compact Mode */}
                 {!isExpanded && (
-                    <div className="flex items-center gap-2 lg:gap-3 px-3 lg:px-4 py-2.5 lg:py-3 animate-fadeIn">
+                    <div className="flex flex-wrap items-center gap-2 lg:gap-3 px-3 lg:px-4 py-2 lg:py-2.5 animate-fadeIn">
                         {/* Prompt Preview (clickable to expand) */}
                         <button
                             onClick={handleExpandClick}
-                            className="flex-1 text-left px-3 lg:px-4 py-2 lg:py-2.5 bg-transparent text-xs lg:text-sm text-light-text-muted dark:text-dark-text-muted truncate hover:text-light-text dark:hover:text-dark-text transition-all duration-150 min-w-0"
+                            className="flex-1 min-w-[120px] text-left px-3 lg:px-4 py-2 lg:py-2.5 bg-transparent text-xs lg:text-sm text-light-text-muted dark:text-dark-text-muted truncate hover:text-light-text dark:hover:text-dark-text transition-all duration-150"
                         >
                             {prompt || t.promptPlaceholder || "Describe what you want to generate..."}
                         </button>
