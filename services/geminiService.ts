@@ -838,10 +838,29 @@ export const generateImage = async (
             enrichedPrompt = await enrichPromptWithImageReferences(prompt, referenceFiles, userApiKey, language);
         }
 
-        // Aspect ratio guidance (simplified)
-        const aspectRatioGuidance = getAspectRatioGuidance(aspectRatio, language);
+        // STEP 1.5: Detect EDITING intent (single reference + edit keywords)
+        // When editing, we need a CLEAN prompt without extra instructions that confuse the model
+        const promptLower = prompt.toLowerCase();
+        const editKeywords = [
+            'replace', 'change', 'modify', 'edit', 'remove', 'delete', 'swap', 'add', 'put',
+            'make it', 'make the', 'turn into', 'convert to', 'transform',
+            'sostituisci', 'cambia', 'modifica', 'rimuovi', 'elimina', 'togli', 'aggiungi', 'metti',
+            'rendilo', 'rendi il', 'rendi la', 'trasforma in', 'converti'
+        ];
+        const isEditingMode = referenceFiles.length === 1 && editKeywords.some(kw => promptLower.includes(kw));
 
-        const instructionParts: string[] = [aspectRatioGuidance];
+        if (isEditingMode) {
+            console.log('✏️ EDITING MODE detected - using clean prompt for better results');
+        }
+
+        const instructionParts: string[] = [];
+
+        // Only add aspect ratio guidance for GENERATION (not editing)
+        // For editing, the model should preserve the original image's aspect ratio naturally
+        if (!isEditingMode) {
+            const aspectRatioGuidance = getAspectRatioGuidance(aspectRatio, language);
+            instructionParts.push(aspectRatioGuidance);
+        }
 
         // STEP 2: Optimized multi-image combining guidance (reduced from ~400 to ~150 chars)
         if (referenceFiles.length > 1) {
@@ -854,8 +873,7 @@ export const generateImage = async (
                 : `⚠️ COMBINE all elements from ${imageListText} into one coherent scene. Include the main subject from each image.`);
         }
 
-        // STEP 3: Detect contextual relationship keywords and add micro-guidance
-        const promptLower = prompt.toLowerCase();
+        // STEP 3: Detect contextual relationship keywords and add micro-guidance (only for multi-image)
         if (referenceFiles.length > 1) {
             // Italian keywords
             if (promptLower.includes('sulla') || promptLower.includes('sul') ||
@@ -955,13 +973,27 @@ export const generateImage = async (
         }
 
         // Build full prompt with enriched user prompt
-        let fullPrompt = `${instructionParts.join(' ')} ${enrichedPrompt}`;
+        let fullPrompt: string;
+
+        if (isEditingMode) {
+            // EDITING MODE: Clean prompt with preservation instruction
+            // Best practice from Nano Banana docs: specify what to keep unchanged
+            const preserveInstruction = language === 'it'
+                ? 'Mantieni invariato tutto il resto dell\'immagine.'
+                : 'Keep the rest of the image unchanged.';
+            fullPrompt = `${enrichedPrompt}. ${preserveInstruction}`;
+        } else {
+            // GENERATION MODE: Full instructions + user prompt
+            fullPrompt = instructionParts.length > 0
+                ? `${instructionParts.join(' ')} ${enrichedPrompt}`
+                : enrichedPrompt;
+        }
 
         if (negativePrompt && negativePrompt.trim() !== '') {
             fullPrompt += ` --no ${negativePrompt.trim()}`;
         }
 
-        console.log('📏 Prompt length:', fullPrompt.length, 'chars');
+        console.log(`📏 Prompt length: ${fullPrompt.length} chars | Mode: ${isEditingMode ? 'EDITING' : 'GENERATION'}`);
 
         // CRITICAL: Images must come BEFORE text for proper reference interpretation
         const parts: any[] = [...imageParts, { text: fullPrompt }];
