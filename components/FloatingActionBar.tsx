@@ -97,7 +97,7 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
     const [showModelMenu, setShowModelMenu] = useState(false);
     const [showResolutionMenu, setShowResolutionMenu] = useState(false);
 
-    const aspectRatios = ["Auto", "1:1", "16:9", "9:16", "4:3", "3:4", "21:9"];
+    const aspectRatios = ["Auto", "1:1", "4:3", "3:4", "16:9", "9:16", "3:2", "2:3", "4:5", "5:4", "21:9"];
     const numImagesOptions = [1, 2, 3, 4];
 
     const handleExpandClick = useCallback(() => {

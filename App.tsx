@@ -841,7 +841,7 @@ const ControlPanel: React.FC<ControlPanelProps> = (props) => {
         }
     };
 
-    const aspectRatios = ["Auto", "1:1", "16:9", "9:16", "4:3", "3:4"];
+    const aspectRatios = ["Auto", "1:1", "4:3", "3:4", "16:9", "9:16", "3:2", "2:3", "4:5", "5:4", "21:9"];
     const isActionDisabled = isLoading || isRewriting || isEnhancing || isGeneratingNegativePrompt;
     const hasImages = referenceImages.length > 0 || styleReferenceImage;
     const isPromptEmpty = editedPrompt.trim() === '';
