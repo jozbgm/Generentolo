@@ -9,6 +9,20 @@ import FloatingActionBar from './components/FloatingActionBar';
 import ZoomableImage from './components/ZoomableImage';
 import PromptLibrary from './components/PromptLibrary';
 
+// --- Utility Functions ---
+// Generate UUID with fallback for environments where crypto.randomUUID is not available
+function generateUUID(): string {
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+        return crypto.randomUUID();
+    }
+    // Fallback UUID v4 generation
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        const r = Math.random() * 16 | 0;
+        const v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+    });
+}
+
 // --- Localization ---
 const translations = {
   en: {
@@ -2330,7 +2344,7 @@ export default function App() {
                         thumbnailDataUrl = imageDataUrl;
                     }
                     return ({
-                        id: crypto.randomUUID(),
+                        id: generateUUID(),
                         imageDataUrl,
                         thumbnailDataUrl,
                         prompt: editedPrompt,
@@ -2446,7 +2460,7 @@ export default function App() {
             const imageDataUrl = await geminiService.inpaintImage(prompt, imageFile, maskFile, userApiKey, language);
             const thumbnailDataUrl = await createThumbnailDataUrl(imageDataUrl);
             const newImage: GeneratedImage = {
-                id: crypto.randomUUID(), imageDataUrl, thumbnailDataUrl,
+                id: generateUUID(), imageDataUrl, thumbnailDataUrl,
                 prompt: `Inpainted: ${editingImage?.prompt} with "${prompt}"`,
                 aspectRatio: editingImage?.aspectRatio || '1:1',
                 timestamp: Date.now()
@@ -2515,7 +2529,7 @@ export default function App() {
 
             const thumbnailDataUrl = await createThumbnailDataUrl(imageDataUrl);
             const newImage: GeneratedImage = {
-                id: crypto.randomUUID(),
+                id: generateUUID(),
                 imageDataUrl,
                 thumbnailDataUrl,
                 prompt: image.prompt,
