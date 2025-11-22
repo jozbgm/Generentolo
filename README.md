@@ -1,8 +1,8 @@
-# 🎨 Generentolo PRO v1.0.0
+# 🎨 Generentolo Pro v1.0.0
 
 **Professional AI-Powered Image Generation Web Application**
 
-A sophisticated web application for generating ultra-high-quality images using Google's Gemini models (Flash & **Nano Banana PRO 3.0**) with ControlNet-like structure guidance, 4K resolution support, and text-in-image capabilities. Designed for graphic designers, marketers, and creative professionals who demand the highest quality and precision.
+A sophisticated web application for generating ultra-high-quality images using Google's Gemini models (Flash & **Nano Banana Pro 3.0**) with ControlNet-like structure guidance, 4K resolution support, and text-in-image capabilities. Designed for graphic designers, marketers, and creative professionals who demand the highest quality and precision.
 
 [![Live Demo](https://img.shields.io/badge/Live-Demo-blue?style=for-the-badge)](https://www.dugongo.it/generentolo/)
 [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
@@ -13,13 +13,13 @@ A sophisticated web application for generating ultra-high-quality images using G
 
 ## ✨ Features
 
-### 🚀 **NUOVO v1.0: Dual Model System**
+### 🚀 **NEW v1.0: Dual Model System**
 - **Flash Model** (gemini-2.5-flash-image) - Fast & Economical ($0.04/image)
   - Perfect for rapid prototyping and testing
   - High-speed generation (2-3 seconds)
   - 2K maximum resolution
 
-- **✨ PRO Model** (gemini-3-pro-image-preview) - **Nano Banana PRO 3.0**
+- **✨ Pro Model** (gemini-3-pro-image-preview) - **Nano Banana Pro 3.0**
   - **4K Native Resolution** (4096×4096px)
   - Advanced text rendering with legible fonts
   - Google Search grounding for fact-checking
@@ -28,7 +28,7 @@ A sophisticated web application for generating ultra-high-quality images using G
   - Professional-grade output for final deliverables
   - $0.13-$0.24 per image (based on resolution)
 
-### 📝 **NUOVO v1.0: Text-in-Image (PRO Only)**
+### 📝 **NEW v1.0: Text-in-Image (Pro Only)**
 - Add text directly to your generated images
 - **Position Control**: Top, Center, Bottom, Overlay
 - **Font Styles**: Bold, Italic, Calligraphy, Modern, Vintage
@@ -39,17 +39,17 @@ A sophisticated web application for generating ultra-high-quality images using G
   - Social media posts
   - Menus and promotional content
 
-### 💰 **NUOVO v1.0: Real-Time Cost Calculator**
+### 💰 **NEW v1.0: Real-Time Cost Calculator**
 - See estimated cost **before** generating
 - Dynamic pricing based on:
-  - Selected model (Flash vs PRO)
+  - Selected model (Flash vs Pro)
   - Resolution (1K/2K/4K)
   - Number of reference images
 - Transparent pricing display
 - No surprises on your API bill
 
 ### 🖼️ **Enhanced Multi-Reference System**
-- Upload up to **14 reference images** (PRO) or 4 (Flash)
+- Upload up to **14 reference images** (Pro) or 4 (Flash)
 - Separate **style reference image** for consistent visual branding
 - **Structure guide image** (ControlNet-like) to preserve spatial composition
 - **👤 Precise Reference Mode** - Maximum fidelity to facial features
@@ -66,7 +66,7 @@ A sophisticated web application for generating ultra-high-quality images using G
 - **15-20 options per tool** for granular control
 
 ### 📐 **Flexible Resolution Options**
-- **PRO Model**:
+- **Pro Model**:
   - 1K (1024×1024) - Standard quality
   - 2K (2048×2048) - High quality
   - **4K (4096×4096) - Ultra quality** ✨
@@ -93,7 +93,7 @@ A sophisticated web application for generating ultra-high-quality images using G
 - **localStorage** for metadata
 - Reuse settings from any historical generation
 - Generation metadata includes:
-  - Model used (Flash/PRO)
+  - Model used (Flash/Pro)
   - Resolution
   - Estimated cost
   - All parameters (prompt, seed, aspect ratio)
@@ -101,7 +101,7 @@ A sophisticated web application for generating ultra-high-quality images using G
 ### 🌐 **Bilingual Interface**
 - Full support for **English** and **Italian**
 - Toggle instantly with preserved state
-- All PRO features fully translated
+- All Pro features fully translated
 
 ### ⚡ **Developer-Friendly**
 - Keyboard shortcuts (Ctrl+G, Ctrl+E, etc.)
@@ -126,7 +126,7 @@ A sophisticated web application for generating ultra-high-quality images using G
 - **Styling**: Tailwind CSS 3.4.7
 - **AI Models**:
   - Google Gemini 2.5 Flash Image
-  - **Google Gemini 3 Pro Image (Nano Banana PRO)** 🆕
+  - **Google Gemini 3 Pro Image (Nano Banana Pro)** 🆕
 - **SDK**: `@google/genai` v1.25.0
 - **Storage**: IndexedDB + localStorage
 - **State Management**: React Hooks
@@ -182,7 +182,7 @@ A sophisticated web application for generating ultra-high-quality images using G
 - **Resolution**: Up to 2K (2048px)
 - **Best for**: Rapid iterations, testing, prototypes
 
-### PRO Model (gemini-3-pro-image-preview)
+### Pro Model (gemini-3-pro-image-preview)
 | Resolution | Base Cost | + Input Images | Example Total |
 |------------|-----------|----------------|---------------|
 | **1K** | $0.134 | $0.067 each | $0.27 (2 refs) |
@@ -209,9 +209,9 @@ A sophisticated web application for generating ultra-high-quality images using G
 
 ---
 
-## 🔄 Workflow Example (PRO Mode)
+## 🔄 Workflow Example (Pro Mode)
 
-1. **Select PRO Model** (gemini-3-pro-image-preview)
+1. **Select Pro Model** (gemini-3-pro-image-preview)
 2. **Choose Resolution** (1K / 2K / **4K**)
 3. **Upload Reference Images** (up to 14!)
 4. **Enable Text-in-Image** (optional)
@@ -231,55 +231,55 @@ A sophisticated web application for generating ultra-high-quality images using G
 | Model | Max Resolution | Megapixels | Text Rendering | Google Search |
 |-------|----------------|------------|----------------|---------------|
 | **Flash** | 2048×2048 | 4.19 MP | Basic | ❌ |
-| **PRO 1K** | 1024×1024 | 1.05 MP | ✅ Advanced | ✅ |
-| **PRO 2K** | 2048×2048 | 4.19 MP | ✅ Advanced | ✅ |
-| **PRO 4K** | 4096×4096 | **16.78 MP** ✨ | ✅ Advanced | ✅ |
+| **Pro 1K** | 1024×1024 | 1.05 MP | ✅ Advanced | ✅ |
+| **Pro 2K** | 2048×2048 | 4.19 MP | ✅ Advanced | ✅ |
+| **Pro 4K** | 4096×4096 | **16.78 MP** ✨ | ✅ Advanced | ✅ |
 
 ---
 
 ## 📋 Changelog
 
-### v1.0.0 PRO (November 2025) 🚀
-**🎉 MAJOR RELEASE - Nano Banana PRO Integration:**
+### v1.0.0 Pro (November 2025) 🚀
+**🎉 MAJOR RELEASE - Nano Banana Pro Integration:**
 
 **✨ NEW: Dual Model System**
 - Flash Model (gemini-2.5-flash-image) - Fast & cheap
-- **PRO Model (gemini-3-pro-image-preview)** - High quality with 4K support
+- **Pro Model (gemini-3-pro-image-preview)** - High quality with 4K support
 - Model selector in UI with clear indicators
 - Smart model recommendations based on use case
 
-**📐 NEW: Resolution Selector (PRO Only)**
+**📐 NEW: Resolution Selector (Pro Only)**
 - 1K (1024×1024) - Standard
 - 2K (2048×2048) - High Quality
 - **4K (4096×4096) - Ultra Quality** ✨
-- Dynamic UI - only shows when PRO selected
+- Dynamic UI - only shows when Pro selected
 - Visual feedback with gradient highlights
 
 **💰 NEW: Real-Time Cost Calculator**
 - Shows estimated cost BEFORE generation
 - Updates dynamically as you:
-  - Switch models (Flash ↔ PRO)
+  - Switch models (Flash ↔ Pro)
   - Change resolution (1K → 2K → 4K)
   - Add/remove reference images
 - Transparent pricing with no surprises
 - Beautiful gradient badge display
 
-**📝 NEW: Text-in-Image System (PRO Only)**
+**📝 NEW: Text-in-Image System (Pro Only)**
 - Add text directly to generated images
 - Position controls: Top, Center, Bottom, Overlay
 - Font styles: Bold, Italic, Calligraphy, Modern, Vintage
 - Automatic text contrast optimization
 - Perfect for marketing materials, infographics, menus
-- Smart toggle - only visible when PRO model selected
+- Smart toggle - only visible when Pro model selected
 
 **🖼️ NEW: 14 Reference Images Support**
-- Increased from 4 to 14 (PRO model capability)
+- Increased from 4 to 14 (Pro model capability)
 - Better multi-image combining
 - Support for complex compositions
 - Visual counter shows available slots
 
 **🎨 UI/UX Improvements**
-- Model selector with icons (⚡ Flash / ⭐ PRO)
+- Model selector with icons (⚡ Flash / ⭐ Pro)
 - Resolution buttons with clear labels
 - Cost estimator badge with yellow-magenta gradient
 - Text-in-image panel with purple gradient
@@ -289,7 +289,7 @@ A sophisticated web application for generating ultra-high-quality images using G
 - Better mobile responsiveness
 
 **🌐 Complete Italian/English Translations**
-- All PRO features fully localized
+- All Pro features fully localized
 - Model names, resolution labels, tooltips
 - Text-in-image controls
 - Cost calculator labels
@@ -298,7 +298,7 @@ A sophisticated web application for generating ultra-high-quality images using G
 - New types: `ModelType`, `ResolutionType`, `TextInImageConfig`
 - `calculateEstimatedCost()` function in geminiService
 - Enhanced `generateImage()` with 3 new parameters
-- Updated FloatingActionBar with PRO controls
+- Updated FloatingActionBar with Pro controls
 - Cost tracking in generation metadata
 - Better TypeScript type safety
 
@@ -350,10 +350,9 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 ## 🙏 Acknowledgments
 
-- **Google Gemini Team** - For Gemini 2.5 Flash & **Nano Banana PRO 3.0**
+- **Google Gemini Team** - For Gemini 2.5 Flash & **Nano Banana Pro 3.0**
 - **React Team** - For React 19
 - **Tailwind CSS** - For utility-first CSS
-- **Claude AI** - Development assistance
 
 ---
 
@@ -370,7 +369,7 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 This application uses Google's Gemini API. Users are responsible for complying with [Google's Terms of Service](https://ai.google.dev/terms) and [Usage Guidelines](https://ai.google.dev/gemini-api/docs/safety-guidance). API keys should be kept private and secure.
 
-**Note**: Nano Banana PRO (gemini-3-pro-image-preview) requires billing enabled on your API key. It is not available in the free tier.
+**Note**: Nano Banana Pro (gemini-3-pro-image-preview) requires billing enabled on your API key. It is not available in the free tier.
 
 ---
 
