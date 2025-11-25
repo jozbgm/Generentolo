@@ -2303,8 +2303,14 @@ export default function App() {
             );
             console.log(`💰 Estimated cost: $${estimatedCost.toFixed(3)}`);
 
-            const generationPromises = Array(numImagesToGenerate).fill(0).map(() =>
-                geminiService.generateImage(
+            // Batch generation: use random seeds for variations when generating multiple images
+            const generationPromises = Array(numImagesToGenerate).fill(0).map((_, index) => {
+                // Use provided seed for first image, random seeds for variations
+                const batchSeed = numImagesToGenerate > 1 && index > 0
+                    ? Math.floor(Math.random() * 1000000).toString()
+                    : seed;
+
+                return geminiService.generateImage(
                     editedPrompt,
                     aspectRatio,
                     allReferenceFiles,
@@ -2312,14 +2318,14 @@ export default function App() {
                     structureImage,
                     userApiKey,
                     negativePrompt,
-                    seed,
+                    batchSeed,
                     language,
                     preciseReference,
-                    selectedModel, // v1.0: Pass selected model
-                    selectedResolution, // v1.0: Pass selected resolution
-                    textInImageConfig // v1.0: Pass text-in-image config
-                )
-            );
+                    selectedModel,
+                    selectedResolution,
+                    textInImageConfig
+                );
+            });
             const imageDataUrls = await Promise.all(generationPromises);
 
             const newImages: GeneratedImage[] = await Promise.all(
