@@ -144,8 +144,8 @@ const PromptLibrary: React.FC<PromptLibraryProps> = ({ isOpen, onClose, onUsePro
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn" onClick={onClose}>
-            <div className="relative w-full max-w-6xl h-[90vh] bg-light-surface dark:bg-dark-surface rounded-2xl shadow-2xl flex flex-col animate-scaleIn" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 md:p-4 bg-black/60 backdrop-blur-sm animate-fadeIn" onClick={onClose}>
+            <div className="relative w-full max-w-6xl h-[95vh] md:h-[90vh] bg-light-surface dark:bg-dark-surface rounded-xl md:rounded-2xl shadow-2xl flex flex-col animate-scaleIn" onClick={(e) => e.stopPropagation()}>
                 {/* Header */}
                 <div className="flex items-center justify-between p-4 md:p-6 border-b border-light-border dark:border-dark-border flex-shrink-0">
                     <div>
@@ -202,7 +202,7 @@ const PromptLibrary: React.FC<PromptLibraryProps> = ({ isOpen, onClose, onUsePro
                                 key={category.id}
                                 onClick={() => setSelectedCategory(category.id)}
                                 title={getCategoryName(category.id)}
-                                className={`flex items-center gap-1 md:gap-1.5 px-2 md:px-3 py-1.5 md:py-2 rounded-lg whitespace-nowrap transition-all text-sm md:text-base ${
+                                className={`flex items-center gap-1 md:gap-1.5 px-3 md:px-3 py-2.5 md:py-2 rounded-lg whitespace-nowrap transition-all text-sm md:text-base min-h-[44px] ${
                                     selectedCategory === category.id
                                         ? 'bg-gradient-to-r from-brand-purple to-brand-pink text-white shadow-lg'
                                         : 'bg-light-surface-accent dark:bg-dark-surface-accent text-light-text dark:text-dark-text hover:bg-light-border dark:hover:bg-dark-border'
@@ -248,7 +248,7 @@ const PromptLibrary: React.FC<PromptLibraryProps> = ({ isOpen, onClose, onUsePro
                                     {template.visualPreset && (
                                         <div className="mb-3 flex items-center gap-2">
                                             <div
-                                                className="w-12 h-12 rounded-lg shadow-md flex items-center justify-center text-2xl"
+                                                className="w-10 h-10 md:w-12 md:h-12 rounded-lg shadow-md flex items-center justify-center text-xl md:text-2xl flex-shrink-0"
                                                 style={{ background: template.visualPreset.gradient }}
                                             >
                                                 {template.visualPreset.emoji}
@@ -311,7 +311,7 @@ const PromptLibrary: React.FC<PromptLibraryProps> = ({ isOpen, onClose, onUsePro
                                     <div className="flex gap-2">
                                         <button
                                             onClick={() => handleCopyPrompt(template.prompt, template.id)}
-                                            className="flex-1 flex items-center justify-center gap-1.5 md:gap-2 px-2 md:px-3 py-1.5 md:py-2 bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border rounded-lg hover:bg-light-border dark:hover:bg-dark-border transition-colors"
+                                            className="flex-1 flex items-center justify-center gap-1.5 md:gap-2 px-2 md:px-3 py-2.5 md:py-2 bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border rounded-lg hover:bg-light-border dark:hover:bg-dark-border transition-colors min-h-[44px]"
                                         >
                                             {copiedId === template.id ? (
                                                 <>
@@ -327,7 +327,7 @@ const PromptLibrary: React.FC<PromptLibraryProps> = ({ isOpen, onClose, onUsePro
                                         </button>
                                         <button
                                             onClick={() => handleUsePrompt(template.prompt)}
-                                            className="flex-1 px-2 md:px-3 py-1.5 md:py-2 bg-gradient-to-r from-brand-yellow to-brand-magenta text-white font-semibold rounded-lg hover:opacity-90 transition-all duration-300 hover:shadow-[0_0_20px_rgba(255,217,61,0.5)] text-xs md:text-sm"
+                                            className="flex-1 px-2 md:px-3 py-2.5 md:py-2 bg-gradient-to-r from-brand-yellow to-brand-magenta text-white font-semibold rounded-lg hover:opacity-90 transition-all duration-300 hover:shadow-[0_0_20px_rgba(255,217,61,0.5)] text-xs md:text-sm min-h-[44px]"
                                         >
                                             {t.promptLibraryUse}
                                         </button>

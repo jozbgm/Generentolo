@@ -129,7 +129,7 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
 
             {/* Advanced Panel Overlay (slide up from bottom) */}
             {showAdvancedPanel && (
-                <div className={`fixed ${isExpanded ? 'bottom-[200px]' : 'bottom-[88px]'} left-1/2 -translate-x-1/2 lg:left-[calc(50%-20px)] lg:-translate-x-1/2 w-[95%] lg:w-[calc(100%-360px)] max-w-5xl bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border rounded-2xl shadow-2xl z-50 p-6 max-h-[40vh] overflow-y-auto transition-all duration-300 ease-out`}>
+                <div className={`fixed ${isExpanded ? 'bottom-[200px]' : 'bottom-[88px]'} left-1/2 -translate-x-1/2 lg:left-[calc(50%-20px)] lg:-translate-x-1/2 w-[95%] lg:w-[calc(100%-360px)] max-w-5xl bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border rounded-2xl shadow-2xl z-50 p-4 md:p-6 max-h-[50vh] md:max-h-[40vh] overflow-y-auto transition-all duration-300 ease-out`}>
                     <div className="flex items-center justify-between mb-4">
                         <h3 className="font-semibold text-light-text dark:text-dark-text">{t.advancedSettings || 'Advanced Settings'}</h3>
                         <button
@@ -226,7 +226,7 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                                     setShowAspectMenu(!showAspectMenu);
                                     setShowNumImagesMenu(false);
                                 }}
-                                className="flex items-center gap-1 lg:gap-1.5 px-2 lg:px-3 py-1.5 lg:py-2 bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-lg text-xs text-light-text dark:text-dark-text hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 active:scale-95 transition-all duration-150 whitespace-nowrap"
+                                className="flex items-center gap-1 lg:gap-1.5 px-3 lg:px-3 py-2.5 lg:py-2 bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-lg text-xs text-light-text dark:text-dark-text hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 active:scale-95 transition-all duration-150 whitespace-nowrap min-h-[44px]"
                             >
                                 <span className="hidden sm:inline">📐</span>
                                 <span>{aspectRatio}</span>
@@ -242,7 +242,7 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                                                     onAspectRatioChange(ratio);
                                                     setShowAspectMenu(false);
                                                 }}
-                                                className={`w-full px-3 py-1.5 text-left text-sm rounded-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 transition-all duration-150 flex items-center gap-2 ${ratio === aspectRatio ? 'bg-brand-purple/20 text-brand-purple font-medium' : 'text-light-text dark:text-dark-text'}`}
+                                                className={`w-full px-3 py-2.5 text-left text-sm rounded-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 transition-all duration-150 flex items-center gap-2 min-h-[44px] ${ratio === aspectRatio ? 'bg-brand-purple/20 text-brand-purple font-medium' : 'text-light-text dark:text-dark-text'}`}
                                             >
                                                 <span className="text-base">{getAspectRatioIcon(ratio)}</span>
                                                 <span>{ratio}</span>
@@ -260,7 +260,7 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                                     setShowNumImagesMenu(!showNumImagesMenu);
                                     setShowAspectMenu(false);
                                 }}
-                                className="flex items-center gap-1 lg:gap-1.5 px-2 lg:px-3 py-1.5 lg:py-2 bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-lg text-xs text-light-text dark:text-dark-text hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 active:scale-95 transition-all duration-150 whitespace-nowrap"
+                                className="flex items-center gap-1 lg:gap-1.5 px-3 lg:px-3 py-2.5 lg:py-2 bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-lg text-xs text-light-text dark:text-dark-text hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 active:scale-95 transition-all duration-150 whitespace-nowrap min-h-[44px]"
                             >
                                 <span className="hidden sm:inline">🖼️</span>
                                 <span>{numImages}x</span>
@@ -276,7 +276,7 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                                                     onNumImagesChange(num);
                                                     setShowNumImagesMenu(false);
                                                 }}
-                                                className={`w-full px-3 py-1.5 text-left text-sm rounded-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 transition-all duration-150 ${num === numImages ? 'bg-brand-purple/20 text-brand-purple' : 'text-light-text dark:text-dark-text'}`}
+                                                className={`w-full px-3 py-2.5 text-left text-sm rounded-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 transition-all duration-150 min-h-[44px] ${num === numImages ? 'bg-brand-purple/20 text-brand-purple' : 'text-light-text dark:text-dark-text'}`}
                                             >
                                                 {num}x
                                             </button>
@@ -308,7 +308,7 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                                     setShowNumImagesMenu(false);
                                     setShowResolutionMenu(false);
                                 }}
-                                className="flex items-center gap-1 lg:gap-1.5 px-2 lg:px-3 py-1.5 lg:py-2 bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-lg text-xs text-light-text dark:text-dark-text hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 active:scale-95 transition-all duration-150 whitespace-nowrap"
+                                className="flex items-center gap-1 lg:gap-1.5 px-3 lg:px-3 py-2.5 lg:py-2 bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-lg text-xs text-light-text dark:text-dark-text hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 active:scale-95 transition-all duration-150 whitespace-nowrap min-h-[44px]"
                             >
                                 <span>{selectedModel === 'gemini-2.5-flash-image' ? '⚡' : '⭐'}</span>
                                 <span className="hidden sm:inline">{selectedModel === 'gemini-2.5-flash-image' ? 'Flash' : 'PRO'}</span>
@@ -322,7 +322,7 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                                                 onModelChange('gemini-2.5-flash-image');
                                                 setShowModelMenu(false);
                                             }}
-                                            className={`w-full px-3 py-2 text-left text-sm rounded-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 transition-all duration-150 flex items-center gap-2 ${selectedModel === 'gemini-2.5-flash-image' ? 'bg-brand-purple/20 text-brand-purple' : 'text-light-text dark:text-dark-text'}`}
+                                            className={`w-full px-3 py-2.5 text-left text-sm rounded-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 transition-all duration-150 flex items-center gap-2 min-h-[44px] ${selectedModel === 'gemini-2.5-flash-image' ? 'bg-brand-purple/20 text-brand-purple' : 'text-light-text dark:text-dark-text'}`}
                                         >
                                             <span>⚡</span>
                                             <span>{t.modelFlash}</span>
@@ -332,7 +332,7 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                                                 onModelChange('gemini-3-pro-image-preview');
                                                 setShowModelMenu(false);
                                             }}
-                                            className={`w-full px-3 py-2 text-left text-sm rounded-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 transition-all duration-150 flex items-center gap-2 ${selectedModel === 'gemini-3-pro-image-preview' ? 'bg-brand-purple/20 text-brand-purple' : 'text-light-text dark:text-dark-text'}`}
+                                            className={`w-full px-3 py-2.5 text-left text-sm rounded-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 transition-all duration-150 flex items-center gap-2 min-h-[44px] ${selectedModel === 'gemini-3-pro-image-preview' ? 'bg-brand-purple/20 text-brand-purple' : 'text-light-text dark:text-dark-text'}`}
                                         >
                                             <span>⭐</span>
                                             <span>{t.modelPro}</span>
@@ -353,7 +353,7 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                                         setShowNumImagesMenu(false);
                                         setShowModelMenu(false);
                                     }}
-                                    className="flex items-center gap-1 lg:gap-1.5 px-2 lg:px-3 py-1.5 lg:py-2 bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-lg text-xs text-light-text dark:text-dark-text hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 active:scale-95 transition-all duration-150 whitespace-nowrap"
+                                    className="flex items-center gap-1 lg:gap-1.5 px-3 lg:px-3 py-2.5 lg:py-2 bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-lg text-xs text-light-text dark:text-dark-text hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 active:scale-95 transition-all duration-150 whitespace-nowrap min-h-[44px]"
                                 >
                                     <span className="hidden sm:inline">📏</span>
                                     <span>{selectedResolution.toUpperCase()}</span>
@@ -367,7 +367,7 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                                                     onResolutionChange('1k');
                                                     setShowResolutionMenu(false);
                                                 }}
-                                                className={`w-full px-3 py-1.5 text-left text-sm rounded-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 transition-all duration-150 ${selectedResolution === '1k' ? 'bg-brand-purple/20 text-brand-purple' : 'text-light-text dark:text-dark-text'}`}
+                                                className={`w-full px-3 py-2.5 text-left text-sm rounded-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 transition-all duration-150 min-h-[44px] ${selectedResolution === '1k' ? 'bg-brand-purple/20 text-brand-purple' : 'text-light-text dark:text-dark-text'}`}
                                             >
                                                 {t.resolution1k}
                                             </button>
@@ -376,7 +376,7 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                                                     onResolutionChange('2k');
                                                     setShowResolutionMenu(false);
                                                 }}
-                                                className={`w-full px-3 py-1.5 text-left text-sm rounded-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 transition-all duration-150 ${selectedResolution === '2k' ? 'bg-brand-purple/20 text-brand-purple' : 'text-light-text dark:text-dark-text'}`}
+                                                className={`w-full px-3 py-2.5 text-left text-sm rounded-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 transition-all duration-150 min-h-[44px] ${selectedResolution === '2k' ? 'bg-brand-purple/20 text-brand-purple' : 'text-light-text dark:text-dark-text'}`}
                                             >
                                                 {t.resolution2k}
                                             </button>
@@ -385,7 +385,7 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                                                     onResolutionChange('4k');
                                                     setShowResolutionMenu(false);
                                                 }}
-                                                className={`w-full px-3 py-1.5 text-left text-sm rounded-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 transition-all duration-150 ${selectedResolution === '4k' ? 'bg-brand-purple/20 text-brand-purple' : 'text-light-text dark:text-dark-text'}`}
+                                                className={`w-full px-3 py-2.5 text-left text-sm rounded-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 transition-all duration-150 min-h-[44px] ${selectedResolution === '4k' ? 'bg-brand-purple/20 text-brand-purple' : 'text-light-text dark:text-dark-text'}`}
                                             >
                                                 {t.resolution4k}
                                             </button>
@@ -672,7 +672,7 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                                                         onAspectRatioChange(ratio);
                                                         setShowAspectMenu(false);
                                                     }}
-                                                    className={`w-full px-3 py-1.5 text-left text-sm rounded-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 transition-all duration-150 flex items-center gap-2 ${ratio === aspectRatio ? 'bg-brand-purple/20 text-brand-purple font-medium' : 'text-light-text dark:text-dark-text'}`}
+                                                    className={`w-full px-3 py-2.5 text-left text-sm rounded-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 transition-all duration-150 flex items-center gap-2 min-h-[44px] ${ratio === aspectRatio ? 'bg-brand-purple/20 text-brand-purple font-medium' : 'text-light-text dark:text-dark-text'}`}
                                                 >
                                                     <span className="text-base">{getAspectRatioIcon(ratio)}</span>
                                                     <span>{ratio}</span>
@@ -705,7 +705,7 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                                                         onNumImagesChange(num);
                                                         setShowNumImagesMenu(false);
                                                     }}
-                                                    className={`w-full px-3 py-1.5 text-left text-sm rounded-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 transition-all duration-150 ${num === numImages ? 'bg-brand-purple/20 text-brand-purple' : 'text-light-text dark:text-dark-text'}`}
+                                                    className={`w-full px-3 py-2.5 text-left text-sm rounded-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 transition-all duration-150 min-h-[44px] ${num === numImages ? 'bg-brand-purple/20 text-brand-purple' : 'text-light-text dark:text-dark-text'}`}
                                                 >
                                                     {num}x
                                                 </button>
@@ -750,7 +750,7 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                                                     onModelChange('gemini-2.5-flash-image');
                                                     setShowModelMenu(false);
                                                 }}
-                                                className={`w-full px-3 py-2 text-left text-sm rounded-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 transition-all duration-150 flex items-center gap-2 ${selectedModel === 'gemini-2.5-flash-image' ? 'bg-brand-purple/20 text-brand-purple' : 'text-light-text dark:text-dark-text'}`}
+                                                className={`w-full px-3 py-2.5 text-left text-sm rounded-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 transition-all duration-150 flex items-center gap-2 min-h-[44px] ${selectedModel === 'gemini-2.5-flash-image' ? 'bg-brand-purple/20 text-brand-purple' : 'text-light-text dark:text-dark-text'}`}
                                             >
                                                 <span>⚡</span>
                                                 <span>{t.modelFlash}</span>
@@ -760,7 +760,7 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                                                     onModelChange('gemini-3-pro-image-preview');
                                                     setShowModelMenu(false);
                                                 }}
-                                                className={`w-full px-3 py-2 text-left text-sm rounded-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 transition-all duration-150 flex items-center gap-2 ${selectedModel === 'gemini-3-pro-image-preview' ? 'bg-brand-purple/20 text-brand-purple' : 'text-light-text dark:text-dark-text'}`}
+                                                className={`w-full px-3 py-2.5 text-left text-sm rounded-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 transition-all duration-150 flex items-center gap-2 min-h-[44px] ${selectedModel === 'gemini-3-pro-image-preview' ? 'bg-brand-purple/20 text-brand-purple' : 'text-light-text dark:text-dark-text'}`}
                                             >
                                                 <span>⭐</span>
                                                 <span>{t.modelPro}</span>
@@ -794,7 +794,7 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                                                         onResolutionChange('1k');
                                                         setShowResolutionMenu(false);
                                                     }}
-                                                    className={`w-full px-3 py-1.5 text-left text-sm rounded-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 transition-all duration-150 ${selectedResolution === '1k' ? 'bg-brand-purple/20 text-brand-purple' : 'text-light-text dark:text-dark-text'}`}
+                                                    className={`w-full px-3 py-2.5 text-left text-sm rounded-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 transition-all duration-150 min-h-[44px] ${selectedResolution === '1k' ? 'bg-brand-purple/20 text-brand-purple' : 'text-light-text dark:text-dark-text'}`}
                                                 >
                                                     {t.resolution1k}
                                                 </button>
@@ -803,7 +803,7 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                                                         onResolutionChange('2k');
                                                         setShowResolutionMenu(false);
                                                     }}
-                                                    className={`w-full px-3 py-1.5 text-left text-sm rounded-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 transition-all duration-150 ${selectedResolution === '2k' ? 'bg-brand-purple/20 text-brand-purple' : 'text-light-text dark:text-dark-text'}`}
+                                                    className={`w-full px-3 py-2.5 text-left text-sm rounded-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 transition-all duration-150 min-h-[44px] ${selectedResolution === '2k' ? 'bg-brand-purple/20 text-brand-purple' : 'text-light-text dark:text-dark-text'}`}
                                                 >
                                                     {t.resolution2k}
                                                 </button>
@@ -812,7 +812,7 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                                                         onResolutionChange('4k');
                                                         setShowResolutionMenu(false);
                                                     }}
-                                                    className={`w-full px-3 py-1.5 text-left text-sm rounded-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 transition-all duration-150 ${selectedResolution === '4k' ? 'bg-brand-purple/20 text-brand-purple' : 'text-light-text dark:text-dark-text'}`}
+                                                    className={`w-full px-3 py-2.5 text-left text-sm rounded-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 transition-all duration-150 min-h-[44px] ${selectedResolution === '4k' ? 'bg-brand-purple/20 text-brand-purple' : 'text-light-text dark:text-dark-text'}`}
                                                 >
                                                     {t.resolution4k}
                                                 </button>
