@@ -2303,22 +2303,38 @@ export default function App() {
             );
             console.log(`💰 Estimated cost: $${estimatedCost.toFixed(3)}`);
 
-            // Batch generation: use random seeds for variations when generating multiple images
+            // Batch generation: add prompt variations for each image to create diversity
+            // NOTE: Gemini API doesn't support seed parameter for image models, so we add subtle prompt variations
             const generationPromises = Array(numImagesToGenerate).fill(0).map((_, index) => {
-                // Use provided seed for first image, random seeds for variations
-                const batchSeed = numImagesToGenerate > 1 && index > 0
-                    ? Math.floor(Math.random() * 1000000).toString()
-                    : seed;
+                let variantPrompt = editedPrompt;
+
+                // Add subtle variations to prompt for batch generation (index > 0)
+                if (numImagesToGenerate > 1 && index > 0) {
+                    const variations = language === 'it'
+                        ? [
+                            ', prospettiva alternativa',
+                            ', angolazione diversa',
+                            ', composizione alternativa',
+                            ', illuminazione variata'
+                          ]
+                        : [
+                            ', alternate perspective',
+                            ', different angle',
+                            ', alternative composition',
+                            ', varied lighting'
+                          ];
+                    variantPrompt = editedPrompt + variations[index % variations.length];
+                }
 
                 return geminiService.generateImage(
-                    editedPrompt,
+                    variantPrompt,
                     aspectRatio,
                     allReferenceFiles,
                     styleReferenceImage,
                     structureImage,
                     userApiKey,
                     negativePrompt,
-                    batchSeed,
+                    seed, // Keep seed same (API might ignore it anyway)
                     language,
                     preciseReference,
                     selectedModel,
