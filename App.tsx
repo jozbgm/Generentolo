@@ -11,7 +11,7 @@ import PromptLibrary from './components/PromptLibrary';
 // --- Localization ---
 const translations = {
   en: {
-    headerTitle: 'Generentolo PRO v1.1',
+    headerTitle: 'Generentolo PRO v1.2',
     headerSubtitle: 'Let me do it for you!',
     refImagesTitle: 'Reference & Style Images',
     styleRefTitle: 'Style Reference',
@@ -165,7 +165,7 @@ const translations = {
     costDisclaimer: '* Estimate based on official Google pricing',
   },
   it: {
-    headerTitle: 'Generentolo PRO v1.1',
+    headerTitle: 'Generentolo PRO v1.2',
     headerSubtitle: 'Let me do it for you!',
     refImagesTitle: 'Immagini di Riferimento e Stile',
     styleRefTitle: 'Riferimento Stile',
@@ -2664,7 +2664,14 @@ export default function App() {
     return (
         <LanguageContext.Provider value={{ language, setLanguage, t }}>
             <div className="h-screen w-screen bg-light-bg dark:bg-dark-bg text-light-text dark:text-dark-text flex flex-col font-sans">
-                <Header theme={theme} toggleTheme={toggleTheme} onOpenSettings={() => setIsSettingsOpen(true)} onOpenFeedback={() => setIsFeedbackOpen(true)} onOpenShortcuts={() => setIsShortcutsOpen(true)} onOpenHelp={() => setIsHelpOpen(true)} onOpenPromptLibrary={() => setIsPromptLibraryOpen(true)} />
+                <Header theme={theme} toggleTheme={toggleTheme} onOpenSettings={() => setIsSettingsOpen(true)} onOpenFeedback={() => setIsFeedbackOpen(true)} onOpenShortcuts={() => setIsShortcutsOpen(true)} onOpenHelp={() => setIsHelpOpen(true)} onOpenPromptLibrary={() => {
+                    const libraryWindow = window.open('./prompt-library.html', '_blank', 'width=1400,height=900');
+                    if (libraryWindow) {
+                        libraryWindow.addEventListener('load', () => {
+                            libraryWindow.postMessage({ type: 'SET_LANGUAGE', language }, '*');
+                        });
+                    }
+                }} />
                 <main className="flex-1 flex flex-col lg:flex-row gap-4 lg:gap-6 px-4 pt-4 pb-32 lg:pb-28 overflow-y-auto lg:overflow-hidden">
                     {/* --- Left Sidebar (only references/style/structure) --- */}
                     <aside className="w-full lg:w-[280px] flex-shrink-0 bg-light-surface/50 dark:bg-dark-surface/30 backdrop-blur-xl rounded-3xl overflow-y-auto h-full">
@@ -2842,15 +2849,22 @@ export default function App() {
                 <ShortcutsModal isOpen={isShortcutsOpen} onClose={() => setIsShortcutsOpen(false)} />
                 <FeedbackModal isOpen={isFeedbackOpen} onClose={() => setIsFeedbackOpen(false)} />
 
-                <PromptLibrary
-                    isOpen={isPromptLibraryOpen}
-                    onClose={() => setIsPromptLibraryOpen(false)}
-                    onUsePrompt={(prompt) => {
-                        setEditedPrompt(prompt);
-                        promptTextareaRef.current?.focus();
-                    }}
-                    t={t}
-                />
+                {/* Prompt Library now opens as standalone window via window.open() */}
+                {useEffect(() => {
+                    const handleMessage = (event: MessageEvent) => {
+                        if (event.data.type === 'USE_PROMPT') {
+                            setEditedPrompt(event.data.prompt);
+                            promptTextareaRef.current?.focus();
+                            showToast(language === 'it' ? 'Prompt applicato!' : 'Prompt applied!', 'success');
+                        } else if (event.data.type === 'GET_LANGUAGE') {
+                            if (event.source) {
+                                (event.source as Window).postMessage({ type: 'SET_LANGUAGE', language }, event.origin);
+                            }
+                        }
+                    };
+                    window.addEventListener('message', handleMessage);
+                    return () => window.removeEventListener('message', handleMessage);
+                }, [language, showToast])}
 
                 {editingImage && <InpaintEditor image={editingImage} onClose={() => setEditingImage(null)} onSave={handleInpaint} />}
 
