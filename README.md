@@ -14,21 +14,28 @@ A sophisticated web application for generating ultra-high-quality images using G
 ## ✨ Features
 
 ### 📚 **NEW v1.2: Professional Prompt Library**
-- **60+ Professional Prompts** for graphic design agencies
+- **150+ Professional Prompts** for graphic design agencies
 - **Standalone full-page experience** (not a popup)
 - **Organized by Model**: Flash (fast & economical) vs PRO (4K quality)
-- **14 Categories**: Packaging, Product Photography, Advertising, Fashion, Food & Beverage, Brand Identity, and more
+- **15 Categories**: Packaging, Product Photography, Advertising, Fashion, Food & Beverage, Brand Identity, Real Estate, Travel, Automotive, and more
 - **Bilingual Support**: EN/IT with live switching
-- **Example Images**: Professional photography examples embedded
+- **Example Images**: Professional photography examples embedded for visual guidance
+- **Smart Sorting**: Prompts with example images appear first for better understanding
 - **Search & Filter**: Find the perfect prompt instantly
 - **One-Click Use**: Applies prompt directly to your generation
 - Perfect for:
   - E-commerce product shots
   - Marketing campaigns
-  - Editorial fashion
-  - Food styling
+  - Editorial fashion & beauty
+  - Food & beverage styling
   - Packaging design
-  - Brand identity
+  - Brand identity & logos
+  - Real estate photography
+  - Automotive advertising
+  - Travel & tourism
+  - Event photography
+  - Pet portraits
+  - Architectural shots
 
 ### ✨ **v1.1: Native 4K Upscaling**
 - **Powered by Nano Banana Pro 3.0** - No external APIs required
@@ -274,26 +281,36 @@ A sophisticated web application for generating ultra-high-quality images using G
 ### v1.2.0 (December 2025) 📚
 **🎉 PROMPT LIBRARY RELEASE - Professional Templates:**
 
-**📚 NEW: Standalone Prompt Library**
-- **60+ Professional Prompts** organized for graphic design agencies
+**📚 NEW: Standalone Prompt Library (150+ Prompts)**
+- **150+ Professional Prompts** organized for graphic design agencies (up from 60+)
 - **Full-page standalone experience** via window.open()
 - **Model-specific organization**: Flash vs PRO capabilities
-- **14 Professional Categories**:
-  - Aesthetic Presets (Y2K, Film, Minimal, Cinematic)
+- **15 Professional Categories**:
+  - Aesthetic Presets (Y2K, Film, Minimal, Cinematic, 80s/90s, Cottagecore, Dark Academia, Vaporwave)
   - PRO Features (4K, Text-in-Image, Infographics)
   - Packaging Design (Luxury, Cosmetics, Food)
-  - Product Photography (E-commerce, Lifestyle, Flat Lay)
+  - Product Photography (E-commerce, Lifestyle, Flat Lay, Watches, Sneakers, Tech)
   - Advertising & Marketing (Billboard, Print, Social)
-  - Fashion & Editorial (Magazine Covers, Lookbooks, Street Style)
+  - Fashion & Editorial (Haute Couture, Magazine Covers, Lookbooks, Street Style, Beauty Close-ups)
   - Food & Beverage (Menu, Commercial, Styling)
-  - People & Portraits (Studio, Cinematic, B&W)
+  - People & Portraits (Studio, Cinematic, B&W, Concerts, Weddings, Pets)
+  - Real Estate (Interior, Exterior, Staging)
+  - Travel & Tourism (Destinations, Lifestyle)
+  - Automotive (Cars, Motorcycles)
+  - Sports & Action (Frozen moments, Street sports)
+  - Architecture & Interiors (Modern, Classic)
+  - Nature & Landscapes (Mountains, Oceans)
+  - Illustration Styles (Anime, Comic Book, Digital Painting)
+  - Brand Identity (Logos, Mockups, Systems)
+  - Seasonal & Holiday (Christmas, Halloween)
   - Plus: Combine, Style, Environment, Edit, Creative categories
 
 **🎨 Library Features**
+- **Smart Sorting**: Prompts with example images appear first for better visual guidance
 - Search bar with real-time filtering
-- Category filter chips
+- Category filter chips (15 categories)
 - Model tabs (All/Flash/PRO)
-- Example images from professional sources
+- **Real example images** embedded from professional photography sources
 - Copy and Use Prompt buttons
 - Bilingual EN/IT with sync to main app
 - Responsive mobile design
