@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useCallback, useMemo, createContext, useContext, useRef } from 'react';
 import { GeneratedImage, DynamicTool, PromptPreset, ModelType, ResolutionType, TextInImageConfig } from './types';
 import * as geminiService from './services/geminiService';
-import * as upscaleService from './services/upscaleService';
 import * as presetsService from './services/presetsService';
 import { useKeyboardShortcuts, APP_SHORTCUTS } from './hooks/useKeyboardShortcuts';
-import { SunIcon, MoonIcon, UploadIcon, DownloadIcon, ZoomInIcon, SparklesIcon, CopyIcon, SettingsIcon, XIcon, CheckIcon, LanguageIcon, WandIcon, InfoIcon, AlertTriangleIcon, BrushIcon, DiceIcon, TrashIcon, ReloadIcon, EnvelopeIcon, StarIcon, CornerUpLeftIcon, UpscaleIcon, ChevronLeftIcon, ChevronRightIcon, SearchIcon } from './components/icons';
+import { SunIcon, MoonIcon, UploadIcon, DownloadIcon, ZoomInIcon, SparklesIcon, CopyIcon, SettingsIcon, XIcon, CheckIcon, LanguageIcon, WandIcon, InfoIcon, AlertTriangleIcon, BrushIcon, DiceIcon, TrashIcon, ReloadIcon, EnvelopeIcon, StarIcon, CornerUpLeftIcon, ChevronLeftIcon, ChevronRightIcon, SearchIcon } from './components/icons';
 import FloatingActionBar from './components/FloatingActionBar';
 import ZoomableImage from './components/ZoomableImage';
 import PromptLibrary from './components/PromptLibrary';
@@ -128,15 +127,6 @@ const translations = {
     historySaveFailed: 'Could not save full history, storage is full.',
     promptEnhancementFailed: 'Prompt enhancement failed.',
     promptCreationFailed: 'Prompt creation failed.',
-    upscaleAction: 'Upscale',
-    upscaling: 'Upscaling...',
-    upscaleSuccess: 'Image upscaled successfully!',
-    upscaleFailed: 'Upscaling failed. Please try again.',
-    upscale2x: 'Upscale 2x',
-    upscale4x: 'Upscale 4x',
-    upscaleQuota: 'Upscales remaining',
-    upscaleQuotaExceeded: 'Monthly quota exceeded',
-    compareImages: 'Compare Before/After',
     // Prompt Library
     promptLibraryTitle: 'Prompt Library',
     promptLibrarySearch: 'Search prompts by title, description, or tags...',
@@ -285,15 +275,6 @@ const translations = {
     historySaveFailed: 'Impossibile salvare la cronologia, memoria piena.',
     promptEnhancementFailed: 'Miglioramento del prompt fallito.',
     promptCreationFailed: 'Creazione del prompt fallita.',
-    upscaleAction: 'Aumenta Qualità',
-    upscaling: 'Aumento qualità...',
-    upscaleSuccess: 'Immagine potenziata con successo!',
-    upscaleFailed: 'Aumento qualità fallito. Riprova.',
-    upscale2x: 'Potenzia 2x',
-    upscale4x: 'Potenzia 4x',
-    upscaleQuota: 'Upscale rimanenti',
-    upscaleQuotaExceeded: 'Quota mensile esaurita',
-    compareImages: 'Confronta Prima/Dopo',
     // Prompt Library
     promptLibraryTitle: 'Libreria Prompt',
     promptLibrarySearch: 'Cerca prompt per titolo, descrizione o tag...',
@@ -1062,14 +1043,11 @@ interface ImageDisplayProps {
     onDownload: (image: GeneratedImage) => void;
     onZoom: (image: GeneratedImage) => void;
     onEdit: (image: GeneratedImage) => void;
-    onUpscale: (image: GeneratedImage, scale: 2 | 4) => void;
-    upscalingImageId: string | null;
     onReroll: (image: GeneratedImage) => void; // v0.8
     onToggleFavorite: (imageId: string) => void; // v0.8
 }
-const ImageDisplay: React.FC<ImageDisplayProps> = ({ images, isLoading, onDownload, onZoom, onEdit, onUpscale, upscalingImageId, onReroll, onToggleFavorite }) => {
+const ImageDisplay: React.FC<ImageDisplayProps> = ({ images, isLoading, onDownload, onZoom, onEdit, onReroll, onToggleFavorite }) => {
     const { t } = useLocalization();
-    const [showUpscaleMenu, setShowUpscaleMenu] = useState<string | null>(null);
 
     return (
         <div className="relative w-full h-full flex items-center justify-center bg-light-surface/50 dark:bg-dark-surface/30 rounded-2xl p-4">
@@ -1083,19 +1061,9 @@ const ImageDisplay: React.FC<ImageDisplayProps> = ({ images, isLoading, onDownlo
             {!isLoading && images.length > 0 && (
                  <div className="w-full h-full flex flex-col items-center justify-center">
                     <div className={`w-full flex-1 min-h-0 grid ${images.length > 1 ? 'grid-cols-2' : 'grid-cols-1'} gap-4 p-4`}>
-                        {images.map(image => {
-                            const isUpscaling = upscalingImageId === image.id;
-                            return (
+                        {images.map(image => (
                             <div key={image.id} className="relative group flex items-center justify-center min-h-0">
                                 <img src={image.imageDataUrl || image.thumbnailDataUrl} alt={image.prompt} className="max-w-full max-h-full object-contain rounded-md cursor-zoom-in" onClick={() => onZoom(image)} />
-
-                                {/* Upscaling overlay */}
-                                {isUpscaling && (
-                                    <div className="absolute inset-0 bg-black/60 rounded-md flex flex-col items-center justify-center">
-                                        <div className="w-12 h-12 border-4 border-brand-yellow border-t-transparent rounded-full animate-spin mb-3"></div>
-                                        <p className="text-white font-semibold">{t.upscaling}</p>
-                                    </div>
-                                )}
 
                                 <div className="absolute top-2 right-2 flex gap-2 items-center opacity-0 group-hover:opacity-100 transition-opacity">
                                     <span className="px-2 py-1 rounded-full bg-black/50 text-white text-xs font-mono backdrop-blur-sm">{image.aspectRatio}</span>
@@ -1112,53 +1080,6 @@ const ImageDisplay: React.FC<ImageDisplayProps> = ({ images, isLoading, onDownlo
 
                                     <button onClick={() => onEdit(image)} className="p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors" aria-label={t.editAction}><BrushIcon className="w-5 h-5" /></button>
 
-                                    {/* Upscale button with dropdown */}
-                                    {upscaleService.isUpscalingEnabled() && !isUpscaling && (
-                                        <div className="relative">
-                                            <button
-                                                onClick={() => setShowUpscaleMenu(showUpscaleMenu === image.id ? null : image.id)}
-                                                className="p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
-                                                aria-label={t.upscaleAction}
-                                            >
-                                                <UpscaleIcon className="w-5 h-5" />
-                                            </button>
-
-                                            {showUpscaleMenu === image.id && (() => {
-                                                const quota = upscaleService.getRemainingQuota();
-                                                return (
-                                                <div className="absolute top-full right-0 mt-1 bg-dark-surface border border-dark-border rounded-lg shadow-lg overflow-hidden z-10 min-w-[160px]">
-                                                    {/* Quota display */}
-                                                    <div className="px-4 py-2 bg-dark-surface-accent/50 border-b border-dark-border">
-                                                        <p className="text-xs text-dark-text-muted">{t.upscaleQuota}</p>
-                                                        <p className="text-sm font-semibold text-white">{quota.remaining} / {quota.total}</p>
-                                                    </div>
-
-                                                    {quota.remaining > 0 ? (
-                                                        <>
-                                                            <button
-                                                                onClick={(e) => { e.stopPropagation(); onUpscale(image, 2); setShowUpscaleMenu(null); }}
-                                                                className="w-full px-4 py-2 text-left text-white hover:bg-dark-surface-accent transition-colors"
-                                                            >
-                                                                {t.upscale2x}
-                                                            </button>
-                                                            <button
-                                                                onClick={(e) => { e.stopPropagation(); onUpscale(image, 4); setShowUpscaleMenu(null); }}
-                                                                className="w-full px-4 py-2 text-left text-white hover:bg-dark-surface-accent transition-colors"
-                                                            >
-                                                                {t.upscale4x}
-                                                            </button>
-                                                        </>
-                                                    ) : (
-                                                        <div className="px-4 py-3 text-center">
-                                                            <p className="text-sm text-red-400">{t.upscaleQuotaExceeded}</p>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                                );
-                                            })()}
-                                        </div>
-                                    )}
-
                                     <button onClick={() => onDownload(image)} className="p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors" aria-label="Download image"><DownloadIcon className="w-5 h-5" /></button>
 
                                     {/* v0.8: Re-roll button */}
@@ -1172,8 +1093,7 @@ const ImageDisplay: React.FC<ImageDisplayProps> = ({ images, isLoading, onDownlo
                                     </button>
                                 </div>
                             </div>
-                            );
-                        })}
+                        ))}
                     </div>
                  </div>
             )}
@@ -1186,94 +1106,6 @@ const ImageDisplay: React.FC<ImageDisplayProps> = ({ images, isLoading, onDownlo
                     <p className="text-sm opacity-70">{t.imageDisplayPlaceholderSubtext}</p>
                 </div>
             )}
-        </div>
-    );
-};
-
-interface ImageComparerProps {
-    originalImage: string;
-    upscaledImage: string;
-    alt: string;
-}
-const ImageComparer: React.FC<ImageComparerProps> = ({ originalImage, upscaledImage, alt }) => {
-    const [sliderPosition, setSliderPosition] = useState(50);
-    const [isDragging, setIsDragging] = useState(false);
-    const containerRef = useRef<HTMLDivElement>(null);
-
-    const handleMove = useCallback((clientX: number) => {
-        if (!containerRef.current) return;
-        const rect = containerRef.current.getBoundingClientRect();
-        const x = clientX - rect.left;
-        const percentage = Math.max(0, Math.min(100, (x / rect.width) * 100));
-        setSliderPosition(percentage);
-    }, []);
-
-    const handleMouseDown = () => setIsDragging(true);
-
-    const handleMouseMove = useCallback((e: MouseEvent) => {
-        if (isDragging) handleMove(e.clientX);
-    }, [isDragging, handleMove]);
-
-    const handleTouchMove = useCallback((e: TouchEvent) => {
-        if (isDragging && e.touches[0]) {
-            e.preventDefault();
-            handleMove(e.touches[0].clientX);
-        }
-    }, [isDragging, handleMove]);
-
-    const handleEnd = () => setIsDragging(false);
-
-    useEffect(() => {
-        if (isDragging) {
-            window.addEventListener('mousemove', handleMouseMove);
-            window.addEventListener('mouseup', handleEnd);
-            window.addEventListener('touchmove', handleTouchMove, { passive: false });
-            window.addEventListener('touchend', handleEnd);
-            return () => {
-                window.removeEventListener('mousemove', handleMouseMove);
-                window.removeEventListener('mouseup', handleEnd);
-                window.removeEventListener('touchmove', handleTouchMove);
-                window.removeEventListener('touchend', handleEnd);
-            };
-        }
-    }, [isDragging, handleMouseMove, handleTouchMove]);
-
-    return (
-        <div ref={containerRef} className="relative select-none max-w-[90vw] max-h-[90vh] overflow-hidden rounded-lg shadow-2xl">
-            {/* Upscaled image (background) */}
-            <img src={upscaledImage} alt={`${alt} - After`} className="w-full h-full object-contain" draggable={false} />
-
-            {/* Original image (clipped) */}
-            <div
-                className="absolute inset-0 overflow-hidden"
-                style={{ clipPath: `inset(0 ${100 - sliderPosition}% 0 0)` }}
-            >
-                <img src={originalImage} alt={`${alt} - Before`} className="w-full h-full object-contain" draggable={false} />
-            </div>
-
-            {/* Slider line */}
-            <div
-                className="absolute top-0 bottom-0 w-1 bg-white shadow-lg cursor-ew-resize"
-                style={{ left: `${sliderPosition}%`, transform: 'translateX(-50%)' }}
-                onMouseDown={handleMouseDown}
-                onTouchStart={handleMouseDown}
-            >
-                {/* Slider handle */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 bg-white rounded-full shadow-lg flex items-center justify-center">
-                    <div className="flex gap-1">
-                        <div className="w-0.5 h-4 bg-gray-400"></div>
-                        <div className="w-0.5 h-4 bg-gray-400"></div>
-                    </div>
-                </div>
-            </div>
-
-            {/* Labels */}
-            <div className="absolute top-4 left-4 px-3 py-1.5 bg-black/60 text-white text-sm font-semibold rounded-full backdrop-blur-sm">
-                Before
-            </div>
-            <div className="absolute top-4 right-4 px-3 py-1.5 bg-black/60 text-white text-sm font-semibold rounded-full backdrop-blur-sm">
-                After
-            </div>
         </div>
     );
 };
@@ -2140,7 +1972,6 @@ export default function App() {
     const [toast, setToast] = useState<{ id: number; message: string; type: 'success' | 'error' } | null>(null);
     const [isHistorySelectionMode, setIsHistorySelectionMode] = useState(false);
     const [selectedHistoryIds, setSelectedHistoryIds] = useState<Set<string>>(new Set());
-    const [upscalingImageId, setUpscalingImageId] = useState<string | null>(null);
     const [presets, setPresets] = useState<PromptPreset[]>([]);
     const [sidebarTab, setSidebarTab] = useState<'history' | 'presets'>('history');
     const promptTextareaRef = useRef<HTMLTextAreaElement>(null);
@@ -2632,45 +2463,6 @@ export default function App() {
         reader.readAsText(file);
     }, [showToast]);
 
-    const handleUpscale = useCallback(async (image: GeneratedImage, scale: 2 | 4) => {
-        if (!upscaleService.isUpscalingEnabled()) {
-            showToast(t.upscaleFailed, 'error');
-            return;
-        }
-
-        const imageDataUrl = image.imageDataUrl || image.thumbnailDataUrl;
-        if (!imageDataUrl) return;
-
-        setUpscalingImageId(image.id);
-
-        try {
-            const upscaledDataUrl = await upscaleService.upscaleImage(imageDataUrl, { scale });
-
-            // Create new upscaled image entry with original for comparison
-            const upscaledImage: GeneratedImage = {
-                ...image,
-                id: `${image.id}-upscaled-${scale}x-${Date.now()}`,
-                imageDataUrl: upscaledDataUrl,
-                thumbnailDataUrl: await createThumbnailDataUrl(upscaledDataUrl),
-                originalImageDataUrl: imageDataUrl, // Save original for comparison
-            };
-
-            // Add to current images and history
-            setCurrentImages(prev => [...prev, upscaledImage]);
-            setHistory(prev => {
-                const updated = [upscaledImage, ...prev];
-                return updated.slice(0, 12);
-            });
-
-            showToast(t.upscaleSuccess, 'success');
-        } catch (error: any) {
-            console.error('Upscaling error:', error);
-            showToast(error.message || t.upscaleFailed, 'error');
-        } finally {
-            setUpscalingImageId(null);
-        }
-    }, [showToast, t.upscaleFailed, t.upscaleSuccess]);
-
     const handleCopyToClipboard = (text: string) => {
         if (!text) return;
         navigator.clipboard.writeText(text).then(() => {
@@ -2796,7 +2588,7 @@ export default function App() {
                     {/* --- Main Content --- */}
                     <div className="flex-1 flex flex-col gap-2 lg:gap-6 min-w-0 h-full">
                         <div className="flex-1 min-h-0 bg-light-surface/50 dark:bg-dark-surface/30 rounded-3xl overflow-hidden">
-                            <ImageDisplay images={currentImages} isLoading={isLoading} onDownload={handleDownload} onZoom={handleZoom} onEdit={setEditingImage} onUpscale={handleUpscale} upscalingImageId={upscalingImageId} onReroll={handleReroll} onToggleFavorite={handleToggleFavorite} />
+                            <ImageDisplay images={currentImages} isLoading={isLoading} onDownload={handleDownload} onZoom={handleZoom} onEdit={setEditingImage} onReroll={handleReroll} onToggleFavorite={handleToggleFavorite} />
                         </div>
 
                         {((referenceImages.length > 0 || !!styleReferenceImage) || currentImages.length === 1) && (
@@ -3011,19 +2803,10 @@ export default function App() {
                                     }
                                 }}
                             >
-                                {/* Show image comparer if original image exists (upscaled image) */}
-                                {zoomedImage.originalImageDataUrl ? (
-                                    <ImageComparer
-                                        originalImage={zoomedImage.originalImageDataUrl}
-                                        upscaledImage={zoomedImage.imageDataUrl || zoomedImage.thumbnailDataUrl!}
-                                        alt={zoomedImage.prompt}
-                                    />
-                                ) : (
-                                    <ZoomableImage
-                                        src={zoomedImage.imageDataUrl || zoomedImage.thumbnailDataUrl!}
-                                        alt={zoomedImage.prompt}
-                                    />
-                                )}
+                                <ZoomableImage
+                                    src={zoomedImage.imageDataUrl || zoomedImage.thumbnailDataUrl!}
+                                    alt={zoomedImage.prompt}
+                                />
 
                                 {/* Top bar with counter, download and close */}
                                 <div className="absolute -top-12 left-0 right-0 flex items-center justify-between">
