@@ -100,6 +100,15 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
     const aspectRatios = ["Auto", "1:1", "4:3", "3:4", "16:9", "9:16", "3:2", "2:3", "4:5", "5:4", "21:9"];
     const numImagesOptions = [1, 2, 3, 4];
 
+    // Visual icon for aspect ratios
+    const getAspectRatioIcon = (ratio: string) => {
+        if (ratio === 'Auto') return '🔄';
+        const [w, h] = ratio.split(':').map(Number);
+        if (w === h) return '⬜'; // Square
+        if (w > h) return '▭'; // Landscape
+        return '▯'; // Portrait
+    };
+
     const handleExpandClick = useCallback(() => {
         setIsExpanded(true);
         setShowAdvancedPanel(false);
@@ -233,9 +242,10 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                                                     onAspectRatioChange(ratio);
                                                     setShowAspectMenu(false);
                                                 }}
-                                                className={`w-full px-3 py-1.5 text-left text-sm rounded-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 transition-all duration-150 ${ratio === aspectRatio ? 'bg-brand-purple/20 text-brand-purple' : 'text-light-text dark:text-dark-text'}`}
+                                                className={`w-full px-3 py-1.5 text-left text-sm rounded-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 transition-all duration-150 flex items-center gap-2 ${ratio === aspectRatio ? 'bg-brand-purple/20 text-brand-purple font-medium' : 'text-light-text dark:text-dark-text'}`}
                                             >
-                                                {ratio}
+                                                <span className="text-base">{getAspectRatioIcon(ratio)}</span>
+                                                <span>{ratio}</span>
                                             </button>
                                         ))}
                                     </div>
@@ -662,9 +672,10 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                                                         onAspectRatioChange(ratio);
                                                         setShowAspectMenu(false);
                                                     }}
-                                                    className={`w-full px-3 py-1.5 text-left text-sm rounded-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 transition-all duration-150 ${ratio === aspectRatio ? 'bg-brand-purple/20 text-brand-purple' : 'text-light-text dark:text-dark-text'}`}
+                                                    className={`w-full px-3 py-1.5 text-left text-sm rounded-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 transition-all duration-150 flex items-center gap-2 ${ratio === aspectRatio ? 'bg-brand-purple/20 text-brand-purple font-medium' : 'text-light-text dark:text-dark-text'}`}
                                                 >
-                                                    {ratio}
+                                                    <span className="text-base">{getAspectRatioIcon(ratio)}</span>
+                                                    <span>{ratio}</span>
                                                 </button>
                                             ))}
                                         </div>
