@@ -1,8 +1,8 @@
-# 🎨 Generentolo PRO v1.1
+# 🎨 Generentolo PRO v1.2
 
 **Professional AI-Powered Image Generation Web Application**
 
-A sophisticated web application for generating ultra-high-quality images using Google's Gemini models (Flash & **Nano Banana PRO 3.0**) with ControlNet-like structure guidance, 4K resolution support, native upscaling, and text-in-image capabilities. Designed for graphic designers, marketers, and creative professionals who demand the highest quality and precision.
+A sophisticated web application for generating ultra-high-quality images using Google's Gemini models (Flash & **Nano Banana PRO 3.0**) with ControlNet-like structure guidance, 4K resolution support, native upscaling, professional prompt library, and text-in-image capabilities. Designed for graphic design agencies, marketers, and creative professionals who demand the highest quality and precision.
 
 [![Live Demo](https://img.shields.io/badge/Live-Demo-blue?style=for-the-badge)](https://www.dugongo.it/generentolo/)
 [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
@@ -13,7 +13,24 @@ A sophisticated web application for generating ultra-high-quality images using G
 
 ## ✨ Features
 
-### ✨ **NUOVO v1.1: Native 4K Upscaling**
+### 📚 **NEW v1.2: Professional Prompt Library**
+- **60+ Professional Prompts** for graphic design agencies
+- **Standalone full-page experience** (not a popup)
+- **Organized by Model**: Flash (fast & economical) vs PRO (4K quality)
+- **14 Categories**: Packaging, Product Photography, Advertising, Fashion, Food & Beverage, Brand Identity, and more
+- **Bilingual Support**: EN/IT with live switching
+- **Example Images**: Professional photography examples embedded
+- **Search & Filter**: Find the perfect prompt instantly
+- **One-Click Use**: Applies prompt directly to your generation
+- Perfect for:
+  - E-commerce product shots
+  - Marketing campaigns
+  - Editorial fashion
+  - Food styling
+  - Packaging design
+  - Brand identity
+
+### ✨ **v1.1: Native 4K Upscaling**
 - **Powered by Nano Banana Pro 3.0** - No external APIs required
 - **2K Upscaling** ($0.134 per image) - Double the resolution
 - **4K Upscaling** ($0.24 per image) - Ultra-high quality enhancement
@@ -253,6 +270,52 @@ A sophisticated web application for generating ultra-high-quality images using G
 ---
 
 ## 📋 Changelog
+
+### v1.2.0 (December 2025) 📚
+**🎉 PROMPT LIBRARY RELEASE - Professional Templates:**
+
+**📚 NEW: Standalone Prompt Library**
+- **60+ Professional Prompts** organized for graphic design agencies
+- **Full-page standalone experience** via window.open()
+- **Model-specific organization**: Flash vs PRO capabilities
+- **14 Professional Categories**:
+  - Aesthetic Presets (Y2K, Film, Minimal, Cinematic)
+  - PRO Features (4K, Text-in-Image, Infographics)
+  - Packaging Design (Luxury, Cosmetics, Food)
+  - Product Photography (E-commerce, Lifestyle, Flat Lay)
+  - Advertising & Marketing (Billboard, Print, Social)
+  - Fashion & Editorial (Magazine Covers, Lookbooks, Street Style)
+  - Food & Beverage (Menu, Commercial, Styling)
+  - People & Portraits (Studio, Cinematic, B&W)
+  - Plus: Combine, Style, Environment, Edit, Creative categories
+
+**🎨 Library Features**
+- Search bar with real-time filtering
+- Category filter chips
+- Model tabs (All/Flash/PRO)
+- Example images from professional sources
+- Copy and Use Prompt buttons
+- Bilingual EN/IT with sync to main app
+- Responsive mobile design
+- Dark theme matching main app
+
+**🔧 Technical Implementation**
+- PostMessage API for parent-child communication
+- Language preference synchronization
+- Sends selected prompts back to main app
+- Tailwind CSS responsive design
+- Toast notifications
+- Clean professional UI
+
+**📊 Prompt Content**
+- Detailed professional prompts
+- Best practices for each use case
+- Reference image guidance
+- Settings recommendations (resolution, aspect ratio)
+- Difficulty levels (easy/medium/advanced)
+- Professional photography techniques
+
+---
 
 ### v1.1.0 (December 2025) ✨
 **🎉 UPSCALING RELEASE - Native 4K Enhancement:**
