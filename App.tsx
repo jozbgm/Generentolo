@@ -11,7 +11,7 @@ import PromptLibrary from './components/PromptLibrary';
 // --- Localization ---
 const translations = {
   en: {
-    headerTitle: 'Generentolo PRO v1.0',
+    headerTitle: 'Generentolo PRO v1.1',
     headerSubtitle: 'Let me do it for you!',
     refImagesTitle: 'Reference & Style Images',
     styleRefTitle: 'Style Reference',
@@ -127,6 +127,12 @@ const translations = {
     historySaveFailed: 'Could not save full history, storage is full.',
     promptEnhancementFailed: 'Prompt enhancement failed.',
     promptCreationFailed: 'Prompt creation failed.',
+    upscaleAction: 'Upscale to 4K',
+    upscale2K: 'Upscale to 2K ($0.134)',
+    upscale4K: 'Upscale to 4K ($0.24)',
+    upscaling: 'Upscaling to high resolution...',
+    upscaleSuccess: 'Image upscaled successfully!',
+    upscaleFailed: 'Upscaling failed. Please try again.',
     // Prompt Library
     promptLibraryTitle: 'Prompt Library',
     promptLibrarySearch: 'Search prompts by title, description, or tags...',
@@ -159,7 +165,7 @@ const translations = {
     costDisclaimer: '* Estimate based on official Google pricing',
   },
   it: {
-    headerTitle: 'Generentolo PRO v1.0',
+    headerTitle: 'Generentolo PRO v1.1',
     headerSubtitle: 'Let me do it for you!',
     refImagesTitle: 'Immagini di Riferimento e Stile',
     styleRefTitle: 'Riferimento Stile',
@@ -275,6 +281,12 @@ const translations = {
     historySaveFailed: 'Impossibile salvare la cronologia, memoria piena.',
     promptEnhancementFailed: 'Miglioramento del prompt fallito.',
     promptCreationFailed: 'Creazione del prompt fallita.',
+    upscaleAction: 'Upscale a 4K',
+    upscale2K: 'Upscale a 2K ($0.134)',
+    upscale4K: 'Upscale a 4K ($0.24)',
+    upscaling: 'Upscaling ad alta risoluzione...',
+    upscaleSuccess: 'Immagine potenziata con successo!',
+    upscaleFailed: 'Upscaling fallito. Riprova.',
     // Prompt Library
     promptLibraryTitle: 'Libreria Prompt',
     promptLibrarySearch: 'Cerca prompt per titolo, descrizione o tag...',
@@ -1045,9 +1057,12 @@ interface ImageDisplayProps {
     onEdit: (image: GeneratedImage) => void;
     onReroll: (image: GeneratedImage) => void; // v0.8
     onToggleFavorite: (imageId: string) => void; // v0.8
+    onUpscale: (image: GeneratedImage, resolution: '2k' | '4k') => void; // v1.1
+    upscalingImageId: string | null; // v1.1
 }
-const ImageDisplay: React.FC<ImageDisplayProps> = ({ images, isLoading, onDownload, onZoom, onEdit, onReroll, onToggleFavorite }) => {
+const ImageDisplay: React.FC<ImageDisplayProps> = ({ images, isLoading, onDownload, onZoom, onEdit, onReroll, onToggleFavorite, onUpscale, upscalingImageId }) => {
     const { t } = useLocalization();
+    const [showUpscaleMenu, setShowUpscaleMenu] = useState<string | null>(null);
 
     return (
         <div className="relative w-full h-full flex items-center justify-center bg-light-surface/50 dark:bg-dark-surface/30 rounded-2xl p-4">
@@ -1061,9 +1076,19 @@ const ImageDisplay: React.FC<ImageDisplayProps> = ({ images, isLoading, onDownlo
             {!isLoading && images.length > 0 && (
                  <div className="w-full h-full flex flex-col items-center justify-center">
                     <div className={`w-full flex-1 min-h-0 grid ${images.length > 1 ? 'grid-cols-2' : 'grid-cols-1'} gap-4 p-4`}>
-                        {images.map(image => (
+                        {images.map(image => {
+                            const isUpscaling = upscalingImageId === image.id;
+                            return (
                             <div key={image.id} className="relative group flex items-center justify-center min-h-0">
                                 <img src={image.imageDataUrl || image.thumbnailDataUrl} alt={image.prompt} className="max-w-full max-h-full object-contain rounded-md cursor-zoom-in" onClick={() => onZoom(image)} />
+
+                                {/* Upscaling overlay */}
+                                {isUpscaling && (
+                                    <div className="absolute inset-0 bg-black/60 rounded-md flex flex-col items-center justify-center z-10">
+                                        <div className="w-12 h-12 border-4 border-brand-yellow border-t-transparent rounded-full animate-spin mb-3"></div>
+                                        <p className="text-white font-semibold">{t.upscaling}</p>
+                                    </div>
+                                )}
 
                                 <div className="absolute top-2 right-2 flex gap-2 items-center opacity-0 group-hover:opacity-100 transition-opacity">
                                     <span className="px-2 py-1 rounded-full bg-black/50 text-white text-xs font-mono backdrop-blur-sm">{image.aspectRatio}</span>
@@ -1080,6 +1105,37 @@ const ImageDisplay: React.FC<ImageDisplayProps> = ({ images, isLoading, onDownlo
 
                                     <button onClick={() => onEdit(image)} className="p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors" aria-label={t.editAction}><BrushIcon className="w-5 h-5" /></button>
 
+                                    {/* v1.1: Upscale button with dropdown */}
+                                    {!isUpscaling && (
+                                        <div className="relative">
+                                            <button
+                                                onClick={() => setShowUpscaleMenu(showUpscaleMenu === image.id ? null : image.id)}
+                                                className="p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+                                                aria-label={t.upscaleAction}
+                                                title={t.upscaleAction}
+                                            >
+                                                <SparklesIcon className="w-5 h-5" />
+                                            </button>
+
+                                            {showUpscaleMenu === image.id && (
+                                                <div className="absolute top-full right-0 mt-1 bg-dark-surface border border-dark-border rounded-lg shadow-lg overflow-hidden z-20 min-w-[160px]">
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); onUpscale(image, '2k'); setShowUpscaleMenu(null); }}
+                                                        className="w-full px-4 py-2 text-left text-white hover:bg-dark-surface-accent transition-colors"
+                                                    >
+                                                        {t.upscale2K}
+                                                    </button>
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); onUpscale(image, '4k'); setShowUpscaleMenu(null); }}
+                                                        className="w-full px-4 py-2 text-left text-white hover:bg-dark-surface-accent transition-colors"
+                                                    >
+                                                        {t.upscale4K}
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+
                                     <button onClick={() => onDownload(image)} className="p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors" aria-label="Download image"><DownloadIcon className="w-5 h-5" /></button>
 
                                     {/* v0.8: Re-roll button */}
@@ -1093,7 +1149,8 @@ const ImageDisplay: React.FC<ImageDisplayProps> = ({ images, isLoading, onDownlo
                                     </button>
                                 </div>
                             </div>
-                        ))}
+                            );
+                        })}
                     </div>
                  </div>
             )}
@@ -1972,6 +2029,7 @@ export default function App() {
     const [toast, setToast] = useState<{ id: number; message: string; type: 'success' | 'error' } | null>(null);
     const [isHistorySelectionMode, setIsHistorySelectionMode] = useState(false);
     const [selectedHistoryIds, setSelectedHistoryIds] = useState<Set<string>>(new Set());
+    const [upscalingImageId, setUpscalingImageId] = useState<string | null>(null);
     const [presets, setPresets] = useState<PromptPreset[]>([]);
     const [sidebarTab, setSidebarTab] = useState<'history' | 'presets'>('history');
     const promptTextareaRef = useRef<HTMLTextAreaElement>(null);
@@ -2405,6 +2463,44 @@ export default function App() {
         ));
     }, []);
 
+    // v1.1: Upscale image using Nano Banana Pro 3.0
+    const handleUpscale = useCallback(async (image: GeneratedImage, resolution: '2k' | '4k') => {
+        const imageDataUrl = image.imageDataUrl || image.thumbnailDataUrl;
+        if (!imageDataUrl) return;
+
+        setUpscalingImageId(image.id);
+
+        try {
+            const upscaledDataUrl = await geminiService.upscaleImage(
+                imageDataUrl,
+                resolution,
+                userApiKey,
+                language
+            );
+
+            // Create new upscaled image entry
+            const thumbnailDataUrl = await createThumbnailDataUrl(upscaledDataUrl);
+            const upscaledImage: GeneratedImage = {
+                ...image,
+                id: `${image.id}-upscaled-${resolution}-${Date.now()}`,
+                imageDataUrl: upscaledDataUrl,
+                thumbnailDataUrl,
+                prompt: `[${resolution.toUpperCase()} Upscaled] ${image.prompt}`,
+            };
+
+            // Add to current images and history
+            setCurrentImages(prev => [...prev, upscaledImage]);
+            setHistory(prev => [upscaledImage, ...prev].slice(0, MAX_HISTORY_ITEMS));
+
+            showToast(t.upscaleSuccess, 'success');
+        } catch (error: any) {
+            console.error('Upscaling error:', error);
+            showToast(error.message || t.upscaleFailed, 'error');
+        } finally {
+            setUpscalingImageId(null);
+        }
+    }, [userApiKey, language, showToast, t.upscaleSuccess, t.upscaleFailed]);
+
     // Preset handlers
     const handleSavePreset = useCallback((name: string, prompt: string, negativePrompt?: string) => {
         try {
@@ -2588,7 +2684,7 @@ export default function App() {
                     {/* --- Main Content --- */}
                     <div className="flex-1 flex flex-col gap-2 lg:gap-6 min-w-0 h-full">
                         <div className="flex-1 min-h-0 bg-light-surface/50 dark:bg-dark-surface/30 rounded-3xl overflow-hidden">
-                            <ImageDisplay images={currentImages} isLoading={isLoading} onDownload={handleDownload} onZoom={handleZoom} onEdit={setEditingImage} onReroll={handleReroll} onToggleFavorite={handleToggleFavorite} />
+                            <ImageDisplay images={currentImages} isLoading={isLoading} onDownload={handleDownload} onZoom={handleZoom} onEdit={setEditingImage} onReroll={handleReroll} onToggleFavorite={handleToggleFavorite} onUpscale={handleUpscale} upscalingImageId={upscalingImageId} />
                         </div>
 
                         {((referenceImages.length > 0 || !!styleReferenceImage) || currentImages.length === 1) && (

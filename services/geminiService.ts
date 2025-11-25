@@ -1288,3 +1288,162 @@ export const generateNegativePrompt = async (prompt: string, referenceFiles: Fil
         throw handleError(error, language);
     }
 };
+
+/**
+ * Helper function to detect image aspect ratio from a File or data URL
+ */
+const detectImageAspectRatio = async (imageSource: File | string): Promise<string> => {
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+            const ratio = img.width / img.height;
+
+            // Map to closest supported aspect ratio
+            if (Math.abs(ratio - 1) < 0.1) resolve('1:1');
+            else if (Math.abs(ratio - 16/9) < 0.15) resolve('16:9');
+            else if (Math.abs(ratio - 9/16) < 0.15) resolve('9:16');
+            else if (Math.abs(ratio - 4/3) < 0.1) resolve('4:3');
+            else if (Math.abs(ratio - 3/4) < 0.1) resolve('3:4');
+            else if (Math.abs(ratio - 3/2) < 0.1) resolve('3:2');
+            else if (Math.abs(ratio - 2/3) < 0.1) resolve('2:3');
+            else if (Math.abs(ratio - 21/9) < 0.2) resolve('21:9');
+            else resolve('1:1'); // Default fallback
+
+            URL.revokeObjectURL(img.src);
+        };
+        img.onerror = () => {
+            URL.revokeObjectURL(img.src);
+            resolve('1:1');
+        };
+
+        if (typeof imageSource === 'string') {
+            img.src = imageSource;
+        } else {
+            img.src = URL.createObjectURL(imageSource);
+        }
+    });
+};
+
+/**
+ * Convert data URL to File object
+ */
+const dataURLToFile = async (dataUrl: string, filename: string): Promise<File> => {
+    const arr = dataUrl.split(',');
+    const mime = arr[0].match(/:(.*?);/)?.[1] || 'image/png';
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) {
+        u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new File([u8arr], filename, { type: mime });
+};
+
+/**
+ * Upscale an image using Nano Banana Pro (Gemini 3 Pro Image) at higher resolution
+ * This function recreates the image at 2K or 4K resolution with enhanced details
+ *
+ * @param imageDataUrl - The data URL of the image to upscale
+ * @param targetResolution - Target resolution: '2k' or '4k' (default: '4k')
+ * @param userApiKey - User's Gemini API key
+ * @param language - UI language for prompts and errors
+ * @returns Data URL of the upscaled image
+ */
+export const upscaleImage = async (
+    imageDataUrl: string,
+    targetResolution: '2k' | '4k' = '4k',
+    userApiKey: string | null,
+    language: 'en' | 'it' = 'en'
+): Promise<string> => {
+    try {
+        const ai = getAiClient(userApiKey);
+
+        // Convert data URL to File for processing
+        const imageFile = await dataURLToFile(imageDataUrl, 'image-to-upscale.png');
+
+        // Convert to generative part
+        const imagePart = await fileToGenerativePart(imageFile);
+
+        // Detect original aspect ratio
+        const aspectRatio = await detectImageAspectRatio(imageDataUrl);
+
+        // Create upscaling prompt with strong emphasis on preservation
+        const prompt = language === 'it'
+            ? `Ricrea questa immagine ESATTAMENTE come è, ma con risoluzione ${targetResolution.toUpperCase()} e dettagli migliorati.
+
+IMPORTANTE - Mantieni IDENTICI:
+- Tutti i soggetti e le loro posizioni esatte
+- La composizione e il layout originale
+- I colori, le tonalità e l'illuminazione
+- Lo stile artistico e l'atmosfera
+- Tutte le texture e i materiali
+
+MIGLIORA SOLO:
+- Nitidezza e definizione dei dettagli
+- Qualità della risoluzione
+- Chiarezza dei bordi e delle texture
+- Dettagli fini senza alterare l'aspetto generale
+
+NON aggiungere, rimuovere o modificare alcun elemento. Questa è una ricreazione fedele ad alta risoluzione.`
+            : `Recreate this image EXACTLY as it is, but with ${targetResolution.toUpperCase()} resolution and enhanced details.
+
+IMPORTANT - Keep IDENTICAL:
+- All subjects and their exact positions
+- The original composition and layout
+- Colors, tones, and lighting
+- Artistic style and atmosphere
+- All textures and materials
+
+IMPROVE ONLY:
+- Sharpness and detail definition
+- Resolution quality
+- Clarity of edges and textures
+- Fine details without altering the general appearance
+
+DO NOT add, remove, or modify any elements. This is a faithful high-resolution recreation.`;
+
+        const parts = [imagePart, { text: prompt }];
+
+        const config: any = {
+            responseModalities: [Modality.IMAGE],
+            temperature: 0.4, // Lower temperature for more faithful recreation
+            topP: 0.9,
+            imageConfig: {
+                imageSize: targetResolution.toUpperCase(), // CRITICAL: Must be "2K" or "4K"
+                aspectRatio: aspectRatio
+            }
+        };
+
+        console.log(`🔍 Upscaling to ${targetResolution.toUpperCase()} with aspect ratio ${aspectRatio}`);
+
+        const result = await ai.models.generateContent({
+            model: 'gemini-3-pro-image-preview', // Nano Banana Pro - supports up to 4K
+            contents: { parts },
+            config: config as any
+        });
+
+        const candidate = result.candidates?.[0];
+        if (!candidate || !candidate.content || !candidate.content.parts) {
+            throw new Error(language === 'it'
+                ? 'Nessun contenuto immagine nella risposta di upscaling.'
+                : 'No image content in upscaling response.');
+        }
+
+        for (const part of candidate.content.parts) {
+            if (part.inlineData) {
+                const base64ImageBytes: string = part.inlineData.data;
+                const upscaledDataUrl = `data:${part.inlineData.mimeType};base64,${base64ImageBytes}`;
+                console.log(`✅ Upscaling completed to ${targetResolution.toUpperCase()}`);
+                return upscaledDataUrl;
+            }
+        }
+
+        throw new Error(language === 'it'
+            ? 'Nessun dato immagine nella risposta.'
+            : 'No image data in response.');
+
+    } catch (error) {
+        console.error('Upscaling error:', error);
+        throw handleError(error, language);
+    }
+};
