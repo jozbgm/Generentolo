@@ -1,8 +1,8 @@
-# 🎨 Generentolo PRO v1.0.0
+# 🎨 Generentolo PRO v1.1
 
 **Professional AI-Powered Image Generation Web Application**
 
-A sophisticated web application for generating ultra-high-quality images using Google's Gemini models (Flash & **Nano Banana PRO 3.0**) with ControlNet-like structure guidance, 4K resolution support, and text-in-image capabilities. Designed for graphic designers, marketers, and creative professionals who demand the highest quality and precision.
+A sophisticated web application for generating ultra-high-quality images using Google's Gemini models (Flash & **Nano Banana PRO 3.0**) with ControlNet-like structure guidance, 4K resolution support, native upscaling, and text-in-image capabilities. Designed for graphic designers, marketers, and creative professionals who demand the highest quality and precision.
 
 [![Live Demo](https://img.shields.io/badge/Live-Demo-blue?style=for-the-badge)](https://www.dugongo.it/generentolo/)
 [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
@@ -13,7 +13,20 @@ A sophisticated web application for generating ultra-high-quality images using G
 
 ## ✨ Features
 
-### 🚀 **NUOVO v1.0: Dual Model System**
+### ✨ **NUOVO v1.1: Native 4K Upscaling**
+- **Powered by Nano Banana Pro 3.0** - No external APIs required
+- **2K Upscaling** ($0.134 per image) - Double the resolution
+- **4K Upscaling** ($0.24 per image) - Ultra-high quality enhancement
+- Intelligent aspect ratio preservation
+- Faithful recreation with detail enhancement
+- Before/after comparison in image viewer
+- Perfect for:
+  - Print-ready materials
+  - Large format displays
+  - Professional portfolios
+  - High-resolution archives
+
+### 🚀 **Dual Model System**
 - **Flash Model** (gemini-2.5-flash-image) - Fast & Economical ($0.04/image)
   - Perfect for rapid prototyping and testing
   - High-speed generation (2-3 seconds)
@@ -80,10 +93,12 @@ A sophisticated web application for generating ultra-high-quality images using G
 - **Seed Control** for reproducible results
 - **Batch Generation** - Up to 4 images at once
 - **Inpainting** - Edit specific regions with mask-based AI
-- **Image Upscaling** - 2x/4x quality enhancement (ClipDrop API)
-  - Monthly quota tracking (100 free/month)
-  - Before/after comparison slider
-  - Automatic quality optimization
+- **✨ Native Image Upscaling** - Powered by Nano Banana Pro 3.0
+  - 2K upscaling (2048px) - $0.134 per image
+  - 4K upscaling (4096px) - $0.24 per image
+  - No external API dependencies
+  - Intelligent detail enhancement
+  - Preserves original composition and style
 
 ### 💾 **Persistent History & Storage**
 - Last 12 generations saved automatically
@@ -238,6 +253,45 @@ A sophisticated web application for generating ultra-high-quality images using G
 ---
 
 ## 📋 Changelog
+
+### v1.1.0 (December 2025) ✨
+**🎉 UPSCALING RELEASE - Native 4K Enhancement:**
+
+**✨ NEW: Native Image Upscaling System**
+- Powered by Nano Banana Pro 3.0 (gemini-3-pro-image-preview)
+- **2K Upscaling** ($0.134) - Perfect for web and social media
+- **4K Upscaling** ($0.24) - Print-ready ultra-high quality
+- No external API dependencies or quota limits
+- Intelligent aspect ratio detection and preservation
+- Temperature 0.4 for faithful recreation
+- Advanced prompt engineering for detail enhancement
+
+**🎨 UI/UX Improvements**
+- Upscale button with sparkle icon in image display
+- Dropdown menu with 2K/4K options and pricing
+- Loading overlay during upscaling with spinner
+- Success/error toast notifications
+- Upscaled images marked with "[2K/4K Upscaled]" prefix
+
+**🌐 Complete Translations**
+- upscaleAction, upscale2K, upscale4K (EN/IT)
+- upscaling status messages
+- Success and error notifications
+
+**🔧 Technical Implementation**
+- New `upscaleImage()` function in geminiService
+- Helper functions: `detectImageAspectRatio()`, `dataURLToFile()`
+- State management with `upscalingImageId`
+- Automatic thumbnail generation for upscaled images
+- Integration with history and favorites system
+
+**📊 Performance**
+- 2K upscale: ~8-12 seconds processing time
+- 4K upscale: ~15-20 seconds processing time
+- Output: High-fidelity recreation with enhanced details
+- File sizes: 2-5MB (2K), 5-15MB (4K)
+
+---
 
 ### v1.0.0 PRO (November 2025) 🚀
 **🎉 MAJOR RELEASE - Nano Banana PRO Integration:**
