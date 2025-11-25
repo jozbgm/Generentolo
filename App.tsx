@@ -2310,6 +2310,10 @@ export default function App() {
 
                 // Add subtle variations to prompt for batch generation (index > 0)
                 if (numImagesToGenerate > 1 && index > 0) {
+                    const keepSame = language === 'it'
+                        ? ', mantieni stesso soggetto e aspetto'
+                        : ', keep same subject appearance';
+
                     const variations = language === 'it'
                         ? [
                             ', prospettiva alternativa',
@@ -2323,7 +2327,7 @@ export default function App() {
                             ', alternative composition',
                             ', varied lighting'
                           ];
-                    variantPrompt = editedPrompt + variations[index % variations.length];
+                    variantPrompt = editedPrompt + variations[index % variations.length] + keepSame;
                 }
 
                 return geminiService.generateImage(
