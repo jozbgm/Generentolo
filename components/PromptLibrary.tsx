@@ -18,6 +18,7 @@ interface PromptLibraryProps {
         promptLibraryCopied: string;
         promptLibraryUse: string;
         promptLibraryCategoryAll: string;
+        promptLibraryCategoryAesthetic: string;
         promptLibraryCategoryPro: string;
         promptLibraryCategoryCombine: string;
         promptLibraryCategoryStyle: string;
@@ -66,6 +67,7 @@ const PromptLibrary: React.FC<PromptLibraryProps> = ({ isOpen, onClose, onUsePro
     const getCategoryName = (categoryId: string) => {
         switch (categoryId) {
             case 'all': return t.promptLibraryCategoryAll;
+            case 'aesthetic': return t.promptLibraryCategoryAesthetic;
             case 'pro': return t.promptLibraryCategoryPro;
             case 'combine': return t.promptLibraryCategoryCombine;
             case 'style': return t.promptLibraryCategoryStyle;
@@ -242,17 +244,39 @@ const PromptLibrary: React.FC<PromptLibraryProps> = ({ isOpen, onClose, onUsePro
                                     key={template.id}
                                     className="group bg-light-surface-accent dark:bg-dark-surface-accent border border-light-border dark:border-dark-border rounded-xl p-3 md:p-4 hover:border-brand-purple/50 hover:shadow-lg transition-all duration-200"
                                 >
-                                    {/* Card Header */}
-                                    <div className="flex items-start justify-between mb-2 md:mb-3">
-                                        <h3 className="text-base md:text-lg font-semibold text-light-text dark:text-dark-text flex-1 pr-2 line-clamp-2">
-                                            {template.title}
-                                        </h3>
-                                        {template.difficulty && (
-                                            <span className={`px-2 py-0.5 md:py-1 text-xs font-medium rounded-md flex-shrink-0 ${getDifficultyColor(template.difficulty)}`}>
-                                                {getDifficultyName(template.difficulty)}
-                                            </span>
-                                        )}
-                                    </div>
+                                    {/* Visual Preset Preview */}
+                                    {template.visualPreset && (
+                                        <div className="mb-3 flex items-center gap-2">
+                                            <div
+                                                className="w-12 h-12 rounded-lg shadow-md flex items-center justify-center text-2xl"
+                                                style={{ background: template.visualPreset.gradient }}
+                                            >
+                                                {template.visualPreset.emoji}
+                                            </div>
+                                            <h3 className="text-base md:text-lg font-semibold text-light-text dark:text-dark-text flex-1 line-clamp-2">
+                                                {template.title}
+                                            </h3>
+                                            {template.difficulty && (
+                                                <span className={`px-2 py-0.5 md:py-1 text-xs font-medium rounded-md flex-shrink-0 ${getDifficultyColor(template.difficulty)}`}>
+                                                    {getDifficultyName(template.difficulty)}
+                                                </span>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {/* Card Header (for non-visual presets) */}
+                                    {!template.visualPreset && (
+                                        <div className="flex items-start justify-between mb-2 md:mb-3">
+                                            <h3 className="text-base md:text-lg font-semibold text-light-text dark:text-dark-text flex-1 pr-2 line-clamp-2">
+                                                {template.title}
+                                            </h3>
+                                            {template.difficulty && (
+                                                <span className={`px-2 py-0.5 md:py-1 text-xs font-medium rounded-md flex-shrink-0 ${getDifficultyColor(template.difficulty)}`}>
+                                                    {getDifficultyName(template.difficulty)}
+                                                </span>
+                                            )}
+                                        </div>
+                                    )}
 
                                     {/* Description */}
                                     <p className="text-xs md:text-sm text-light-text-muted dark:text-dark-text-muted mb-2 md:mb-3 line-clamp-2">

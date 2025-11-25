@@ -7,10 +7,15 @@ export interface PromptTemplate {
     tags: string[];
     exampleImage?: string;
     difficulty?: 'easy' | 'medium' | 'advanced';
+    visualPreset?: {
+        gradient?: string; // CSS gradient for visual preview
+        emoji?: string; // Emoji representation
+    };
 }
 
 export const PROMPT_CATEGORIES = [
     { id: 'all', name: 'All', icon: '✨' },
+    { id: 'aesthetic', name: 'Aesthetic Presets', icon: '🎭' },
     { id: 'pro', name: 'PRO Features', icon: '⭐' },
     { id: 'combine', name: 'Combine & Merge', icon: '🔗' },
     { id: 'style', name: 'Style & Transform', icon: '🎨' },
@@ -21,6 +26,138 @@ export const PROMPT_CATEGORIES = [
 ] as const;
 
 export const PROMPT_LIBRARY: PromptTemplate[] = [
+    // AESTHETIC PRESETS - Higgsfield-inspired visual styles
+    {
+        id: 'aesthetic-y2k',
+        title: 'Y2K Aesthetic',
+        category: 'aesthetic',
+        prompt: 'Y2K aesthetic style: vibrant neon colors, holographic effects, cyber futuristic vibe, glossy textures, metallic accents, early 2000s digital art, retro-futuristic fashion, chrome and iridescent elements',
+        description: 'Early 2000s cyber aesthetic with neon and chrome',
+        tags: ['y2k', 'neon', 'cyber', 'retro'],
+        difficulty: 'easy',
+        visualPreset: {
+            gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)',
+            emoji: '💿'
+        }
+    },
+    {
+        id: 'aesthetic-iphone',
+        title: 'iPhone Style Photo',
+        category: 'aesthetic',
+        prompt: 'Shot on iPhone 15 Pro Max: natural smartphone photography, authentic lighting, casual candid moment, modern color grading, slight lens blur, realistic depth of field, spontaneous composition, Instagram-ready aesthetic',
+        description: 'Authentic smartphone photography look',
+        tags: ['iphone', 'candid', 'realistic', 'mobile'],
+        difficulty: 'easy',
+        visualPreset: {
+            gradient: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+            emoji: '📱'
+        }
+    },
+    {
+        id: 'aesthetic-amalfi',
+        title: 'Amalfi Summer',
+        category: 'aesthetic',
+        prompt: 'Amalfi Coast summer vibes: warm golden hour lighting, Mediterranean colors (azure blues, terracotta, white), coastal Italian aesthetic, dreamy vacation atmosphere, sun-kissed tones, bougainvillea flowers, luxury lifestyle',
+        description: 'Italian Riviera summer luxury aesthetic',
+        tags: ['summer', 'coastal', 'luxury', 'travel'],
+        difficulty: 'easy',
+        visualPreset: {
+            gradient: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+            emoji: '🏖️'
+        }
+    },
+    {
+        id: 'aesthetic-tokyo',
+        title: 'Tokyo Street Style',
+        category: 'aesthetic',
+        prompt: 'Tokyo street style photography: neon-lit urban nights, Harajuku fashion, cyberpunk cityscape, rain-slicked streets, vibrant signage, contemporary Japanese street culture, moody atmospheric lighting, cinematic composition',
+        description: 'Modern Tokyo urban night aesthetic',
+        tags: ['tokyo', 'urban', 'neon', 'street'],
+        difficulty: 'easy',
+        visualPreset: {
+            gradient: 'linear-gradient(135deg, #fc466b 0%, #3f5efb 100%)',
+            emoji: '🗼'
+        }
+    },
+    {
+        id: 'aesthetic-film',
+        title: 'Film Camera Aesthetic',
+        category: 'aesthetic',
+        prompt: 'Shot on 35mm film: analog photography aesthetic, subtle film grain, warm nostalgic tones, natural vintage color palette, soft focus, authentic imperfections, Kodak Portra 400 style, timeless quality',
+        description: 'Vintage film camera photography look',
+        tags: ['film', 'analog', 'vintage', 'grain'],
+        difficulty: 'easy',
+        visualPreset: {
+            gradient: 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)',
+            emoji: '📷'
+        }
+    },
+    {
+        id: 'aesthetic-minimal',
+        title: 'Minimalist Clean',
+        category: 'aesthetic',
+        prompt: 'Minimalist aesthetic: clean composition, negative space, muted neutral tones (whites, beiges, grays), simple geometric shapes, Scandinavian design influence, calm and serene atmosphere, high-end editorial style',
+        description: 'Clean minimalist Scandinavian aesthetic',
+        tags: ['minimal', 'clean', 'scandinavian', 'simple'],
+        difficulty: 'easy',
+        visualPreset: {
+            gradient: 'linear-gradient(135deg, #e0e0e0 0%, #ffffff 100%)',
+            emoji: '◻️'
+        }
+    },
+    {
+        id: 'aesthetic-gothic',
+        title: 'Dark Gothic',
+        category: 'aesthetic',
+        prompt: 'Gothic dark aesthetic: moody atmospheric lighting, deep blacks and burgundy tones, Victorian gothic elements, dramatic shadows, romantic melancholy, ornate details, mysterious ambiance, baroque influences',
+        description: 'Victorian gothic dark romantic aesthetic',
+        tags: ['gothic', 'dark', 'moody', 'dramatic'],
+        difficulty: 'medium',
+        visualPreset: {
+            gradient: 'linear-gradient(135deg, #141e30 0%, #243b55 100%)',
+            emoji: '🌙'
+        }
+    },
+    {
+        id: 'aesthetic-cottagecore',
+        title: 'Cottagecore Dream',
+        category: 'aesthetic',
+        prompt: 'Cottagecore aesthetic: soft pastoral countryside, vintage floral patterns, warm natural lighting, cozy rustic charm, wildflowers and meadows, romantic cottage life, earthy tones, nostalgic countryside atmosphere',
+        description: 'Soft pastoral countryside romantic aesthetic',
+        tags: ['cottagecore', 'pastoral', 'vintage', 'nature'],
+        difficulty: 'easy',
+        visualPreset: {
+            gradient: 'linear-gradient(135deg, #a8e063 0%, #56ab2f 100%)',
+            emoji: '🌻'
+        }
+    },
+    {
+        id: 'aesthetic-vaporwave',
+        title: 'Vaporwave Retro',
+        category: 'aesthetic',
+        prompt: 'Vaporwave aesthetic: pastel pink and cyan colors, 80s/90s retro computer graphics, glitch art elements, Japanese text overlays, palm trees and sunsets, nostalgic internet culture, surreal digital collage',
+        description: '80s/90s internet culture retro aesthetic',
+        tags: ['vaporwave', 'retro', 'glitch', 'surreal'],
+        difficulty: 'medium',
+        visualPreset: {
+            gradient: 'linear-gradient(135deg, #ff6fd8 0%, #3813c2 100%)',
+            emoji: '🌴'
+        }
+    },
+    {
+        id: 'aesthetic-cinematic',
+        title: 'Cinematic Movie',
+        category: 'aesthetic',
+        prompt: 'Cinematic movie aesthetic: widescreen 2.35:1 aspect ratio feel, dramatic color grading, professional film lighting, depth of field, Hollywood production quality, epic composition, lens flares, anamorphic bokeh',
+        description: 'Professional Hollywood film aesthetic',
+        tags: ['cinematic', 'movie', 'dramatic', 'film'],
+        difficulty: 'medium',
+        visualPreset: {
+            gradient: 'linear-gradient(135deg, #434343 0%, #000000 100%)',
+            emoji: '🎬'
+        }
+    },
+
     // PRO FEATURES - Nano Banana Pro Exclusive
     {
         id: 'pro-infographic',
