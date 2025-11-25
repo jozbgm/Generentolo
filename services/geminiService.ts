@@ -964,6 +964,8 @@ export const generateImage = async (
             responseModalities: [Modality.IMAGE],
             // NOTE: outputOptions/outputMimeType NOT supported in GenerateContentConfig
             // Gemini Image models return PNG by default (verified in SDK types)
+            // Temperature 0.9 to reduce IMAGE_RECITATION false positives
+            temperature: 0.9,
             safetySettings: [
                 { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH },
                 { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH },
@@ -992,40 +994,61 @@ export const generateImage = async (
 
         console.log(`🚀 Model: ${model} | Resolution: ${resolution} | References: ${referenceFiles.length}`);
 
-        // Retry logic for IMAGE_RECITATION (often false positives)
-        const MAX_RETRIES = 3;
+        // Enhanced retry logic for API stability
+        // Handles: IMAGE_RECITATION, 500 INTERNAL, 503 UNAVAILABLE, IMAGE_OTHER
+        const MAX_RETRIES = 5; // Increased for PRO model stability
         let lastError: any = null;
         let result: any = null;
 
         for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
             try {
                 result = await ai.models.generateContent({
-                    model: model, // v1.0: Use selected model
+                    model: model,
                     contents: { parts },
                     config: config as any,
                 });
 
-                // Check for IMAGE_RECITATION before processing
+                // Check for retriable finish reasons
                 const candidate = result.candidates?.[0];
                 const finishReason = candidate?.finishReason;
 
-                if (finishReason === 'IMAGE_RECITATION' && attempt < MAX_RETRIES - 1) {
-                    console.warn(`⚠️ IMAGE_RECITATION on attempt ${attempt + 1}/${MAX_RETRIES}, retrying...`);
-                    // Wait before retry (exponential backoff: 500ms, 1000ms, 2000ms)
-                    await new Promise(resolve => setTimeout(resolve, 500 * Math.pow(2, attempt)));
-                    continue; // Retry
-                }
-
-                // If we got here, either success or final attempt with error
-                break;
-            } catch (error) {
-                lastError = error;
-                if (attempt < MAX_RETRIES - 1) {
-                    console.warn(`⚠️ Error on attempt ${attempt + 1}/${MAX_RETRIES}, retrying...`, error);
-                    await new Promise(resolve => setTimeout(resolve, 500 * Math.pow(2, attempt)));
+                // Retry on IMAGE_RECITATION, IMAGE_OTHER (common with PRO model)
+                const retriableReasons = ['IMAGE_RECITATION', 'IMAGE_OTHER'];
+                if (retriableReasons.includes(finishReason) && attempt < MAX_RETRIES - 1) {
+                    console.warn(`⚠️ ${finishReason} on attempt ${attempt + 1}/${MAX_RETRIES}, retrying...`);
+                    // Exponential backoff with jitter: 1s, 2s, 4s, 8s, 16s + random 0-500ms
+                    const baseDelay = 1000 * Math.pow(2, attempt);
+                    const jitter = Math.random() * 500;
+                    await new Promise(resolve => setTimeout(resolve, baseDelay + jitter));
                     continue;
                 }
-                // Final attempt failed, throw error
+
+                // Success - exit retry loop
+                break;
+            } catch (error: any) {
+                lastError = error;
+
+                // Check if error is retriable (500, 503, 429, network errors)
+                const errorMessage = error?.message || '';
+                const isRetriable =
+                    errorMessage.includes('500') ||
+                    errorMessage.includes('503') ||
+                    errorMessage.includes('INTERNAL') ||
+                    errorMessage.includes('UNAVAILABLE') ||
+                    errorMessage.includes('overloaded') ||
+                    errorMessage.includes('429') ||
+                    errorMessage.includes('RESOURCE_EXHAUSTED');
+
+                if (isRetriable && attempt < MAX_RETRIES - 1) {
+                    console.warn(`⚠️ Retriable error on attempt ${attempt + 1}/${MAX_RETRIES}:`, errorMessage);
+                    // Longer backoff for server errors: 2s, 4s, 8s, 16s, 32s + jitter
+                    const baseDelay = 2000 * Math.pow(2, attempt);
+                    const jitter = Math.random() * 1000;
+                    await new Promise(resolve => setTimeout(resolve, baseDelay + jitter));
+                    continue;
+                }
+
+                // Non-retriable error or final attempt
                 throw error;
             }
         }
