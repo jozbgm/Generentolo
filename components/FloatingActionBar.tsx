@@ -60,6 +60,7 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
     onGenerate,
     onEnhancePrompt,
     onGenerate3Prompts,
+    onOpenPresets,
     isLoading,
     isEnhancing,
     hasReferences,
