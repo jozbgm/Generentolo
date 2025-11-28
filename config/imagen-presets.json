@@ -1,0 +1,203 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "title": "Nano Banana (Gemini Image Generation) Optimal Presets",
+  "description": "Preset ottimizzati per gemini-2.5-flash-image e gemini-3-pro-image-preview basati su best practices 2025",
+  "version": "1.3.0",
+  "presets": {
+    "photography": {
+      "luxury_product": {
+        "name": "Luxury Product Photography",
+        "description": "Fotografia di prodotto premium con illuminazione professionale",
+        "model": "gemini-3-pro-image-preview",
+        "resolution": "2K",
+        "promptTemplate": "[PRODUCT] posizionato su [SURFACE], illuminato da [LIGHT_SETUP], angolazione [ANGLE], stile fotografia di prodotto luxury high-end per catalogo premium, 4K ultra nitido con dettagli cristallini, bokeh cremoso sullo sfondo",
+        "negativePrompt": "low quality, blurry, pixelated, distorted, text, watermark, cheap looking",
+        "aspectRatio": "1:1",
+        "safetySettings": "block_some",
+        "examples": [
+          "Orologio di lusso in oro rosa con quadrante blu scuro posizionato su marmo nero venato, illuminato da softbox con rim light da destra, angolazione 45° dall'alto, stile fotografia di prodotto luxury high-end per catalogo premium, 4K ultra nitido con dettagli cristallini, bokeh cremoso sullo sfondo"
+        ]
+      },
+      "food_social": {
+        "name": "Food Social Media",
+        "description": "Food photography ottimizzata per Instagram e social",
+        "model": "gemini-2.5-flash-image",
+        "promptTemplate": "[DISH] visto dall'alto su [SURFACE], guarnito con [GARNISHES], illuminato da luce naturale morbida laterale, colori ultra saturi e vibranti, composizione flat lay bilanciata, stile food photography luminoso per Instagram, 4K nitido",
+        "negativePrompt": "dark, underexposed, unappetizing, messy, low saturation",
+        "aspectRatio": "1:1",
+        "safetySettings": "block_some",
+        "examples": [
+          "Bowl açai visto dall'alto su tavolo legno chiaro, guarnito con banana, mirtilli, granola, cocco, fiori edibili, illuminato da luce naturale morbida laterale, colori ultra saturi e vibranti, composizione flat lay bilanciata, stile food photography luminoso per Instagram, 4K nitido"
+        ]
+      },
+      "portrait_editorial": {
+        "name": "Editorial Portrait",
+        "description": "Ritratti editoriali per moda e magazine",
+        "model": "gemini-3-pro-image-preview",
+        "resolution": "4K",
+        "promptTemplate": "Ritratto editoriale di [SUBJECT] con [STYLING], su sfondo [BACKGROUND], illuminato da [LIGHTING], fotografato con [CAMERA_LENS], composizione [COMPOSITION], mood [MOOD], stile fotografia moda editoriale [REFERENCE], qualità stampa rivista 4K ultra nitida",
+        "negativePrompt": "amateur, snapshot, poor lighting, distorted face, bad anatomy",
+        "aspectRatio": "3:4",
+        "safetySettings": "block_some",
+        "examples": [
+          "Ritratto editoriale di modella con capelli corti platino e trucco metallico, indossa giacca couture nera, su sfondo minimalista grigio cemento, illuminato da luce finestra laterale alta con ombre drammatiche, fotografato con Hasselblad 80mm f/2.0, composizione asimmetrica con spazio negativo, mood intenso contemporaneo, stile fotografia moda editoriale Vogue, qualità stampa rivista 4K ultra nitida"
+        ]
+      }
+    },
+    "art_design": {
+      "concept_art": {
+        "name": "Concept Art Fantasy",
+        "description": "Concept art per game design e illustrazione",
+        "model": "gemini-2.5-flash-image",
+        "promptTemplate": "[SUBJECT] in [ENVIRONMENT], stile concept art cinematografico [REFERENCE], palette colori [COLORS], atmosfera [MOOD], tecnica [TECHNIQUE], altissima qualità",
+        "negativePrompt": "photo, photorealistic, low quality, sketch, unfinished",
+        "aspectRatio": "16:9",
+        "safetySettings": "block_only_high",
+        "examples": [
+          "Castello fantasy galleggiante tra nuvole al tramonto, architettura gotica con torri slanciate, in ambiente mistico con cascate nel vuoto, stile concept art cinematografico alla Hayao Miyazaki, palette colori caldi arancio rosa viola, atmosfera magica sognante, tecnica pittura digitale con texture pennellate, altissima qualità"
+        ]
+      },
+      "abstract_modern": {
+        "name": "Abstract Modern Art",
+        "description": "Arte astratta moderna per design d'interni",
+        "model": "gemini-2.5-flash-image",
+        "promptTemplate": "Composizione astratta con [SHAPES], palette colori [COLORS], [TEXTURE], equilibrio tra [BALANCE], stile arte astratta [REFERENCE], composizione [COMPOSITION], adatto per stampa grande formato",
+        "negativePrompt": "figurative, representational, low resolution, busy",
+        "aspectRatio": "4:3",
+        "safetySettings": "block_only_high",
+        "examples": [
+          "Composizione astratta con forme geometriche fluide organiche intersecanti, palette colori teal corallo oro metallico bianco crema, texture marmo liquido e gradients morbidi con elementi oro foglia, equilibrio tra caos organico e ordine geometrico, stile arte astratta contemporanea alla Kandinsky art déco, composizione dinamica movimento verso alto destra, adatto per stampa grande formato"
+        ]
+      }
+    },
+    "commercial": {
+      "tech_product": {
+        "name": "Tech Product Render",
+        "description": "Render fotorealistici di prodotti tech",
+        "model": "gemini-3-pro-image-preview",
+        "resolution": "4K",
+        "promptTemplate": "[DEVICE] su superficie [SURFACE], illuminato da [LIGHT_SETUP], angolazione [ANGLE], dettagli ultra precisi su [MATERIALS], stile product photography tech premium [REFERENCE], rendering fotorealistico 4K",
+        "negativePrompt": "low poly, CGI looking, plastic, toy, low quality",
+        "aspectRatio": "1:1",
+        "safetySettings": "block_some",
+        "examples": [
+          "Smartphone flagship nero opaco con display edge-to-edge acceso su superficie riflettente nera, illuminato da gradient light da sinistra con backlight blu sottile, angolazione 3/4 frontale dall'alto, dettagli ultra precisi su texture vetro alluminio ceramica, stile product photography tech premium alla Apple, rendering fotorealistico 4K"
+        ]
+      },
+      "social_template": {
+        "name": "Social Media Template",
+        "description": "Template per Instagram Stories e post",
+        "model": "gemini-2.5-flash-image",
+        "promptTemplate": "Template [PLATFORM] [STYLE] con sfondo [BACKGROUND], spazio [LAYOUT], elementi decorativi [ELEMENTS], palette colori [COLORS], composizione [ORIENTATION]",
+        "negativePrompt": "cluttered, busy, unreadable, poor contrast",
+        "aspectRatio": "9:16",
+        "safetySettings": "block_some",
+        "examples": [
+          "Template Instagram Story minimalista moderno con sfondo gradiente soft pesca lavanda, spazio centrale ampio vuoto per testo, elementi decorativi geometrici sottili negli angoli linee dorate cerchi trasparenti, palette colori pastello femminile, composizione verticale 9:16"
+        ]
+      },
+      "architecture_exterior": {
+        "name": "Architecture Exterior",
+        "description": "Fotografia architettonica professionale",
+        "model": "gemini-3-pro-image-preview",
+        "resolution": "4K",
+        "promptTemplate": "[BUILDING] con [FEATURES], illuminazione [TIME_OF_DAY], [ENVIRONMENT], fotografato con obiettivo [LENS] per linee verticali perfette, composizione [COMPOSITION], stile fotografia architettonica [REFERENCE], dettagli cristallini 4K",
+        "negativePrompt": "distorted, tilted, amateur, poor perspective",
+        "aspectRatio": "16:9",
+        "safetySettings": "block_some",
+        "examples": [
+          "Villa moderna minimalista con vetrate dal pavimento al soffitto struttura cemento legno chiaro piscina infinity vista oceano, illuminazione crepuscolare blue hour con luci calde interne visibili, palme tropicali ai lati cielo blu profondo stelle, fotografato con tilt-shift 24mm per linee verticali perfette, composizione bilanciata simmetrica, stile fotografia architettonica alla Julius Shulman, dettagli cristallini 4K"
+        ]
+      }
+    },
+    "illustration": {
+      "children_book": {
+        "name": "Children's Book Illustration",
+        "description": "Illustrazioni per libri bambini",
+        "model": "gemini-2.5-flash-image",
+        "promptTemplate": "Illustrazione stile libro bambini di [SUBJECT] [ACTION] in [ENVIRONMENT], stile [TECHNIQUE], palette colori [COLORS], atmosfera [MOOD], qualità stampa libro illustrato",
+        "negativePrompt": "scary, dark, violent, realistic photo, adult themes",
+        "aspectRatio": "4:3",
+        "safetySettings": "block_most",
+        "examples": [
+          "Illustrazione stile libro bambini di coniglietto bianco con gilet blu che legge sotto quercia grande, circondato da fiori selvatici margherite papaveri campanule farfalle amichevoli, stile illustrazione acquerello delicato contorni morbidi, palette colori pastello allegri, atmosfera calda accogliente fiabesca, qualità stampa libro illustrato"
+        ]
+      }
+    },
+    "landscape": {
+      "cinematic_wide": {
+        "name": "Cinematic Landscape",
+        "description": "Paesaggi cinematografici widescreen",
+        "model": "gemini-3-pro-image-preview",
+        "resolution": "4K",
+        "promptTemplate": "Paesaggio epico di [LOCATION] con [FEATURES], illuminazione [TIME], cielo [SKY], [FOREGROUND] per profondità, composizione widescreen cinematografica orizzonte terzo inferiore, fotografato con [LENS], [TECHNIQUE], color grading [STYLE], 4K ultra nitido dettagli ricchissimi",
+        "negativePrompt": "amateur, phone photo, poor composition, centered horizon",
+        "aspectRatio": "16:9",
+        "safetySettings": "block_some",
+        "examples": [
+          "Paesaggio epico di montagne innevate norvegesi riflesse in lago glaciale cristallino, illuminazione alba dorata rosa, cielo drammatico nuvole stratificate aurore boreali verdi deboli, foresta pini primo piano sinistra per profondità, composizione widescreen cinematografica orizzonte terzo inferiore, fotografato con grandangolo 16mm, lunga esposizione effetto seta acqua, color grading cinematografico teal orange alla Marc Adamus, 4K ultra nitido dettagli ricchissimi"
+        ]
+      }
+    }
+  },
+  "promptingGuidelines": {
+    "do": [
+      "Usa frasi descrittive dettagliate, NON elenchi di parole chiave",
+      "Specifica sempre illuminazione (tipo, direzione, qualità)",
+      "Includi riferimenti tecnici camera (obiettivo, apertura) per fotorealismo",
+      "Definisci composizione e angolazione chiaramente",
+      "Aggiungi riferimenti stile (artisti, movimenti, brand)",
+      "Descrivi materiali e texture specificamente",
+      "Usa palette colori descrittiva",
+      "Specifica aspect ratio appropriato al contenuto"
+    ],
+    "dont": [
+      "NON usare elenchi separati da virgole (keyword stuffing)",
+      "NON essere vago o generico",
+      "NON superare 25 caratteri per testo nelle immagini",
+      "NON ignorare l'illuminazione",
+      "NON usare pose anatomiche troppo complesse",
+      "NON aspettarti perfezione al primo tentativo - itera!",
+      "NON usare negative prompts con gemini-3-pro (non supportato)",
+      "NON specificare risoluzione nel prompt (usa parametri API)"
+    ]
+  },
+  "modelComparison": {
+    "gemini-2.5-flash-image": {
+      "name": "Nano Banana Flash",
+      "bestFor": [
+        "Iterazioni rapide e brainstorming",
+        "Social media content",
+        "Alto volume generazioni",
+        "Testing A/B",
+        "Budget limitato"
+      ],
+      "pricing": "$0.039 per immagine",
+      "resolution": "1024x1024",
+      "speed": "Veloce (+40% vs standard)",
+      "quality": "Alta"
+    },
+    "gemini-3-pro-image-preview": {
+      "name": "Nano Banana Pro 3.0",
+      "bestFor": [
+        "Qualità massima professionale",
+        "Risoluzione fino 4K",
+        "Istruzioni complesse",
+        "Asset per clienti finali",
+        "Stampa e pubblicazioni"
+      ],
+      "pricing": "$0.13 (2K) - $0.24 (4K) per immagine",
+      "resolution": "Fino a 4K",
+      "speed": "Standard",
+      "quality": "Massima"
+    }
+  },
+  "costOptimization": {
+    "workflow": [
+      "1. Brainstorming con Flash (economico, veloce)",
+      "2. Selezione migliori varianti con Flash",
+      "3. Versione finale con PRO 4K (massima qualità)"
+    ],
+    "savings": "60-70% sui costi totali rispetto a usare solo PRO"
+  }
+}

@@ -1,8 +1,8 @@
-# 🎨 Generentolo PRO v1.2
+# 🎨 Generentolo PRO v1.3
 
 **Professional AI-Powered Image Generation Web Application**
 
-A sophisticated web application for generating ultra-high-quality images using Google's Gemini models (Flash & **Nano Banana PRO 3.0**) with ControlNet-like structure guidance, 4K resolution support, native upscaling, professional prompt library, and text-in-image capabilities. Designed for graphic design agencies, marketers, and creative professionals who demand the highest quality and precision.
+A sophisticated web application for generating ultra-high-quality images using Google's Gemini models (Flash & **Nano Banana PRO 3.0**) with ControlNet-like structure guidance, 4K resolution support, native upscaling, professional prompt library with optimized presets, and text-in-image capabilities. Designed for graphic design agencies, marketers, and creative professionals who demand the highest quality and precision.
 
 [![Live Demo](https://img.shields.io/badge/Live-Demo-blue?style=for-the-badge)](https://www.dugongo.it/generentolo/)
 [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
@@ -13,7 +13,26 @@ A sophisticated web application for generating ultra-high-quality images using G
 
 ## ✨ Features
 
-### 📚 **NEW v1.2: Professional Prompt Library**
+### 🚀 **NEW v1.3: Optimized Presets & Performance**
+- **Professional JSON Presets** for Nano Banana Flash & Pro 3.0
+- **10+ Curated Templates** based on 2025 best practices
+- **Detailed Prompt Engineering Guidelines** built-in
+- **Model-Specific Optimization** (Flash vs Pro usage recommendations)
+- **Cost Optimization Strategies** (60-70% savings workflow)
+- **Performance Improvements** across the entire app
+- Ready-to-use configurations for:
+  - Luxury Product Photography
+  - Food Social Media
+  - Editorial Portraits
+  - Concept Art
+  - Tech Product Renders
+  - Architecture
+  - Children's Book Illustrations
+  - Cinematic Landscapes
+  - Social Media Templates
+  - Abstract Modern Art
+
+### 📚 **v1.2: Professional Prompt Library**
 - **150+ Professional Prompts** for graphic design agencies
 - **Standalone full-page experience** (not a popup)
 - **Organized by Model**: Flash (fast & economical) vs PRO (4K quality)
