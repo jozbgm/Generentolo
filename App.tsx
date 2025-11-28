@@ -7,6 +7,7 @@ import { SunIcon, MoonIcon, UploadIcon, DownloadIcon, ZoomInIcon, SparklesIcon, 
 import FloatingActionBar from './components/FloatingActionBar';
 import ZoomableImage from './components/ZoomableImage';
 import PromptLibrary from './components/PromptLibrary';
+import PresetSelector from './components/PresetSelector';
 
 // --- Localization ---
 const translations = {
@@ -1534,7 +1535,7 @@ const CreativePromptsPanel: React.FC<CreativePromptsPanelProps> = ({ prompts, on
                     })}
                 </div>
             ) : (
-                 <div className="text-center py-4">
+                 <div className="text-center py-4 space-y-3">
                     {hasImages ? (
                         <button onClick={onGenerate} className="text-center py-2 px-4 rounded-lg bg-light-surface dark:bg-dark-surface/50 border border-light-border dark:border-dark-border hover:border-brand-yellow transition-colors font-semibold text-sm">
                             {t.generateSuggestions}
@@ -2025,6 +2026,7 @@ export default function App() {
     const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
     const [isHelpOpen, setIsHelpOpen] = useState(false);
     const [isPromptLibraryOpen, setIsPromptLibraryOpen] = useState(false);
+    const [isPresetSelectorOpen, setIsPresetSelectorOpen] = useState(false);
     const [userApiKey, setUserApiKey] = useState<string>('');
     const [toast, setToast] = useState<{ id: number; message: string; type: 'success' | 'error' } | null>(null);
     const [isHistorySelectionMode, setIsHistorySelectionMode] = useState(false);
@@ -2395,6 +2397,13 @@ export default function App() {
             setIsEnhancing(false);
         }
     }, [editedPrompt, referenceImages, styleReferenceImage, structureImage, userApiKey, language, showToast, t.promptEnhancementFailed]);
+
+    const handleApplyPreset = useCallback((prompt: string, model: string, aspectRatio: string) => {
+        setEditedPrompt(prompt);
+        setSelectedModel(model as ModelType);
+        setAspectRatio(aspectRatio);
+        showToast(language === 'it' ? '✅ Preset applicato!' : '✅ Preset applied!', 'success');
+    }, [language, showToast]);
 
     const handleDownload = (image: GeneratedImage) => {
         const downloadUrl = image.imageDataUrl || image.thumbnailDataUrl;
@@ -2815,6 +2824,7 @@ export default function App() {
                     onGenerate={handleGenerate}
                     onEnhancePrompt={handleEnhancePrompt}
                     onGenerate3Prompts={handleGenerateCreativePrompts}
+                    onOpenPresets={() => setIsPresetSelectorOpen(true)}
                     isLoading={isLoading}
                     isEnhancing={isEnhancing}
                     hasReferences={referenceImages.length > 0 || !!styleReferenceImage || !!structureImage}
@@ -2968,6 +2978,15 @@ export default function App() {
                         </div>
                     );
                 })()}
+
+                {/* Preset Selector Modal */}
+                {isPresetSelectorOpen && (
+                    <PresetSelector
+                        onApplyPreset={handleApplyPreset}
+                        language={language}
+                        onClose={() => setIsPresetSelectorOpen(false)}
+                    />
+                )}
             </div>
         </LanguageContext.Provider>
     );

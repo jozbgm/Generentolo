@@ -13,6 +13,7 @@ interface FloatingActionBarProps {
     onGenerate: () => void;
     onEnhancePrompt: () => void;
     onGenerate3Prompts: () => void;
+    onOpenPresets?: () => void;
 
     // State
     isLoading: boolean;
@@ -286,6 +287,19 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                             )}
                         </div>
 
+                        {onOpenPresets && (
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onOpenPresets();
+                                }}
+                                className="flex items-center gap-1 lg:gap-1.5 px-2 lg:px-3 py-1.5 lg:py-2 bg-gradient-to-r from-brand-yellow/20 to-brand-magenta/20 hover:from-brand-yellow/30 hover:to-brand-magenta/30 rounded-lg text-xs text-brand-purple dark:text-brand-yellow font-medium hover:scale-105 active:scale-95 transition-all duration-150"
+                                title={t.promptLibraryTitle || "Presets"}
+                            >
+                                <span>✨</span>
+                                <span className="hidden lg:inline">Presets</span>
+                            </button>
+                        )}
                         <button
                             onClick={() => {
                                 setShowAdvancedPanel(!showAdvancedPanel);
