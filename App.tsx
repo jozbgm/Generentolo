@@ -1192,10 +1192,14 @@ interface HistoryPanelProps {
     onCancelSelectionMode: () => void;
     onToggleSelection: (id: string) => void;
     onDeleteSelected: () => void;
+    onGenerateVariations: (image: GeneratedImage) => void; // v1.3
+    variationsLoadingId: string | null; // v1.3
+    onCopySettings: (image: GeneratedImage) => void; // v1.3
 }
 const HistoryPanel: React.FC<HistoryPanelProps> = ({
     history, onSelect, onZoom, onDelete, onClearAll,
-    isSelectionMode, selectedIds, onEnterSelectionMode, onCancelSelectionMode, onToggleSelection, onDeleteSelected
+    isSelectionMode, selectedIds, onEnterSelectionMode, onCancelSelectionMode, onToggleSelection, onDeleteSelected,
+    onGenerateVariations, variationsLoadingId, onCopySettings
 }) => {
     const { t } = useLocalization();
     const [displayCount, setDisplayCount] = useState(30); // Show 30 images initially
@@ -1321,6 +1325,23 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
                                                     title={t.reuseAction}
                                                 >
                                                     <ReloadIcon className="w-4 h-4" />
+                                                </button>
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); onCopySettings(item); }}
+                                                    className="p-1.5 rounded-full bg-black/60 text-white transition-all hover:bg-brand-magenta"
+                                                    aria-label="Copy settings"
+                                                    title="📋 Copy all settings"
+                                                >
+                                                    <CopyIcon className="w-4 h-4" />
+                                                </button>
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); onGenerateVariations(item); }}
+                                                    className="p-1.5 rounded-full bg-brand-yellow/80 text-black transition-all hover:bg-brand-yellow disabled:opacity-50"
+                                                    aria-label="Generate variations"
+                                                    title="🎲 Generate 4 variations"
+                                                    disabled={variationsLoadingId !== null}
+                                                >
+                                                    <DiceIcon className="w-4 h-4" />
                                                 </button>
                                                 <button
                                                     onClick={(e) => { e.stopPropagation(); onDelete(item.id); }}
@@ -2045,6 +2066,7 @@ export default function App() {
     const [upscalingImageId, setUpscalingImageId] = useState<string | null>(null);
     const [presets, setPresets] = useState<PromptPreset[]>([]);
     const [sidebarTab, setSidebarTab] = useState<'history' | 'presets'>('history');
+    const [variationsLoadingId, setVariationsLoadingId] = useState<string | null>(null); // v1.3: For variations
     const promptTextareaRef = useRef<HTMLTextAreaElement>(null);
     const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -2338,6 +2360,97 @@ export default function App() {
             setIsLoading(false);
             showToast(language === 'it' ? '🛑 Generazione annullata' : '🛑 Generation cancelled', 'success');
         }
+    }, [language, showToast]);
+
+    // v1.3: Generate 4 variations of an image
+    const handleGenerateVariations = useCallback(async (sourceImage: GeneratedImage) => {
+        if (isLoading || variationsLoadingId) return;
+
+        setVariationsLoadingId(sourceImage.id);
+
+        try {
+            const NUM_VARIATIONS = 4;
+            const variations: GeneratedImage[] = [];
+
+            showToast(
+                language === 'it'
+                    ? `🎲 Generando ${NUM_VARIATIONS} variazioni...`
+                    : `🎲 Generating ${NUM_VARIATIONS} variations...`,
+                'success'
+            );
+
+            // Generate variations sequentially with different seeds
+            for (let i = 0; i < NUM_VARIATIONS; i++) {
+                const randomSeed = Math.floor(Math.random() * 1000000).toString();
+
+                const imageDataUrl = await geminiService.generateImage(
+                    sourceImage.prompt,
+                    sourceImage.aspectRatio,
+                    [], // No reference images for variations
+                    null, // No style
+                    null, // No structure
+                    userApiKey,
+                    '', // No negative prompt
+                    randomSeed,
+                    language,
+                    false,
+                    sourceImage.model || selectedModel,
+                    sourceImage.resolution || selectedResolution,
+                    undefined,
+                    undefined // No abort signal for variations
+                );
+
+                const thumbnailDataUrl = await createThumbnailDataUrl(imageDataUrl);
+
+                const newImage: GeneratedImage = {
+                    id: crypto.randomUUID(),
+                    imageDataUrl,
+                    thumbnailDataUrl,
+                    prompt: sourceImage.prompt,
+                    aspectRatio: sourceImage.aspectRatio,
+                    timestamp: Date.now(),
+                    model: sourceImage.model,
+                    resolution: sourceImage.resolution,
+                    seed: randomSeed
+                };
+
+                variations.push(newImage);
+                console.log(`✅ Variation ${i + 1}/${NUM_VARIATIONS} generated`);
+            }
+
+            // Add variations to current images and history
+            setCurrentImages(variations);
+            setHistory(prev => [...variations, ...prev].slice(0, MAX_HISTORY_ITEMS));
+
+            showToast(
+                language === 'it'
+                    ? `✅ ${NUM_VARIATIONS} variazioni generate!`
+                    : `✅ ${NUM_VARIATIONS} variations generated!`,
+                'success'
+            );
+        } catch (error: any) {
+            console.error("Variation generation failed", error);
+            showToast(error.message || (language === 'it' ? 'Generazione variazioni fallita' : 'Variation generation failed'), 'error');
+        } finally {
+            setVariationsLoadingId(null);
+        }
+    }, [isLoading, variationsLoadingId, language, userApiKey, selectedModel, selectedResolution, showToast]);
+
+    // v1.3: Copy settings from an image
+    const handleCopySettings = useCallback((sourceImage: GeneratedImage) => {
+        setEditedPrompt(sourceImage.prompt);
+        setAspectRatio(sourceImage.aspectRatio);
+        if (sourceImage.model) setSelectedModel(sourceImage.model);
+        if (sourceImage.resolution) setSelectedResolution(sourceImage.resolution);
+        if (sourceImage.seed) setSeed(sourceImage.seed);
+        if (sourceImage.negativePrompt) setNegativePrompt(sourceImage.negativePrompt);
+
+        showToast(
+            language === 'it'
+                ? '📋 Parametri copiati!'
+                : '📋 Settings copied!',
+            'success'
+        );
     }, [language, showToast]);
 
     // Image navigation in lightbox
@@ -2857,6 +2970,9 @@ export default function App() {
                                         onCancelSelectionMode={handleCancelHistorySelectionMode}
                                         onToggleSelection={handleToggleHistorySelection}
                                         onDeleteSelected={handleDeleteSelectedHistoryItems}
+                                        onGenerateVariations={handleGenerateVariations}
+                                        variationsLoadingId={variationsLoadingId}
+                                        onCopySettings={handleCopySettings}
                                     />
                                 ) : (
                                     <PresetsPanel
@@ -2908,9 +3024,6 @@ export default function App() {
                     onResolutionChange={setSelectedResolution}
                     textInImageConfig={textInImageConfig}
                     onTextInImageConfigChange={setTextInImageConfig}
-                    referenceImagesCount={referenceImages.length}
-                    styleImageCount={styleReferenceImage ? 1 : 0}
-                    structureImageCount={structureImage ? 1 : 0}
                 />
 
                 <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} onSave={handleSaveApiKey} currentApiKey={userApiKey} />

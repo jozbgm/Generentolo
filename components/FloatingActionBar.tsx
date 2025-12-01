@@ -1,7 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { useLocalization } from '../App';
 import { ModelType, ResolutionType, TextInImageConfig } from '../types';
-import CostCalculator from './CostCalculator';
 
 interface FloatingActionBarProps {
     // Prompt
@@ -48,9 +47,6 @@ interface FloatingActionBarProps {
     onResolutionChange: (resolution: ResolutionType) => void;
     textInImageConfig: TextInImageConfig;
     onTextInImageConfigChange: (config: TextInImageConfig) => void;
-    referenceImagesCount: number; // For cost calculation
-    styleImageCount: number; // 0 or 1
-    structureImageCount: number; // 0 or 1
 }
 
 const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
@@ -86,9 +82,6 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
     onResolutionChange,
     textInImageConfig,
     onTextInImageConfigChange,
-    referenceImagesCount,
-    styleImageCount,
-    structureImageCount,
 }) => {
     const { t } = useLocalization();
     const [isExpanded, setIsExpanded] = useState(false);
@@ -424,17 +417,6 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                                 </div>
                             </div>
                         )}
-
-                        {/* v1.0: Estimated Cost Badge - Real-time pricing */}
-                        <CostCalculator
-                            model={selectedModel}
-                            resolution={selectedResolution}
-                            referenceCount={referenceImagesCount}
-                            styleImageCount={styleImageCount}
-                            structureImageCount={structureImageCount}
-                            compact={true}
-                            t={t}
-                        />
 
                         {/* Primary Action - HERO BUTTON */}
                         <button
@@ -826,17 +808,6 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                                     )}
                                 </div>
                             )}
-
-                            {/* v1.0: Estimated Cost Badge (Expanded Mode) - Real-time pricing */}
-                            <CostCalculator
-                                model={selectedModel}
-                                resolution={selectedResolution}
-                                referenceCount={referenceImagesCount}
-                                styleImageCount={styleImageCount}
-                                structureImageCount={structureImageCount}
-                                compact={true}
-                                t={t}
-                            />
 
                             {/* v0.7: Precise Reference Toggle Switch (Expanded Mode) */}
                             {hasReferences && (
