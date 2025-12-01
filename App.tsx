@@ -7,7 +7,17 @@ import { SunIcon, MoonIcon, UploadIcon, DownloadIcon, ZoomInIcon, SparklesIcon, 
 import FloatingActionBar from './components/FloatingActionBar';
 import ZoomableImage from './components/ZoomableImage';
 import PromptLibrary from './components/PromptLibrary';
-import PresetSelector from './components/PresetSelector';
+
+// Polyfill for crypto.randomUUID() on browsers that don't support it (mobile Safari, etc)
+if (!crypto.randomUUID) {
+    crypto.randomUUID = function() {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            const r = Math.random() * 16 | 0;
+            const v = c === 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+    };
+}
 
 // --- Localization ---
 const translations = {
@@ -2026,7 +2036,6 @@ export default function App() {
     const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
     const [isHelpOpen, setIsHelpOpen] = useState(false);
     const [isPromptLibraryOpen, setIsPromptLibraryOpen] = useState(false);
-    const [isPresetSelectorOpen, setIsPresetSelectorOpen] = useState(false);
     const [userApiKey, setUserApiKey] = useState<string>('');
     const [toast, setToast] = useState<{ id: number; message: string; type: 'success' | 'error' } | null>(null);
     const [isHistorySelectionMode, setIsHistorySelectionMode] = useState(false);
@@ -2196,7 +2205,11 @@ export default function App() {
 
             // Batch generation: add prompt variations for each image to create diversity
             // NOTE: Gemini API doesn't support seed parameter for image models, so we add subtle prompt variations
-            const generationPromises = Array(numImagesToGenerate).fill(0).map((_, index) => {
+            // v1.3 FIX: Generate sequentially instead of parallel to avoid NO_IMAGE errors with multiple references
+            const hasMultipleReferences = allReferenceFiles.length > 1 || styleReferenceImage || structureImage;
+            const imageDataUrls: string[] = [];
+
+            for (let index = 0; index < numImagesToGenerate; index++) {
                 let variantPrompt = editedPrompt;
 
                 // Add subtle variations to prompt for batch generation (index > 0)
@@ -2221,23 +2234,56 @@ export default function App() {
                     variantPrompt = editedPrompt + variations[index % variations.length] + keepSame;
                 }
 
-                return geminiService.generateImage(
-                    variantPrompt,
-                    aspectRatio,
-                    allReferenceFiles,
-                    styleReferenceImage,
-                    structureImage,
-                    userApiKey,
-                    negativePrompt,
-                    seed, // Keep seed same (API might ignore it anyway)
-                    language,
-                    preciseReference,
-                    selectedModel,
-                    selectedResolution,
-                    textInImageConfig
-                );
-            });
-            const imageDataUrls = await Promise.all(generationPromises);
+                // Generate sequentially if there are multiple references/complex setup to avoid API overload
+                // Otherwise parallel is fine
+                if (hasMultipleReferences || selectedModel === 'gemini-3-pro-image-preview') {
+                    const imageDataUrl = await geminiService.generateImage(
+                        variantPrompt,
+                        aspectRatio,
+                        allReferenceFiles,
+                        styleReferenceImage,
+                        structureImage,
+                        userApiKey,
+                        negativePrompt,
+                        seed,
+                        language,
+                        preciseReference,
+                        selectedModel,
+                        selectedResolution,
+                        textInImageConfig
+                    );
+                    imageDataUrls.push(imageDataUrl);
+                    console.log(`✅ Image ${index + 1}/${numImagesToGenerate} generated`);
+                } else {
+                    // Simple case: can generate in parallel
+                    const generationPromises = Array(numImagesToGenerate).fill(0).map((_, idx) => {
+                        let vPrompt = editedPrompt;
+                        if (numImagesToGenerate > 1 && idx > 0) {
+                            const variations = language === 'it'
+                                ? [', prospettiva alternativa', ', angolazione diversa', ', composizione alternativa', ', illuminazione variata']
+                                : [', alternate perspective', ', different angle', ', alternative composition', ', varied lighting'];
+                            vPrompt = editedPrompt + variations[idx % variations.length];
+                        }
+                        return geminiService.generateImage(
+                            vPrompt,
+                            aspectRatio,
+                            allReferenceFiles,
+                            styleReferenceImage,
+                            structureImage,
+                            userApiKey,
+                            negativePrompt,
+                            seed,
+                            language,
+                            preciseReference,
+                            selectedModel,
+                            selectedResolution,
+                            textInImageConfig
+                        );
+                    });
+                    imageDataUrls.push(...await Promise.all(generationPromises));
+                    break; // Exit loop since we generated all in parallel
+                }
+            }
 
             const newImages: GeneratedImage[] = await Promise.all(
                 imageDataUrls.map(async (imageDataUrl) => {
@@ -2397,13 +2443,6 @@ export default function App() {
             setIsEnhancing(false);
         }
     }, [editedPrompt, referenceImages, styleReferenceImage, structureImage, userApiKey, language, showToast, t.promptEnhancementFailed]);
-
-    const handleApplyPreset = useCallback((prompt: string, model: string, aspectRatio: string) => {
-        setEditedPrompt(prompt);
-        setSelectedModel(model as ModelType);
-        setAspectRatio(aspectRatio);
-        showToast(language === 'it' ? '✅ Preset applicato!' : '✅ Preset applied!', 'success');
-    }, [language, showToast]);
 
     const handleDownload = (image: GeneratedImage) => {
         const downloadUrl = image.imageDataUrl || image.thumbnailDataUrl;
@@ -2824,7 +2863,6 @@ export default function App() {
                     onGenerate={handleGenerate}
                     onEnhancePrompt={handleEnhancePrompt}
                     onGenerate3Prompts={handleGenerateCreativePrompts}
-                    onOpenPresets={() => setIsPresetSelectorOpen(true)}
                     isLoading={isLoading}
                     isEnhancing={isEnhancing}
                     hasReferences={referenceImages.length > 0 || !!styleReferenceImage || !!structureImage}
@@ -2979,14 +3017,6 @@ export default function App() {
                     );
                 })()}
 
-                {/* Preset Selector Modal */}
-                {isPresetSelectorOpen && (
-                    <PresetSelector
-                        onApplyPreset={handleApplyPreset}
-                        language={language}
-                        onClose={() => setIsPresetSelectorOpen(false)}
-                    />
-                )}
             </div>
         </LanguageContext.Provider>
     );

@@ -957,6 +957,21 @@ export const generateImage = async (
 
         console.log(`📏 Prompt length: ${fullPrompt.length} chars`);
 
+        // v1.3: Optimize prompt for Nano Banana Pro with multiple images to reduce complexity
+        if (model === 'gemini-3-pro-image-preview' && imageParts.length > 2 && fullPrompt.length > 500) {
+            console.log('⚡ Optimizing prompt for Nano Banana Pro with multiple references...');
+            // Keep only essential instructions, remove verbose guidance
+            fullPrompt = fullPrompt
+                .replace(/⚠️ COMBINA tutti.*?\./g, '')
+                .replace(/⚠️ COMBINE all.*?\./g, '')
+                .replace(/🎨 APPLICA STILE:.*?(?=🏗️|📝|$)/g, '')
+                .replace(/🎨 APPLY STYLE:.*?(?=🏗️|📝|$)/g, '')
+                .replace(/mantieni stesso soggetto e aspetto/g, '')
+                .replace(/keep same subject appearance/g, '')
+                .trim();
+            console.log(`📏 Optimized prompt length: ${fullPrompt.length} chars`);
+        }
+
         // CRITICAL: Images must come BEFORE text for proper reference interpretation
         const parts: any[] = [...imageParts, { text: fullPrompt }];
 
@@ -1000,6 +1015,11 @@ export const generateImage = async (
         console.log(`🚀 Model: ${model} | Resolution: ${resolution} | References: ${referenceFiles.length}`);
         console.log(`🔧 Config:`, JSON.stringify(config, null, 2));
 
+        // v1.3: Warning for Nano Banana Pro - it's slower and requires patience
+        if (model === 'gemini-3-pro-image-preview') {
+            console.log('⏳ Nano Banana Pro: This model is slower (up to 60-90s per image). Please be patient...');
+        }
+
         // Enhanced retry logic: IMAGE_RECITATION/IMAGE_OTHER with prompt variations + 500/503 server errors
         const MAX_RETRIES = 5;
         let lastError: any = null;
@@ -1007,11 +1027,25 @@ export const generateImage = async (
 
         for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
             try {
-                result = await ai.models.generateContent({
+                // v1.3: Add timeout wrapper for Pro model to give better error messages
+                const timeoutMs = model === 'gemini-3-pro-image-preview' ? 120000 : 60000; // 2min for Pro, 1min for Flash
+                const generatePromise = ai.models.generateContent({
                     model: model,
                     contents: { parts },
                     config: config as any,
                 });
+
+                // Simple timeout implementation
+                const timeoutPromise = new Promise((_, reject) => {
+                    setTimeout(() => {
+                        const msg = language === 'it'
+                            ? `⏱️ Timeout dopo ${timeoutMs / 1000}s. ${model === 'gemini-3-pro-image-preview' ? 'Nano Banana Pro richiede più tempo del previsto.' : ''} Prova: 1) Riprova (il server potrebbe essere sovraccarico) 2) Usa meno immagini di riferimento 3) Semplifica il prompt 4) Usa Nano Banana Flash se hai fretta.`
+                            : `⏱️ Timeout after ${timeoutMs / 1000}s. ${model === 'gemini-3-pro-image-preview' ? 'Nano Banana Pro requires more time than expected.' : ''} Try: 1) Retry (server might be overloaded) 2) Use fewer reference images 3) Simplify prompt 4) Use Nano Banana Flash for faster results.`;
+                        reject(new Error(msg));
+                    }, timeoutMs);
+                });
+
+                result = await Promise.race([generatePromise, timeoutPromise]);
 
                 // Check for IMAGE_RECITATION and IMAGE_OTHER before processing
                 const candidate = result.candidates?.[0];
