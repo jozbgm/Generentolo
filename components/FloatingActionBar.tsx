@@ -11,6 +11,7 @@ interface FloatingActionBarProps {
 
     // Actions
     onGenerate: () => void;
+    onAbortGeneration: () => void; // v1.3
     onEnhancePrompt: () => void;
     onGenerate3Prompts: () => void;
 
@@ -57,6 +58,7 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
     onPromptChange,
     promptTextareaRef,
     onGenerate,
+    onAbortGeneration,
     onEnhancePrompt,
     onGenerate3Prompts,
     isLoading,
@@ -436,11 +438,10 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
 
                         {/* Primary Action - HERO BUTTON */}
                         <button
-                            onClick={onGenerate}
-                            disabled={isLoading}
-                            className="relative px-4 lg:px-6 py-2.5 lg:py-3 bg-gradient-to-r from-brand-yellow via-brand-magenta to-brand-yellow bg-[length:200%_100%] hover:bg-[position:100%_0] hover:scale-110 active:scale-95 rounded-xl font-bold text-white text-sm lg:text-base shadow-[0_0_20px_rgba(255,217,61,0.5)] hover:shadow-[0_0_30px_rgba(255,217,61,0.8)] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:shadow-lg whitespace-nowrap"
+                            onClick={isLoading ? onAbortGeneration : onGenerate}
+                            className={`relative px-4 lg:px-6 py-2.5 lg:py-3 ${isLoading ? 'bg-gradient-to-r from-red-500 to-red-600' : 'bg-gradient-to-r from-brand-yellow via-brand-magenta to-brand-yellow bg-[length:200%_100%] hover:bg-[position:100%_0]'} hover:scale-110 active:scale-95 rounded-xl font-bold text-white text-sm lg:text-base shadow-[0_0_20px_rgba(255,217,61,0.5)] hover:shadow-[0_0_30px_rgba(255,217,61,0.8)] transition-all duration-300 whitespace-nowrap`}
                         >
-                            {isLoading ? <span className="inline-block animate-pulse">⏳</span> : "⚡"} <span className="hidden sm:inline">{isLoading ? "Generating..." : "Generate"}</span>
+                            {isLoading ? <span className="inline-block">🛑</span> : "⚡"} <span className="hidden sm:inline">{isLoading ? t.abort || "Abort" : t.generateButton || "Generate"}</span>
                         </button>
                     </div>
                 )}

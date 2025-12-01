@@ -799,7 +799,8 @@ export const generateImage = async (
     preciseReference: boolean = false,
     model: ModelType = 'gemini-2.5-flash-image',
     resolution: ResolutionType = '2k',
-    textInImage?: TextInImageConfig
+    textInImage?: TextInImageConfig,
+    abortSignal?: AbortSignal
 ): Promise<string> => {
     try {
         const ai = getAiClient(userApiKey);
@@ -1012,6 +1013,16 @@ export const generateImage = async (
             config.seed = parseInt(seed, 10);
         }
 
+        // v1.3: Add abort signal support
+        if (abortSignal) {
+            config.abortSignal = abortSignal;
+        }
+
+        // v1.3: Add timeout via httpOptions
+        config.httpOptions = {
+            timeout: model === 'gemini-3-pro-image-preview' ? 180000 : 90000 // 3min for Pro, 1.5min for Flash
+        };
+
         console.log(`🚀 Model: ${model} | Resolution: ${resolution} | References: ${referenceFiles.length}`);
         console.log(`🔧 Config:`, JSON.stringify(config, null, 2));
 
@@ -1027,25 +1038,12 @@ export const generateImage = async (
 
         for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
             try {
-                // v1.3: Add timeout wrapper for Pro model to give better error messages
-                const timeoutMs = model === 'gemini-3-pro-image-preview' ? 120000 : 60000; // 2min for Pro, 1min for Flash
-                const generatePromise = ai.models.generateContent({
+                // v1.3: httpOptions.timeout now handles timeout at SDK level
+                result = await ai.models.generateContent({
                     model: model,
                     contents: { parts },
                     config: config as any,
                 });
-
-                // Simple timeout implementation
-                const timeoutPromise = new Promise((_, reject) => {
-                    setTimeout(() => {
-                        const msg = language === 'it'
-                            ? `⏱️ Timeout dopo ${timeoutMs / 1000}s. ${model === 'gemini-3-pro-image-preview' ? 'Nano Banana Pro richiede più tempo del previsto.' : ''} Prova: 1) Riprova (il server potrebbe essere sovraccarico) 2) Usa meno immagini di riferimento 3) Semplifica il prompt 4) Usa Nano Banana Flash se hai fretta.`
-                            : `⏱️ Timeout after ${timeoutMs / 1000}s. ${model === 'gemini-3-pro-image-preview' ? 'Nano Banana Pro requires more time than expected.' : ''} Try: 1) Retry (server might be overloaded) 2) Use fewer reference images 3) Simplify prompt 4) Use Nano Banana Flash for faster results.`;
-                        reject(new Error(msg));
-                    }, timeoutMs);
-                });
-
-                result = await Promise.race([generatePromise, timeoutPromise]);
 
                 // Check for IMAGE_RECITATION and IMAGE_OTHER before processing
                 const candidate = result.candidates?.[0];
@@ -1080,8 +1078,27 @@ export const generateImage = async (
             } catch (error: any) {
                 lastError = error;
 
-                // Check if error is retriable (500, 503, 429, network errors)
+                // v1.3: Get error message
                 const errorMessage = error?.message || '';
+
+                // v1.3: Check for abort (user cancelled)
+                if (error.name === 'AbortError' || errorMessage.includes('abort')) {
+                    const msg = language === 'it'
+                        ? '🛑 Generazione annullata dall\'utente.'
+                        : '🛑 Generation cancelled by user.';
+                    throw new Error(msg);
+                }
+
+                // v1.3: Check for timeout
+                if (errorMessage.includes('timeout') || errorMessage.includes('TIMEOUT')) {
+                    const timeoutMs = config.httpOptions?.timeout || 90000;
+                    const msg = language === 'it'
+                        ? `⏱️ Timeout dopo ${timeoutMs / 1000}s. ${model === 'gemini-3-pro-image-preview' ? 'Nano Banana Pro richiede più tempo.' : ''} Prova: 1) Riprova 2) Usa meno immagini 3) Semplifica prompt 4) Usa Nano Banana Flash.`
+                        : `⏱️ Timeout after ${timeoutMs / 1000}s. ${model === 'gemini-3-pro-image-preview' ? 'Nano Banana Pro requires more time.' : ''} Try: 1) Retry 2) Fewer images 3) Simpler prompt 4) Use Nano Banana Flash.`;
+                    throw new Error(msg);
+                }
+
+                // Check if error is retriable (500, 503, 429, network errors)
                 const isRetriable =
                     errorMessage.includes('500') ||
                     errorMessage.includes('503') ||

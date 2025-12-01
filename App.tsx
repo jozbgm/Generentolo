@@ -83,6 +83,7 @@ const translations = {
     fontModern: 'Modern',
     fontVintage: 'Vintage',
     generateButton: 'Generate',
+    abort: 'Abort',
     generatingButton: 'Generating...',
     generatingStatus: 'Generentolo is generating...',
     generatingSubtext: 'This can take a moment.',
@@ -237,6 +238,7 @@ const translations = {
     fontModern: 'Moderno',
     fontVintage: 'Vintage',
     generateButton: 'Genera',
+    abort: 'Annulla',
     generatingButton: 'In generazione...',
     generatingStatus: 'Generentolo sta generando...',
     generatingSubtext: 'Potrebbe volerci un momento.',
@@ -2044,6 +2046,7 @@ export default function App() {
     const [presets, setPresets] = useState<PromptPreset[]>([]);
     const [sidebarTab, setSidebarTab] = useState<'history' | 'presets'>('history');
     const promptTextareaRef = useRef<HTMLTextAreaElement>(null);
+    const abortControllerRef = useRef<AbortController | null>(null);
 
     const t = useMemo(() => translations[language], [language]);
 
@@ -2190,6 +2193,10 @@ export default function App() {
     const handleGenerate = useCallback(async () => {
         if (referenceImages.length === 0 && !editedPrompt && !styleReferenceImage) return;
 
+        // v1.3: Create new AbortController for this generation
+        const controller = new AbortController();
+        abortControllerRef.current = controller;
+
         setIsLoading(true);
         setCurrentImages([]);
         try {
@@ -2250,7 +2257,8 @@ export default function App() {
                         preciseReference,
                         selectedModel,
                         selectedResolution,
-                        textInImageConfig
+                        textInImageConfig,
+                        controller.signal
                     );
                     imageDataUrls.push(imageDataUrl);
                     console.log(`✅ Image ${index + 1}/${numImagesToGenerate} generated`);
@@ -2277,7 +2285,8 @@ export default function App() {
                             preciseReference,
                             selectedModel,
                             selectedResolution,
-                            textInImageConfig
+                            textInImageConfig,
+                            controller.signal
                         );
                     });
                     imageDataUrls.push(...await Promise.all(generationPromises));
@@ -2317,8 +2326,19 @@ export default function App() {
             showToast(error.message || t.generationFailed, 'error');
         } finally {
             setIsLoading(false);
+            abortControllerRef.current = null; // v1.3: Clear abort controller
         }
     }, [referenceImages, styleReferenceImage, structureImage, preciseReference, userApiKey, aspectRatio, showToast, t.generationFailed, language, editedPrompt, negativePrompt, seed, numImagesToGenerate, selectedModel, selectedResolution, textInImageConfig]);
+
+    // v1.3: Abort generation
+    const handleAbortGeneration = useCallback(() => {
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+            abortControllerRef.current = null;
+            setIsLoading(false);
+            showToast(language === 'it' ? '🛑 Generazione annullata' : '🛑 Generation cancelled', 'success');
+        }
+    }, [language, showToast]);
 
     // Image navigation in lightbox
     const getImageNavigation = useCallback(() => {
@@ -2861,6 +2881,7 @@ export default function App() {
                     onPromptChange={setEditedPrompt}
                     promptTextareaRef={promptTextareaRef}
                     onGenerate={handleGenerate}
+                    onAbortGeneration={handleAbortGeneration}
                     onEnhancePrompt={handleEnhancePrompt}
                     onGenerate3Prompts={handleGenerateCreativePrompts}
                     isLoading={isLoading}
