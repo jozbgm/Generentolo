@@ -1,4 +1,4 @@
-# 🎨 Generentolo PRO v1.3
+# 🎨 Generentolo PRO v1.3.1
 
 **Professional AI-Powered Image Generation Web Application**
 
@@ -13,7 +13,22 @@ A sophisticated web application for generating ultra-high-quality images using G
 
 ## ✨ Features
 
-### 🚀 **NEW v1.3: Optimized Presets & Performance**
+### 🚀 **NEW v1.3.1: Quick Win Features & UX Improvements**
+- **🎲 Variations with 1 Click** - Generate 4 variations of any image with different random seeds
+- **📋 Copy All Settings** - Instantly reuse ALL parameters from any image (prompt, model, resolution, aspect ratio, seed, negative prompt)
+- **⏸ Abort Generation** - Cancel ongoing generations with brand-styled abort button
+- **🐛 Mobile Safari Fix** - crypto.randomUUID() polyfill for iOS compatibility
+- **⚡ Enhanced API Reliability** - AbortController + configurable timeout support (180s Pro, 90s Flash)
+- **🎨 Improved Cost UX** - Cost calculator moved from floating bar to reduce user intimidation
+- **🔧 Sequential Generation** - Optimized handling for multi-reference and Pro model scenarios
+- Perfect for:
+  - Quick iteration workflows
+  - Testing multiple style variations
+  - Rapid prototyping with consistent settings
+  - Mobile users on iOS Safari
+  - Professional agencies needing reliable cancellation
+
+### 🎨 **v1.3: Optimized Presets & Performance**
 - **Professional JSON Presets** for Nano Banana Flash & Pro 3.0
 - **10+ Curated Templates** based on 2025 best practices
 - **Detailed Prompt Engineering Guidelines** built-in
@@ -296,6 +311,73 @@ A sophisticated web application for generating ultra-high-quality images using G
 ---
 
 ## 📋 Changelog
+
+### v1.3.1 (December 2025) ⚡
+**🎉 QUICK WIN FEATURES - Enhanced Workflow & Reliability:**
+
+**🎲 NEW: Variations with 1 Click**
+- Generate 4 variations of any image with different random seeds
+- One-click button (🎲) on history panel images
+- Sequential generation to prevent API overload
+- Maintains original prompt, aspect ratio, model, and resolution
+- Perfect for rapid iteration and A/B testing
+- Loading state prevents multiple simultaneous generations
+
+**📋 NEW: Copy All Settings**
+- One-click button (📋) to copy ALL parameters from any image
+- Copies and applies:
+  - Prompt (fills textarea)
+  - Aspect ratio
+  - Model (Flash/Pro)
+  - Resolution (1K/2K/4K)
+  - Seed
+  - Negative prompt
+- Toast notification confirms successful copy
+- Faster than manual "Reuse" workflow
+
+**⏸ NEW: Abort Generation**
+- Cancel ongoing generations instantly
+- Brand-styled button with purple/magenta gradient
+- Works in both compact and expanded floating bar modes
+- AbortController implementation across entire API chain
+- User-friendly toast notifications
+- Proper cleanup and state management
+
+**🐛 FIXED: Mobile Safari Compatibility**
+- crypto.randomUUID() polyfill for iOS Safari <15.4
+- RFC4122 v4 compliant UUID generation
+- Fixes crashes on older iOS devices
+- Placed at App.tsx entry point
+
+**⚡ ENHANCED: API Reliability**
+- AbortSignal support throughout Gemini SDK calls
+- Configurable HTTP timeouts:
+  - 180 seconds (3 min) for Nano Banana Pro
+  - 90 seconds (1.5 min) for Nano Banana Flash
+- Improved error handling for abort/timeout scenarios
+- Better retry logic with exponential backoff
+- Sequential generation for complex scenarios (multi-reference + Pro)
+
+**🎨 UX IMPROVEMENTS**
+- Cost calculator removed from floating bar (less intimidating)
+- Abort button uses brand palette (purple/magenta)
+- Pause icon (⏸) for visual clarity
+- Consistent button styling across viewports
+- Improved mobile responsiveness
+
+**🔧 Technical Details**
+- `abortControllerRef` with React useRef pattern
+- `handleAbortGeneration` callback with proper cleanup
+- `variationsLoadingId` state for loading tracking
+- `handleCopySettings` with comprehensive parameter transfer
+- Enhanced error messages for Italian/English
+
+**📊 Files Modified**
+- `App.tsx`: +150 lines (abort controller, variations, copy settings, polyfill)
+- `components/FloatingActionBar.tsx`: Abort button integration, cost calculator removal
+- `services/geminiService.ts`: AbortSignal + timeout support
+
+---
 
 ### v1.2.0 (December 2025) 📚
 **🎉 PROMPT LIBRARY RELEASE - Professional Templates:**
