@@ -3,7 +3,7 @@ import { GeneratedImage, DynamicTool, PromptPreset, ModelType, ResolutionType, T
 import * as geminiService from './services/geminiService';
 import * as presetsService from './services/presetsService';
 import { useKeyboardShortcuts, APP_SHORTCUTS } from './hooks/useKeyboardShortcuts';
-import { SunIcon, MoonIcon, UploadIcon, DownloadIcon, ZoomInIcon, SparklesIcon, CopyIcon, SettingsIcon, XIcon, CheckIcon, LanguageIcon, WandIcon, InfoIcon, AlertTriangleIcon, BrushIcon, DiceIcon, TrashIcon, ReloadIcon, EnvelopeIcon, StarIcon, CornerUpLeftIcon, ChevronLeftIcon, ChevronRightIcon, SearchIcon } from './components/icons';
+import { SunIcon, MoonIcon, UploadIcon, DownloadIcon, ZoomInIcon, SparklesIcon, CopyIcon, SettingsIcon, XIcon, CheckIcon, LanguageIcon, WandIcon, InfoIcon, AlertTriangleIcon, BrushIcon, DiceIcon, TrashIcon, ReloadIcon, EnvelopeIcon, StarIcon, CornerUpLeftIcon, ChevronLeftIcon, ChevronRightIcon, SearchIcon, ChartIcon } from './components/icons';
 import FloatingActionBar from './components/FloatingActionBar';
 import ZoomableImage from './components/ZoomableImage';
 import PromptLibrary from './components/PromptLibrary';
@@ -477,7 +477,7 @@ const Header: React.FC<HeaderProps> = ({ theme, toggleTheme, onOpenSettings, onO
                     <span className="hidden sm:inline">Prompts</span>
                 </button>
                 <button onClick={onOpenUsageTracker} className="p-2 rounded-full text-light-text-muted dark:text-dark-text-muted hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors" title={t.usageTrackerTitle}>
-                    📊
+                    <ChartIcon className="w-5 h-5" />
                 </button>
                 <button onClick={onOpenHelp} className="p-2 rounded-full text-light-text-muted dark:text-dark-text-muted hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors" title="Help Guide">
                     <InfoIcon className="w-5 h-5" />
@@ -669,6 +669,150 @@ const ReferencePanel: React.FC<{
                     <input id="structure-file-upload" type="file" className="hidden" accept="image/*" onChange={handleStructureFileChange} />
                 </div>
             </div>
+
+            {/* Style Presets Section - Always Visible */}
+            <div className="border-t border-light-border dark:border-dark-border/50 pt-4"></div>
+            <div className="space-y-2">
+                <h3 className="font-semibold text-light-text dark:text-dark-text flex items-center gap-2">
+                    <span>🎨</span>
+                    <span>{t.stylePresetsTitle}</span>
+                </h3>
+                <select
+                    value={selectedStylePreset || ''}
+                    onChange={(e) => {
+                        const presetId = e.target.value || null;
+                        setSelectedStylePreset(presetId);
+                        if (presetId) {
+                            const preset = STYLE_PRESETS.find(p => p.id === presetId);
+                            if (preset) {
+                                setPrompt(prev => {
+                                    const cleanPrompt = prev.replace(/,\s*(oil painting style|watercolor style|anime style|pixel art style|vector illustration|professional product photography|professional portrait photography|cinematic film style|street photography|macro photography|isometric view|UI\/UX design mockup|infographic design|social media post design|typography art)[^,]*/gi, '');
+                                    return cleanPrompt + preset.promptSuffix;
+                                });
+                            }
+                        }
+                    }}
+                    className="w-full px-3 py-2 rounded-lg bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border text-light-text dark:text-dark-text text-sm focus:outline-none focus:ring-2 focus:ring-brand-yellow/50"
+                >
+                    <option value="">{language === 'it' ? 'Nessuno' : 'None'}</option>
+                    {STYLE_PRESETS.map(preset => (
+                        <option key={preset.id} value={preset.id}>
+                            {preset.icon} {language === 'it' ? preset.nameIt : preset.name}
+                        </option>
+                    ))}
+                </select>
+                {selectedStylePreset && (
+                    <p className="text-xs text-light-text-muted dark:text-dark-text-muted">
+                        {STYLE_PRESETS.find(p => p.id === selectedStylePreset)?.[language === 'it' ? 'descriptionIt' : 'description']}
+                    </p>
+                )}
+            </div>
+
+            {/* Physics Controls Section - Visible for PRO model */}
+            {selectedModel === 'gemini-3-pro-image-preview' && (
+                <>
+                    <div className="border-t border-light-border dark:border-dark-border/50 pt-4"></div>
+                    <div className="space-y-3">
+                        <h3 className="font-semibold text-light-text dark:text-dark-text flex items-center gap-2">
+                            <span>⚙️</span>
+                            <span>{t.physicsControlTitle}</span>
+                        </h3>
+
+                        {/* Lighting Control */}
+                        <div className="space-y-1">
+                            <label className="text-xs font-medium text-light-text-muted dark:text-dark-text-muted">
+                                {language === 'it' ? 'Illuminazione' : 'Lighting'}
+                            </label>
+                            <select
+                                value={selectedLighting || ''}
+                                onChange={(e) => {
+                                    const lightingId = e.target.value || null;
+                                    setSelectedLighting(lightingId);
+                                    if (lightingId) {
+                                        const preset = PHYSICS_PRESETS.lighting.find(p => p.id === lightingId);
+                                        if (preset) {
+                                            setPrompt(prev => {
+                                                const cleanPrompt = prev.replace(/,\s*(soft studio lighting|golden hour lighting|dramatic lighting|neon lighting|natural daylight)[^,]*/gi, '');
+                                                return cleanPrompt + ', ' + preset.prompt;
+                                            });
+                                        }
+                                    }
+                                }}
+                                className="w-full px-3 py-2 rounded-lg bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border text-light-text dark:text-dark-text text-sm focus:outline-none focus:ring-2 focus:ring-brand-yellow/50"
+                            >
+                                <option value="">{language === 'it' ? 'Nessuna' : 'None'}</option>
+                                {PHYSICS_PRESETS.lighting.map(preset => (
+                                    <option key={preset.id} value={preset.id}>
+                                        {language === 'it' ? preset.nameIt : preset.name}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {/* Camera Control */}
+                        <div className="space-y-1">
+                            <label className="text-xs font-medium text-light-text-muted dark:text-dark-text-muted">
+                                {language === 'it' ? 'Fotocamera' : 'Camera'}
+                            </label>
+                            <select
+                                value={selectedCamera || ''}
+                                onChange={(e) => {
+                                    const cameraId = e.target.value || null;
+                                    setSelectedCamera(cameraId);
+                                    if (cameraId) {
+                                        const preset = PHYSICS_PRESETS.camera.find(p => p.id === cameraId);
+                                        if (preset) {
+                                            setPrompt(prev => {
+                                                const cleanPrompt = prev.replace(/,\s*(wide angle lens|portrait lens|macro lens|telephoto lens|fisheye lens)[^,]*/gi, '');
+                                                return cleanPrompt + ', ' + preset.prompt;
+                                            });
+                                        }
+                                    }
+                                }}
+                                className="w-full px-3 py-2 rounded-lg bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border text-light-text dark:text-dark-text text-sm focus:outline-none focus:ring-2 focus:ring-brand-yellow/50"
+                            >
+                                <option value="">{language === 'it' ? 'Nessuna' : 'None'}</option>
+                                {PHYSICS_PRESETS.camera.map(preset => (
+                                    <option key={preset.id} value={preset.id}>
+                                        {language === 'it' ? preset.nameIt : preset.name}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {/* Focus Control */}
+                        <div className="space-y-1">
+                            <label className="text-xs font-medium text-light-text-muted dark:text-dark-text-muted">
+                                {language === 'it' ? 'Messa a Fuoco' : 'Focus'}
+                            </label>
+                            <select
+                                value={selectedFocus || ''}
+                                onChange={(e) => {
+                                    const focusId = e.target.value || null;
+                                    setSelectedFocus(focusId);
+                                    if (focusId) {
+                                        const preset = PHYSICS_PRESETS.focus.find(p => p.id === focusId);
+                                        if (preset) {
+                                            setPrompt(prev => {
+                                                const cleanPrompt = prev.replace(/,\s*(shallow depth of field|tack sharp|cinematic depth of field|tilt-shift effect|soft focus)[^,]*/gi, '');
+                                                return cleanPrompt + ', ' + preset.prompt;
+                                            });
+                                        }
+                                    }
+                                }}
+                                className="w-full px-3 py-2 rounded-lg bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border text-light-text dark:text-dark-text text-sm focus:outline-none focus:ring-2 focus:ring-brand-yellow/50"
+                            >
+                                <option value="">{language === 'it' ? 'Nessuna' : 'None'}</option>
+                                {PHYSICS_PRESETS.focus.map(preset => (
+                                    <option key={preset.id} value={preset.id}>
+                                        {language === 'it' ? preset.nameIt : preset.name}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
+                </>
+            )}
         </div>
     );
 };
@@ -1575,109 +1719,11 @@ interface CreativePromptsPanelProps {
     selectedPrompt: string;
     isLoading: boolean;
     hasImages: boolean;
-    // v1.4
-    editedPrompt: string;
-    onEditedPromptChange: (prompt: string) => void;
-    selectedModel: ModelType;
-    selectedStylePreset: string | null;
-    setSelectedStylePreset: (id: string | null) => void;
-    selectedLighting: string | null;
-    setSelectedLighting: (id: string | null) => void;
-    selectedCamera: string | null;
-    setSelectedCamera: (id: string | null) => void;
-    selectedFocus: string | null;
-    setSelectedFocus: (id: string | null) => void;
 }
-const CreativePromptsPanel: React.FC<CreativePromptsPanelProps> = ({ prompts, onSelectPrompt, onGenerate, selectedPrompt, isLoading, hasImages, editedPrompt, onEditedPromptChange, selectedModel, selectedStylePreset, setSelectedStylePreset, selectedLighting, setSelectedLighting, selectedCamera, setSelectedCamera, selectedFocus, setSelectedFocus }) => {
-    const { t, language } = useLocalization();
+const CreativePromptsPanel: React.FC<CreativePromptsPanelProps> = ({ prompts, onSelectPrompt, onGenerate, selectedPrompt, isLoading, hasImages }) => {
+    const { t } = useLocalization();
     return (
         <div className="flex-shrink-0 w-full p-4 bg-light-surface/50 dark:bg-dark-surface/30 backdrop-blur-xl rounded-2xl border border-light-border dark:border-dark-border/50 shadow-sm">
-            {/* v1.4: Style Presets - Quick style application */}
-            <div className="mb-4 pb-4 border-b border-light-border dark:border-dark-border">
-                <h4 className="text-xs font-semibold text-light-text-muted dark:text-dark-text-muted uppercase tracking-wider mb-2">{t.stylePresetsTitle}</h4>
-                <select
-                    value={selectedStylePreset || ''}
-                    onChange={(e) => {
-                        const presetId = e.target.value;
-                        setSelectedStylePreset(presetId || null);
-                        if (presetId) {
-                            const preset = STYLE_PRESETS.find(p => p.id === presetId);
-                            if (preset) {
-                                onEditedPromptChange(editedPrompt + preset.promptSuffix);
-                            }
-                        }
-                    }}
-                    className="w-full p-2 text-sm bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded-lg focus:ring-2 focus:ring-brand-purple focus:outline-none"
-                >
-                    <option value="">{t.stylePresetsNone}</option>
-                    {STYLE_PRESETS.map(preset => (
-                        <option key={preset.id} value={preset.id}>
-                            {preset.icon} {language === 'it' ? preset.nameIt : preset.name}
-                        </option>
-                    ))}
-                </select>
-            </div>
-
-            {/* v1.4: Physics Controls - Professional camera/lighting presets (PRO only) */}
-            {selectedModel === 'gemini-3-pro-image-preview' && (
-                <div className="mb-4 pb-4 border-b border-light-border dark:border-dark-border">
-                    <h4 className="text-xs font-semibold text-light-text-muted dark:text-dark-text-muted uppercase tracking-wider mb-2">{t.physicsControlTitle}</h4>
-                    <div className="grid grid-cols-3 gap-2">
-                        <select
-                            value={selectedLighting || ''}
-                            onChange={(e) => {
-                                const id = e.target.value;
-                                setSelectedLighting(id || null);
-                                if (id) {
-                                    const preset = PHYSICS_PRESETS.lighting.find(p => p.id === id);
-                                    if (preset) onEditedPromptChange(editedPrompt + ', ' + preset.prompt);
-                                }
-                            }}
-                            className="w-full p-1.5 text-xs bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded focus:ring-1 focus:ring-brand-purple focus:outline-none"
-                        >
-                            <option value="">💡 {t.lightingLabel}</option>
-                            {PHYSICS_PRESETS.lighting.map(p => (
-                                <option key={p.id} value={p.id}>{language === 'it' ? p.nameIt : p.name}</option>
-                            ))}
-                        </select>
-                        <select
-                            value={selectedCamera || ''}
-                            onChange={(e) => {
-                                const id = e.target.value;
-                                setSelectedCamera(id || null);
-                                if (id) {
-                                    const preset = PHYSICS_PRESETS.camera.find(p => p.id === id);
-                                    if (preset) onEditedPromptChange(editedPrompt + ', ' + preset.prompt);
-                                }
-                            }}
-                            className="w-full p-1.5 text-xs bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded focus:ring-1 focus:ring-brand-purple focus:outline-none"
-                        >
-                            <option value="">📷 {t.cameraLabel}</option>
-                            {PHYSICS_PRESETS.camera.map(p => (
-                                <option key={p.id} value={p.id}>{language === 'it' ? p.nameIt : p.name}</option>
-                            ))}
-                        </select>
-                        <select
-                            value={selectedFocus || ''}
-                            onChange={(e) => {
-                                const id = e.target.value;
-                                setSelectedFocus(id || null);
-                                if (id) {
-                                    const preset = PHYSICS_PRESETS.focus.find(p => p.id === id);
-                                    if (preset) onEditedPromptChange(editedPrompt + ', ' + preset.prompt);
-                                }
-                            }}
-                            className="w-full p-1.5 text-xs bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded focus:ring-1 focus:ring-brand-purple focus:outline-none"
-                        >
-                            <option value="">🎯 {t.focusLabel}</option>
-                            {PHYSICS_PRESETS.focus.map(p => (
-                                <option key={p.id} value={p.id}>{language === 'it' ? p.nameIt : p.name}</option>
-                            ))}
-                        </select>
-                    </div>
-                </div>
-            )}
-
             <div className="flex justify-between items-center mb-3">
                 <h4 className="text-xs font-semibold text-light-text-muted dark:text-dark-text-muted uppercase tracking-wider">{t.creativePromptsTitle}</h4>
                 {prompts.length > 0 && hasImages && (
@@ -3053,17 +3099,6 @@ export default function App() {
                                     selectedPrompt={editedPrompt}
                                     isLoading={isPromptsLoading}
                                     hasImages={(referenceImages.length > 0 || !!styleReferenceImage)}
-                                    editedPrompt={editedPrompt}
-                                    onEditedPromptChange={setEditedPrompt}
-                                    selectedModel={selectedModel}
-                                    selectedStylePreset={selectedStylePreset}
-                                    setSelectedStylePreset={setSelectedStylePreset}
-                                    selectedLighting={selectedLighting}
-                                    setSelectedLighting={setSelectedLighting}
-                                    selectedCamera={selectedCamera}
-                                    setSelectedCamera={setSelectedCamera}
-                                    selectedFocus={selectedFocus}
-                                    setSelectedFocus={setSelectedFocus}
                                 />
                             )}
 
