@@ -1,8 +1,8 @@
-# 🎨 Generentolo PRO v1.3.1
+# 🎨 Generentolo PRO v1.4.0
 
 **Professional AI-Powered Image Generation Web Application**
 
-A sophisticated web application for generating ultra-high-quality images using Google's Gemini models (Flash & **Nano Banana PRO 3.0**) with ControlNet-like structure guidance, 4K resolution support, native upscaling, professional prompt library with optimized presets, and text-in-image capabilities. Designed for graphic design agencies, marketers, and creative professionals who demand the highest quality and precision.
+A sophisticated web application for generating ultra-high-quality images using Google's Gemini models (Flash & **Nano Banana PRO 3.0**) with Google Search Grounding, style presets, physics controls, usage tracking, ControlNet-like structure guidance, 4K resolution support, native upscaling, professional prompt library with optimized presets, and text-in-image capabilities. Designed for graphic design agencies, marketers, and creative professionals who demand the highest quality and precision.
 
 [![Live Demo](https://img.shields.io/badge/Live-Demo-blue?style=for-the-badge)](https://www.dugongo.it/generentolo/)
 [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
@@ -13,7 +13,36 @@ A sophisticated web application for generating ultra-high-quality images using G
 
 ## ✨ Features
 
-### 🚀 **NEW v1.3.1: Quick Win Features & UX Improvements**
+### 🌟 **NEW v1.4.0: Nano Banana Pro 3.0 Advanced Features**
+- **🌐 Google Search Grounding** - Generate images with real-time data from Google Search (PRO only)
+  - Current weather maps, stock charts, recent events
+  - Unique feature - no other consumer app has this!
+  - Automatic fact verification and data-driven outputs
+- **🎨 Style Presets Gallery** - 15+ one-click style applications
+  - Artistic: Oil Painting, Watercolor, Anime, Pixel Art, Vector
+  - Photo: Product Photography, Portrait Studio, Cinematic, Street, Macro
+  - Scene: Isometric Game, UI/UX Mockup, Infographic, Social Media
+  - Text: Typography Art
+- **📸 Physics Control Presets** - Professional camera and lighting control
+  - Lighting: Soft Studio, Golden Hour, Dramatic Shadows, Neon, Natural
+  - Camera: Wide Angle, Portrait 50mm, Macro, Telephoto, Fisheye
+  - Focus: Bokeh, Tack Sharp, Cinematic DOF, Tilt-Shift, Soft Focus
+- **📊 Usage Tracker** - Session statistics and cost monitoring
+  - Real-time tracking of images generated, total cost, tokens used
+  - Average generation time per image
+  - Transparent cost breakdown
+- **🔄 Smart Auto-Fallback** - Automatic retry with Flash when Pro blocks
+  - Handles `blockReason: "OTHER"` gracefully
+  - Transparent user notification
+  - Cost-effective alternative path
+- Perfect for:
+  - Real-time data visualization (weather, sports, stocks)
+  - Professional photography with precise lighting control
+  - Quick style iterations with preset templates
+  - Cost-conscious workflows with usage monitoring
+  - Agencies requiring reliable generation paths
+
+### 🚀 **v1.3.1: Quick Win Features & UX Improvements**
 - **🎲 Variations with 1 Click** - Generate 4 variations of any image with different random seeds
 - **📋 Copy All Settings** - Instantly reuse ALL parameters from any image (prompt, model, resolution, aspect ratio, seed, negative prompt)
 - **⏸ Abort Generation** - Cancel ongoing generations with brand-styled abort button

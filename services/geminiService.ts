@@ -823,7 +823,8 @@ export const generateImage = async (
     model: ModelType = 'gemini-2.5-flash-image',
     resolution: ResolutionType = '2k',
     textInImage?: TextInImageConfig,
-    abortSignal?: AbortSignal
+    abortSignal?: AbortSignal,
+    useGrounding?: boolean // v1.4: Google Search Grounding
 ): Promise<string> => {
     try {
         const ai = getAiClient(userApiKey);
@@ -1034,6 +1035,14 @@ export const generateImage = async (
 
         if (seed && /^\d+$/.test(seed)) {
             config.seed = parseInt(seed, 10);
+        }
+
+        // v1.4: Google Search Grounding support
+        if (useGrounding && model === 'gemini-3-pro-image-preview') {
+            config.tools = [{
+                googleSearch: {}
+            }];
+            console.log('🌐 Google Search Grounding enabled - using real-time data');
         }
 
         // v1.3: Add abort signal support
