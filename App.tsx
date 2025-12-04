@@ -565,8 +565,8 @@ const ReferencePanel: React.FC<{
     selectedFocus: string | null;
     setSelectedFocus: (id: string | null) => void;
     selectedModel: ModelType;
-    setPrompt: (value: string | ((prev: string) => string)) => void;
-}> = ({ onAddImages, onRemoveImage, referenceImages, onAddStyleImage, onRemoveStyleImage, styleImage, onAddStructureImage, onRemoveStructureImage, structureImage, selectedStylePreset, setSelectedStylePreset, selectedLighting, setSelectedLighting, selectedCamera, setSelectedCamera, selectedFocus, setSelectedFocus, selectedModel, setPrompt }) => {
+    setEditedPrompt: (value: string | ((prev: string) => string)) => void;
+}> = ({ onAddImages, onRemoveImage, referenceImages, onAddStyleImage, onRemoveStyleImage, styleImage, onAddStructureImage, onRemoveStructureImage, structureImage, selectedStylePreset, setSelectedStylePreset, selectedLighting, setSelectedLighting, selectedCamera, setSelectedCamera, selectedFocus, setSelectedFocus, selectedModel, setEditedPrompt }) => {
     const { t, language } = useLocalization();
     const [isDraggingRef, setIsDraggingRef] = useState(false);
     const [isDraggingStyle, setIsDraggingStyle] = useState(false);
@@ -696,7 +696,7 @@ const ReferencePanel: React.FC<{
                         if (presetId) {
                             const preset = STYLE_PRESETS.find(p => p.id === presetId);
                             if (preset) {
-                                setPrompt(prev => {
+                                setEditedPrompt(prev => {
                                     const cleanPrompt = prev.replace(/,\s*(oil painting style|watercolor style|anime style|pixel art style|vector illustration|professional product photography|professional portrait photography|cinematic film style|street photography|macro photography|isometric view|UI\/UX design mockup|infographic design|social media post design|typography art)[^,]*/gi, '');
                                     return cleanPrompt + preset.promptSuffix;
                                 });
@@ -742,7 +742,7 @@ const ReferencePanel: React.FC<{
                                     if (lightingId) {
                                         const preset = PHYSICS_PRESETS.lighting.find(p => p.id === lightingId);
                                         if (preset) {
-                                            setPrompt(prev => {
+                                            setEditedPrompt(prev => {
                                                 const cleanPrompt = prev.replace(/,\s*(soft studio lighting|golden hour lighting|dramatic lighting|neon lighting|natural daylight)[^,]*/gi, '');
                                                 return cleanPrompt + ', ' + preset.prompt;
                                             });
@@ -773,7 +773,7 @@ const ReferencePanel: React.FC<{
                                     if (cameraId) {
                                         const preset = PHYSICS_PRESETS.camera.find(p => p.id === cameraId);
                                         if (preset) {
-                                            setPrompt(prev => {
+                                            setEditedPrompt(prev => {
                                                 const cleanPrompt = prev.replace(/,\s*(wide angle lens|portrait lens|macro lens|telephoto lens|fisheye lens)[^,]*/gi, '');
                                                 return cleanPrompt + ', ' + preset.prompt;
                                             });
@@ -804,7 +804,7 @@ const ReferencePanel: React.FC<{
                                     if (focusId) {
                                         const preset = PHYSICS_PRESETS.focus.find(p => p.id === focusId);
                                         if (preset) {
-                                            setPrompt(prev => {
+                                            setEditedPrompt(prev => {
                                                 const cleanPrompt = prev.replace(/,\s*(shallow depth of field|tack sharp|cinematic depth of field|tilt-shift effect|soft focus)[^,]*/gi, '');
                                                 return cleanPrompt + ', ' + preset.prompt;
                                             });
@@ -3100,7 +3100,7 @@ export default function App() {
                             selectedFocus={selectedFocus}
                             setSelectedFocus={setSelectedFocus}
                             selectedModel={selectedModel}
-                            setPrompt={setPrompt}
+                            setEditedPrompt={setEditedPrompt}
                         />
                     </aside>
 
