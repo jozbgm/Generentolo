@@ -1575,11 +1575,109 @@ interface CreativePromptsPanelProps {
     selectedPrompt: string;
     isLoading: boolean;
     hasImages: boolean;
+    // v1.4
+    editedPrompt: string;
+    onEditedPromptChange: (prompt: string) => void;
+    selectedModel: ModelType;
+    selectedStylePreset: string | null;
+    setSelectedStylePreset: (id: string | null) => void;
+    selectedLighting: string | null;
+    setSelectedLighting: (id: string | null) => void;
+    selectedCamera: string | null;
+    setSelectedCamera: (id: string | null) => void;
+    selectedFocus: string | null;
+    setSelectedFocus: (id: string | null) => void;
 }
-const CreativePromptsPanel: React.FC<CreativePromptsPanelProps> = ({ prompts, onSelectPrompt, onGenerate, selectedPrompt, isLoading, hasImages }) => {
-    const { t } = useLocalization();
+const CreativePromptsPanel: React.FC<CreativePromptsPanelProps> = ({ prompts, onSelectPrompt, onGenerate, selectedPrompt, isLoading, hasImages, editedPrompt, onEditedPromptChange, selectedModel, selectedStylePreset, setSelectedStylePreset, selectedLighting, setSelectedLighting, selectedCamera, setSelectedCamera, selectedFocus, setSelectedFocus }) => {
+    const { t, language } = useLocalization();
     return (
         <div className="flex-shrink-0 w-full p-4 bg-light-surface/50 dark:bg-dark-surface/30 backdrop-blur-xl rounded-2xl border border-light-border dark:border-dark-border/50 shadow-sm">
+            {/* v1.4: Style Presets - Quick style application */}
+            <div className="mb-4 pb-4 border-b border-light-border dark:border-dark-border">
+                <h4 className="text-xs font-semibold text-light-text-muted dark:text-dark-text-muted uppercase tracking-wider mb-2">{t.stylePresetsTitle}</h4>
+                <select
+                    value={selectedStylePreset || ''}
+                    onChange={(e) => {
+                        const presetId = e.target.value;
+                        setSelectedStylePreset(presetId || null);
+                        if (presetId) {
+                            const preset = STYLE_PRESETS.find(p => p.id === presetId);
+                            if (preset) {
+                                onEditedPromptChange(editedPrompt + preset.promptSuffix);
+                            }
+                        }
+                    }}
+                    className="w-full p-2 text-sm bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded-lg focus:ring-2 focus:ring-brand-purple focus:outline-none"
+                >
+                    <option value="">{t.stylePresetsNone}</option>
+                    {STYLE_PRESETS.map(preset => (
+                        <option key={preset.id} value={preset.id}>
+                            {preset.icon} {language === 'it' ? preset.nameIt : preset.name}
+                        </option>
+                    ))}
+                </select>
+            </div>
+
+            {/* v1.4: Physics Controls - Professional camera/lighting presets (PRO only) */}
+            {selectedModel === 'gemini-3-pro-image-preview' && (
+                <div className="mb-4 pb-4 border-b border-light-border dark:border-dark-border">
+                    <h4 className="text-xs font-semibold text-light-text-muted dark:text-dark-text-muted uppercase tracking-wider mb-2">{t.physicsControlTitle}</h4>
+                    <div className="grid grid-cols-3 gap-2">
+                        <select
+                            value={selectedLighting || ''}
+                            onChange={(e) => {
+                                const id = e.target.value;
+                                setSelectedLighting(id || null);
+                                if (id) {
+                                    const preset = PHYSICS_PRESETS.lighting.find(p => p.id === id);
+                                    if (preset) onEditedPromptChange(editedPrompt + ', ' + preset.prompt);
+                                }
+                            }}
+                            className="w-full p-1.5 text-xs bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded focus:ring-1 focus:ring-brand-purple focus:outline-none"
+                        >
+                            <option value="">💡 {t.lightingLabel}</option>
+                            {PHYSICS_PRESETS.lighting.map(p => (
+                                <option key={p.id} value={p.id}>{language === 'it' ? p.nameIt : p.name}</option>
+                            ))}
+                        </select>
+                        <select
+                            value={selectedCamera || ''}
+                            onChange={(e) => {
+                                const id = e.target.value;
+                                setSelectedCamera(id || null);
+                                if (id) {
+                                    const preset = PHYSICS_PRESETS.camera.find(p => p.id === id);
+                                    if (preset) onEditedPromptChange(editedPrompt + ', ' + preset.prompt);
+                                }
+                            }}
+                            className="w-full p-1.5 text-xs bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded focus:ring-1 focus:ring-brand-purple focus:outline-none"
+                        >
+                            <option value="">📷 {t.cameraLabel}</option>
+                            {PHYSICS_PRESETS.camera.map(p => (
+                                <option key={p.id} value={p.id}>{language === 'it' ? p.nameIt : p.name}</option>
+                            ))}
+                        </select>
+                        <select
+                            value={selectedFocus || ''}
+                            onChange={(e) => {
+                                const id = e.target.value;
+                                setSelectedFocus(id || null);
+                                if (id) {
+                                    const preset = PHYSICS_PRESETS.focus.find(p => p.id === id);
+                                    if (preset) onEditedPromptChange(editedPrompt + ', ' + preset.prompt);
+                                }
+                            }}
+                            className="w-full p-1.5 text-xs bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded focus:ring-1 focus:ring-brand-purple focus:outline-none"
+                        >
+                            <option value="">🎯 {t.focusLabel}</option>
+                            {PHYSICS_PRESETS.focus.map(p => (
+                                <option key={p.id} value={p.id}>{language === 'it' ? p.nameIt : p.name}</option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
+            )}
+
             <div className="flex justify-between items-center mb-3">
                 <h4 className="text-xs font-semibold text-light-text-muted dark:text-dark-text-muted uppercase tracking-wider">{t.creativePromptsTitle}</h4>
                 {prompts.length > 0 && hasImages && (
@@ -2948,13 +3046,24 @@ export default function App() {
                         {((referenceImages.length > 0 || !!styleReferenceImage) || currentImages.length === 1) && (
                             <div className="flex-shrink-0 space-y-2 lg:space-y-4 overflow-y-auto max-h-[300px] lg:max-h-[250px]">
                                {(referenceImages.length > 0 || !!styleReferenceImage) && (
-                                <CreativePromptsPanel 
-                                    prompts={prompts} 
-                                    onSelectPrompt={setEditedPrompt} 
+                                <CreativePromptsPanel
+                                    prompts={prompts}
+                                    onSelectPrompt={setEditedPrompt}
                                     onGenerate={handleGenerateCreativePrompts}
                                     selectedPrompt={editedPrompt}
                                     isLoading={isPromptsLoading}
                                     hasImages={(referenceImages.length > 0 || !!styleReferenceImage)}
+                                    editedPrompt={editedPrompt}
+                                    onEditedPromptChange={setEditedPrompt}
+                                    selectedModel={selectedModel}
+                                    selectedStylePreset={selectedStylePreset}
+                                    setSelectedStylePreset={setSelectedStylePreset}
+                                    selectedLighting={selectedLighting}
+                                    setSelectedLighting={setSelectedLighting}
+                                    selectedCamera={selectedCamera}
+                                    setSelectedCamera={setSelectedCamera}
+                                    selectedFocus={selectedFocus}
+                                    setSelectedFocus={setSelectedFocus}
                                 />
                             )}
 
