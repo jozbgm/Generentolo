@@ -1037,8 +1037,8 @@ export const generateImage = async (
             config.seed = parseInt(seed, 10);
         }
 
-        // v1.4: Google Search Grounding support
-        if (useGrounding && model === 'gemini-3-pro-image-preview') {
+        // v1.4: Google Search Grounding support (all models)
+        if (useGrounding) {
             config.tools = [{
                 googleSearch: {}
             }];
