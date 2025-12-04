@@ -175,7 +175,7 @@ const translations = {
     groundingTooltip: 'Use real-time data from Google Search (weather, stocks, events). PRO model only.',
     stylePresetsTitle: 'Quick Style Presets',
     stylePresetsNone: 'None',
-    physicsControlTitle: 'Physics Controls (PRO)',
+    physicsControlTitle: 'Physics Controls',
     lightingLabel: 'Lighting',
     cameraLabel: 'Camera',
     focusLabel: 'Focus',
@@ -340,7 +340,7 @@ const translations = {
     groundingTooltip: 'Usa dati real-time da Google Search (meteo, borsa, eventi). Solo modello PRO.',
     stylePresetsTitle: 'Preset Stile Rapidi',
     stylePresetsNone: 'Nessuno',
-    physicsControlTitle: 'Controlli Fisica (PRO)',
+    physicsControlTitle: 'Controlli Fisica',
     lightingLabel: 'Illuminazione',
     cameraLabel: 'Fotocamera',
     focusLabel: 'Fuoco',
@@ -719,15 +719,13 @@ const ReferencePanel: React.FC<{
                 )}
             </div>
 
-            {/* Physics Controls Section - Visible for PRO model */}
-            {selectedModel === 'gemini-3-pro-image-preview' && (
-                <>
-                    <div className="border-t border-light-border dark:border-dark-border/50 pt-4"></div>
-                    <div className="space-y-3">
-                        <h3 className="font-semibold text-light-text dark:text-dark-text flex items-center gap-2">
-                            <span>⚙️</span>
-                            <span>{t.physicsControlTitle}</span>
-                        </h3>
+            {/* Physics Controls Section - Always Visible */}
+            <div className="border-t border-light-border dark:border-dark-border/50 pt-4"></div>
+            <div className="space-y-3">
+                <h3 className="font-semibold text-light-text dark:text-dark-text flex items-center gap-2">
+                    <span>⚙️</span>
+                    <span>{t.physicsControlTitle}</span>
+                </h3>
 
                         {/* Lighting Control */}
                         <div className="space-y-1">
@@ -822,8 +820,6 @@ const ReferencePanel: React.FC<{
                             </select>
                         </div>
                     </div>
-                </>
-            )}
         </div>
     );
 };
