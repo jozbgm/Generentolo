@@ -566,7 +566,12 @@ const ReferencePanel: React.FC<{
     setSelectedFocus: (id: string | null) => void;
     selectedModel: ModelType;
     setEditedPrompt: (value: string | ((prev: string) => string)) => void;
-}> = ({ onAddImages, onRemoveImage, referenceImages, onAddStyleImage, onRemoveStyleImage, styleImage, onAddStructureImage, onRemoveStructureImage, structureImage, selectedStylePreset, setSelectedStylePreset, selectedLighting, setSelectedLighting, selectedCamera, setSelectedCamera, selectedFocus, setSelectedFocus, selectedModel, setEditedPrompt }) => {
+    // v1.4: Precise Reference & Google Search Grounding
+    preciseReference: boolean;
+    setPreciseReference: (value: boolean) => void;
+    useGrounding: boolean;
+    setUseGrounding: (value: boolean) => void;
+}> = ({ onAddImages, onRemoveImage, referenceImages, onAddStyleImage, onRemoveStyleImage, styleImage, onAddStructureImage, onRemoveStructureImage, structureImage, selectedStylePreset, setSelectedStylePreset, selectedLighting, setSelectedLighting, selectedCamera, setSelectedCamera, selectedFocus, setSelectedFocus, selectedModel, setEditedPrompt, preciseReference, setPreciseReference, useGrounding, setUseGrounding }) => {
     const { t, language } = useLocalization();
     const [isDraggingRef, setIsDraggingRef] = useState(false);
     const [isDraggingStyle, setIsDraggingStyle] = useState(false);
@@ -679,6 +684,50 @@ const ReferencePanel: React.FC<{
                     )}
                     <input id="structure-file-upload" type="file" className="hidden" accept="image/*" onChange={handleStructureFileChange} />
                 </div>
+            </div>
+
+            {/* Control Checkboxes Section */}
+            <div className="border-t border-light-border dark:border-dark-border/50 pt-4"></div>
+            <div className="space-y-3">
+                {/* Precise Reference Mode */}
+                <div className="flex items-start gap-3">
+                    <input
+                        type="checkbox"
+                        id="precise-reference-toggle"
+                        checked={preciseReference}
+                        onChange={(e) => setPreciseReference(e.target.checked)}
+                        className="mt-0.5 w-4 h-4 rounded border-light-border dark:border-dark-border bg-light-surface dark:bg-dark-surface text-brand-purple focus:ring-2 focus:ring-brand-purple focus:ring-offset-0"
+                    />
+                    <label htmlFor="precise-reference-toggle" className="flex-1 cursor-pointer">
+                        <div className="text-sm font-medium text-light-text dark:text-dark-text">
+                            👤 {t.preciseReference}
+                        </div>
+                        <div className="text-xs text-light-text-muted dark:text-dark-text-muted mt-0.5">
+                            {t.preciseReferenceTooltip}
+                        </div>
+                    </label>
+                </div>
+
+                {/* Google Search Grounding - PRO Only */}
+                {selectedModel === 'gemini-3-pro-image-preview' && (
+                    <div className="flex items-start gap-3">
+                        <input
+                            type="checkbox"
+                            id="grounding-toggle"
+                            checked={useGrounding}
+                            onChange={(e) => setUseGrounding(e.target.checked)}
+                            className="mt-0.5 w-4 h-4 rounded border-light-border dark:border-dark-border bg-light-surface dark:bg-dark-surface text-brand-yellow focus:ring-2 focus:ring-brand-yellow focus:ring-offset-0"
+                        />
+                        <label htmlFor="grounding-toggle" className="flex-1 cursor-pointer">
+                            <div className="text-sm font-medium text-light-text dark:text-dark-text">
+                                🌐 {t.groundingLabel}
+                            </div>
+                            <div className="text-xs text-light-text-muted dark:text-dark-text-muted mt-0.5">
+                                {t.groundingTooltip}
+                            </div>
+                        </label>
+                    </div>
+                )}
             </div>
 
             {/* Style Presets Section - Always Visible */}
@@ -1174,27 +1223,6 @@ const ControlPanel: React.FC<ControlPanelProps> = (props) => {
                         <button onClick={onRandomizeSeed} title={t.randomize} className="p-2 rounded-lg bg-light-surface-accent dark:bg-dark-surface-accent border border-light-border dark:border-dark-border hover:border-dark-text-muted transition-colors"><DiceIcon className="w-5 h-5"/></button>
                     </div>
                 </div>
-
-                {/* v1.4: Google Search Grounding Toggle */}
-                {selectedModel === 'gemini-3-pro-image-preview' && (
-                    <div className="flex items-start gap-3 p-3 rounded-lg bg-blue-500/10 border border-blue-500/30">
-                        <input
-                            type="checkbox"
-                            id="grounding-toggle"
-                            checked={useGrounding}
-                            onChange={(e) => setUseGrounding(e.target.checked)}
-                            className="mt-1 w-4 h-4 rounded border-gray-300 text-brand-purple focus:ring-brand-purple"
-                        />
-                        <label htmlFor="grounding-toggle" className="flex-1 cursor-pointer">
-                            <div className="text-sm font-medium text-light-text dark:text-dark-text">
-                                🌐 {t.groundingLabel}
-                            </div>
-                            <div className="text-xs text-light-text-muted dark:text-dark-text-muted mt-1">
-                                {t.groundingTooltip}
-                            </div>
-                        </label>
-                    </div>
-                )}
             </div>
 
             <div>
@@ -3097,6 +3125,10 @@ export default function App() {
                             setSelectedFocus={setSelectedFocus}
                             selectedModel={selectedModel}
                             setEditedPrompt={setEditedPrompt}
+                            preciseReference={preciseReference}
+                            setPreciseReference={setPreciseReference}
+                            useGrounding={useGrounding}
+                            setUseGrounding={setUseGrounding}
                         />
                     </aside>
 
