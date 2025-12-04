@@ -24,9 +24,32 @@ const handleError = (error: any, language: 'en' | 'it'): Error => {
     
     // Check for promptFeedback structure for blocked prompts (when error is an object)
     if (error.promptFeedback?.blockReason === 'SAFETY') {
-        message = language === 'it' 
-            ? 'La richiesta è stata bloccata per motivi di sicurezza. Prova a modificare il prompt.' 
+        message = language === 'it'
+            ? 'La richiesta è stata bloccata per motivi di sicurezza. Prova a modificare il prompt.'
             : 'The request was blocked for safety reasons. Please try modifying your prompt.';
+    }
+    else if (error.promptFeedback?.blockReason === 'OTHER') {
+        message = language === 'it'
+            ? '⚠️ Richiesta bloccata da Gemini (OTHER).\n\n' +
+              '🔧 Possibili cause:\n' +
+              '• Prompt troppo lungo o complesso\n' +
+              '• Combinazione prompt + immagine problematica\n' +
+              '• Contenuto che viola policy generiche\n\n' +
+              '✅ Soluzioni:\n' +
+              '• Semplifica il prompt (riduci dettagli)\n' +
+              '• Rimuovi riferimenti a brand/celebrity\n' +
+              '• Prova con un\'altra immagine di riferimento\n' +
+              '• Riprova tra qualche minuto'
+            : '⚠️ Request blocked by Gemini (OTHER).\n\n' +
+              '🔧 Possible causes:\n' +
+              '• Prompt too long or complex\n' +
+              '• Problematic prompt + image combination\n' +
+              '• Content violating general policies\n\n' +
+              '✅ Solutions:\n' +
+              '• Simplify prompt (reduce details)\n' +
+              '• Remove brand/celebrity references\n' +
+              '• Try with different reference image\n' +
+              '• Retry in a few minutes';
     }
     // Check for response structure from the Gemini API client itself (when error is an Error object with message)
     else if (error.message) {
@@ -1140,11 +1163,36 @@ export const generateImage = async (
             if (result.promptFeedback?.blockReason) {
                 const blockReason = result.promptFeedback.blockReason;
                 const safetyRatings = result.promptFeedback.safetyRatings || [];
-                
+
+                // v1.3.1: Auto-fallback to Flash-exp when Pro 3.0 blocks with "OTHER"
+                // "OTHER" typically means: face manipulation, personal photos, identity editing
+                if (blockReason === 'OTHER' && model === 'gemini-3-pro-image-preview') {
+                    console.warn('⚠️ Nano Banana Pro blocked with "OTHER". Auto-fallback to Nano Banana Flash...');
+                    const fallbackMessage = language === 'it'
+                        ? '🔄 Nano Banana Pro ha bloccato la richiesta (policy restrittive). Riprovo automaticamente con Nano Banana Flash (più permissivo)...'
+                        : '🔄 Nano Banana Pro blocked the request (restrictive policies). Auto-retrying with Nano Banana Flash (more permissive)...';
+
+                    // Recursively call generateImage with Flash model
+                    return await generateImage(
+                        prompt,
+                        aspectRatio,
+                        referenceFiles,
+                        styleFile,
+                        structureFile,
+                        userApiKey,
+                        language,
+                        'gemini-2.0-flash-exp', // Force Flash model
+                        seed,
+                        resolution,
+                        abortSignal,
+                        onProgress ? (msg) => onProgress(`${fallbackMessage}\n\n${msg}`) : undefined
+                    );
+                }
+
                 let detailedMessage = language === 'it'
                     ? `La richiesta è stata bloccata: ${blockReason}. `
                     : `The request was blocked: ${blockReason}. `;
-                
+
                 if (safetyRatings.length > 0) {
                     const issues = safetyRatings
                         .filter((r: any) => r.blocked)
@@ -1156,7 +1204,7 @@ export const generateImage = async (
                             : `Problematic categories: ${issues}. Try modifying the images or prompt.`;
                     }
                 }
-                
+
                 throw new Error(detailedMessage);
             }
             
