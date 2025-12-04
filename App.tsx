@@ -7,6 +7,8 @@ import { SunIcon, MoonIcon, UploadIcon, DownloadIcon, ZoomInIcon, SparklesIcon, 
 import FloatingActionBar from './components/FloatingActionBar';
 import ZoomableImage from './components/ZoomableImage';
 import PromptLibrary from './components/PromptLibrary';
+import UsageTracker from './components/UsageTracker'; // v1.4
+import { STYLE_PRESETS, PHYSICS_PRESETS } from './data/stylePresets'; // v1.4
 
 // Polyfill for crypto.randomUUID() on browsers that don't support it (mobile Safari, etc)
 if (!crypto.randomUUID) {
@@ -168,6 +170,16 @@ const translations = {
     promptLibraryDifficultyEasy: 'easy',
     promptLibraryDifficultyMedium: 'medium',
     promptLibraryDifficultyAdvanced: 'advanced',
+    // v1.4: New Features
+    groundingLabel: 'Google Search Grounding',
+    groundingTooltip: 'Use real-time data from Google Search (weather, stocks, events). PRO model only.',
+    stylePresetsTitle: 'Quick Style Presets',
+    stylePresetsNone: 'None',
+    physicsControlTitle: 'Physics Controls (PRO)',
+    lightingLabel: 'Lighting',
+    cameraLabel: 'Camera',
+    focusLabel: 'Focus',
+    usageTrackerTitle: 'Session Stats',
     // Cost Calculator
     costEstimate: 'Cost Estimate',
     costOutput: 'Output',
@@ -323,6 +335,16 @@ const translations = {
     promptLibraryDifficultyEasy: 'facile',
     promptLibraryDifficultyMedium: 'medio',
     promptLibraryDifficultyAdvanced: 'avanzato',
+    // v1.4: Nuove Funzionalità
+    groundingLabel: 'Google Search Grounding',
+    groundingTooltip: 'Usa dati real-time da Google Search (meteo, borsa, eventi). Solo modello PRO.',
+    stylePresetsTitle: 'Preset Stile Rapidi',
+    stylePresetsNone: 'Nessuno',
+    physicsControlTitle: 'Controlli Fisica (PRO)',
+    lightingLabel: 'Illuminazione',
+    cameraLabel: 'Fotocamera',
+    focusLabel: 'Fuoco',
+    usageTrackerTitle: 'Statistiche Sessione',
     // Cost Calculator
     costEstimate: 'Stima Costo',
     costOutput: 'Output',
@@ -428,8 +450,9 @@ interface HeaderProps {
     onOpenShortcuts: () => void;
     onOpenHelp: () => void;
     onOpenPromptLibrary: () => void;
+    onOpenUsageTracker: () => void; // v1.4
 }
-const Header: React.FC<HeaderProps> = ({ theme, toggleTheme, onOpenSettings, onOpenFeedback, onOpenShortcuts, onOpenHelp, onOpenPromptLibrary }) => {
+const Header: React.FC<HeaderProps> = ({ theme, toggleTheme, onOpenSettings, onOpenFeedback, onOpenShortcuts, onOpenHelp, onOpenPromptLibrary, onOpenUsageTracker }) => {
     const { t, language, setLanguage } = useLocalization();
     const toggleLanguage = () => setLanguage(language === 'en' ? 'it' : 'en');
     return (
@@ -452,6 +475,9 @@ const Header: React.FC<HeaderProps> = ({ theme, toggleTheme, onOpenSettings, onO
                 >
                     <SparklesIcon className="w-4 h-4" />
                     <span className="hidden sm:inline">Prompts</span>
+                </button>
+                <button onClick={onOpenUsageTracker} className="p-2 rounded-full text-light-text-muted dark:text-dark-text-muted hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors" title={t.usageTrackerTitle}>
+                    📊
                 </button>
                 <button onClick={onOpenHelp} className="p-2 rounded-full text-light-text-muted dark:text-dark-text-muted hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors" title="Help Guide">
                     <InfoIcon className="w-5 h-5" />
@@ -997,6 +1023,27 @@ const ControlPanel: React.FC<ControlPanelProps> = (props) => {
                         <button onClick={onRandomizeSeed} title={t.randomize} className="p-2 rounded-lg bg-light-surface-accent dark:bg-dark-surface-accent border border-light-border dark:border-dark-border hover:border-dark-text-muted transition-colors"><DiceIcon className="w-5 h-5"/></button>
                     </div>
                 </div>
+
+                {/* v1.4: Google Search Grounding Toggle */}
+                {selectedModel === 'gemini-3-pro-image-preview' && (
+                    <div className="flex items-start gap-3 p-3 rounded-lg bg-blue-500/10 border border-blue-500/30">
+                        <input
+                            type="checkbox"
+                            id="grounding-toggle"
+                            checked={useGrounding}
+                            onChange={(e) => setUseGrounding(e.target.checked)}
+                            className="mt-1 w-4 h-4 rounded border-gray-300 text-brand-purple focus:ring-brand-purple"
+                        />
+                        <label htmlFor="grounding-toggle" className="flex-1 cursor-pointer">
+                            <div className="text-sm font-medium text-light-text dark:text-dark-text">
+                                🌐 {t.groundingLabel}
+                            </div>
+                            <div className="text-xs text-light-text-muted dark:text-dark-text-muted mt-1">
+                                {t.groundingTooltip}
+                            </div>
+                        </label>
+                    </div>
+                )}
             </div>
 
             <div>
@@ -2067,6 +2114,21 @@ export default function App() {
     const [presets, setPresets] = useState<PromptPreset[]>([]);
     const [sidebarTab, setSidebarTab] = useState<'history' | 'presets'>('history');
     const [variationsLoadingId, setVariationsLoadingId] = useState<string | null>(null); // v1.3: For variations
+
+    // v1.4: New features states
+    const [useGrounding, setUseGrounding] = useState(false); // Google Search Grounding
+    const [selectedStylePreset, setSelectedStylePreset] = useState<string | null>(null);
+    const [selectedLighting, setSelectedLighting] = useState<string | null>(null);
+    const [selectedCamera, setSelectedCamera] = useState<string | null>(null);
+    const [selectedFocus, setSelectedFocus] = useState<string | null>(null);
+    const [showUsageTracker, setShowUsageTracker] = useState(false);
+    const [usageStats, setUsageStats] = useState({
+        imagesGenerated: 0,
+        totalCost: 0,
+        tokensUsed: 0,
+        averageTime: 0,
+        generationTimes: [] as number[]
+    });
     const promptTextareaRef = useRef<HTMLTextAreaElement>(null);
     const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -2280,7 +2342,8 @@ export default function App() {
                         selectedModel,
                         selectedResolution,
                         textInImageConfig,
-                        controller.signal
+                        controller.signal,
+                        useGrounding // v1.4: Google Search Grounding
                     );
                     imageDataUrls.push(imageDataUrl);
                     console.log(`✅ Image ${index + 1}/${numImagesToGenerate} generated`);
@@ -2308,7 +2371,8 @@ export default function App() {
                             selectedModel,
                             selectedResolution,
                             textInImageConfig,
-                            controller.signal
+                            controller.signal,
+                            useGrounding // v1.4: Google Search Grounding
                         );
                     });
                     imageDataUrls.push(...await Promise.all(generationPromises));
@@ -2397,7 +2461,8 @@ export default function App() {
                     sourceImage.model || selectedModel,
                     sourceImage.resolution || selectedResolution,
                     undefined,
-                    undefined // No abort signal for variations
+                    undefined, // No abort signal for variations
+                    false // v1.4: No grounding for variations
                 );
 
                 const thumbnailDataUrl = await createThumbnailDataUrl(imageDataUrl);
@@ -2608,7 +2673,12 @@ export default function App() {
                 image.negativePrompt,
                 newSeed, // NEW seed for variation
                 language,
-                preciseReference
+                preciseReference,
+                image.model || selectedModel,
+                image.resolution || selectedResolution,
+                undefined,
+                undefined,
+                false // v1.4: No grounding for recreate
             );
 
             const thumbnailDataUrl = await createThumbnailDataUrl(imageDataUrl);
@@ -2845,7 +2915,7 @@ export default function App() {
     return (
         <LanguageContext.Provider value={{ language, setLanguage, t }}>
             <div className="h-screen w-screen bg-light-bg dark:bg-dark-bg text-light-text dark:text-dark-text flex flex-col font-sans">
-                <Header theme={theme} toggleTheme={toggleTheme} onOpenSettings={() => setIsSettingsOpen(true)} onOpenFeedback={() => setIsFeedbackOpen(true)} onOpenShortcuts={() => setIsShortcutsOpen(true)} onOpenHelp={() => setIsHelpOpen(true)} onOpenPromptLibrary={() => {
+                <Header theme={theme} toggleTheme={toggleTheme} onOpenSettings={() => setIsSettingsOpen(true)} onOpenFeedback={() => setIsFeedbackOpen(true)} onOpenShortcuts={() => setIsShortcutsOpen(true)} onOpenHelp={() => setIsHelpOpen(true)} onOpenUsageTracker={() => setShowUsageTracker(true)} onOpenPromptLibrary={() => {
                     const libraryWindow = window.open('./prompt-library.html', '_blank', 'width=1400,height=900');
                     if (libraryWindow) {
                         libraryWindow.addEventListener('load', () => {
@@ -3030,6 +3100,14 @@ export default function App() {
                 <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
                 <ShortcutsModal isOpen={isShortcutsOpen} onClose={() => setIsShortcutsOpen(false)} />
                 <FeedbackModal isOpen={isFeedbackOpen} onClose={() => setIsFeedbackOpen(false)} />
+
+                {/* v1.4: Usage Tracker Modal */}
+                <UsageTracker
+                    stats={usageStats}
+                    isVisible={showUsageTracker}
+                    onClose={() => setShowUsageTracker(false)}
+                    language={language}
+                />
 
                 {/* Prompt Library now opens as standalone window via window.open() */}
                 {useEffect(() => {
