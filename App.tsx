@@ -555,8 +555,19 @@ const ReferencePanel: React.FC<{
     onAddStructureImage: (file: File) => void;
     onRemoveStructureImage: () => void;
     structureImage: File | null;
-}> = ({ onAddImages, onRemoveImage, referenceImages, onAddStyleImage, onRemoveStyleImage, styleImage, onAddStructureImage, onRemoveStructureImage, structureImage }) => {
-    const { t } = useLocalization();
+    // v1.4: Style Presets and Physics Controls
+    selectedStylePreset: string | null;
+    setSelectedStylePreset: (id: string | null) => void;
+    selectedLighting: string | null;
+    setSelectedLighting: (id: string | null) => void;
+    selectedCamera: string | null;
+    setSelectedCamera: (id: string | null) => void;
+    selectedFocus: string | null;
+    setSelectedFocus: (id: string | null) => void;
+    selectedModel: ModelType;
+    setPrompt: (value: string | ((prev: string) => string)) => void;
+}> = ({ onAddImages, onRemoveImage, referenceImages, onAddStyleImage, onRemoveStyleImage, styleImage, onAddStructureImage, onRemoveStructureImage, structureImage, selectedStylePreset, setSelectedStylePreset, selectedLighting, setSelectedLighting, selectedCamera, setSelectedCamera, selectedFocus, setSelectedFocus, selectedModel, setPrompt }) => {
+    const { t, language } = useLocalization();
     const [isDraggingRef, setIsDraggingRef] = useState(false);
     const [isDraggingStyle, setIsDraggingStyle] = useState(false);
     const [isDraggingStructure, setIsDraggingStructure] = useState(false);
@@ -3080,6 +3091,16 @@ export default function App() {
                             onAddStructureImage={setStructureImage}
                             onRemoveStructureImage={() => setStructureImage(null)}
                             structureImage={structureImage}
+                            selectedStylePreset={selectedStylePreset}
+                            setSelectedStylePreset={setSelectedStylePreset}
+                            selectedLighting={selectedLighting}
+                            setSelectedLighting={setSelectedLighting}
+                            selectedCamera={selectedCamera}
+                            setSelectedCamera={setSelectedCamera}
+                            selectedFocus={selectedFocus}
+                            setSelectedFocus={setSelectedFocus}
+                            selectedModel={selectedModel}
+                            setPrompt={setPrompt}
                         />
                     </aside>
 
