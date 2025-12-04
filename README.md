@@ -617,7 +617,6 @@ MIT License - see [LICENSE](LICENSE) file for details.
 - **Google Gemini Team** - For Gemini 2.5 Flash & **Nano Banana PRO 3.0**
 - **React Team** - For React 19
 - **Tailwind CSS** - For utility-first CSS
-- **Claude AI** - Development assistance
 
 ---
 
