@@ -1,8 +1,8 @@
-# 🎨 Generentolo PRO v1.4.0
+# 🎨 Generentolo PRO v1.5.0
 
 **Professional AI-Powered Image Generation Web Application**
 
-A sophisticated web application for generating ultra-high-quality images using Google's Gemini models (Flash & **Nano Banana PRO 3.0**) with Google Search Grounding, style presets, physics controls, usage tracking, ControlNet-like structure guidance, 4K resolution support, native upscaling, professional prompt library with optimized presets, and text-in-image capabilities. Designed for graphic design agencies, marketers, and creative professionals who demand the highest quality and precision.
+A sophisticated web application for generating ultra-high-quality images using Google's Gemini models (Flash & **Nano Banana PRO 3.0**) with **advanced Google Search Grounding with explicit keyword control**, style presets, physics controls, usage tracking, ControlNet-like structure guidance, 4K resolution support, native upscaling, professional prompt library with optimized presets, and text-in-image capabilities. Designed for graphic design agencies, marketers, and creative professionals who demand the highest quality and precision.
 
 [![Live Demo](https://img.shields.io/badge/Live-Demo-blue?style=for-the-badge)](https://www.dugongo.it/generentolo/)
 [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
@@ -13,11 +13,25 @@ A sophisticated web application for generating ultra-high-quality images using G
 
 ## ✨ Features
 
-### 🌟 **NEW v1.4.0: Nano Banana Pro 3.0 Advanced Features**
-- **🌐 Google Search Grounding** - Generate images with real-time data from Google Search (PRO only)
-  - Current weather maps, stock charts, recent events
-  - Unique feature - no other consumer app has this!
-  - Automatic fact verification and data-driven outputs
+### 🎯 **NEW v1.5.0: Explicit Search Keyword Control**
+- **🔍 Square Bracket Syntax** - Precise control over Google Search Grounding keywords
+  - Use `[text]` in your prompt to specify exact search terms
+  - Example: `"product photo [iPhone 15 Pro Max]"` searches ONLY for "iPhone 15 Pro Max"
+  - Perfect for product placement, brand integration, and precise reference fetching
+  - Falls back to automatic keyword extraction when no brackets present
+  - Industry-first feature for AI image generation tools
+- **🎯 Use Cases**:
+  - Product placement: `"model holding [Coca Cola bottle]"`
+  - Brand assets: `"car interior with [Tesla Model S dashboard]"`
+  - Architecture: `"modern office inspired by [Apple Park campus]"`
+  - Fashion: `"outfit featuring [Nike Air Jordan 1]"`
+
+### 🌟 **v1.4.0: Nano Banana Pro 3.0 Advanced Features**
+- **🌐 Google Search Grounding** - Fetch real reference images from Google Images automatically
+  - Works for ALL models (Flash and PRO)
+  - Invisible reference images used during generation
+  - Automatic watermark filtering from stock photo sites
+  - Graceful CORS error handling for maximum compatibility
 - **🎨 Style Presets Gallery** - 15+ one-click style applications
   - Artistic: Oil Painting, Watercolor, Anime, Pixel Art, Vector
   - Photo: Product Photography, Portrait Studio, Cinematic, Street, Macro
@@ -340,6 +354,42 @@ A sophisticated web application for generating ultra-high-quality images using G
 ---
 
 ## 📋 Changelog
+
+### v1.5.0 (December 2025) 🎯
+**🎉 EXPLICIT KEYWORD CONTROL - Industry-First Feature:**
+
+**🔍 NEW: Square Bracket Syntax for Google Search Grounding**
+- Use `[text]` in prompts to specify exact search keywords
+- Example: `"macro product photo... [borotalco original] ..."` → searches only "borotalco original"
+- Perfect for product placement scenarios with long, complex prompts
+- Automatic fallback to keyword extraction when no brackets present
+- Console logging shows which mode is active (🎯 explicit vs 🤖 automatic)
+
+**🎯 Key Benefits**
+- **Precision**: No more random keyword extraction from complex prompts
+- **Control**: You decide exactly what to search on Google Images
+- **Flexibility**: Works alongside automatic extraction seamlessly
+- **Professional**: Ideal for agencies doing branded content and product placement
+
+**💡 Use Cases**
+- Product placement: `"lifestyle shot with person drinking [Coca Cola Classic]"`
+- Brand integration: `"office desk setup featuring [MacBook Pro 16]"`
+- Architecture: `"modern home inspired by [Fallingwater Frank Lloyd Wright]"`
+- Fashion: `"street style outfit with [Nike Air Jordan 1 Chicago]"`
+
+**🔧 Technical Implementation**
+- Modified `extractSearchKeywords()` in googleSearchService.ts
+- Regex pattern: `/\[([^\]]+)\]/` to detect bracketed text
+- Preserves all existing automatic extraction logic as fallback
+- Version updated across package.json, index.html, README.md
+
+**📊 Files Modified**
+- `services/googleSearchService.ts`: Enhanced keyword extraction with bracket detection
+- `package.json`: Version bump to 1.5.0
+- `index.html`: Title updated to v1.5
+- `README.md`: Feature documentation and examples
+
+---
 
 ### v1.3.1 (December 2025) ⚡
 **🎉 QUICK WIN FEATURES - Enhanced Workflow & Reliability:**

@@ -1,7 +1,8 @@
 /**
  * Google Custom Search Service
  * Fetches images from Google Images to use as invisible reference images
- * v1.4.1 - Enhanced Google Search Grounding with auto-reference images
+ * v1.4.2 - Square bracket syntax for explicit search keywords [like this]
+ *          Example: "macro photo... [borotalco original] ..." → searches only "borotalco original"
  */
 
 const GOOGLE_SEARCH_API_KEY = import.meta.env.VITE_GOOGLE_SEARCH_API_KEY;
@@ -25,9 +26,26 @@ interface GoogleSearchResponse {
 
 /**
  * Extract main keywords from prompt for image search
- * Removes common words, style descriptors, and focuses on subjects
+ * v1.4.2: Supports explicit keywords via square brackets [like this]
+ * If brackets are found, uses ONLY that text. Otherwise, falls back to automatic extraction.
+ *
+ * Examples:
+ * - "macro photo... [borotalco original] ..." → searches "borotalco original"
+ * - "piazza vecchia bergamo in stile pixar" → searches "piazza vecchia bergamo"
  */
 export const extractSearchKeywords = (prompt: string): string => {
+    // v1.4.2: Check if user specified explicit search terms with square brackets
+    const bracketMatch = prompt.match(/\[([^\]]+)\]/);
+
+    if (bracketMatch && bracketMatch[1]) {
+        const explicitKeywords = bracketMatch[1].trim();
+        console.log(`🎯 Using explicit search keywords from brackets: "${explicitKeywords}"`);
+        return explicitKeywords;
+    }
+
+    // Fallback to automatic extraction if no brackets found
+    console.log(`🤖 No brackets found, using automatic keyword extraction`);
+
     // Remove everything AFTER style mentions to get only the subject
     let cleanPrompt = prompt.toLowerCase();
 
