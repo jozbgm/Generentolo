@@ -9,6 +9,7 @@ import ZoomableImage from './components/ZoomableImage';
 import PromptLibrary from './components/PromptLibrary';
 import UsageTracker from './components/UsageTracker'; // v1.4
 import { STYLE_PRESETS, PHYSICS_PRESETS } from './data/stylePresets'; // v1.4
+import { fetchInvisibleReferences } from './services/googleSearchService'; // v1.4.1
 
 // Polyfill for crypto.randomUUID() on browsers that don't support it (mobile Safari, etc)
 if (!crypto.randomUUID) {
@@ -172,7 +173,7 @@ const translations = {
     promptLibraryDifficultyAdvanced: 'advanced',
     // v1.4: New Features
     groundingLabel: 'Google Search Grounding',
-    groundingTooltip: 'Use real-time data from Google Search (weather, stocks, events). PRO model only.',
+    groundingTooltip: 'Automatically fetches reference images from Google based on your prompt keywords to improve accuracy and realism.',
     stylePresetsTitle: 'Quick Style Presets',
     stylePresetsNone: 'None',
     physicsControlTitle: 'Physics Controls',
@@ -337,7 +338,7 @@ const translations = {
     promptLibraryDifficultyAdvanced: 'avanzato',
     // v1.4: Nuove Funzionalità
     groundingLabel: 'Google Search Grounding',
-    groundingTooltip: 'Usa dati real-time da Google Search (meteo, borsa, eventi). Solo modello PRO.',
+    groundingTooltip: 'Scarica automaticamente immagini di riferimento da Google basandosi sulle parole chiave del prompt per migliorare accuratezza e realismo.',
     stylePresetsTitle: 'Preset Stile Rapidi',
     stylePresetsNone: 'Nessuno',
     physicsControlTitle: 'Controlli Fisica',
@@ -708,26 +709,24 @@ const ReferencePanel: React.FC<{
                     </label>
                 </div>
 
-                {/* Google Search Grounding - PRO Only */}
-                {selectedModel === 'gemini-3-pro-image-preview' && (
-                    <div className="flex items-start gap-3">
-                        <input
-                            type="checkbox"
-                            id="grounding-toggle"
-                            checked={useGrounding}
-                            onChange={(e) => setUseGrounding(e.target.checked)}
-                            className="mt-0.5 w-4 h-4 rounded border-light-border dark:border-dark-border bg-light-surface dark:bg-dark-surface text-brand-yellow focus:ring-2 focus:ring-brand-yellow focus:ring-offset-0"
-                        />
-                        <label htmlFor="grounding-toggle" className="flex-1 cursor-pointer">
-                            <div className="text-sm font-medium text-light-text dark:text-dark-text">
-                                🌐 {t.groundingLabel}
-                            </div>
-                            <div className="text-xs text-light-text-muted dark:text-dark-text-muted mt-0.5">
-                                {t.groundingTooltip}
-                            </div>
-                        </label>
-                    </div>
-                )}
+                {/* Google Search Grounding - v1.4.1: Now available for all models */}
+                <div className="flex items-start gap-3">
+                    <input
+                        type="checkbox"
+                        id="grounding-toggle"
+                        checked={useGrounding}
+                        onChange={(e) => setUseGrounding(e.target.checked)}
+                        className="mt-0.5 w-4 h-4 rounded border-light-border dark:border-dark-border bg-light-surface dark:bg-dark-surface text-brand-yellow focus:ring-2 focus:ring-brand-yellow focus:ring-offset-0"
+                    />
+                    <label htmlFor="grounding-toggle" className="flex-1 cursor-pointer">
+                        <div className="text-sm font-medium text-light-text dark:text-dark-text">
+                            🌐 {t.groundingLabel}
+                        </div>
+                        <div className="text-xs text-light-text-muted dark:text-dark-text-muted mt-0.5">
+                            {t.groundingTooltip}
+                        </div>
+                    </label>
+                </div>
             </div>
 
             {/* Style Presets Section - Always Visible */}
@@ -2463,7 +2462,32 @@ export default function App() {
         setIsLoading(true);
         setCurrentImages([]);
         try {
-            const allReferenceFiles = [...referenceImages];
+            // v1.4.1: Fetch invisible reference images from Google if grounding is enabled
+            let invisibleReferences: File[] = [];
+            if (useGrounding && editedPrompt) {
+                console.log('🌐 Google Search Grounding active - fetching reference images...');
+                showToast(
+                    language === 'it'
+                        ? '🔍 Ricerca immagini di riferimento da Google...'
+                        : '🔍 Fetching reference images from Google...',
+                    'success'
+                );
+                invisibleReferences = await fetchInvisibleReferences(editedPrompt, 2);
+                if (invisibleReferences.length > 0) {
+                    console.log(`✅ Added ${invisibleReferences.length} invisible reference images from Google`);
+                    showToast(
+                        language === 'it'
+                            ? `✅ ${invisibleReferences.length} immagini di riferimento trovate`
+                            : `✅ ${invisibleReferences.length} reference images found`,
+                        'success'
+                    );
+                } else {
+                    console.log('⚠️ No reference images found from Google Search');
+                }
+            }
+
+            // Merge user's visible references with invisible Google references
+            const allReferenceFiles = [...referenceImages, ...invisibleReferences];
 
             // v1.0: Calculate estimated cost
             const estimatedCost = geminiService.calculateEstimatedCost(
@@ -2593,7 +2617,7 @@ export default function App() {
             setIsLoading(false);
             abortControllerRef.current = null; // v1.3: Clear abort controller
         }
-    }, [referenceImages, styleReferenceImage, structureImage, preciseReference, userApiKey, aspectRatio, showToast, t.generationFailed, language, editedPrompt, negativePrompt, seed, numImagesToGenerate, selectedModel, selectedResolution, textInImageConfig]);
+    }, [referenceImages, styleReferenceImage, structureImage, preciseReference, userApiKey, aspectRatio, showToast, t.generationFailed, language, editedPrompt, negativePrompt, seed, numImagesToGenerate, selectedModel, selectedResolution, textInImageConfig, useGrounding]);
 
     // v1.3: Abort generation
     const handleAbortGeneration = useCallback(() => {
