@@ -28,26 +28,51 @@ interface GoogleSearchResponse {
  * Removes common words, style descriptors, and focuses on subjects
  */
 export const extractSearchKeywords = (prompt: string): string => {
-    // Remove common style/quality descriptors
-    const cleanPrompt = prompt
-        .toLowerCase()
-        .replace(/\b(photorealistic|realistic|detailed|high quality|professional|cinematic|composition|4k|8k|hd|ultra|masterpiece)\b/gi, '')
-        .replace(/\b(in the style of|style of|inspired by|similar to|like)\b/gi, '')
+    // Remove everything AFTER style mentions to get only the subject
+    let cleanPrompt = prompt.toLowerCase();
+
+    // Find where style instructions start and cut there
+    const styleCutPoints = [
+        / in (the )?style (of |)/,
+        / stile /,
+        / come /,
+        / tipo /,
+        / pixar/,
+        / disney/,
+        / anime/,
+        / cartoon/,
+        / realistic/,
+        / photorealistic/
+    ];
+
+    for (const pattern of styleCutPoints) {
+        const match = cleanPrompt.match(pattern);
+        if (match && match.index !== undefined) {
+            cleanPrompt = cleanPrompt.substring(0, match.index);
+            break;
+        }
+    }
+
+    // Remove quality and style descriptors
+    cleanPrompt = cleanPrompt
+        .replace(/\b(detailed|high quality|professional|cinematic|composition|4k|8k|hd|ultra|masterpiece)\b/gi, '')
         .replace(/\b(background|foreground|lighting|shadow|highlight)\b/gi, '')
         .replace(/\b(portrait|landscape|wide angle|close up|macro)\b/gi, '')
+        .replace(/\b(vibrant|colorful|bright|dark|moody|dramatic)\b/gi, '')
+        .replace(/,/g, ' ')
         .trim();
 
-    // Take first significant words (usually the main subject)
+    // Take first significant words (the main subject)
     const words = cleanPrompt.split(/\s+/).filter(w => w.length > 2);
 
-    // Return first 3-4 words as search term
+    // Return first 3-4 words as search term (the subject only)
     return words.slice(0, 4).join(' ');
 };
 
 /**
  * Search Google Images and return top image URLs
  */
-export const searchGoogleImages = async (query: string, maxResults: number = 3): Promise<string[]> => {
+export const searchGoogleImages = async (query: string, maxResults: number = 10): Promise<string[]> => {
     try {
         // Check if API keys are configured
         if (!GOOGLE_SEARCH_API_KEY || !GOOGLE_SEARCH_ENGINE_ID) {
@@ -79,8 +104,29 @@ export const searchGoogleImages = async (query: string, maxResults: number = 3):
             return [];
         }
 
-        const imageUrls = data.items.map(item => item.link);
-        console.log(`✅ Found ${imageUrls.length} images for: "${query}"`);
+        // Filter out stock photo sites with watermarks
+        const blockedDomains = [
+            'shutterstock.com',
+            'istockphoto.com',
+            'gettyimages.com',
+            'dreamstime.com',
+            'depositphotos.com',
+            'alamy.com',
+            '123rf.com',
+            'stock.adobe.com',
+            'freepik.com',
+            'pngtree.com',
+            'vecteezy.com'
+        ];
+
+        const imageUrls = data.items
+            .map(item => item.link)
+            .filter(url => {
+                const urlLower = url.toLowerCase();
+                return !blockedDomains.some(domain => urlLower.includes(domain));
+            });
+
+        console.log(`✅ Found ${imageUrls.length} images for: "${query}" (watermark sites filtered)`);
 
         return imageUrls;
     } catch (error) {
