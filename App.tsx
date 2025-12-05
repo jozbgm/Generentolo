@@ -25,7 +25,7 @@ if (!crypto.randomUUID) {
 // --- Localization ---
 const translations = {
   en: {
-    headerTitle: 'Generentolo PRO v1.4',
+    headerTitle: 'Generentolo PRO v1.5',
     headerSubtitle: 'Let me do it for you!',
     refImagesTitle: 'Reference & Style Images',
     styleRefTitle: 'Style Reference',
@@ -190,7 +190,7 @@ const translations = {
     costDisclaimer: '* Estimate based on official Google pricing',
   },
   it: {
-    headerTitle: 'Generentolo PRO v1.4',
+    headerTitle: 'Generentolo PRO v1.5',
     headerSubtitle: 'Let me do it for you!',
     refImagesTitle: 'Immagini di Riferimento e Stile',
     styleRefTitle: 'Riferimento Stile',
