@@ -1,4 +1,4 @@
-# 🎨 Generentolo PRO v1.5.0
+# 🎨 Generentolo PRO v1.5.1
 
 **Professional AI-Powered Image Generation Web Application**
 
@@ -13,18 +13,23 @@ A sophisticated web application for generating ultra-high-quality images using G
 
 ## ✨ Features
 
-### 🎯 **NEW v1.5.0: Explicit Search Keyword Control**
-- **🔍 Square Bracket Syntax** - Precise control over Google Search Grounding keywords
-  - Use `[text]` in your prompt to specify exact search terms
-  - Example: `"product photo [iPhone 15 Pro Max]"` searches ONLY for "iPhone 15 Pro Max"
-  - Perfect for product placement, brand integration, and precise reference fetching
-  - Falls back to automatic keyword extraction when no brackets present
-  - Industry-first feature for AI image generation tools
-- **🎯 Use Cases**:
-  - Product placement: `"model holding [Coca Cola bottle]"`
-  - Brand assets: `"car interior with [Tesla Model S dashboard]"`
-  - Architecture: `"modern office inspired by [Apple Park campus]"`
-  - Fashion: `"outfit featuring [Nike Air Jordan 1]"`
+### 🎯 **NEW v1.5.1: Smart Bracket Removal for Ambiguous Keywords**
+- **🧹 Automatic Bracket Cleanup** - Prevents ambiguous keyword interpretations
+  - Brackets removed from prompt AFTER Google Search, BEFORE Gemini generation
+  - Fixes issues like `[Coin Bergamo]` → "Coin" interpreted as money instead of brand
+  - Example: `"[iPhone 15 Pro Max] product shot"` → Google searches exact model, Gemini receives clean prompt
+  - 100% backward compatible - works seamlessly with or without brackets
+  - Industry-first solution for precise brand/product placement
+- **🎯 How It Works**:
+  1. Google searches with explicit keyword: `"Coin Bergamo"` ✅
+  2. Downloads reference images of the actual building ✅
+  3. Removes brackets from prompt: `"fotografia professionale"` ✅
+  4. Gemini generates using references WITHOUT ambiguous text ✅
+- **💡 Best Practices**:
+  - Minimal prompts work best: `"[Coin Bergamo]"` or `"[Coin Bergamo] exterior shot"`
+  - Avoid contradictory descriptions: ❌ `"historic palace [Coin Bergamo]"` (Coin is modern!)
+  - Let reference images do the work: ✅ `"[brand name] professional photography"`
+  - Works perfectly for: Product placement, brand integration, specific buildings/locations
 
 ### 🌟 **v1.4.0: Nano Banana Pro 3.0 Advanced Features**
 - **🌐 Google Search Grounding** - Fetch real reference images from Google Images automatically
@@ -354,6 +359,45 @@ A sophisticated web application for generating ultra-high-quality images using G
 ---
 
 ## 📋 Changelog
+
+### v1.5.1 (December 2025) 🧹
+**🎉 SMART BRACKET REMOVAL - Ambiguous Keyword Fix:**
+
+**🧹 NEW: Automatic Bracket Cleanup for Gemini**
+- Brackets removed from prompt AFTER Google Search, BEFORE sending to Gemini
+- Solves ambiguous keyword problem (e.g., "Coin" = money vs brand name)
+- Example workflow:
+  - Input: `"[Coin Bergamo] professional photography"`
+  - Google searches: `"Coin Bergamo"` → finds department store building ✅
+  - Gemini receives: `"professional photography"` → no ambiguous "Coin" word ✅
+  - Result: Accurate building representation, NO unwanted coins! 🎯
+
+**🔧 Problem Solved**
+- **Issue**: Brand names with double meanings caused wrong outputs
+  - `[Coin]` = money 💰 instead of Coin department store 🏢
+  - `[Apple]` = fruit 🍎 instead of Apple brand 💻
+  - `[Dove]` = bird 🕊️ instead of Dove soap 🧼
+- **Solution**: Reference images guide generation, text can't confuse AI anymore
+
+**💡 Best Practices Added to Docs**
+- Use minimal prompts: `"[brand name]"` or `"[brand name] product shot"`
+- Avoid contradictions: ❌ `"historic palace [modern building]"`
+- Let references work: ✅ Google finds exact images, Gemini recreates faithfully
+- Perfect for: Product placement, brand integration, specific locations
+
+**🔧 Technical Implementation**
+- New function: `removeBracketsFromPrompt()` in googleSearchService.ts
+- Used in App.tsx only when Google Grounding is active
+- 100% backward compatible - prompts without brackets unchanged
+- Console logging: 🧹 shows when cleanup happens
+
+**📊 Files Modified**
+- `services/googleSearchService.ts`: Added removeBracketsFromPrompt() function
+- `App.tsx`: Import new function, create cleanedPrompt variable
+- `services/geminiService.ts`: Version comments updated
+- All version numbers: 1.5.0 → 1.5.1 across entire codebase
+
+---
 
 ### v1.5.0 (December 2025) 🎯
 **🎉 EXPLICIT KEYWORD CONTROL - Industry-First Feature:**
