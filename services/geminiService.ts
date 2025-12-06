@@ -1037,7 +1037,7 @@ export const generateImage = async (
             config.seed = parseInt(seed, 10);
         }
 
-        // v1.4.1: Google Search Grounding support (all models)
+        // v1.5.1: Google Search Grounding support (all models)
         // Note: Invisible reference images from Google are added in App.tsx before calling this function
         if (useGrounding) {
             // For PRO model, also enable textual grounding for real-time data

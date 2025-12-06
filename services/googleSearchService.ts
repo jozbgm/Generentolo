@@ -1,7 +1,8 @@
 /**
  * Google Custom Search Service
  * Fetches images from Google Images to use as invisible reference images
- * v1.4.2 - Square bracket syntax for explicit search keywords [like this]
+ * v1.5.1 - Square bracket syntax for explicit search keywords [like this]
+ *          Brackets are removed from final prompt to avoid ambiguous keywords
  *          Example: "macro photo... [borotalco original] ..." → searches only "borotalco original"
  */
 
@@ -26,7 +27,7 @@ interface GoogleSearchResponse {
 
 /**
  * Extract main keywords from prompt for image search
- * v1.4.2: Supports explicit keywords via square brackets [like this]
+ * v1.5.1: Supports explicit keywords via square brackets [like this]
  * If brackets are found, uses ONLY that text. Otherwise, falls back to automatic extraction.
  *
  * Examples:
@@ -34,7 +35,7 @@ interface GoogleSearchResponse {
  * - "piazza vecchia bergamo in stile pixar" → searches "piazza vecchia bergamo"
  */
 export const extractSearchKeywords = (prompt: string): string => {
-    // v1.4.2: Check if user specified explicit search terms with square brackets
+    // v1.5.1: Check if user specified explicit search terms with square brackets
     const bracketMatch = prompt.match(/\[([^\]]+)\]/);
 
     if (bracketMatch && bracketMatch[1]) {
@@ -174,6 +175,16 @@ export const fetchImageAsFile = async (url: string, filename: string = 'google-r
         console.error(`❌ Failed to fetch image from ${url}:`, error);
         return null;
     }
+};
+
+/**
+ * Remove square brackets and their content from prompt
+ * Used to clean prompt before sending to Gemini (to avoid ambiguous keywords like "Coin" = money vs brand)
+ *
+ * Example: "palazzo storico [Coin Bergamo] fotografia" → "palazzo storico fotografia"
+ */
+export const removeBracketsFromPrompt = (prompt: string): string => {
+    return prompt.replace(/\[([^\]]+)\]/g, '').replace(/\s+/g, ' ').trim();
 };
 
 /**

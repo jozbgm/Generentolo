@@ -9,7 +9,7 @@ import ZoomableImage from './components/ZoomableImage';
 import PromptLibrary from './components/PromptLibrary';
 import UsageTracker from './components/UsageTracker'; // v1.4
 import { STYLE_PRESETS, PHYSICS_PRESETS } from './data/stylePresets'; // v1.4
-import { fetchInvisibleReferences } from './services/googleSearchService'; // v1.4.1
+import { fetchInvisibleReferences, removeBracketsFromPrompt } from './services/googleSearchService'; // v1.5.1
 
 // Polyfill for crypto.randomUUID() on browsers that don't support it (mobile Safari, etc)
 if (!crypto.randomUUID) {
@@ -25,7 +25,7 @@ if (!crypto.randomUUID) {
 // --- Localization ---
 const translations = {
   en: {
-    headerTitle: 'Generentolo PRO v1.5',
+    headerTitle: 'Generentolo PRO v1.5.1',
     headerSubtitle: 'Let me do it for you!',
     refImagesTitle: 'Reference & Style Images',
     styleRefTitle: 'Style Reference',
@@ -190,7 +190,7 @@ const translations = {
     costDisclaimer: '* Estimate based on official Google pricing',
   },
   it: {
-    headerTitle: 'Generentolo PRO v1.5',
+    headerTitle: 'Generentolo PRO v1.5.1',
     headerSubtitle: 'Let me do it for you!',
     refImagesTitle: 'Immagini di Riferimento e Stile',
     styleRefTitle: 'Riferimento Stile',
@@ -709,7 +709,7 @@ const ReferencePanel: React.FC<{
                     </label>
                 </div>
 
-                {/* Google Search Grounding - v1.4.1: Now available for all models */}
+                {/* Google Search Grounding - v1.5.1: Now available for all models */}
                 <div className="flex items-start gap-3">
                     <input
                         type="checkbox"
@@ -2462,7 +2462,7 @@ export default function App() {
         setIsLoading(true);
         setCurrentImages([]);
         try {
-            // v1.4.1: Fetch invisible reference images from Google if grounding is enabled
+            // v1.5.1: Fetch invisible reference images from Google if grounding is enabled
             let invisibleReferences: File[] = [];
             if (useGrounding && editedPrompt) {
                 console.log('🌐 Google Search Grounding active - fetching reference images...');
@@ -2489,6 +2489,12 @@ export default function App() {
             // Merge user's visible references with invisible Google references
             const allReferenceFiles = [...referenceImages, ...invisibleReferences];
 
+            // v1.5.1: Remove square brackets from prompt to avoid ambiguous keywords (e.g., "Coin" = money vs brand)
+            const cleanedPrompt = useGrounding ? removeBracketsFromPrompt(editedPrompt) : editedPrompt;
+            console.log(useGrounding && editedPrompt !== cleanedPrompt
+                ? `🧹 Cleaned prompt for Gemini: "${cleanedPrompt}" (removed brackets)`
+                : '');
+
             // v1.0: Calculate estimated cost
             const estimatedCost = geminiService.calculateEstimatedCost(
                 selectedModel,
@@ -2504,7 +2510,7 @@ export default function App() {
             const imageDataUrls: string[] = [];
 
             for (let index = 0; index < numImagesToGenerate; index++) {
-                let variantPrompt = editedPrompt;
+                let variantPrompt = cleanedPrompt;
 
                 // Add subtle variations to prompt for batch generation (index > 0)
                 if (numImagesToGenerate > 1 && index > 0) {
@@ -2525,7 +2531,7 @@ export default function App() {
                             ', alternative composition',
                             ', varied lighting'
                           ];
-                    variantPrompt = editedPrompt + variations[index % variations.length] + keepSame;
+                    variantPrompt = cleanedPrompt + variations[index % variations.length] + keepSame;
                 }
 
                 // Generate sequentially if there are multiple references/complex setup to avoid API overload
