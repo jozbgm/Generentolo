@@ -1,8 +1,8 @@
-# 🎨 Generentolo PRO v1.5.0
+# 🎨 Generentolo PRO v1.6.0
 
 **Professional AI-Powered Image Generation Web Application**
 
-A sophisticated web application for generating ultra-high-quality images using Google's Gemini models (Flash & **Nano Banana PRO 3.0**) with **advanced Google Search Grounding with explicit keyword control**, style presets, physics controls, usage tracking, ControlNet-like structure guidance, 4K resolution support, native upscaling, professional prompt library with optimized presets, and text-in-image capabilities. Designed for graphic design agencies, marketers, and creative professionals who demand the highest quality and precision.
+A sophisticated web application for generating ultra-high-quality images using Google's Gemini models (Flash & **Nano Banana PRO 3.1**) with **Advanced Native 2K/4K Generation**, **advanced Google Search Grounding with explicit keyword control**, style presets, physics controls, usage tracking, ControlNet-like structure guidance, 4K resolution support, native upscaling, professional prompt library with optimized presets, and text-in-image capabilities. Designed for graphic design agencies, marketers, and creative professionals who demand the highest quality and precision.
 
 [![Live Demo](https://img.shields.io/badge/Live-Demo-blue?style=for-the-badge)](https://www.dugongo.it/generentolo/)
 [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
@@ -354,6 +354,23 @@ A sophisticated web application for generating ultra-high-quality images using G
 ---
 
 ## 📋 Changelog
+
+### v1.6.0 (December 2025) ✨
+**🎉 NATIVE 4K GENERATION - Nano Banana PRO 3.1 Upgrade:**
+
+**✨ NEW: Native 1K/2K/4K Resolution for PRO Model**
+- **Native Generation**: Images are now generated directly at the requested resolution (up to 4096px).
+- **Nano Banana PRO 3.1**: Leveraging the latest model capabilities for ultra-high-definition output.
+- **Dynamic Post-Processing**: Optimized `aggressiveCropAndResize` algorithm that supports canvas dimensions up to 4K without quality loss.
+- **High-Res Prompt Booster**: Automatic injection of technical high-resolution triggers for maximum sharpness.
+
+**🔧 Technical Improvements**
+- Integrated `imageSize` native parameter in Gemini API calls.
+- Removed the 2048px limitation from the post-processing pipeline.
+- Improved image smoothing quality for better visual fidelity.
+- Fixed TypeScript lint errors and background fallback stability.
+
+---
 
 ### v1.5.0 (December 2025) 🎯
 **🎉 EXPLICIT KEYWORD CONTROL - Industry-First Feature:**

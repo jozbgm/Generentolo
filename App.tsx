@@ -13,8 +13,8 @@ import { fetchInvisibleReferences, removeBracketsFromPrompt } from './services/g
 
 // Polyfill for crypto.randomUUID() on browsers that don't support it (mobile Safari, etc)
 if (!crypto.randomUUID) {
-    crypto.randomUUID = function() {
-        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    crypto.randomUUID = function () {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
             const r = Math.random() * 16 | 0;
             const v = c === 'x' ? r : (r & 0x3 | 0x8);
             return v.toString(16);
@@ -24,350 +24,350 @@ if (!crypto.randomUUID) {
 
 // --- Localization ---
 const translations = {
-  en: {
-    headerTitle: 'Generentolo PRO v1.5.1',
-    headerSubtitle: 'Let me do it for you!',
-    refImagesTitle: 'Reference & Style Images',
-    styleRefTitle: 'Style Reference',
-    structureRefTitle: 'Structure Guide',
-    addStyleImage: 'Add / Drop Style Image',
-    addStructureImage: 'Add / Drop Structure Image',
-    addImage: 'Add / Drop Images',
-    optional: 'Optional',
-    preciseReference: 'Precise Reference',
-    preciseReferenceTooltip: 'Preserves EXACTLY facial features, skin texture, eye color, and hairstyle from reference images without any modification. Maximum fidelity to original faces.',
-    structureTooltip: 'Upload an image whose composition and structure will be preserved in the generation (like ControlNet depth map)',
-    creativePromptsTitle: 'Creative Prompts',
-    generateSuggestions: 'Generate Suggestions',
-    suggestionsPlaceholder: "Click 'Generate Suggestions' to get creative ideas.",
-    promptsLoading: 'Upload an image to generate prompts.',
-    promptPlaceholder: 'Write your prompt or generate one from images...',
-    createFromImage: 'Create from Images',
-    enhancePrompt: 'Enhance Prompt',
-    professionalToolsTitle: 'Professional Tools',
-    generateTools: 'Generate Tools',
-    advancedSettingsTitle: 'Advanced Settings',
-    negativePromptLabel: 'Negative Prompt',
-    negativePromptTooltip: "Terms to exclude from the image (e.g., ugly, deformed). Helps refine results.",
-    generateNegativePrompt: 'Generate Negative Prompt',
-    negativePromptPlaceholder: 'e.g., text, watermarks, ugly...',
-    seedLabel: 'Seed',
-    seedTooltip: "A specific number that ensures an identical image is generated every time with the same prompt. Leave blank for random.",
-    seedPlaceholder: 'Number for consistency',
-    copySeed: 'Copy Seed',
-    toolsLoading: 'Click \'Generate Tools\' to get professional controls.',
-    toolsPlaceholder: "Click 'Generate Tools' to unlock professional controls based on your images.",
-    chooseOptions: 'Choose options...',
-    numImagesTitle: 'Number of Images',
-    aspectRatioTitle: 'Aspect Ratio',
-    aspectRatioTooltip: "Sets the width-to-height ratio of the final image. 'Auto' uses the aspect ratio of the reference image.",
-    modelTitle: 'Model',
-    modelFlash: 'Flash (Fast & Cheap)',
-    modelPro: 'PRO (High Quality)',
-    modelTooltip: "Flash: Fast and economical ($0.04/image). PRO: High quality with 4K support ($0.13-$0.24/image).",
-    resolutionTitle: 'Resolution',
-    resolution1k: '1K (Standard)',
-    resolution2k: '2K (High)',
-    resolution4k: '4K (Ultra)',
-    resolutionTooltip: "PRO model only. Higher resolution = better quality but slower and more expensive.",
-    estimatedCost: 'Estimated Cost',
-    textInImageTitle: 'Text in Image',
-    textInImageEnable: 'Add Text',
-    textInImagePlaceholder: 'Enter text to display...',
-    textPosition: 'Position',
-    textPositionTop: 'Top',
-    textPositionCenter: 'Center',
-    textPositionBottom: 'Bottom',
-    textPositionOverlay: 'Overlay',
-    fontStyle: 'Font Style',
-    fontBold: 'Bold',
-    fontItalic: 'Italic',
-    fontCalligraphy: 'Calligraphy',
-    fontModern: 'Modern',
-    fontVintage: 'Vintage',
-    generateButton: 'Generate',
-    abort: 'Abort',
-    generatingButton: 'Generating...',
-    generatingStatus: 'Generentolo is generating...',
-    generatingSubtext: 'This can take a moment.',
-    imageDisplayPlaceholderTitle: 'Your creations will appear here.',
-    imageDisplayPlaceholderSubtext: 'Upload an image and generate to begin.',
-    historyTitle: 'History',
-    historyEmpty: 'No generations yet.',
-    historyCapped: 'History is limited to the last 12 creations.',
-    clearHistory: 'Clear all history',
-    confirmClearHistory: 'Are you sure you want to clear the entire history? This action cannot be undone.',
-    allHistory: 'All',
-    favoritesOnly: 'Favorites',
-    noFavorites: 'No favorites yet. Click the star icon on images to bookmark them.',
-    generationPromptTitle: 'Generation Prompt',
-    copy: 'Copy',
-    copied: 'Copied!',
-    settingsTitle: 'Settings',
-    apiKeyLabel: 'Gemini API Key',
-    apiKeyPlaceholder: 'Enter your API key',
-    apiKeySubtext: 'If you leave this empty, the application will use the default shared key. Your key is saved locally in your browser.',
-    cancel: 'Cancel',
-    save: 'Save',
-    clearSelection: 'Clear Selection',
-    editAction: 'Inpaint',
-    inpaintModalTitle: 'Inpaint Image',
-    inpaintPromptLabel: 'Describe the change for the masked area:',
-    brushSizeLabel: 'Brush Size',
-    clearMask: 'Clear Mask',
-    randomize: 'Randomize',
-    deleteAction: 'Delete',
-    reuseAction: 'Reuse Settings',
-    confirmDeleteHistory: 'Are you sure you want to delete this item from history?',
-    feedbackTitle: 'Leave Feedback',
-    yourRating: 'Your Rating',
-    yourName: 'Your Name',
-    yourEmail: 'Your Email',
-    yourMessage: 'Your Message',
-    sendFeedback: 'Send Feedback',
-    useAsReference: 'Use as Reference',
-    resetInterface: 'Reset Interface',
-    select: 'Select',
-    deleteSelected: 'Delete Selected',
-    confirmDeleteSelected: 'Are you sure you want to delete the selected items? This action cannot be undone.',
-    keyboardShortcuts: 'Keyboard Shortcuts',
-    shortcutsDescription: 'Use these shortcuts to speed up your workflow:',
-    helpGuide: 'Help Guide',
-    helpDescription: 'Complete guide to using Generentolo',
-    // Toasts
-    apiKeySaved: 'API Key saved!',
-    downloadStarted: 'Download started!',
-    generationFailed: 'Generation failed. Please try again.',
-    inpaintingFailed: 'Inpainting failed. Please try again.',
-    historySaveFailed: 'Could not save full history, storage is full.',
-    promptEnhancementFailed: 'Prompt enhancement failed.',
-    promptCreationFailed: 'Prompt creation failed.',
-    upscaleAction: 'Upscale to 4K',
-    upscale2K: 'Upscale to 2K ($0.134)',
-    upscale4K: 'Upscale to 4K ($0.24)',
-    upscaling: 'Upscaling to high resolution...',
-    upscaleSuccess: 'Image upscaled successfully!',
-    upscaleFailed: 'Upscaling failed. Please try again.',
-    // Prompt Library
-    promptLibraryTitle: 'Prompt Library',
-    promptLibrarySearch: 'Search prompts by title, description, or tags...',
-    promptLibraryTemplates: 'templates',
-    promptLibraryTemplate: 'template',
-    promptLibraryAvailable: 'available',
-    promptLibraryNoResults: 'No prompts found',
-    promptLibraryNoResultsDesc: 'Try adjusting your search or selecting a different category',
-    promptLibraryCopy: 'Copy',
-    promptLibraryCopied: 'Copied!',
-    promptLibraryUse: 'Use Prompt',
-    promptLibraryCategoryAll: 'All',
-    promptLibraryCategoryAesthetic: 'Aesthetic Presets',
-    promptLibraryCategoryPro: 'PRO Features',
-    promptLibraryCategoryCombine: 'Combine & Merge',
-    promptLibraryCategoryStyle: 'Style & Transform',
-    promptLibraryCategoryPeople: 'People & Characters',
-    promptLibraryCategoryEnvironment: 'Environment & Scene',
-    promptLibraryCategoryEdit: 'Edit & Modify',
-    promptLibraryCategoryCreative: 'Creative & Fun',
-    promptLibraryDifficultyEasy: 'easy',
-    promptLibraryDifficultyMedium: 'medium',
-    promptLibraryDifficultyAdvanced: 'advanced',
-    // v1.4: New Features
-    groundingLabel: 'Google Search Grounding',
-    groundingTooltip: 'Automatically fetches reference images from Google based on your prompt keywords to improve accuracy and realism.',
-    stylePresetsTitle: 'Quick Style Presets',
-    stylePresetsNone: 'None',
-    physicsControlTitle: 'Physics Controls',
-    lightingLabel: 'Lighting',
-    cameraLabel: 'Camera',
-    focusLabel: 'Focus',
-    usageTrackerTitle: 'Session Stats',
-    // Cost Calculator
-    costEstimate: 'Cost Estimate',
-    costOutput: 'Output',
-    costInputImages: 'Input Images',
-    costPrompt: 'Prompt',
-    costTotal: 'Total',
-    costDisclaimer: '* Estimate based on official Google pricing',
-  },
-  it: {
-    headerTitle: 'Generentolo PRO v1.5.1',
-    headerSubtitle: 'Let me do it for you!',
-    refImagesTitle: 'Immagini di Riferimento e Stile',
-    styleRefTitle: 'Riferimento Stile',
-    structureRefTitle: 'Guida Struttura',
-    addStyleImage: 'Aggiungi / Trascina Stile',
-    addStructureImage: 'Aggiungi / Trascina Struttura',
-    addImage: 'Aggiungi / Trascina Immagini',
-    optional: 'Facoltativo',
-    preciseReference: 'Riferimento Preciso',
-    preciseReferenceTooltip: 'Preserva ESATTAMENTE i tratti del viso, texture della pelle, colore degli occhi e acconciatura dalle immagini di riferimento senza alcuna modifica. Massima fedeltà ai volti originali.',
-    structureTooltip: 'Carica un\'immagine la cui composizione e struttura verranno preservate nella generazione (come depth map ControlNet)',
-    creativePromptsTitle: 'Prompt Creativi',
-    generateSuggestions: 'Genera Suggerimenti',
-    suggestionsPlaceholder: "Clicca 'Genera Suggerimenti' per ottenere idee creative.",
-    promptsLoading: 'Carica un\'immagine per generare i prompt.',
-    promptPlaceholder: 'Scrivi il tuo prompt o creane uno dalle immagini...',
-    createFromImage: 'Crea da Immagini',
-    enhancePrompt: 'Migliora Prompt',
-    professionalToolsTitle: 'Strumenti Professionali',
-    generateTools: 'Genera Strumenti',
-    advancedSettingsTitle: 'Impostazioni Avanzate',
-    negativePromptLabel: 'Prompt Negativo',
-    negativePromptTooltip: "Termini da escludere dall'immagine (es. brutto, deforme). Aiuta a rifinire i risultati.",
-    generateNegativePrompt: 'Genera Prompt Negativo',
-    negativePromptPlaceholder: 'es. testo, watermark, brutto...',
-    seedLabel: 'Seed',
-    seedTooltip: "Un numero specifico che assicura la generazione di un'immagine identica ogni volta con lo stesso prompt. Lascia vuoto per un risultato casuale.",
-    seedPlaceholder: 'Numero per coerenza',
-    copySeed: 'Copia Seed',
-    toolsLoading: 'Clicca \'Genera Strumenti\' per ottenere controlli professionali.',
-    toolsPlaceholder: "Clicca 'Genera Strumenti' per sbloccare i controlli professionali in base alle tue immagini.",
-    chooseOptions: 'Scegli opzioni...',
-    numImagesTitle: 'Numero di Immagini',
-    aspectRatioTitle: 'Proporzioni',
-    aspectRatioTooltip: "Imposta il rapporto larghezza-altezza dell'immagine finale. 'Auto' usa le proporzioni dell'immagine di riferimento.",
-    modelTitle: 'Modello',
-    modelFlash: 'Flash (Veloce & Economico)',
-    modelPro: 'PRO (Alta Qualità)',
-    modelTooltip: "Flash: Veloce ed economico ($0.04/immagine). PRO: Alta qualità con supporto 4K ($0.13-$0.24/immagine).",
-    resolutionTitle: 'Risoluzione',
-    resolution1k: '1K (Standard)',
-    resolution2k: '2K (Alta)',
-    resolution4k: '4K (Ultra)',
-    resolutionTooltip: "Solo modello PRO. Risoluzione maggiore = qualità migliore ma più lento e costoso.",
-    estimatedCost: 'Costo Stimato',
-    textInImageTitle: 'Testo nell\'Immagine',
-    textInImageEnable: 'Aggiungi Testo',
-    textInImagePlaceholder: 'Inserisci il testo da mostrare...',
-    textPosition: 'Posizione',
-    textPositionTop: 'Alto',
-    textPositionCenter: 'Centro',
-    textPositionBottom: 'Basso',
-    textPositionOverlay: 'Sovrapposto',
-    fontStyle: 'Stile Font',
-    fontBold: 'Grassetto',
-    fontItalic: 'Corsivo',
-    fontCalligraphy: 'Calligrafia',
-    fontModern: 'Moderno',
-    fontVintage: 'Vintage',
-    generateButton: 'Genera',
-    abort: 'Annulla',
-    generatingButton: 'In generazione...',
-    generatingStatus: 'Generentolo sta generando...',
-    generatingSubtext: 'Potrebbe volerci un momento.',
-    imageDisplayPlaceholderTitle: 'Le tue creazioni appariranno qui.',
-    imageDisplayPlaceholderSubtext: 'Carica un\'immagine e genera per iniziare.',
-    historyTitle: 'Cronologia',
-    historyEmpty: 'Nessuna generazione ancora.',
-  	historyCapped: 'La cronologia è limitata alle ultime 12 creazioni.',
-    clearHistory: 'Svuota cronologia',
-    confirmClearHistory: 'Sei sicuro di voler svuotare l\'intera cronologia? L\'azione è irreversibile.',
-    allHistory: 'Tutte',
-    favoritesOnly: 'Preferiti',
-    noFavorites: 'Nessun preferito. Clicca sulla stella per segnare le immagini.',
-    generationPromptTitle: 'Prompt di Generazione',
-    copy: 'Copia',
-    copied: 'Copiato!',
-    settingsTitle: 'Impostazioni',
-    apiKeyLabel: 'Chiave API Gemini',
-    apiKeyPlaceholder: 'Inserisci la tua chiave API',
-    apiKeySubtext: 'Se lasci vuoto, l\'applicazione userà la chiave condivisa predefinita. La tua chiave è salvata localmente nel browser.',
-    cancel: 'Annulla',
-    save: 'Salva',
-    clearSelection: 'Pulisci Selezione',
-    editAction: 'Modifica',
-    inpaintModalTitle: 'Modifica Immagine',
-    inpaintPromptLabel: 'Descrivi la modifica per l\'area mascherata:',
-    brushSizeLabel: 'Dim. Pennello',
-    clearMask: 'Pulisci Maschera',
-    randomize: 'Randomizza',
-    deleteAction: 'Elimina',
-    reuseAction: 'Riusa Impostazioni',
-    confirmDeleteHistory: 'Sei sicuro di voler eliminare questo elemento dalla cronologia?',
-    feedbackTitle: 'Lascia un Feedback',
-    yourRating: 'La tua Valutazione',
-    yourName: 'Il tuo Nome',
-    yourEmail: 'La tua Email',
-    yourMessage: 'Il tuo Messaggio',
-    sendFeedback: 'Invia Feedback',
-    useAsReference: 'Usa come Riferimento',
-    resetInterface: 'Resetta Interfaccia',
-    select: 'Seleziona',
-    deleteSelected: 'Elimina Selezionati',
-    confirmDeleteSelected: 'Sei sicuro di voler eliminare gli elementi selezionati? L\'azione è irreversibile.',
-    keyboardShortcuts: 'Scorciatoie Tastiera',
-    shortcutsDescription: 'Usa queste scorciatoie per velocizzare il tuo lavoro:',
-    helpGuide: 'Guida',
-    helpDescription: 'Guida completa all\'uso di Generentolo',
-    // Toasts
-    apiKeySaved: 'Chiave API salvata!',
-    downloadStarted: 'Download avviato!',
-    generationFailed: 'Generazione fallita. Riprova.',
-    inpaintingFailed: 'Modifica fallita. Riprova.',
-    historySaveFailed: 'Impossibile salvare la cronologia, memoria piena.',
-    promptEnhancementFailed: 'Miglioramento del prompt fallito.',
-    promptCreationFailed: 'Creazione del prompt fallita.',
-    upscaleAction: 'Upscale a 4K',
-    upscale2K: 'Upscale a 2K ($0.134)',
-    upscale4K: 'Upscale a 4K ($0.24)',
-    upscaling: 'Upscaling ad alta risoluzione...',
-    upscaleSuccess: 'Immagine potenziata con successo!',
-    upscaleFailed: 'Upscaling fallito. Riprova.',
-    // Prompt Library
-    promptLibraryTitle: 'Libreria Prompt',
-    promptLibrarySearch: 'Cerca prompt per titolo, descrizione o tag...',
-    promptLibraryTemplates: 'template',
-    promptLibraryTemplate: 'template',
-    promptLibraryAvailable: 'disponibili',
-    promptLibraryNoResults: 'Nessun prompt trovato',
-    promptLibraryNoResultsDesc: 'Prova a modificare la ricerca o seleziona una categoria diversa',
-    promptLibraryCopy: 'Copia',
-    promptLibraryCopied: 'Copiato!',
-    promptLibraryUse: 'Usa Prompt',
-    promptLibraryCategoryAll: 'Tutti',
-    promptLibraryCategoryAesthetic: 'Preset Estetici',
-    promptLibraryCategoryPro: 'Funzioni PRO',
-    promptLibraryCategoryCombine: 'Combina e Unisci',
-    promptLibraryCategoryStyle: 'Stile e Trasforma',
-    promptLibraryCategoryPeople: 'Persone e Personaggi',
-    promptLibraryCategoryEnvironment: 'Ambiente e Scena',
-    promptLibraryCategoryEdit: 'Modifica e Ritocca',
-    promptLibraryCategoryCreative: 'Creativo e Divertente',
-    promptLibraryDifficultyEasy: 'facile',
-    promptLibraryDifficultyMedium: 'medio',
-    promptLibraryDifficultyAdvanced: 'avanzato',
-    // v1.4: Nuove Funzionalità
-    groundingLabel: 'Google Search Grounding',
-    groundingTooltip: 'Scarica automaticamente immagini di riferimento da Google basandosi sulle parole chiave del prompt per migliorare accuratezza e realismo.',
-    stylePresetsTitle: 'Preset Stile Rapidi',
-    stylePresetsNone: 'Nessuno',
-    physicsControlTitle: 'Controlli Fisica',
-    lightingLabel: 'Illuminazione',
-    cameraLabel: 'Fotocamera',
-    focusLabel: 'Fuoco',
-    usageTrackerTitle: 'Statistiche Sessione',
-    // Cost Calculator
-    costEstimate: 'Stima Costo',
-    costOutput: 'Output',
-    costInputImages: 'Immagini Input',
-    costPrompt: 'Prompt',
-    costTotal: 'Totale',
-    costDisclaimer: '* Stima basata sui prezzi ufficiali Google',
-  }
+    en: {
+        headerTitle: 'Generentolo PRO v1.6.0',
+        headerSubtitle: 'Let me do it for you!',
+        refImagesTitle: 'Reference & Style Images',
+        styleRefTitle: 'Style Reference',
+        structureRefTitle: 'Structure Guide',
+        addStyleImage: 'Add / Drop Style Image',
+        addStructureImage: 'Add / Drop Structure Image',
+        addImage: 'Add / Drop Images',
+        optional: 'Optional',
+        preciseReference: 'Precise Reference',
+        preciseReferenceTooltip: 'Preserves EXACTLY facial features, skin texture, eye color, and hairstyle from reference images without any modification. Maximum fidelity to original faces.',
+        structureTooltip: 'Upload an image whose composition and structure will be preserved in the generation (like ControlNet depth map)',
+        creativePromptsTitle: 'Creative Prompts',
+        generateSuggestions: 'Generate Suggestions',
+        suggestionsPlaceholder: "Click 'Generate Suggestions' to get creative ideas.",
+        promptsLoading: 'Upload an image to generate prompts.',
+        promptPlaceholder: 'Write your prompt or generate one from images...',
+        createFromImage: 'Create from Images',
+        enhancePrompt: 'Enhance Prompt',
+        professionalToolsTitle: 'Professional Tools',
+        generateTools: 'Generate Tools',
+        advancedSettingsTitle: 'Advanced Settings',
+        negativePromptLabel: 'Negative Prompt',
+        negativePromptTooltip: "Terms to exclude from the image (e.g., ugly, deformed). Helps refine results.",
+        generateNegativePrompt: 'Generate Negative Prompt',
+        negativePromptPlaceholder: 'e.g., text, watermarks, ugly...',
+        seedLabel: 'Seed',
+        seedTooltip: "A specific number that ensures an identical image is generated every time with the same prompt. Leave blank for random.",
+        seedPlaceholder: 'Number for consistency',
+        copySeed: 'Copy Seed',
+        toolsLoading: 'Click \'Generate Tools\' to get professional controls.',
+        toolsPlaceholder: "Click 'Generate Tools' to unlock professional controls based on your images.",
+        chooseOptions: 'Choose options...',
+        numImagesTitle: 'Number of Images',
+        aspectRatioTitle: 'Aspect Ratio',
+        aspectRatioTooltip: "Sets the width-to-height ratio of the final image. 'Auto' uses the aspect ratio of the reference image.",
+        modelTitle: 'Model',
+        modelFlash: 'Flash (Fast & Cheap)',
+        modelPro: 'PRO (High Quality)',
+        modelTooltip: "Flash: Fast and economical ($0.04/image). PRO: High quality with 4K support ($0.13-$0.24/image).",
+        resolutionTitle: 'Resolution',
+        resolution1k: '1K (Standard)',
+        resolution2k: '2K (High)',
+        resolution4k: '4K (Ultra)',
+        resolutionTooltip: "PRO model only. Higher resolution = better quality but slower and more expensive.",
+        estimatedCost: 'Estimated Cost',
+        textInImageTitle: 'Text in Image',
+        textInImageEnable: 'Add Text',
+        textInImagePlaceholder: 'Enter text to display...',
+        textPosition: 'Position',
+        textPositionTop: 'Top',
+        textPositionCenter: 'Center',
+        textPositionBottom: 'Bottom',
+        textPositionOverlay: 'Overlay',
+        fontStyle: 'Font Style',
+        fontBold: 'Bold',
+        fontItalic: 'Italic',
+        fontCalligraphy: 'Calligraphy',
+        fontModern: 'Modern',
+        fontVintage: 'Vintage',
+        generateButton: 'Generate',
+        abort: 'Abort',
+        generatingButton: 'Generating...',
+        generatingStatus: 'Generentolo is generating...',
+        generatingSubtext: 'This can take a moment.',
+        imageDisplayPlaceholderTitle: 'Your creations will appear here.',
+        imageDisplayPlaceholderSubtext: 'Upload an image and generate to begin.',
+        historyTitle: 'History',
+        historyEmpty: 'No generations yet.',
+        historyCapped: 'History is limited to the last 12 creations.',
+        clearHistory: 'Clear all history',
+        confirmClearHistory: 'Are you sure you want to clear the entire history? This action cannot be undone.',
+        allHistory: 'All',
+        favoritesOnly: 'Favorites',
+        noFavorites: 'No favorites yet. Click the star icon on images to bookmark them.',
+        generationPromptTitle: 'Generation Prompt',
+        copy: 'Copy',
+        copied: 'Copied!',
+        settingsTitle: 'Settings',
+        apiKeyLabel: 'Gemini API Key',
+        apiKeyPlaceholder: 'Enter your API key',
+        apiKeySubtext: 'If you leave this empty, the application will use the default shared key. Your key is saved locally in your browser.',
+        cancel: 'Cancel',
+        save: 'Save',
+        clearSelection: 'Clear Selection',
+        editAction: 'Inpaint',
+        inpaintModalTitle: 'Inpaint Image',
+        inpaintPromptLabel: 'Describe the change for the masked area:',
+        brushSizeLabel: 'Brush Size',
+        clearMask: 'Clear Mask',
+        randomize: 'Randomize',
+        deleteAction: 'Delete',
+        reuseAction: 'Reuse Settings',
+        confirmDeleteHistory: 'Are you sure you want to delete this item from history?',
+        feedbackTitle: 'Leave Feedback',
+        yourRating: 'Your Rating',
+        yourName: 'Your Name',
+        yourEmail: 'Your Email',
+        yourMessage: 'Your Message',
+        sendFeedback: 'Send Feedback',
+        useAsReference: 'Use as Reference',
+        resetInterface: 'Reset Interface',
+        select: 'Select',
+        deleteSelected: 'Delete Selected',
+        confirmDeleteSelected: 'Are you sure you want to delete the selected items? This action cannot be undone.',
+        keyboardShortcuts: 'Keyboard Shortcuts',
+        shortcutsDescription: 'Use these shortcuts to speed up your workflow:',
+        helpGuide: 'Help Guide',
+        helpDescription: 'Complete guide to using Generentolo',
+        // Toasts
+        apiKeySaved: 'API Key saved!',
+        downloadStarted: 'Download started!',
+        generationFailed: 'Generation failed. Please try again.',
+        inpaintingFailed: 'Inpainting failed. Please try again.',
+        historySaveFailed: 'Could not save full history, storage is full.',
+        promptEnhancementFailed: 'Prompt enhancement failed.',
+        promptCreationFailed: 'Prompt creation failed.',
+        upscaleAction: 'Upscale to 4K',
+        upscale2K: 'Upscale to 2K ($0.134)',
+        upscale4K: 'Upscale to 4K ($0.24)',
+        upscaling: 'Upscaling to high resolution...',
+        upscaleSuccess: 'Image upscaled successfully!',
+        upscaleFailed: 'Upscaling failed. Please try again.',
+        // Prompt Library
+        promptLibraryTitle: 'Prompt Library',
+        promptLibrarySearch: 'Search prompts by title, description, or tags...',
+        promptLibraryTemplates: 'templates',
+        promptLibraryTemplate: 'template',
+        promptLibraryAvailable: 'available',
+        promptLibraryNoResults: 'No prompts found',
+        promptLibraryNoResultsDesc: 'Try adjusting your search or selecting a different category',
+        promptLibraryCopy: 'Copy',
+        promptLibraryCopied: 'Copied!',
+        promptLibraryUse: 'Use Prompt',
+        promptLibraryCategoryAll: 'All',
+        promptLibraryCategoryAesthetic: 'Aesthetic Presets',
+        promptLibraryCategoryPro: 'PRO Features',
+        promptLibraryCategoryCombine: 'Combine & Merge',
+        promptLibraryCategoryStyle: 'Style & Transform',
+        promptLibraryCategoryPeople: 'People & Characters',
+        promptLibraryCategoryEnvironment: 'Environment & Scene',
+        promptLibraryCategoryEdit: 'Edit & Modify',
+        promptLibraryCategoryCreative: 'Creative & Fun',
+        promptLibraryDifficultyEasy: 'easy',
+        promptLibraryDifficultyMedium: 'medium',
+        promptLibraryDifficultyAdvanced: 'advanced',
+        // v1.4: New Features
+        groundingLabel: 'Google Search Grounding',
+        groundingTooltip: 'Automatically fetches reference images from Google based on your prompt keywords to improve accuracy and realism.',
+        stylePresetsTitle: 'Quick Style Presets',
+        stylePresetsNone: 'None',
+        physicsControlTitle: 'Physics Controls',
+        lightingLabel: 'Lighting',
+        cameraLabel: 'Camera',
+        focusLabel: 'Focus',
+        usageTrackerTitle: 'Session Stats',
+        // Cost Calculator
+        costEstimate: 'Cost Estimate',
+        costOutput: 'Output',
+        costInputImages: 'Input Images',
+        costPrompt: 'Prompt',
+        costTotal: 'Total',
+        costDisclaimer: '* Estimate based on official Google pricing',
+    },
+    it: {
+        headerTitle: 'Generentolo PRO v1.6.0',
+        headerSubtitle: 'Let me do it for you!',
+        refImagesTitle: 'Immagini di Riferimento e Stile',
+        styleRefTitle: 'Riferimento Stile',
+        structureRefTitle: 'Guida Struttura',
+        addStyleImage: 'Aggiungi / Trascina Stile',
+        addStructureImage: 'Aggiungi / Trascina Struttura',
+        addImage: 'Aggiungi / Trascina Immagini',
+        optional: 'Facoltativo',
+        preciseReference: 'Riferimento Preciso',
+        preciseReferenceTooltip: 'Preserva ESATTAMENTE i tratti del viso, texture della pelle, colore degli occhi e acconciatura dalle immagini di riferimento senza alcuna modifica. Massima fedeltà ai volti originali.',
+        structureTooltip: 'Carica un\'immagine la cui composizione e struttura verranno preservate nella generazione (come depth map ControlNet)',
+        creativePromptsTitle: 'Prompt Creativi',
+        generateSuggestions: 'Genera Suggerimenti',
+        suggestionsPlaceholder: "Clicca 'Genera Suggerimenti' per ottenere idee creative.",
+        promptsLoading: 'Carica un\'immagine per generare i prompt.',
+        promptPlaceholder: 'Scrivi il tuo prompt o creane uno dalle immagini...',
+        createFromImage: 'Crea da Immagini',
+        enhancePrompt: 'Migliora Prompt',
+        professionalToolsTitle: 'Strumenti Professionali',
+        generateTools: 'Genera Strumenti',
+        advancedSettingsTitle: 'Impostazioni Avanzate',
+        negativePromptLabel: 'Prompt Negativo',
+        negativePromptTooltip: "Termini da escludere dall'immagine (es. brutto, deforme). Aiuta a rifinire i risultati.",
+        generateNegativePrompt: 'Genera Prompt Negativo',
+        negativePromptPlaceholder: 'es. testo, watermark, brutto...',
+        seedLabel: 'Seed',
+        seedTooltip: "Un numero specifico che assicura la generazione di un'immagine identica ogni volta con lo stesso prompt. Lascia vuoto per un risultato casuale.",
+        seedPlaceholder: 'Numero per coerenza',
+        copySeed: 'Copia Seed',
+        toolsLoading: 'Clicca \'Genera Strumenti\' per ottenere controlli professionali.',
+        toolsPlaceholder: "Clicca 'Genera Strumenti' per sbloccare i controlli professionali in base alle tue immagini.",
+        chooseOptions: 'Scegli opzioni...',
+        numImagesTitle: 'Numero di Immagini',
+        aspectRatioTitle: 'Proporzioni',
+        aspectRatioTooltip: "Imposta il rapporto larghezza-altezza dell'immagine finale. 'Auto' usa le proporzioni dell'immagine di riferimento.",
+        modelTitle: 'Modello',
+        modelFlash: 'Flash (Veloce & Economico)',
+        modelPro: 'PRO (Alta Qualità)',
+        modelTooltip: "Flash: Veloce ed economico ($0.04/immagine). PRO: Alta qualità con supporto 4K ($0.13-$0.24/immagine).",
+        resolutionTitle: 'Risoluzione',
+        resolution1k: '1K (Standard)',
+        resolution2k: '2K (Alta)',
+        resolution4k: '4K (Ultra)',
+        resolutionTooltip: "Solo modello PRO. Risoluzione maggiore = qualità migliore ma più lento e costoso.",
+        estimatedCost: 'Costo Stimato',
+        textInImageTitle: 'Testo nell\'Immagine',
+        textInImageEnable: 'Aggiungi Testo',
+        textInImagePlaceholder: 'Inserisci il testo da mostrare...',
+        textPosition: 'Posizione',
+        textPositionTop: 'Alto',
+        textPositionCenter: 'Centro',
+        textPositionBottom: 'Basso',
+        textPositionOverlay: 'Sovrapposto',
+        fontStyle: 'Stile Font',
+        fontBold: 'Grassetto',
+        fontItalic: 'Corsivo',
+        fontCalligraphy: 'Calligrafia',
+        fontModern: 'Moderno',
+        fontVintage: 'Vintage',
+        generateButton: 'Genera',
+        abort: 'Annulla',
+        generatingButton: 'In generazione...',
+        generatingStatus: 'Generentolo sta generando...',
+        generatingSubtext: 'Potrebbe volerci un momento.',
+        imageDisplayPlaceholderTitle: 'Le tue creazioni appariranno qui.',
+        imageDisplayPlaceholderSubtext: 'Carica un\'immagine e genera per iniziare.',
+        historyTitle: 'Cronologia',
+        historyEmpty: 'Nessuna generazione ancora.',
+        historyCapped: 'La cronologia è limitata alle ultime 12 creazioni.',
+        clearHistory: 'Svuota cronologia',
+        confirmClearHistory: 'Sei sicuro di voler svuotare l\'intera cronologia? L\'azione è irreversibile.',
+        allHistory: 'Tutte',
+        favoritesOnly: 'Preferiti',
+        noFavorites: 'Nessun preferito. Clicca sulla stella per segnare le immagini.',
+        generationPromptTitle: 'Prompt di Generazione',
+        copy: 'Copia',
+        copied: 'Copiato!',
+        settingsTitle: 'Impostazioni',
+        apiKeyLabel: 'Chiave API Gemini',
+        apiKeyPlaceholder: 'Inserisci la tua chiave API',
+        apiKeySubtext: 'Se lasci vuoto, l\'applicazione userà la chiave condivisa predefinita. La tua chiave è salvata localmente nel browser.',
+        cancel: 'Annulla',
+        save: 'Salva',
+        clearSelection: 'Pulisci Selezione',
+        editAction: 'Modifica',
+        inpaintModalTitle: 'Modifica Immagine',
+        inpaintPromptLabel: 'Descrivi la modifica per l\'area mascherata:',
+        brushSizeLabel: 'Dim. Pennello',
+        clearMask: 'Pulisci Maschera',
+        randomize: 'Randomizza',
+        deleteAction: 'Elimina',
+        reuseAction: 'Riusa Impostazioni',
+        confirmDeleteHistory: 'Sei sicuro di voler eliminare questo elemento dalla cronologia?',
+        feedbackTitle: 'Lascia un Feedback',
+        yourRating: 'La tua Valutazione',
+        yourName: 'Il tuo Nome',
+        yourEmail: 'La tua Email',
+        yourMessage: 'Il tuo Messaggio',
+        sendFeedback: 'Invia Feedback',
+        useAsReference: 'Usa come Riferimento',
+        resetInterface: 'Resetta Interfaccia',
+        select: 'Seleziona',
+        deleteSelected: 'Elimina Selezionati',
+        confirmDeleteSelected: 'Sei sicuro di voler eliminare gli elementi selezionati? L\'azione è irreversibile.',
+        keyboardShortcuts: 'Scorciatoie Tastiera',
+        shortcutsDescription: 'Usa queste scorciatoie per velocizzare il tuo lavoro:',
+        helpGuide: 'Guida',
+        helpDescription: 'Guida completa all\'uso di Generentolo',
+        // Toasts
+        apiKeySaved: 'Chiave API salvata!',
+        downloadStarted: 'Download avviato!',
+        generationFailed: 'Generazione fallita. Riprova.',
+        inpaintingFailed: 'Modifica fallita. Riprova.',
+        historySaveFailed: 'Impossibile salvare la cronologia, memoria piena.',
+        promptEnhancementFailed: 'Miglioramento del prompt fallito.',
+        promptCreationFailed: 'Creazione del prompt fallita.',
+        upscaleAction: 'Upscale a 4K',
+        upscale2K: 'Upscale a 2K ($0.134)',
+        upscale4K: 'Upscale a 4K ($0.24)',
+        upscaling: 'Upscaling ad alta risoluzione...',
+        upscaleSuccess: 'Immagine potenziata con successo!',
+        upscaleFailed: 'Upscaling fallito. Riprova.',
+        // Prompt Library
+        promptLibraryTitle: 'Libreria Prompt',
+        promptLibrarySearch: 'Cerca prompt per titolo, descrizione o tag...',
+        promptLibraryTemplates: 'template',
+        promptLibraryTemplate: 'template',
+        promptLibraryAvailable: 'disponibili',
+        promptLibraryNoResults: 'Nessun prompt trovato',
+        promptLibraryNoResultsDesc: 'Prova a modificare la ricerca o seleziona una categoria diversa',
+        promptLibraryCopy: 'Copia',
+        promptLibraryCopied: 'Copiato!',
+        promptLibraryUse: 'Usa Prompt',
+        promptLibraryCategoryAll: 'Tutti',
+        promptLibraryCategoryAesthetic: 'Preset Estetici',
+        promptLibraryCategoryPro: 'Funzioni PRO',
+        promptLibraryCategoryCombine: 'Combina e Unisci',
+        promptLibraryCategoryStyle: 'Stile e Trasforma',
+        promptLibraryCategoryPeople: 'Persone e Personaggi',
+        promptLibraryCategoryEnvironment: 'Ambiente e Scena',
+        promptLibraryCategoryEdit: 'Modifica e Ritocca',
+        promptLibraryCategoryCreative: 'Creativo e Divertente',
+        promptLibraryDifficultyEasy: 'facile',
+        promptLibraryDifficultyMedium: 'medio',
+        promptLibraryDifficultyAdvanced: 'avanzato',
+        // v1.4: Nuove Funzionalità
+        groundingLabel: 'Google Search Grounding',
+        groundingTooltip: 'Scarica automaticamente immagini di riferimento da Google basandosi sulle parole chiave del prompt per migliorare accuratezza e realismo.',
+        stylePresetsTitle: 'Preset Stile Rapidi',
+        stylePresetsNone: 'Nessuno',
+        physicsControlTitle: 'Controlli Fisica',
+        lightingLabel: 'Illuminazione',
+        cameraLabel: 'Fotocamera',
+        focusLabel: 'Fuoco',
+        usageTrackerTitle: 'Statistiche Sessione',
+        // Cost Calculator
+        costEstimate: 'Stima Costo',
+        costOutput: 'Output',
+        costInputImages: 'Immagini Input',
+        costPrompt: 'Prompt',
+        costTotal: 'Totale',
+        costDisclaimer: '* Stima basata sui prezzi ufficiali Google',
+    }
 };
 
 type Language = keyof typeof translations;
 
 interface LocalizationContextType {
-  language: Language;
-  setLanguage: (language: Language) => void;
-  t: typeof translations.en;
+    language: Language;
+    setLanguage: (language: Language) => void;
+    t: typeof translations.en;
 }
 
 export const LanguageContext = createContext<LocalizationContextType>({
-  language: 'en',
-  setLanguage: () => {},
-  t: translations.en,
+    language: 'en',
+    setLanguage: () => { },
+    t: translations.en,
 });
 
 export const useLocalization = () => useContext(LanguageContext);
@@ -375,17 +375,17 @@ export const useLocalization = () => useContext(LanguageContext);
 
 // --- Helper Functions ---
 const getInitialTheme = (): 'dark' | 'light' => {
-  if (typeof window !== 'undefined' && window.localStorage) {
-    const storedPrefs = window.localStorage.getItem('color-theme');
-    if (typeof storedPrefs === 'string') return storedPrefs as 'dark' | 'light';
-    const userMedia = window.matchMedia('(prefers-color-scheme: dark)');
-    if (userMedia.matches) return 'dark';
-  }
-  return 'dark';
+    if (typeof window !== 'undefined' && window.localStorage) {
+        const storedPrefs = window.localStorage.getItem('color-theme');
+        if (typeof storedPrefs === 'string') return storedPrefs as 'dark' | 'light';
+        const userMedia = window.matchMedia('(prefers-color-scheme: dark)');
+        if (userMedia.matches) return 'dark';
+    }
+    return 'dark';
 };
 
 const getInitialLanguage = (): Language => {
-    if(typeof window !== 'undefined' && window.localStorage) {
+    if (typeof window !== 'undefined' && window.localStorage) {
         const storedLang = window.localStorage.getItem('language');
         if (storedLang === 'en' || storedLang === 'it') return storedLang;
     }
@@ -400,8 +400,8 @@ const dataURLtoFile = (dataurl: string, filename: string): File => {
     const bstr = atob(arr[1]);
     let n = bstr.length;
     const u8arr = new Uint8Array(n);
-    while(n--){ u8arr[n] = bstr.charCodeAt(n); }
-    return new File([u8arr], filename, {type:mime});
+    while (n--) { u8arr[n] = bstr.charCodeAt(n); }
+    return new File([u8arr], filename, { type: mime });
 }
 
 const createThumbnailDataUrl = (dataUrl: string, maxSize = 256): Promise<string> => {
@@ -459,7 +459,7 @@ const Header: React.FC<HeaderProps> = ({ theme, toggleTheme, onOpenSettings, onO
     return (
         <header className="flex justify-between items-center p-4">
             <div>
-                 <h1 className="text-xl font-bold flex items-center">
+                <h1 className="text-xl font-bold flex items-center">
                     <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-yellow to-brand-magenta">
                         {t.headerTitle}
                     </span>
@@ -519,7 +519,7 @@ const ImagePreview = React.memo<{ file: File; index: number; isGuide?: boolean; 
                 <img src={previewUrl} alt={`Reference ${index + 1}`} className="w-full h-full object-cover rounded-xl" />
                 {!isGuide && onRemove && (
                     <button onClick={(e) => { e.stopPropagation(); onRemove(index); }} className="absolute top-1.5 right-1.5 bg-black/60 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity z-10" aria-label={`Remove image ${index + 1}`}>
-                        <XIcon className="w-3 h-3"/>
+                        <XIcon className="w-3 h-3" />
                     </button>
                 )}
             </div>
@@ -539,7 +539,7 @@ const StyleImagePreview = React.memo<{ file: File; onRemove: () => void }>(
             <>
                 <img src={previewUrl} alt="Style reference" className="w-full h-auto max-h-48 object-cover rounded-xl" />
                 <button onClick={onRemove} className="absolute top-2 right-2 bg-black/60 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm opacity-0 group-hover:opacity-100 transition-opacity z-10" aria-label="Remove style image">
-                    <XIcon className="w-4 h-4"/>
+                    <XIcon className="w-4 h-4" />
                 </button>
             </>
         );
@@ -622,7 +622,7 @@ const ReferencePanel: React.FC<{
     return (
         <div className="p-4 space-y-4">
             <h3 className="font-semibold text-light-text dark:text-dark-text">{t.refImagesTitle}</h3>
-            <div 
+            <div
                 onDragEnter={handleRefDragEnter} onDragLeave={handleRefDragLeave} onDragOver={handleDragOver} onDrop={handleRefDrop}
                 className={`rounded-xl transition-all relative ${isDraggingRef ? 'border-2 border-dashed border-brand-yellow bg-brand-purple/10 p-1' : 'border-2 border-transparent'}`}
             >
@@ -632,8 +632,8 @@ const ReferencePanel: React.FC<{
                     ))}
 
                     {referenceImages.length < MAX_USER_IMAGES && (
-                         <div onClick={() => fileInputRef.current?.click()} className="relative group aspect-square rounded-xl shadow-[0_0_12px_3px_rgba(94,139,255,0.5)] bg-light-surface/50 dark:bg-dark-surface/30 flex items-center justify-center cursor-pointer">
-                             <div className="text-light-text-muted dark:text-dark-text-muted text-center">
+                        <div onClick={() => fileInputRef.current?.click()} className="relative group aspect-square rounded-xl shadow-[0_0_12px_3px_rgba(94,139,255,0.5)] bg-light-surface/50 dark:bg-dark-surface/30 flex items-center justify-center cursor-pointer">
+                            <div className="text-light-text-muted dark:text-dark-text-muted text-center">
                                 <UploadIcon className="w-6 h-6 mx-auto" />
                                 <span className="text-xs mt-1 block">{t.addImage}</span>
                             </div>
@@ -650,7 +650,7 @@ const ReferencePanel: React.FC<{
                 className={`rounded-xl transition-all relative ${isDraggingStyle ? 'border-2 border-dashed border-brand-pink bg-brand-pink/10 p-1' : 'border-2 border-transparent'}`}
             >
                 <div className="relative group shadow-[0_0_8px_2px_rgba(255,217,61,0.5)] rounded-xl">
-                     <div className="absolute top-2 left-2 px-2 py-1 bg-brand-yellow/90 text-black text-xs rounded-full font-semibold backdrop-blur-sm z-10">STYLE</div>
+                    <div className="absolute top-2 left-2 px-2 py-1 bg-brand-yellow/90 text-black text-xs rounded-full font-semibold backdrop-blur-sm z-10">STYLE</div>
                     {styleImage ? (
                         <StyleImagePreview file={styleImage} onRemove={onRemoveStyleImage} />
                     ) : (
@@ -671,9 +671,9 @@ const ReferencePanel: React.FC<{
                 className={`rounded-xl transition-all relative ${isDraggingStructure ? 'border-2 border-dashed border-brand-blue bg-brand-blue/10 p-1' : 'border-2 border-transparent'}`}
             >
                 <div className="relative group shadow-[0_0_8px_2px_rgba(255,0,110,0.5)] rounded-xl">
-                     <div className="absolute top-2 left-2 px-2 py-1 bg-brand-magenta/90 text-white text-xs rounded-full font-semibold backdrop-blur-sm z-10">
+                    <div className="absolute top-2 left-2 px-2 py-1 bg-brand-magenta/90 text-white text-xs rounded-full font-semibold backdrop-blur-sm z-10">
                         STRUCTURE
-                     </div>
+                    </div>
                     {structureImage ? (
                         <StyleImagePreview file={structureImage} onRemove={onRemoveStructureImage} />
                     ) : (
@@ -775,99 +775,99 @@ const ReferencePanel: React.FC<{
                     <span>{t.physicsControlTitle}</span>
                 </h3>
 
-                        {/* Lighting Control */}
-                        <div className="space-y-1">
-                            <label className="text-xs font-medium text-light-text-muted dark:text-dark-text-muted">
-                                {language === 'it' ? 'Illuminazione' : 'Lighting'}
-                            </label>
-                            <select
-                                value={selectedLighting || ''}
-                                onChange={(e) => {
-                                    const lightingId = e.target.value || null;
-                                    setSelectedLighting(lightingId);
-                                    if (lightingId) {
-                                        const preset = PHYSICS_PRESETS.lighting.find(p => p.id === lightingId);
-                                        if (preset) {
-                                            setEditedPrompt(prev => {
-                                                const cleanPrompt = prev.replace(/,\s*(soft studio lighting|golden hour lighting|dramatic lighting|neon lighting|natural daylight)[^,]*/gi, '');
-                                                return cleanPrompt + ', ' + preset.prompt;
-                                            });
-                                        }
-                                    }
-                                }}
-                                className="w-full px-3 py-2 rounded-lg bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border text-light-text dark:text-dark-text text-sm focus:outline-none focus:ring-2 focus:ring-brand-yellow/50"
-                            >
-                                <option value="">{language === 'it' ? 'Nessuna' : 'None'}</option>
-                                {PHYSICS_PRESETS.lighting.map(preset => (
-                                    <option key={preset.id} value={preset.id}>
-                                        {language === 'it' ? preset.nameIt : preset.name}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
+                {/* Lighting Control */}
+                <div className="space-y-1">
+                    <label className="text-xs font-medium text-light-text-muted dark:text-dark-text-muted">
+                        {language === 'it' ? 'Illuminazione' : 'Lighting'}
+                    </label>
+                    <select
+                        value={selectedLighting || ''}
+                        onChange={(e) => {
+                            const lightingId = e.target.value || null;
+                            setSelectedLighting(lightingId);
+                            if (lightingId) {
+                                const preset = PHYSICS_PRESETS.lighting.find(p => p.id === lightingId);
+                                if (preset) {
+                                    setEditedPrompt(prev => {
+                                        const cleanPrompt = prev.replace(/,\s*(soft studio lighting|golden hour lighting|dramatic lighting|neon lighting|natural daylight)[^,]*/gi, '');
+                                        return cleanPrompt + ', ' + preset.prompt;
+                                    });
+                                }
+                            }
+                        }}
+                        className="w-full px-3 py-2 rounded-lg bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border text-light-text dark:text-dark-text text-sm focus:outline-none focus:ring-2 focus:ring-brand-yellow/50"
+                    >
+                        <option value="">{language === 'it' ? 'Nessuna' : 'None'}</option>
+                        {PHYSICS_PRESETS.lighting.map(preset => (
+                            <option key={preset.id} value={preset.id}>
+                                {language === 'it' ? preset.nameIt : preset.name}
+                            </option>
+                        ))}
+                    </select>
+                </div>
 
-                        {/* Camera Control */}
-                        <div className="space-y-1">
-                            <label className="text-xs font-medium text-light-text-muted dark:text-dark-text-muted">
-                                {language === 'it' ? 'Fotocamera' : 'Camera'}
-                            </label>
-                            <select
-                                value={selectedCamera || ''}
-                                onChange={(e) => {
-                                    const cameraId = e.target.value || null;
-                                    setSelectedCamera(cameraId);
-                                    if (cameraId) {
-                                        const preset = PHYSICS_PRESETS.camera.find(p => p.id === cameraId);
-                                        if (preset) {
-                                            setEditedPrompt(prev => {
-                                                const cleanPrompt = prev.replace(/,\s*(wide angle lens|portrait lens|macro lens|telephoto lens|fisheye lens)[^,]*/gi, '');
-                                                return cleanPrompt + ', ' + preset.prompt;
-                                            });
-                                        }
-                                    }
-                                }}
-                                className="w-full px-3 py-2 rounded-lg bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border text-light-text dark:text-dark-text text-sm focus:outline-none focus:ring-2 focus:ring-brand-yellow/50"
-                            >
-                                <option value="">{language === 'it' ? 'Nessuna' : 'None'}</option>
-                                {PHYSICS_PRESETS.camera.map(preset => (
-                                    <option key={preset.id} value={preset.id}>
-                                        {language === 'it' ? preset.nameIt : preset.name}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
+                {/* Camera Control */}
+                <div className="space-y-1">
+                    <label className="text-xs font-medium text-light-text-muted dark:text-dark-text-muted">
+                        {language === 'it' ? 'Fotocamera' : 'Camera'}
+                    </label>
+                    <select
+                        value={selectedCamera || ''}
+                        onChange={(e) => {
+                            const cameraId = e.target.value || null;
+                            setSelectedCamera(cameraId);
+                            if (cameraId) {
+                                const preset = PHYSICS_PRESETS.camera.find(p => p.id === cameraId);
+                                if (preset) {
+                                    setEditedPrompt(prev => {
+                                        const cleanPrompt = prev.replace(/,\s*(wide angle lens|portrait lens|macro lens|telephoto lens|fisheye lens)[^,]*/gi, '');
+                                        return cleanPrompt + ', ' + preset.prompt;
+                                    });
+                                }
+                            }
+                        }}
+                        className="w-full px-3 py-2 rounded-lg bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border text-light-text dark:text-dark-text text-sm focus:outline-none focus:ring-2 focus:ring-brand-yellow/50"
+                    >
+                        <option value="">{language === 'it' ? 'Nessuna' : 'None'}</option>
+                        {PHYSICS_PRESETS.camera.map(preset => (
+                            <option key={preset.id} value={preset.id}>
+                                {language === 'it' ? preset.nameIt : preset.name}
+                            </option>
+                        ))}
+                    </select>
+                </div>
 
-                        {/* Focus Control */}
-                        <div className="space-y-1">
-                            <label className="text-xs font-medium text-light-text-muted dark:text-dark-text-muted">
-                                {language === 'it' ? 'Messa a Fuoco' : 'Focus'}
-                            </label>
-                            <select
-                                value={selectedFocus || ''}
-                                onChange={(e) => {
-                                    const focusId = e.target.value || null;
-                                    setSelectedFocus(focusId);
-                                    if (focusId) {
-                                        const preset = PHYSICS_PRESETS.focus.find(p => p.id === focusId);
-                                        if (preset) {
-                                            setEditedPrompt(prev => {
-                                                const cleanPrompt = prev.replace(/,\s*(shallow depth of field|tack sharp|cinematic depth of field|tilt-shift effect|soft focus)[^,]*/gi, '');
-                                                return cleanPrompt + ', ' + preset.prompt;
-                                            });
-                                        }
-                                    }
-                                }}
-                                className="w-full px-3 py-2 rounded-lg bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border text-light-text dark:text-dark-text text-sm focus:outline-none focus:ring-2 focus:ring-brand-yellow/50"
-                            >
-                                <option value="">{language === 'it' ? 'Nessuna' : 'None'}</option>
-                                {PHYSICS_PRESETS.focus.map(preset => (
-                                    <option key={preset.id} value={preset.id}>
-                                        {language === 'it' ? preset.nameIt : preset.name}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                    </div>
+                {/* Focus Control */}
+                <div className="space-y-1">
+                    <label className="text-xs font-medium text-light-text-muted dark:text-dark-text-muted">
+                        {language === 'it' ? 'Messa a Fuoco' : 'Focus'}
+                    </label>
+                    <select
+                        value={selectedFocus || ''}
+                        onChange={(e) => {
+                            const focusId = e.target.value || null;
+                            setSelectedFocus(focusId);
+                            if (focusId) {
+                                const preset = PHYSICS_PRESETS.focus.find(p => p.id === focusId);
+                                if (preset) {
+                                    setEditedPrompt(prev => {
+                                        const cleanPrompt = prev.replace(/,\s*(shallow depth of field|tack sharp|cinematic depth of field|tilt-shift effect|soft focus)[^,]*/gi, '');
+                                        return cleanPrompt + ', ' + preset.prompt;
+                                    });
+                                }
+                            }
+                        }}
+                        className="w-full px-3 py-2 rounded-lg bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border text-light-text dark:text-dark-text text-sm focus:outline-none focus:ring-2 focus:ring-brand-yellow/50"
+                    >
+                        <option value="">{language === 'it' ? 'Nessuna' : 'None'}</option>
+                        {PHYSICS_PRESETS.focus.map(preset => (
+                            <option key={preset.id} value={preset.id}>
+                                {language === 'it' ? preset.nameIt : preset.name}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+            </div>
         </div>
     );
 };
@@ -1028,13 +1028,13 @@ const ControlPanel: React.FC<ControlPanelProps> = (props) => {
     const [editingTool, setEditingTool] = useState<DynamicTool | null>(null);
     const [isRewriting, setIsRewriting] = useState(false);
     const [isGeneratingNegativePrompt, setIsGeneratingNegativePrompt] = useState(false);
-    
+
     useEffect(() => {
         const newSettings: Record<string, string[]> = {};
         dynamicTools.forEach(tool => { newSettings[tool.name] = []; });
         setToolSettings(newSettings);
     }, [dynamicTools]);
-    
+
     const handleGenerateNegativePrompt = useCallback(async () => {
         if (!editedPrompt || isGeneratingNegativePrompt) return;
 
@@ -1093,14 +1093,14 @@ const ControlPanel: React.FC<ControlPanelProps> = (props) => {
                     textareaRef={promptTextareaRef}
                 />
             </div>
-            
+
             <div>
                 <h3 className="font-semibold mb-3 text-light-text dark:text-dark-text">{t.professionalToolsTitle}</h3>
-                 <div className="space-y-4">
+                <div className="space-y-4">
                     <div className="grid grid-cols-2 gap-3">
                         {isToolsLoading && hasImages ? (
-                             <> <SkeletonLoader className="h-[52px]" /> <SkeletonLoader className="h-[52px]" /> </>
-                         ) : dynamicTools.length > 0 ? dynamicTools.map(tool => {
+                            <> <SkeletonLoader className="h-[52px]" /> <SkeletonLoader className="h-[52px]" /> </>
+                        ) : dynamicTools.length > 0 ? dynamicTools.map(tool => {
                             const selectionCount = toolSettings[tool.name]?.length || 0;
                             return (
                                 <div key={tool.name}>
@@ -1188,7 +1188,7 @@ const ControlPanel: React.FC<ControlPanelProps> = (props) => {
 
             <div className="p-4 rounded-xl bg-light-surface dark:bg-dark-surface/50 border border-light-border dark:border-dark-border space-y-4">
                 <h4 className="text-sm font-semibold text-light-text dark:text-dark-text">{t.advancedSettingsTitle}</h4>
-                 <div>
+                <div>
                     <label htmlFor="num-images" className="block text-xs font-medium text-light-text-muted dark:text-dark-text-muted mb-2">{t.numImagesTitle}</label>
                     <div className="grid grid-cols-4 gap-2">
                         {[1, 2, 3, 4].map(num => (
@@ -1203,13 +1203,13 @@ const ControlPanel: React.FC<ControlPanelProps> = (props) => {
                     </div>
                 </div>
                 <div className="relative">
-                     <label htmlFor="negative-prompt" className="flex items-center gap-2 text-xs font-medium text-light-text-muted dark:text-dark-text-muted mb-1">
+                    <label htmlFor="negative-prompt" className="flex items-center gap-2 text-xs font-medium text-light-text-muted dark:text-dark-text-muted mb-1">
                         <span>{t.negativePromptLabel}</span>
                         {isGeneratingNegativePrompt && <div className="w-3 h-3 border-2 border-brand-yellow/50 border-t-transparent rounded-full animate-spin"></div>}
                     </label>
                     <textarea id="negative-prompt" value={negativePrompt} onChange={e => onNegativePromptChange(e.target.value)} rows={2} className="w-full p-2 pr-10 text-sm bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded-lg focus:ring-2 focus:ring-brand-purple focus:outline-none" placeholder={t.negativePromptPlaceholder} />
                     <button onClick={handleGenerateNegativePrompt} disabled={isActionDisabled || !editedPrompt} title={t.generateNegativePrompt} className="absolute bottom-2 right-2 p-1.5 rounded-full text-brand-yellow hover:bg-brand-purple/20 transition-colors disabled:text-gray-400 disabled:hover:bg-transparent">
-                        <WandIcon className="w-5 h-5"/>
+                        <WandIcon className="w-5 h-5" />
                     </button>
                 </div>
                 <div>
@@ -1218,14 +1218,14 @@ const ControlPanel: React.FC<ControlPanelProps> = (props) => {
                     </label>
                     <div className="flex gap-2">
                         <input id="seed" type="text" value={seed} onChange={e => onSeedChange(e.target.value.replace(/\D/g, ''))} placeholder={t.seedPlaceholder} className="w-full p-2 text-sm bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded-lg focus:ring-2 focus:ring-brand-purple focus:outline-none" />
-                        <button onClick={onCopySeed} title={t.copySeed} className="p-2 rounded-lg bg-light-surface-accent dark:bg-dark-surface-accent border border-light-border dark:border-dark-border hover:border-dark-text-muted transition-colors"><CopyIcon className="w-5 h-5"/></button>
-                        <button onClick={onRandomizeSeed} title={t.randomize} className="p-2 rounded-lg bg-light-surface-accent dark:bg-dark-surface-accent border border-light-border dark:border-dark-border hover:border-dark-text-muted transition-colors"><DiceIcon className="w-5 h-5"/></button>
+                        <button onClick={onCopySeed} title={t.copySeed} className="p-2 rounded-lg bg-light-surface-accent dark:bg-dark-surface-accent border border-light-border dark:border-dark-border hover:border-dark-text-muted transition-colors"><CopyIcon className="w-5 h-5" /></button>
+                        <button onClick={onRandomizeSeed} title={t.randomize} className="p-2 rounded-lg bg-light-surface-accent dark:bg-dark-surface-accent border border-light-border dark:border-dark-border hover:border-dark-text-muted transition-colors"><DiceIcon className="w-5 h-5" /></button>
                     </div>
                 </div>
             </div>
 
             <div>
-                 <h3 className="font-semibold mb-3 text-light-text dark:text-dark-text">
+                <h3 className="font-semibold mb-3 text-light-text dark:text-dark-text">
                     {t.aspectRatioTitle}
                 </h3>
                 <div className="grid grid-cols-3 gap-2">
@@ -1312,88 +1312,88 @@ const ImageDisplay: React.FC<ImageDisplayProps> = ({ images, isLoading, onDownlo
                 </div>
             )}
             {!isLoading && images.length > 0 && (
-                 <div className="w-full h-full flex flex-col items-center justify-center">
+                <div className="w-full h-full flex flex-col items-center justify-center">
                     <div className={`w-full flex-1 min-h-0 grid ${images.length > 1 ? 'grid-cols-2' : 'grid-cols-1'} gap-4 p-4`}>
                         {images.map(image => {
                             const isUpscaling = upscalingImageId === image.id;
                             return (
-                            <div key={image.id} className="relative group flex items-center justify-center min-h-0">
-                                <img src={image.imageDataUrl || image.thumbnailDataUrl} alt={image.prompt} className="max-w-full max-h-full object-contain rounded-md cursor-zoom-in" onClick={() => onZoom(image)} />
+                                <div key={image.id} className="relative group flex items-center justify-center min-h-0">
+                                    <img src={image.imageDataUrl || image.thumbnailDataUrl} alt={image.prompt} className="max-w-full max-h-full object-contain rounded-md cursor-zoom-in" onClick={() => onZoom(image)} />
 
-                                {/* Upscaling overlay */}
-                                {isUpscaling && (
-                                    <div className="absolute inset-0 bg-black/60 rounded-md flex flex-col items-center justify-center z-10">
-                                        <div className="w-12 h-12 border-4 border-brand-yellow border-t-transparent rounded-full animate-spin mb-3"></div>
-                                        <p className="text-white font-semibold">{t.upscaling}</p>
-                                    </div>
-                                )}
-
-                                <div className="absolute top-2 right-2 flex gap-2 items-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <span className="px-2 py-1 rounded-full bg-black/50 text-white text-xs font-mono backdrop-blur-sm">{image.aspectRatio}</span>
-
-                                    {/* v0.8: Favorite/Bookmark button */}
-                                    <button
-                                        onClick={() => onToggleFavorite(image.id)}
-                                        className={`p-2 rounded-full ${image.isFavorite ? 'bg-yellow-400 text-black' : 'bg-black/50 text-white'} hover:bg-yellow-400 hover:text-black transition-colors`}
-                                        aria-label={image.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
-                                        title={image.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
-                                    >
-                                        <StarIcon className="w-5 h-5" />
-                                    </button>
-
-                                    <button onClick={() => onEdit(image)} className="p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors" aria-label={t.editAction}><BrushIcon className="w-5 h-5" /></button>
-
-                                    {/* v1.1: Upscale button with dropdown */}
-                                    {!isUpscaling && (
-                                        <div className="relative">
-                                            <button
-                                                onClick={() => setShowUpscaleMenu(showUpscaleMenu === image.id ? null : image.id)}
-                                                className="p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
-                                                aria-label={t.upscaleAction}
-                                                title={t.upscaleAction}
-                                            >
-                                                <SparklesIcon className="w-5 h-5" />
-                                            </button>
-
-                                            {showUpscaleMenu === image.id && (
-                                                <div className="absolute top-full right-0 mt-1 bg-dark-surface border border-dark-border rounded-lg shadow-lg overflow-hidden z-20 min-w-[160px]">
-                                                    <button
-                                                        onClick={(e) => { e.stopPropagation(); onUpscale(image, '2k'); setShowUpscaleMenu(null); }}
-                                                        className="w-full px-4 py-2 text-left text-white hover:bg-dark-surface-accent transition-colors"
-                                                    >
-                                                        {t.upscale2K}
-                                                    </button>
-                                                    <button
-                                                        onClick={(e) => { e.stopPropagation(); onUpscale(image, '4k'); setShowUpscaleMenu(null); }}
-                                                        className="w-full px-4 py-2 text-left text-white hover:bg-dark-surface-accent transition-colors"
-                                                    >
-                                                        {t.upscale4K}
-                                                    </button>
-                                                </div>
-                                            )}
+                                    {/* Upscaling overlay */}
+                                    {isUpscaling && (
+                                        <div className="absolute inset-0 bg-black/60 rounded-md flex flex-col items-center justify-center z-10">
+                                            <div className="w-12 h-12 border-4 border-brand-yellow border-t-transparent rounded-full animate-spin mb-3"></div>
+                                            <p className="text-white font-semibold">{t.upscaling}</p>
                                         </div>
                                     )}
 
-                                    <button onClick={() => onDownload(image)} className="p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors" aria-label="Download image"><DownloadIcon className="w-5 h-5" /></button>
+                                    <div className="absolute top-2 right-2 flex gap-2 items-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <span className="px-2 py-1 rounded-full bg-black/50 text-white text-xs font-mono backdrop-blur-sm">{image.aspectRatio}</span>
 
-                                    {/* v0.8: Re-roll button */}
-                                    <button
-                                        onClick={() => onReroll(image)}
-                                        className="p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
-                                        aria-label="Re-roll (generate variant)"
-                                        title="🎲 Generate variant with new seed"
-                                    >
-                                        <DiceIcon className="w-5 h-5" />
-                                    </button>
+                                        {/* v0.8: Favorite/Bookmark button */}
+                                        <button
+                                            onClick={() => onToggleFavorite(image.id)}
+                                            className={`p-2 rounded-full ${image.isFavorite ? 'bg-yellow-400 text-black' : 'bg-black/50 text-white'} hover:bg-yellow-400 hover:text-black transition-colors`}
+                                            aria-label={image.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+                                            title={image.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+                                        >
+                                            <StarIcon className="w-5 h-5" />
+                                        </button>
+
+                                        <button onClick={() => onEdit(image)} className="p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors" aria-label={t.editAction}><BrushIcon className="w-5 h-5" /></button>
+
+                                        {/* v1.1: Upscale button with dropdown */}
+                                        {!isUpscaling && (
+                                            <div className="relative">
+                                                <button
+                                                    onClick={() => setShowUpscaleMenu(showUpscaleMenu === image.id ? null : image.id)}
+                                                    className="p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+                                                    aria-label={t.upscaleAction}
+                                                    title={t.upscaleAction}
+                                                >
+                                                    <SparklesIcon className="w-5 h-5" />
+                                                </button>
+
+                                                {showUpscaleMenu === image.id && (
+                                                    <div className="absolute top-full right-0 mt-1 bg-dark-surface border border-dark-border rounded-lg shadow-lg overflow-hidden z-20 min-w-[160px]">
+                                                        <button
+                                                            onClick={(e) => { e.stopPropagation(); onUpscale(image, '2k'); setShowUpscaleMenu(null); }}
+                                                            className="w-full px-4 py-2 text-left text-white hover:bg-dark-surface-accent transition-colors"
+                                                        >
+                                                            {t.upscale2K}
+                                                        </button>
+                                                        <button
+                                                            onClick={(e) => { e.stopPropagation(); onUpscale(image, '4k'); setShowUpscaleMenu(null); }}
+                                                            className="w-full px-4 py-2 text-left text-white hover:bg-dark-surface-accent transition-colors"
+                                                        >
+                                                            {t.upscale4K}
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+
+                                        <button onClick={() => onDownload(image)} className="p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors" aria-label="Download image"><DownloadIcon className="w-5 h-5" /></button>
+
+                                        {/* v0.8: Re-roll button */}
+                                        <button
+                                            onClick={() => onReroll(image)}
+                                            className="p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+                                            aria-label="Re-roll (generate variant)"
+                                            title="🎲 Generate variant with new seed"
+                                        >
+                                            <DiceIcon className="w-5 h-5" />
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
                             );
                         })}
                     </div>
-                 </div>
+                </div>
             )}
             {!isLoading && images.length === 0 && (
-                 <div className="text-center text-light-text-muted dark:text-dark-text-muted">
+                <div className="text-center text-light-text-muted dark:text-dark-text-muted">
                     <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-gradient-to-br from-brand-blue/10 to-brand-purple/10 flex items-center justify-center">
                         <div className="w-16 h-16 rounded-full bg-gradient-to-br from-brand-blue/20 to-brand-purple/20"></div>
                     </div>
@@ -1473,28 +1473,28 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
     return (
         <div className="h-full flex flex-col bg-light-surface/50 dark:bg-dark-surface/30 backdrop-blur-xl rounded-3xl p-4">
             <div className="flex justify-between items-center mb-3">
-              <h2 className="font-semibold text-light-text dark:text-dark-text">{t.historyTitle} {history.length > 0 && <span className="text-sm text-light-text-muted dark:text-dark-text-muted">({history.length})</span>}</h2>
-              {history.length > 0 && (
-                 <div className="flex items-center gap-2">
-                  {!isSelectionMode ? (
-                    <>
-                      <button onClick={onEnterSelectionMode} className="text-sm font-medium text-brand-blue hover:underline">{t.select}</button>
-                      <button
-                        onClick={onClearAll}
-                        title={t.clearHistory}
-                        className="p-1.5 rounded-full text-light-text-muted dark:text-dark-text-muted hover:bg-red-500/20 hover:text-red-500 dark:hover:bg-red-500/20 transition-colors"
-                      >
-                        <TrashIcon className="w-4 h-4" />
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <button onClick={onDeleteSelected} disabled={selectedIds.size === 0} className="text-sm font-medium text-red-500 hover:underline disabled:opacity-50 disabled:no-underline">{t.deleteSelected} ({selectedIds.size})</button>
-                      <button onClick={onCancelSelectionMode} className="text-sm font-medium text-light-text-muted dark:text-dark-text-muted hover:underline">{t.cancel}</button>
-                    </>
-                  )}
-                </div>
-              )}
+                <h2 className="font-semibold text-light-text dark:text-dark-text">{t.historyTitle} {history.length > 0 && <span className="text-sm text-light-text-muted dark:text-dark-text-muted">({history.length})</span>}</h2>
+                {history.length > 0 && (
+                    <div className="flex items-center gap-2">
+                        {!isSelectionMode ? (
+                            <>
+                                <button onClick={onEnterSelectionMode} className="text-sm font-medium text-brand-blue hover:underline">{t.select}</button>
+                                <button
+                                    onClick={onClearAll}
+                                    title={t.clearHistory}
+                                    className="p-1.5 rounded-full text-light-text-muted dark:text-dark-text-muted hover:bg-red-500/20 hover:text-red-500 dark:hover:bg-red-500/20 transition-colors"
+                                >
+                                    <TrashIcon className="w-4 h-4" />
+                                </button>
+                            </>
+                        ) : (
+                            <>
+                                <button onClick={onDeleteSelected} disabled={selectedIds.size === 0} className="text-sm font-medium text-red-500 hover:underline disabled:opacity-50 disabled:no-underline">{t.deleteSelected} ({selectedIds.size})</button>
+                                <button onClick={onCancelSelectionMode} className="text-sm font-medium text-light-text-muted dark:text-dark-text-muted hover:underline">{t.cancel}</button>
+                            </>
+                        )}
+                    </div>
+                )}
             </div>
 
             {/* v0.8.1: Favorites filter toggle */}
@@ -1502,21 +1502,19 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
                 <div className="flex gap-1 mb-3 bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-xl p-1">
                     <button
                         onClick={() => setShowFavoritesOnly(false)}
-                        className={`flex-1 px-3 py-1.5 text-sm font-medium rounded-lg transition-all ${
-                            !showFavoritesOnly
+                        className={`flex-1 px-3 py-1.5 text-sm font-medium rounded-lg transition-all ${!showFavoritesOnly
                                 ? 'bg-white dark:bg-dark-surface text-light-text dark:text-dark-text shadow-sm'
                                 : 'text-light-text-muted dark:text-dark-text-muted hover:text-light-text dark:hover:text-dark-text'
-                        }`}
+                            }`}
                     >
                         {t.allHistory}
                     </button>
                     <button
                         onClick={() => setShowFavoritesOnly(true)}
-                        className={`flex-1 px-3 py-1.5 text-sm font-medium rounded-lg transition-all flex items-center justify-center gap-1.5 ${
-                            showFavoritesOnly
+                        className={`flex-1 px-3 py-1.5 text-sm font-medium rounded-lg transition-all flex items-center justify-center gap-1.5 ${showFavoritesOnly
                                 ? 'bg-white dark:bg-dark-surface text-light-text dark:text-dark-text shadow-sm'
                                 : 'text-light-text-muted dark:text-dark-text-muted hover:text-light-text dark:hover:text-dark-text'
-                        }`}
+                            }`}
                     >
                         <StarIcon className="w-4 h-4" filled={showFavoritesOnly} />
                         {t.favoritesOnly}
@@ -1532,7 +1530,7 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
                             return (
                                 <div key={item.id} className="relative group" onClick={() => isSelectionMode ? onToggleSelection(item.id) : onZoom(item)}>
                                     <img src={item.thumbnailDataUrl || item.imageDataUrl} alt={item.prompt} className={`aspect-square object-cover rounded-xl w-full transition-transform duration-300 ${isSelectionMode ? 'group-hover:scale-95 cursor-pointer' : 'cursor-zoom-in'}`} />
-                                    
+
                                     {isSelectionMode ? (
                                         <div className={`absolute inset-0 rounded-xl cursor-pointer transition-all border-2 ${isSelected ? 'border-brand-blue bg-brand-blue/30' : 'border-transparent group-hover:bg-black/30'}`}>
                                             <div className={`absolute top-1.5 right-1.5 w-5 h-5 rounded-full flex items-center justify-center transition-all ${isSelected ? 'bg-brand-blue border-2 border-white' : 'bg-black/30 border-2 border-white/50'}`}>
@@ -1761,8 +1759,8 @@ const CreativePromptsPanel: React.FC<CreativePromptsPanelProps> = ({ prompts, on
             <div className="flex justify-between items-center mb-3">
                 <h4 className="text-xs font-semibold text-light-text-muted dark:text-dark-text-muted uppercase tracking-wider">{t.creativePromptsTitle}</h4>
                 {prompts.length > 0 && hasImages && (
-                    <button 
-                        onClick={onGenerate} 
+                    <button
+                        onClick={onGenerate}
                         disabled={isLoading}
                         className="p-1.5 rounded-full text-brand-yellow hover:bg-brand-purple/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         title={t.generateSuggestions}
@@ -1782,8 +1780,8 @@ const CreativePromptsPanel: React.FC<CreativePromptsPanelProps> = ({ prompts, on
                     {prompts.map((prompt, index) => {
                         const isSelected = selectedPrompt === prompt;
                         return (
-                            <button 
-                                key={`${index}-${prompt}`} 
+                            <button
+                                key={`${index}-${prompt}`}
                                 onClick={() => onSelectPrompt(prompt)}
                                 className={`text-left p-3 rounded-lg text-sm transition-all border ${isSelected ? 'bg-brand-purple/20 border-brand-yellow text-light-text dark:text-dark-text font-medium' : 'bg-light-surface/50 dark:bg-dark-surface/50 border-transparent hover:border-dark-border text-light-text-muted dark:text-dark-text-muted'}`}
                             >
@@ -1793,7 +1791,7 @@ const CreativePromptsPanel: React.FC<CreativePromptsPanelProps> = ({ prompts, on
                     })}
                 </div>
             ) : (
-                 <div className="text-center py-4 space-y-3">
+                <div className="text-center py-4 space-y-3">
                     {hasImages ? (
                         <button onClick={onGenerate} className="text-center py-2 px-4 rounded-lg bg-light-surface dark:bg-dark-surface/50 border border-light-border dark:border-dark-border hover:border-brand-yellow transition-colors font-semibold text-sm">
                             {t.generateSuggestions}
@@ -1801,7 +1799,7 @@ const CreativePromptsPanel: React.FC<CreativePromptsPanelProps> = ({ prompts, on
                     ) : (
                         <p className="text-sm text-light-text-muted dark:text-dark-text-muted">{t.promptsLoading}</p>
                     )}
-                 </div>
+                </div>
             )}
         </div>
     );
@@ -1938,7 +1936,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                         <XIcon className="w-6 h-6" />
                     </button>
                 </div>
-                
+
                 <div className="flex-1 overflow-y-auto p-6 space-y-6">
                     {helpContent.sections.map((section, index) => (
                         <div key={index} className="space-y-2">
@@ -2035,7 +2033,7 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose }) => {
     const handleSend = () => {
         const subject = encodeURIComponent(`Feedback for Generentolo`);
         const body = encodeURIComponent(
-`Rating: ${rating}/5
+            `Rating: ${rating}/5
 Name: ${name}
 Email: ${email}
 
@@ -2069,15 +2067,15 @@ ${message}`
                             ))}
                         </div>
                     </div>
-                     <div>
+                    <div>
                         <label htmlFor="feedback-name" className="block text-sm font-medium text-light-text-muted dark:text-dark-text-muted mb-1">{t.yourName}</label>
                         <input id="feedback-name" type="text" value={name} onChange={e => setName(e.target.value)} className="w-full p-2 bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded-lg focus:ring-2 focus:ring-brand-purple focus:outline-none" />
                     </div>
-                     <div>
+                    <div>
                         <label htmlFor="feedback-email" className="block text-sm font-medium text-light-text-muted dark:text-dark-text-muted mb-1">{t.yourEmail}</label>
                         <input id="feedback-email" type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full p-2 bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded-lg focus:ring-2 focus:ring-brand-purple focus:outline-none" />
                     </div>
-                     <div>
+                    <div>
                         <label htmlFor="feedback-message" className="block text-sm font-medium text-light-text-muted dark:text-dark-text-muted mb-1">{t.yourMessage}</label>
                         <textarea id="feedback-message" value={message} onChange={e => setMessage(e.target.value)} rows={4} className="w-full p-2 bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded-lg focus:ring-2 focus:ring-brand-purple focus:outline-none" />
                     </div>
@@ -2176,11 +2174,11 @@ const InpaintEditor: React.FC<InpaintEditorProps> = ({ image, onClose, onSave })
             }
         }
     };
-    
+
     useEffect(() => {
         if (canvasRef.current) {
             const ctx = canvasRef.current.getContext('2d');
-            if(ctx) ctx.lineWidth = brushSize;
+            if (ctx) ctx.lineWidth = brushSize;
         }
     }, [brushSize]);
 
@@ -2204,9 +2202,9 @@ const InpaintEditor: React.FC<InpaintEditorProps> = ({ image, onClose, onSave })
             setIsLoading(false);
         }, 'image/png');
     };
-    
+
     return (
-         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose} role="dialog">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose} role="dialog">
             <div className="bg-light-surface/80 dark:bg-dark-surface/80 backdrop-blur-xl border border-white/10 dark:border-white/10 rounded-2xl shadow-2xl w-full max-w-4xl flex flex-col" onClick={e => e.stopPropagation()}>
                 <div className="flex justify-between items-center p-4 border-b border-light-border dark:border-dark-border">
                     <h2 className="text-lg font-semibold">{t.inpaintModalTitle}</h2>
@@ -2317,7 +2315,7 @@ export default function App() {
         const loadedPresets = presetsService.loadPresets();
         setPresets(loadedPresets);
     }, []);
-    
+
     const showToast = useCallback((message: string, type: 'success' | 'error') => {
         setToast({ id: Date.now(), message, type });
     }, []);
@@ -2340,7 +2338,7 @@ export default function App() {
     useEffect(() => {
         localStorage.setItem('language', language);
     }, [language]);
-    
+
     useEffect(() => {
         try {
             const savedHistory = localStorage.getItem('nano-generator-history');
@@ -2395,11 +2393,11 @@ export default function App() {
     useEffect(() => {
         const hasImages = referenceImages.length > 0 || styleReferenceImage;
         if (!hasImages) {
-             setPrompts([]);
-             setDynamicTools([]);
+            setPrompts([]);
+            setDynamicTools([]);
         }
     }, [referenceImages, styleReferenceImage]);
-    
+
     const handleGenerateCreativePrompts = useCallback(async () => {
         const hasImages = referenceImages.length > 0 || styleReferenceImage || structureImage;
         if (!hasImages) return;
@@ -2447,11 +2445,11 @@ export default function App() {
     const handleAddStyleImage = (file: File) => {
         setStyleReferenceImage(file);
     };
-    
+
     const handleRemoveStyleImage = () => {
         setStyleReferenceImage(null);
     };
-    
+
     const handleGenerate = useCallback(async () => {
         if (referenceImages.length === 0 && !editedPrompt && !styleReferenceImage) return;
 
@@ -2524,13 +2522,13 @@ export default function App() {
                             ', angolazione diversa',
                             ', composizione alternativa',
                             ', illuminazione variata'
-                          ]
+                        ]
                         : [
                             ', alternate perspective',
                             ', different angle',
                             ', alternative composition',
                             ', varied lighting'
-                          ];
+                        ];
                     variantPrompt = cleanedPrompt + variations[index % variations.length] + keepSame;
                 }
 
@@ -3039,7 +3037,7 @@ export default function App() {
     const handleRandomizeSeed = () => {
         setSeed(String(Math.floor(Math.random() * 1000000000)));
     };
-    
+
     const handleCancelHistorySelectionMode = useCallback(() => {
         setIsHistorySelectionMode(false);
         setSelectedHistoryIds(new Set());
@@ -3069,7 +3067,7 @@ export default function App() {
             return newSet;
         });
     };
-    
+
     const handleDeleteSelectedHistoryItems = () => {
         if (selectedHistoryIds.size === 0) return;
         if (window.confirm(t.confirmDeleteSelected)) {
@@ -3094,7 +3092,7 @@ export default function App() {
         setNumImagesToGenerate(1);
     }, []);
 
-     const handleUseAsReference = () => {
+    const handleUseAsReference = () => {
         if (currentImages.length === 0 || referenceImages.length >= MAX_USER_IMAGES) return;
         const imageToUse = currentImages[0];
         const imageUrl = imageToUse.imageDataUrl || imageToUse.thumbnailDataUrl;
@@ -3104,7 +3102,7 @@ export default function App() {
         handleAddImages([file]);
         setCurrentImages([]);
     };
-    
+
     const isActionDisabled = isLoading || isEnhancing;
 
     // Keyboard shortcuts
@@ -3170,31 +3168,31 @@ export default function App() {
 
                         {((referenceImages.length > 0 || !!styleReferenceImage) || currentImages.length === 1) && (
                             <div className="flex-shrink-0 space-y-2 lg:space-y-4 overflow-y-auto max-h-[300px] lg:max-h-[250px]">
-                               {(referenceImages.length > 0 || !!styleReferenceImage) && (
-                                <CreativePromptsPanel
-                                    prompts={prompts}
-                                    onSelectPrompt={setEditedPrompt}
-                                    onGenerate={handleGenerateCreativePrompts}
-                                    selectedPrompt={editedPrompt}
-                                    isLoading={isPromptsLoading}
-                                    hasImages={(referenceImages.length > 0 || !!styleReferenceImage)}
-                                />
-                            )}
+                                {(referenceImages.length > 0 || !!styleReferenceImage) && (
+                                    <CreativePromptsPanel
+                                        prompts={prompts}
+                                        onSelectPrompt={setEditedPrompt}
+                                        onGenerate={handleGenerateCreativePrompts}
+                                        selectedPrompt={editedPrompt}
+                                        isLoading={isPromptsLoading}
+                                        hasImages={(referenceImages.length > 0 || !!styleReferenceImage)}
+                                    />
+                                )}
 
-                            {currentImages.length === 1 && (
-                                <div className="w-full p-4 bg-light-surface/50 dark:bg-dark-surface/30 backdrop-blur-xl rounded-2xl border border-light-border dark:border-dark-border/50 shadow-sm">
-                                    <div className="flex justify-between items-start">
-                                        <div>
-                                            <h4 className="text-xs font-semibold mb-1 text-light-text-muted dark:text-dark-text-muted uppercase tracking-wider">{t.generationPromptTitle}</h4>
-                                            <p className="text-sm mr-4">{currentImages[0].prompt}</p>
+                                {currentImages.length === 1 && (
+                                    <div className="w-full p-4 bg-light-surface/50 dark:bg-dark-surface/30 backdrop-blur-xl rounded-2xl border border-light-border dark:border-dark-border/50 shadow-sm">
+                                        <div className="flex justify-between items-start">
+                                            <div>
+                                                <h4 className="text-xs font-semibold mb-1 text-light-text-muted dark:text-dark-text-muted uppercase tracking-wider">{t.generationPromptTitle}</h4>
+                                                <p className="text-sm mr-4">{currentImages[0].prompt}</p>
+                                            </div>
+                                            <button onClick={() => handleCopyToClipboard(currentImages[0].prompt)} className="flex-shrink-0 flex items-center gap-1.5 text-xs px-2 py-1 rounded-md bg-light-surface-accent dark:bg-dark-surface-accent border border-light-border dark:border-dark-border hover:border-dark-text-muted transition-colors">
+                                                <CopyIcon className="w-3 h-3" />
+                                                <span>{t.copy}</span>
+                                            </button>
                                         </div>
-                                        <button onClick={() => handleCopyToClipboard(currentImages[0].prompt)} className="flex-shrink-0 flex items-center gap-1.5 text-xs px-2 py-1 rounded-md bg-light-surface-accent dark:bg-dark-surface-accent border border-light-border dark:border-dark-border hover:border-dark-text-muted transition-colors">
-                                            <CopyIcon className="w-3 h-3" />
-                                            <span>{t.copy}</span>
-                                        </button>
                                     </div>
-                                </div>
-                            )}
+                                )}
                             </div>
                         )}
                     </div>
@@ -3202,13 +3200,13 @@ export default function App() {
                     {/* --- Right Column (Buttons + History) --- */}
                     <div className="w-full lg:w-[320px] flex-shrink-0 flex flex-col gap-4">
                         <div className="space-y-4 p-4 bg-light-surface/50 dark:bg-dark-surface/30 backdrop-blur-xl rounded-3xl">
-                             <button onClick={handleGenerate} disabled={isActionDisabled} className="w-full flex justify-center items-center gap-2 bg-gradient-to-r from-brand-yellow to-brand-magenta text-white font-semibold py-3 rounded-xl hover:opacity-90 transition-all duration-300 hover:shadow-[0_0_20px_rgba(255,217,61,0.5)] disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none">
+                            <button onClick={handleGenerate} disabled={isActionDisabled} className="w-full flex justify-center items-center gap-2 bg-gradient-to-r from-brand-yellow to-brand-magenta text-white font-semibold py-3 rounded-xl hover:opacity-90 transition-all duration-300 hover:shadow-[0_0_20px_rgba(255,217,61,0.5)] disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none">
                                 {isLoading ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : <SparklesIcon className="w-5 h-5" />}
                                 <span>{isLoading ? t.generatingButton : t.generateButton}</span>
                             </button>
-                             <div className="flex flex-col gap-3">
+                            <div className="flex flex-col gap-3">
                                 <button onClick={handleUseAsReference} disabled={isActionDisabled || currentImages.length === 0 || referenceImages.length >= MAX_USER_IMAGES} className="w-full p-[2px] bg-gradient-to-r from-yellow-400 to-amber-500 rounded-xl disabled:opacity-50 group transition-all">
-                                   <div className="w-full h-full bg-light-surface dark:bg-dark-surface-accent rounded-[10px] flex justify-center items-center gap-2 text-light-text dark:text-dark-text font-semibold py-2 transition-all group-hover:bg-opacity-80 disabled:group-hover:bg-opacity-100 dark:group-hover:bg-opacity-80">
+                                    <div className="w-full h-full bg-light-surface dark:bg-dark-surface-accent rounded-[10px] flex justify-center items-center gap-2 text-light-text dark:text-dark-text font-semibold py-2 transition-all group-hover:bg-opacity-80 disabled:group-hover:bg-opacity-100 dark:group-hover:bg-opacity-80">
                                         <CornerUpLeftIcon className="w-4 h-4 text-yellow-500" />
                                         <span className="text-sm">{t.useAsReference}</span>
                                     </div>
@@ -3219,7 +3217,7 @@ export default function App() {
                                         <span className="text-sm">{t.resetInterface}</span>
                                     </div>
                                 </button>
-                             </div>
+                            </div>
                         </div>
 
                         <aside className="flex-1 min-h-0 flex flex-col gap-3">
@@ -3227,21 +3225,19 @@ export default function App() {
                             <div className="flex gap-2 bg-light-surface/50 dark:bg-dark-surface/30 backdrop-blur-xl rounded-2xl p-1">
                                 <button
                                     onClick={() => setSidebarTab('history')}
-                                    className={`flex-1 py-2 px-4 rounded-xl text-sm font-medium transition-all ${
-                                        sidebarTab === 'history'
+                                    className={`flex-1 py-2 px-4 rounded-xl text-sm font-medium transition-all ${sidebarTab === 'history'
                                             ? 'bg-light-surface dark:bg-dark-surface text-light-text dark:text-dark-text shadow-sm'
                                             : 'text-light-text-muted dark:text-dark-text-muted hover:bg-light-surface/50 dark:hover:bg-dark-surface/50'
-                                    }`}
+                                        }`}
                                 >
                                     History
                                 </button>
                                 <button
                                     onClick={() => setSidebarTab('presets')}
-                                    className={`flex-1 py-2 px-4 rounded-xl text-sm font-medium transition-all ${
-                                        sidebarTab === 'presets'
+                                    className={`flex-1 py-2 px-4 rounded-xl text-sm font-medium transition-all ${sidebarTab === 'presets'
                                             ? 'bg-light-surface dark:bg-dark-surface text-light-text dark:text-dark-text shadow-sm'
                                             : 'text-light-text-muted dark:text-dark-text-muted hover:bg-light-surface/50 dark:hover:bg-dark-surface/50'
-                                    }`}
+                                        }`}
                                 >
                                     <StarIcon className="w-4 h-4 inline-block mr-1 -mt-0.5" filled={sidebarTab === 'presets'} />
                                     Presets
