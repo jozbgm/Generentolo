@@ -1,11 +1,11 @@
-import { GoogleGenAI, Type, Modality, HarmCategory, HarmBlockThreshold } from "@google/genai";
+import { GoogleGenAI, Type, Modality } from "@google/genai";
 import { DynamicTool, ModelType, ResolutionType, TextInImageConfig } from '../types';
 import { enhancePromptV2 } from './enhancePromptNew';
 
 const DEFAULT_API_KEY = import.meta.env.VITE_API_KEY;
 
 if (!DEFAULT_API_KEY) {
-  console.warn("VITE_API_KEY environment variable not set. Users must provide their own API key.");
+    console.warn("VITE_API_KEY environment variable not set. Users must provide their own API key.");
 }
 
 export const getAiClient = (userApiKey?: string | null) => {
@@ -21,7 +21,7 @@ const handleError = (error: any, language: 'en' | 'it'): Error => {
     console.error("Gemini Service Error:", error);
 
     let message = language === 'it' ? 'Si è verificato un errore sconosciuto.' : 'An unknown error occurred.';
-    
+
     // Check for promptFeedback structure for blocked prompts (when error is an object)
     if (error.promptFeedback?.blockReason === 'SAFETY') {
         message = language === 'it'
@@ -31,25 +31,25 @@ const handleError = (error: any, language: 'en' | 'it'): Error => {
     else if (error.promptFeedback?.blockReason === 'OTHER') {
         message = language === 'it'
             ? '⚠️ Richiesta bloccata da Gemini (OTHER).\n\n' +
-              '🔧 Possibili cause:\n' +
-              '• Prompt troppo lungo o complesso\n' +
-              '• Combinazione prompt + immagine problematica\n' +
-              '• Contenuto che viola policy generiche\n\n' +
-              '✅ Soluzioni:\n' +
-              '• Semplifica il prompt (riduci dettagli)\n' +
-              '• Rimuovi riferimenti a brand/celebrity\n' +
-              '• Prova con un\'altra immagine di riferimento\n' +
-              '• Riprova tra qualche minuto'
+            '🔧 Possibili cause:\n' +
+            '• Prompt troppo lungo o complesso\n' +
+            '• Combinazione prompt + immagine problematica\n' +
+            '• Contenuto che viola policy generiche\n\n' +
+            '✅ Soluzioni:\n' +
+            '• Semplifica il prompt (riduci dettagli)\n' +
+            '• Rimuovi riferimenti a brand/celebrity\n' +
+            '• Prova con un\'altra immagine di riferimento\n' +
+            '• Riprova tra qualche minuto'
             : '⚠️ Request blocked by Gemini (OTHER).\n\n' +
-              '🔧 Possible causes:\n' +
-              '• Prompt too long or complex\n' +
-              '• Problematic prompt + image combination\n' +
-              '• Content violating general policies\n\n' +
-              '✅ Solutions:\n' +
-              '• Simplify prompt (reduce details)\n' +
-              '• Remove brand/celebrity references\n' +
-              '• Try with different reference image\n' +
-              '• Retry in a few minutes';
+            '🔧 Possible causes:\n' +
+            '• Prompt too long or complex\n' +
+            '• Problematic prompt + image combination\n' +
+            '• Content violating general policies\n\n' +
+            '✅ Solutions:\n' +
+            '• Simplify prompt (reduce details)\n' +
+            '• Remove brand/celebrity references\n' +
+            '• Try with different reference image\n' +
+            '• Retry in a few minutes';
     }
     // Check for response structure from the Gemini API client itself (when error is an Error object with message)
     else if (error.message) {
@@ -57,8 +57,8 @@ const handleError = (error: any, language: 'en' | 'it'): Error => {
         try {
             const errorObj = JSON.parse(error.message);
             if (errorObj.error?.code === 503) {
-                message = language === 'it' 
-                    ? 'Il modello è attualmente sovraccarico. Riprova tra qualche istante.' 
+                message = language === 'it'
+                    ? 'Il modello è attualmente sovraccarico. Riprova tra qualche istante.'
                     : 'The model is currently overloaded. Please try again in a few moments.';
             } else if (errorObj.error?.message) {
                 message = errorObj.error.message;
@@ -74,42 +74,42 @@ const handleError = (error: any, language: 'en' | 'it'): Error => {
 
 
 export const fileToGenerativePart = async (file: File) => {
-  const base64EncodedDataPromise = new Promise<string>((resolve) => {
-    const reader = new FileReader();
-    reader.onloadend = () => resolve((reader.result as string).split(',')[1]);
-    reader.readAsDataURL(file);
-  });
-  return {
-    inlineData: { data: await base64EncodedDataPromise, mimeType: file.type },
-  };
+    const base64EncodedDataPromise = new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve((reader.result as string).split(',')[1]);
+        reader.readAsDataURL(file);
+    });
+    return {
+        inlineData: { data: await base64EncodedDataPromise, mimeType: file.type },
+    };
 };
 
 export const generatePromptsFromImage = async (imageFiles: File[], styleFile: File | null, structureFile: File | null, userApiKey?: string | null, language: 'en' | 'it' = 'en'): Promise<string[]> => {
-  try {
-    if (imageFiles.length === 0 && !styleFile && !structureFile) return [];
-    const ai = getAiClient(userApiKey);
+    try {
+        if (imageFiles.length === 0 && !styleFile && !structureFile) return [];
+        const ai = getAiClient(userApiKey);
 
-    const imageParts = [];
-    for (const file of imageFiles) {
-        imageParts.push(await fileToGenerativePart(file));
-    }
-    if (styleFile) {
-        imageParts.push(await fileToGenerativePart(styleFile));
-    }
-    if (structureFile) {
-        imageParts.push(await fileToGenerativePart(structureFile));
-    }
+        const imageParts = [];
+        for (const file of imageFiles) {
+            imageParts.push(await fileToGenerativePart(file));
+        }
+        if (styleFile) {
+            imageParts.push(await fileToGenerativePart(styleFile));
+        }
+        if (structureFile) {
+            imageParts.push(await fileToGenerativePart(structureFile));
+        }
 
-    const stylePromptPart = styleFile
-        ? (language === 'it' ? "Applica lo stile visivo (colori, illuminazione, atmosfera) dell'immagine di stile fornita a questi scenari." : "Apply the visual style (colors, lighting, mood) from the provided style image to these scenarios.")
-        : "";
+        const stylePromptPart = styleFile
+            ? (language === 'it' ? "Applica lo stile visivo (colori, illuminazione, atmosfera) dell'immagine di stile fornita a questi scenari." : "Apply the visual style (colors, lighting, mood) from the provided style image to these scenarios.")
+            : "";
 
-    const structurePromptPart = structureFile
-        ? (language === 'it' ? "L'ultima immagine è una guida strutturale: mantieni la stessa composizione spaziale, layout e geometria nella generazione." : "The last image is a structural guide: maintain the same spatial composition, layout and geometry in the generation.")
-        : "";
+        const structurePromptPart = structureFile
+            ? (language === 'it' ? "L'ultima immagine è una guida strutturale: mantieni la stessa composizione spaziale, layout e geometria nella generazione." : "The last image is a structural guide: maintain the same spatial composition, layout and geometry in the generation.")
+            : "";
 
-    const promptText = language === 'it'
-      ? `Sei un art director senior e un esperto di fotografia pubblicitaria per agenzie di comunicazione. Analizza TUTTI i soggetti e gli elementi in TUTTE le immagini di riferimento fornite. Il tuo obiettivo è creare 3 prompt distinti per immagini pubblicitarie professionali che COMBININO in modo creativo i soggetti delle diverse immagini. ${stylePromptPart} ${structurePromptPart}
+        const promptText = language === 'it'
+            ? `Sei un art director senior e un esperto di fotografia pubblicitaria per agenzie di comunicazione. Analizza TUTTI i soggetti e gli elementi in TUTTE le immagini di riferimento fornite. Il tuo obiettivo è creare 3 prompt distinti per immagini pubblicitarie professionali che COMBININO in modo creativo i soggetti delle diverse immagini. ${stylePromptPart} ${structurePromptPart}
 
 **STRUTTURA DEI 3 PROMPT:**
 1. **HERO SHOT** - Focus principale sul prodotto/soggetto con lighting da studio professionale
@@ -161,7 +161,7 @@ export const generatePromptsFromImage = async (imageFiles: File[], styleFile: Fi
 - Varia mood e tecnica tra i 3 prompt ma mantieni coerenza di brand
 
 Restituisci un array JSON di 3 stringhe, ciascuna altamente dettagliata e professionale.`
-      : `You are a senior art director and expert in advertising photography for communication agencies. Analyze ALL subjects and elements in ALL provided reference images. Your goal is to create 3 distinct prompts for professional advertising images that creatively COMBINE the subjects from different images. ${stylePromptPart} ${structurePromptPart}
+            : `You are a senior art director and expert in advertising photography for communication agencies. Analyze ALL subjects and elements in ALL provided reference images. Your goal is to create 3 distinct prompts for professional advertising images that creatively COMBINE the subjects from different images. ${stylePromptPart} ${structurePromptPart}
 
 **STRUCTURE OF 3 PROMPTS:**
 1. **HERO SHOT** - Main focus on product/subject with professional studio lighting
@@ -213,77 +213,77 @@ Restituisci un array JSON di 3 stringhe, ciascuna altamente dettagliata e profes
 - Vary mood and technique across 3 prompts but maintain brand coherence
 
 Return a JSON array of 3 strings, each highly detailed and professional.`;
-      
-    const result = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: {
-            parts: [
-                ...imageParts,
-                { text: promptText }
-            ]
-        },
-        config: {
-            responseMimeType: "application/json",
-            responseSchema: {
-                type: Type.ARRAY,
-                items: { type: Type.STRING }
+
+        const result = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: {
+                parts: [
+                    ...imageParts,
+                    { text: promptText }
+                ]
+            },
+            config: {
+                responseMimeType: "application/json",
+                responseSchema: {
+                    type: Type.ARRAY,
+                    items: { type: Type.STRING }
+                }
             }
-        }
-    });
-    
-    const responseText = result.text.trim();
-    const prompts = JSON.parse(responseText);
-    return Array.isArray(prompts) && prompts.length > 0 ? prompts : [];
-  } catch (error) {
-    throw handleError(error, language);
-  }
+        });
+
+        const responseText = result.text?.trim() || "[]";
+        const prompts = JSON.parse(responseText);
+        return Array.isArray(prompts) && prompts.length > 0 ? prompts : [];
+    } catch (error) {
+        throw handleError(error, language);
+    }
 };
 
 export const generateSinglePromptFromImage = async (imageFiles: File[], styleFile: File | null, structureFile: File | null, userApiKey?: string | null, language: 'en' | 'it' = 'en'): Promise<string> => {
-  try {
-    if (imageFiles.length === 0 && !styleFile && !structureFile) return '';
-    const ai = getAiClient(userApiKey);
+    try {
+        if (imageFiles.length === 0 && !styleFile && !structureFile) return '';
+        const ai = getAiClient(userApiKey);
 
-    const imageParts = [];
-    for (const file of imageFiles) {
-        imageParts.push(await fileToGenerativePart(file));
-    }
-    if (styleFile) {
-        imageParts.push(await fileToGenerativePart(styleFile));
-    }
-    if (structureFile) {
-        imageParts.push(await fileToGenerativePart(structureFile));
-    }
-
-    const stylePromptPart = styleFile
-        ? (language === 'it' ? "Applica lo stile visivo (colori, illuminazione, atmosfera) dell'immagine di stile fornita a questo scenario." : "Apply the visual style (colors, lighting, mood) from the provided style image to this scenario.")
-        : "";
-
-    const structurePromptPart = structureFile
-        ? (language === 'it' ? "L'ultima immagine è una guida strutturale: mantieni la stessa composizione spaziale, layout e geometria nella generazione." : "The last image is a structural guide: maintain the same spatial composition, layout and geometry in the generation.")
-        : "";
-
-    const promptText = language === 'it'
-      ? `Sei un art director e un esperto di prompt per la generazione di immagini pubblicitarie. Analizza TUTTI i soggetti e gli elementi in TUTTE le immagini di riferimento fornite. Il tuo obiettivo è creare UN UNICO prompt per un'immagine pubblicitaria professionale e creativa che COMBINI in modo intelligente e artistico i soggetti delle diverse immagini. Invece di descrivere semplicemente le immagini, immagina uno scenario di advertising ideale che unisca i soggetti. ${stylePromptPart} ${structurePromptPart} Sii dettagliato e mira a produrre un'immagine di alta qualità. Restituisci solo la stringa del prompt.`
-      : `You are an art director and an expert prompt engineer for advertising imagery. Analyze ALL subjects and elements in ALL provided reference images. Your goal is to create A SINGLE professional and creative advertising image prompt that intelligently and artistically COMBINES the subjects from the different images. Instead of just describing the images, imagine an ideal advertising scenario that merges the subjects. ${stylePromptPart} ${structurePromptPart} Be detailed and aim to produce a high-quality image. Return only the prompt string.`;
-      
-    const result = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: {
-            parts: [
-                ...imageParts,
-                { text: promptText }
-            ]
-        },
-        config: {
-            temperature: 0.7
+        const imageParts = [];
+        for (const file of imageFiles) {
+            imageParts.push(await fileToGenerativePart(file));
         }
-    });
-    
-    return result.text.trim();
-  } catch (error) {
-    throw handleError(error, language);
-  }
+        if (styleFile) {
+            imageParts.push(await fileToGenerativePart(styleFile));
+        }
+        if (structureFile) {
+            imageParts.push(await fileToGenerativePart(structureFile));
+        }
+
+        const stylePromptPart = styleFile
+            ? (language === 'it' ? "Applica lo stile visivo (colori, illuminazione, atmosfera) dell'immagine di stile fornita a questo scenario." : "Apply the visual style (colors, lighting, mood) from the provided style image to this scenario.")
+            : "";
+
+        const structurePromptPart = structureFile
+            ? (language === 'it' ? "L'ultima immagine è una guida strutturale: mantieni la stessa composizione spaziale, layout e geometria nella generazione." : "The last image is a structural guide: maintain the same spatial composition, layout and geometry in the generation.")
+            : "";
+
+        const promptText = language === 'it'
+            ? `Sei un art director e un esperto di prompt per la generazione di immagini pubblicitarie. Analizza TUTTI i soggetti e gli elementi in TUTTE le immagini di riferimento fornite. Il tuo obiettivo è creare UN UNICO prompt per un'immagine pubblicitaria professionale e creativa che COMBINI in modo intelligente e artistico i soggetti delle diverse immagini. Invece di descrivere semplicemente le immagini, immagina uno scenario di advertising ideale che unisca i soggetti. ${stylePromptPart} ${structurePromptPart} Sii dettagliato e mira a produrre un'immagine di alta qualità. Restituisci solo la stringa del prompt.`
+            : `You are an art director and an expert prompt engineer for advertising imagery. Analyze ALL subjects and elements in ALL provided reference images. Your goal is to create A SINGLE professional and creative advertising image prompt that intelligently and artistically COMBINES the subjects from the different images. Instead of just describing the images, imagine an ideal advertising scenario that merges the subjects. ${stylePromptPart} ${structurePromptPart} Be detailed and aim to produce a high-quality image. Return only the prompt string.`;
+
+        const result = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: {
+                parts: [
+                    ...imageParts,
+                    { text: promptText }
+                ]
+            },
+            config: {
+                temperature: 0.7
+            }
+        });
+
+        return result.text?.trim() || "";
+    } catch (error) {
+        throw handleError(error, language);
+    }
 };
 
 export const enhancePrompt = async (currentPrompt: string, imageFiles: File[], styleFile: File | null, structureFile: File | null, userApiKey?: string | null, language: 'en' | 'it' = 'en'): Promise<string> => {
@@ -312,9 +312,9 @@ export const generateDynamicToolsFromImage = async (imageFiles: File[], styleFil
         if (structureFile) {
             imageParts.push(await fileToGenerativePart(structureFile));
         }
-        
+
         const promptText = language === 'it'
-          ? `Analizza in dettaglio i soggetti e gli stili di TUTTE le immagini fornite. Identifica tutti gli elementi chiave (persone, prodotti, scene, ecc.). In base alla tua analisi COMPLESSIVA, genera un elenco di fino a 6 strumenti creativi pertinenti per un grafico professionista, con etichette e opzioni in italiano.
+            ? `Analizza in dettaglio i soggetti e gli stili di TUTTE le immagini fornite. Identifica tutti gli elementi chiave (persone, prodotti, scene, ecc.). In base alla tua analisi COMPLESSIVA, genera un elenco di fino a 6 strumenti creativi pertinenti per un grafico professionista, con etichette e opzioni in italiano.
 
 REGOLA FONDAMENTALE: Se identifichi più tipi di soggetti distinti tra le immagini (es. una persona E un prodotto), DEVI fornire strumenti pertinenti per CIASCUN tipo di soggetto. Non scegliere l'uno o l'altro; combinali. Ad esempio, se vedi una modella che tiene una bottiglia, dovresti restituire strumenti per la persona (come 'hairstyle') E strumenti per il prodotto (come 'lighting_style'). L'obiettivo è dare all'utente il controllo su tutti gli elementi principali.
 
@@ -331,7 +331,7 @@ REGOLA FONDAMENTALE: Se identifichi più tipi di soggetti distinti tra le immagi
   - **Dettagli**: Fornisci opzioni come 'Alba nebbiosa', 'Sole cocente di mezzogiorno', 'Crepuscolo malinconico' per \`time_of_day\`. Per \`weather\`, suggerisci 'Pioggia leggera', 'Nuvole di tempesta drammatiche', 'Inondato di sole'. \`artistic_style\` potrebbe includere 'Pennellate impressioniste', 'Iperrealistico', 'Riflesso lente anamorfica'.
 
 Per tutti gli strumenti, assicurati che l'array \`options\` contenga una vasta gamma di scelte, almeno 15-20 opzioni creative e specifiche ispirate a TUTTE le immagini fornite. Restituisci un array JSON di oggetti, dove ogni oggetto ha le chiavi "name", "label" (in italiano) e "options" (in italiano).`
-          : `Analyze the subjects and styles of ALL provided images in detail. Identify all key elements (people, products, scenes, etc.). Based on your COMPREHENSIVE analysis, generate a list of up to 6 relevant creative tools for a professional graphic designer, with labels and options in English.
+            : `Analyze the subjects and styles of ALL provided images in detail. Identify all key elements (people, products, scenes, etc.). Based on your COMPREHENSIVE analysis, generate a list of up to 6 relevant creative tools for a professional graphic designer, with labels and options in English.
 
 CRITICAL RULE: If you identify multiple distinct subject types across the images (e.g., a person AND a product), you MUST provide relevant tools for EACH subject type. Do not choose one over the other; combine them. For instance, if you see a model holding a bottle, you should return tools for the person (like 'hairstyle') AND tools for the product (like 'lighting_style'). The goal is to give the user control over all major elements.
 
@@ -373,7 +373,7 @@ For all tools, ensure the \`options\` array contains a wide variety of choices, 
                 }
             }
         });
-        const responseText = result.text.trim();
+        const responseText = result.text?.trim() || "[]";
         const tools = JSON.parse(responseText);
         return Array.isArray(tools) ? tools : [];
     } catch (error) {
@@ -385,25 +385,25 @@ export const rewritePromptWithOptions = async (currentPrompt: string, toolSelect
     try {
         if (!toolSelections) return currentPrompt;
         const ai = getAiClient(userApiKey);
-        
+
         const systemInstruction = language === 'it'
-          ? `Sei un assistente AI che perfeziona i prompt per un modello di generazione di immagini. Riscrivi il prompt dell'utente per incorporare in modo fluido e creativo le opzioni selezionate. Il prompt finale deve essere un'unica istruzione coerente. Non aggiungere testo di conversazione o spiegazioni. Restituisci solo il testo del prompt riscritto.`
-          : `You are an AI assistant that refines prompts for an image generation model. Rewrite the user's prompt to seamlessly and creatively incorporate their selected options. The final prompt should be a single, coherent instruction. Do not add any conversational text or explanations. Return only the rewritten prompt text.`;
-        
+            ? `Sei un assistente AI che perfeziona i prompt per un modello di generazione di immagini. Riscrivi il prompt dell'utente per incorporare in modo fluido e creativo le opzioni selezionate. Il prompt finale deve essere un'unica istruzione coerente. Non aggiungere testo di conversazione o spiegazioni. Restituisci solo il testo del prompt riscritto.`
+            : `You are an AI assistant that refines prompts for an image generation model. Rewrite the user's prompt to seamlessly and creatively incorporate their selected options. The final prompt should be a single, coherent instruction. Do not add any conversational text or explanations. Return only the rewritten prompt text.`;
+
         const userMessage = language === 'it'
-          ? `Riscrivi questo prompt: "${currentPrompt}" per includere questi elementi: ${toolSelections}.`
-          : `Rewrite this prompt: "${currentPrompt}" to include these elements: ${toolSelections}.`;
+            ? `Riscrivi questo prompt: "${currentPrompt}" per includere questi elementi: ${toolSelections}.`
+            : `Rewrite this prompt: "${currentPrompt}" to include these elements: ${toolSelections}.`;
 
         const result = await ai.models.generateContent({
             model: 'gemini-2.5-flash',
             contents: { parts: [{ text: userMessage }] },
             config: {
                 systemInstruction: systemInstruction,
-                temperature: 0.2 
+                temperature: 0.2
             }
         });
 
-        const rewrittenPrompt = result.text.trim();
+        const rewrittenPrompt = result.text?.trim() || "";
         // A simple check to ensure we got a reasonable response.
         return rewrittenPrompt.length > 5 ? rewrittenPrompt : `${currentPrompt}, with ${toolSelections}`;
     } catch (error) {
@@ -417,12 +417,12 @@ export const rewritePromptWithStyleImage = async (currentPrompt: string, styleFi
         const stylePart = await fileToGenerativePart(styleFile);
 
         const systemInstruction = language === 'it'
-          ? "Sei un direttore artistico esperto. Analizza l'immagine fornita per il suo stile artistico, la palette di colori, l'illuminazione e l'atmosfera generale. Riscrivi il prompt dell'utente per incorporare in modo creativo questi elementi stilistici. Il nuovo prompt deve essere un'istruzione diretta e suggestiva per un'IA di generazione di immagini. Restituisci solo il testo del prompt riscritto."
-          : "You are an expert art director. Analyze the provided image for its artistic style, color palette, lighting, and overall mood. Rewrite the user's prompt to creatively incorporate these stylistic elements. The new prompt should be a direct, inspiring instruction for an image generation AI. Return only the rewritten prompt text.";
-        
+            ? "Sei un direttore artistico esperto. Analizza l'immagine fornita per il suo stile artistico, la palette di colori, l'illuminazione e l'atmosfera generale. Riscrivi il prompt dell'utente per incorporare in modo creativo questi elementi stilistici. Il nuovo prompt deve essere un'istruzione diretta e suggestiva per un'IA di generazione di immagini. Restituisci solo il testo del prompt riscritto."
+            : "You are an expert art director. Analyze the provided image for its artistic style, color palette, lighting, and overall mood. Rewrite the user's prompt to creatively incorporate these stylistic elements. The new prompt should be a direct, inspiring instruction for an image generation AI. Return only the rewritten prompt text.";
+
         const userMessage = language === 'it'
-          ? `Prompt utente da riscrivere: "${currentPrompt}"`
-          : `User prompt to rewrite: "${currentPrompt}"`;
+            ? `Prompt utente da riscrivere: "${currentPrompt}"`
+            : `User prompt to rewrite: "${currentPrompt}"`;
 
         const result = await ai.models.generateContent({
             model: 'gemini-2.5-flash',
@@ -433,7 +433,7 @@ export const rewritePromptWithStyleImage = async (currentPrompt: string, styleFi
             }
         });
 
-        const rewrittenPrompt = result.text.trim();
+        const rewrittenPrompt = result.text?.trim() || "";
         return rewrittenPrompt.length > 5 ? rewrittenPrompt : currentPrompt; // Fallback to original
     } catch (error) {
         throw handleError(error, language);
@@ -470,9 +470,9 @@ const detectWhiteBorders = (ctx: CanvasRenderingContext2D, width: number, height
     const data = imageData.data;
     const threshold = 230; // Consider pixels > 230 as "white" (more aggressive)
     const sampleSize = 5; // Check every 5th pixel for better accuracy
-    
+
     let top = 0, bottom = 0, left = 0, right = 0;
-    
+
     // Detect top border
     outer: for (let y = 0; y < height / 4; y++) {
         let whiteCount = 0;
@@ -485,7 +485,7 @@ const detectWhiteBorders = (ctx: CanvasRenderingContext2D, width: number, height
         if (whiteCount / (width / sampleSize) < 0.8) break outer;
         top = y;
     }
-    
+
     // Detect bottom border
     outer: for (let y = height - 1; y > (height * 3) / 4; y--) {
         let whiteCount = 0;
@@ -498,7 +498,7 @@ const detectWhiteBorders = (ctx: CanvasRenderingContext2D, width: number, height
         if (whiteCount / (width / sampleSize) < 0.8) break outer;
         bottom = height - y;
     }
-    
+
     // Detect left border
     outer: for (let x = 0; x < width / 4; x++) {
         let whiteCount = 0;
@@ -511,7 +511,7 @@ const detectWhiteBorders = (ctx: CanvasRenderingContext2D, width: number, height
         if (whiteCount / (height / sampleSize) < 0.8) break outer;
         left = x;
     }
-    
+
     // Detect right border
     outer: for (let x = width - 1; x > (width * 3) / 4; x--) {
         let whiteCount = 0;
@@ -524,12 +524,12 @@ const detectWhiteBorders = (ctx: CanvasRenderingContext2D, width: number, height
         if (whiteCount / (height / sampleSize) < 0.8) break outer;
         right = width - x;
     }
-    
+
     return { top, bottom, left, right };
 };
 
 // Improved crop and resize to fill target aspect ratio with maximum quality retention
-const aggressiveCropAndResize = (imageDataUrl: string, targetAspectRatio: string): Promise<string> => {
+const aggressiveCropAndResize = (imageDataUrl: string, targetAspectRatio: string, resolution: ResolutionType = '2k'): Promise<string> => {
     return new Promise((resolve, reject) => {
         const [widthRatio, heightRatio] = targetAspectRatio.split(':').map(Number);
         const targetRatio = widthRatio / heightRatio;
@@ -592,10 +592,13 @@ const aggressiveCropAndResize = (imageDataUrl: string, targetAspectRatio: string
                 }
             }
 
-            // Step 5: Calculate optimal output dimensions (always maximize to 2048px on longest side)
-            // This ensures we ALWAYS get maximum resolution regardless of aspect ratio
+            // Step 5: Calculate optimal output dimensions based on requested resolution
+            // 1K = 1024px, 2K = 2048px, 4K = 4096px
             const MIN_DIMENSION = 1024; // Minimum size for shorter dimension
-            const MAX_DIMENSION = 2048; // Maximum size for longer dimension
+            let MAX_DIMENSION = 2048; // Default 2K
+
+            if (resolution === '1k') MAX_DIMENSION = 1024;
+            else if (resolution === '4k') MAX_DIMENSION = 4096;
 
             let outputWidth: number;
             let outputHeight: number;
@@ -638,7 +641,7 @@ const aggressiveCropAndResize = (imageDataUrl: string, targetAspectRatio: string
             );
 
             // Debug logging for final output
-            console.log(`[Aspect Ratio Processing] Final output: ${outputWidth}x${outputHeight} (ratio: ${(outputWidth/outputHeight).toFixed(3)}, target: ${targetRatio.toFixed(3)})`);
+            console.log(`[Aspect Ratio Processing] Final output: ${outputWidth}x${outputHeight} (${resolution.toUpperCase()}, ratio: ${(outputWidth / outputHeight).toFixed(3)}, target: ${targetRatio.toFixed(3)})`);
 
             // Return as high-quality PNG
             resolve(canvas.toDataURL('image/png', 1.0));
@@ -703,7 +706,7 @@ Examples of correct responses:
             config: { temperature: 0.1 }
         });
 
-        const subjects = analysisResult.text.trim();
+        const subjects = analysisResult.text?.trim() || "";
 
         // Ora arricchisci il prompt utente con riferimenti espliciti
         const enrichmentPrompt = language === 'it'
@@ -748,7 +751,7 @@ Rewritten: "Create the man from Image 1 wearing a hoodie with the logo from Imag
             config: { temperature: 0.2 }
         });
 
-        const enrichedPrompt = enrichmentResult.text.trim();
+        const enrichedPrompt = enrichmentResult.text?.trim() || "";
 
         // Fallback: se il prompt arricchito è troppo corto o sembra invalido, usa l'originale
         if (enrichedPrompt.length < 10 || !enrichedPrompt.toLowerCase().includes('image')) {
@@ -770,18 +773,18 @@ const extractStyleDescription = async (styleFile: File, userApiKey: string | nul
     try {
         const ai = getAiClient(userApiKey);
         const stylePart = await fileToGenerativePart(styleFile);
-        
+
         const promptText = language === 'it'
             ? "Analizza questa immagine e descrivi SOLO gli elementi stilistici: palette di colori, tipo di illuminazione, atmosfera/mood, stile fotografico o artistico, texture. NON descrivere i soggetti o gli oggetti presenti, solo lo stile visivo. Sii conciso (max 2-3 frasi)."
             : "Analyze this image and describe ONLY the stylistic elements: color palette, lighting type, mood/atmosphere, photographic or artistic style, textures. DO NOT describe the subjects or objects present, only the visual style. Be concise (max 2-3 sentences).";
-        
+
         const result = await ai.models.generateContent({
             model: 'gemini-2.5-flash',
             contents: { parts: [stylePart, { text: promptText }] },
             config: { temperature: 0.3 }
         });
-        
-        return result.text.trim();
+
+        return result.text?.trim() || "";
     } catch (error) {
         console.error("Failed to extract style description:", error);
         return "";
@@ -858,6 +861,14 @@ export const generateImage = async (
         // Text guidance is minimal - just a reminder to fill the frame
         const aspectRatioGuidance = getAspectRatioGuidance(aspectRatio, language);
         const instructionParts: string[] = [aspectRatioGuidance];
+
+        // v1.0: Add resolution keywords to prompt for Nano Banana Pro (Gemini 3 Pro) to trigger high-res generation
+        if (model === 'gemini-3-pro-image-preview' && resolution) {
+            const resolutionKeyword = resolution === '4k' ? 'extreme 4K Ultra HD resolution, 4096px, hyper-detailed textures, macro sharpness' :
+                resolution === '2k' ? '2K HD resolution, 2048px, very sharp details' :
+                    '1K standard resolution, 1024px';
+            instructionParts.push(language === 'it' ? `Risoluzione: ${resolutionKeyword}.` : `Resolution: ${resolutionKeyword}.`);
+        }
 
         const promptLower = prompt.toLowerCase();
 
@@ -1020,17 +1031,21 @@ export const generateImage = async (
         // Add imageConfig with aspect ratio
         // NOTE: personGeneration is NOT supported in @google/genai SDK (only in Vertex AI)
         // LM Arena likely uses Vertex AI which has this parameter, but we can't use it here
+        // Add imageConfig with aspect ratio and resolution
+        const imageConfig: any = {};
+
         if (aspectRatio !== 'Auto') {
-            config.imageConfig = {
-                aspectRatio: aspectRatio
-            };
+            imageConfig.aspectRatio = aspectRatio;
         }
 
-        // v1.0: Resolution for PRO model
-        // NOTE: imageSize is NOT supported in GenerateContentConfig.imageConfig (only in GenerateImagesConfig for Imagen)
-        // For Gemini Image models, resolution may need to be controlled via prompt or is not yet configurable
+        // v1.0: Native Resolution for Nano Banana Pro (Gemini 3 Pro Image)
         if (model === 'gemini-3-pro-image-preview' && resolution) {
-            console.log(`🎨 PRO Mode: Target resolution ${resolution.toUpperCase()} (via model default, not API param)`);
+            imageConfig.imageSize = resolution.toUpperCase(); // "1K", "2K", or "4K"
+            console.log(`🎨 PRO Mode: requesting native ${resolution.toUpperCase()} generation`);
+        }
+
+        if (Object.keys(imageConfig).length > 0) {
+            config.imageConfig = imageConfig;
         }
 
         if (seed && /^\d+$/.test(seed)) {
@@ -1174,7 +1189,7 @@ export const generateImage = async (
             console.error("Image parts in request:", imageParts.length);
             console.error("Parts order:", parts.map((p, i) => `${i}: ${p.text ? 'TEXT' : 'IMAGE'}`).join(', '));
             console.error("=============================");
-            
+
             if (result.promptFeedback?.blockReason) {
                 const blockReason = result.promptFeedback.blockReason;
                 const safetyRatings = result.promptFeedback.safetyRatings || [];
@@ -1183,9 +1198,6 @@ export const generateImage = async (
                 // "OTHER" typically means: face manipulation, personal photos, identity editing
                 if (blockReason === 'OTHER' && model === 'gemini-3-pro-image-preview') {
                     console.warn('⚠️ Nano Banana Pro blocked with "OTHER". Auto-fallback to Nano Banana Flash...');
-                    const fallbackMessage = language === 'it'
-                        ? '🔄 Nano Banana Pro ha bloccato la richiesta (policy restrittive). Riprovo automaticamente con Nano Banana Flash (più permissivo)...'
-                        : '🔄 Nano Banana Pro blocked the request (restrictive policies). Auto-retrying with Nano Banana Flash (more permissive)...';
 
                     // Recursively call generateImage with Flash model
                     return await generateImage(
@@ -1195,12 +1207,15 @@ export const generateImage = async (
                         styleFile,
                         structureFile,
                         userApiKey,
-                        language,
-                        'gemini-2.0-flash-exp', // Force Flash model
+                        negativePrompt,
                         seed,
+                        language,
+                        preciseReference,
+                        'gemini-2.5-flash-image', // Force Flash model
                         resolution,
+                        textInImage,
                         abortSignal,
-                        onProgress ? (msg) => onProgress(`${fallbackMessage}\n\n${msg}`) : undefined
+                        useGrounding
                     );
                 }
 
@@ -1222,7 +1237,7 @@ export const generateImage = async (
 
                 throw new Error(detailedMessage);
             }
-            
+
             // Check if there are candidates but they're empty
             if (result.candidates && result.candidates.length > 0) {
                 const finishReason = result.candidates[0]?.finishReason;
@@ -1247,7 +1262,7 @@ export const generateImage = async (
                     throw new Error(message);
                 }
             }
-            
+
             const genericMessage = language === 'it'
                 ? 'Nessun contenuto immagine nella risposta. Possibili cause: 1) Prompt troppo complesso 2) Immagini incompatibili 3) Richiesta bloccata. Riprova con immagini o prompt diversi.'
                 : 'No image content in response. Possible causes: 1) Prompt too complex 2) Incompatible images 3) Blocked request. Try again with different images or prompt.';
@@ -1265,7 +1280,7 @@ export const generateImage = async (
                 }
 
                 // Apply crop and resize for specific aspect ratios
-                const finalImageDataUrl = await aggressiveCropAndResize(originalImageDataUrl, aspectRatio);
+                const finalImageDataUrl = await aggressiveCropAndResize(originalImageDataUrl, aspectRatio, resolution);
                 return finalImageDataUrl;
             }
         }
@@ -1296,7 +1311,7 @@ export const editImage = async (prompt: string, imageFile: File, userApiKey?: st
 
         const candidate = result.candidates?.[0];
         if (!candidate || !candidate.content || !candidate.content.parts) {
-             if (result.promptFeedback?.blockReason) {
+            if (result.promptFeedback?.blockReason) {
                 throw { promptFeedback: result.promptFeedback };
             }
             console.error("Invalid response structure from Gemini API during edit:", JSON.stringify(result, null, 2));
@@ -1306,7 +1321,8 @@ export const editImage = async (prompt: string, imageFile: File, userApiKey?: st
         for (const part of candidate.content.parts) {
             if (part.inlineData) {
                 const base64ImageBytes: string = part.inlineData.data;
-                return `data:${part.inlineData.mimeType};base64,${base64ImageBytes}`;
+                const mimeType: string = part.inlineData.mimeType || 'image/png';
+                return `data:${mimeType};base64,${base64ImageBytes}`;
             }
         }
         throw new Error("No image data in response parts");
@@ -1342,7 +1358,7 @@ export const inpaintImage = async (prompt: string, imageFile: File, maskFile: Fi
 
         const candidate = result.candidates?.[0];
         if (!candidate || !candidate.content || !candidate.content.parts) {
-             if (result.promptFeedback?.blockReason) {
+            if (result.promptFeedback?.blockReason) {
                 throw { promptFeedback: result.promptFeedback };
             }
             console.error("Invalid response structure from Gemini API during inpaint:", JSON.stringify(result, null, 2));
@@ -1352,7 +1368,8 @@ export const inpaintImage = async (prompt: string, imageFile: File, maskFile: Fi
         for (const part of candidate.content.parts) {
             if (part.inlineData) {
                 const base64ImageBytes: string = part.inlineData.data;
-                return `data:${part.inlineData.mimeType};base64,${base64ImageBytes}`;
+                const mimeType: string = part.inlineData.mimeType || 'image/png';
+                return `data:${mimeType};base64,${base64ImageBytes}`;
             }
         }
         throw new Error("No image data in response parts for inpainting");
@@ -1380,7 +1397,7 @@ export const generateNegativePrompt = async (prompt: string, referenceFiles: Fil
         const systemInstruction = language === 'it'
             ? "Sei un assistente AI per un generatore di immagini professionale. Il tuo compito è creare un 'prompt negativo' per migliorare la qualità dell'immagine. Analizza il prompt principale dell'utente E le eventuali immagini di riferimento fornite. Il prompt negativo deve essere un elenco di termini separati da virgola da EVITARE, come difetti artistici comuni (es. 'brutto, deforme, sfocato, anatomia scadente, mani fatte male, arti extra'). REGOLA FONDAMENTALE: NON aggiungere termini per elementi che sono chiaramente PRESENTI e INTENZIONALI nelle immagini di riferimento. Ad esempio, se un'immagine di riferimento contiene testo o un logo, NON includere 'testo' o 'logo' nel prompt negativo. Restituisci SOLO la stringa di termini."
             : "You are an AI assistant for a professional image generator. Your task is to create a 'negative prompt' to improve image quality. Analyze the user's main prompt AND any provided reference images. The negative prompt should be a comma-separated list of terms to AVOID, such as common artistic flaws (e.g., 'ugly, deformed, blurry, poor anatomy, bad hands, extra limbs'). CRITICAL RULE: Do NOT add terms for things that are clearly PRESENT and INTENTIONAL in the reference images. For example, if a reference image contains text or a logo, DO NOT include 'text' or 'logo' in the negative prompt. Return ONLY the string of terms.";
-        
+
         const userMessage = language === 'it'
             ? `Prompt utente: "${prompt}"`
             : `User Prompt: "${prompt}"`;
@@ -1394,8 +1411,9 @@ export const generateNegativePrompt = async (prompt: string, referenceFiles: Fil
                 topP: 0.95
             }
         });
-        
-        const negativePrompt = result.text.trim().replace(/negative prompt: /i, '');
+
+        const responseText = result.text?.trim() || "";
+        const negativePrompt = responseText.replace(/negative prompt: /i, '');
         return negativePrompt || "text, watermark, blurry, low quality, ugly, deformed";
 
     } catch (error) {
@@ -1414,13 +1432,13 @@ const detectImageAspectRatio = async (imageSource: File | string): Promise<strin
 
             // Map to closest supported aspect ratio
             if (Math.abs(ratio - 1) < 0.1) resolve('1:1');
-            else if (Math.abs(ratio - 16/9) < 0.15) resolve('16:9');
-            else if (Math.abs(ratio - 9/16) < 0.15) resolve('9:16');
-            else if (Math.abs(ratio - 4/3) < 0.1) resolve('4:3');
-            else if (Math.abs(ratio - 3/4) < 0.1) resolve('3:4');
-            else if (Math.abs(ratio - 3/2) < 0.1) resolve('3:2');
-            else if (Math.abs(ratio - 2/3) < 0.1) resolve('2:3');
-            else if (Math.abs(ratio - 21/9) < 0.2) resolve('21:9');
+            else if (Math.abs(ratio - 16 / 9) < 0.15) resolve('16:9');
+            else if (Math.abs(ratio - 9 / 16) < 0.15) resolve('9:16');
+            else if (Math.abs(ratio - 4 / 3) < 0.1) resolve('4:3');
+            else if (Math.abs(ratio - 3 / 4) < 0.1) resolve('3:4');
+            else if (Math.abs(ratio - 3 / 2) < 0.1) resolve('3:2');
+            else if (Math.abs(ratio - 2 / 3) < 0.1) resolve('2:3');
+            else if (Math.abs(ratio - 21 / 9) < 0.2) resolve('21:9');
             else resolve('1:1'); // Default fallback
 
             URL.revokeObjectURL(img.src);
@@ -1546,7 +1564,8 @@ DO NOT add, remove, or modify any elements. This is a faithful high-resolution r
         for (const part of candidate.content.parts) {
             if (part.inlineData) {
                 const base64ImageBytes: string = part.inlineData.data;
-                const upscaledDataUrl = `data:${part.inlineData.mimeType};base64,${base64ImageBytes}`;
+                const mimeType: string = part.inlineData.mimeType || 'image/png';
+                const upscaledDataUrl = `data:${mimeType};base64,${base64ImageBytes}`;
                 console.log(`✅ Upscaling completed to ${targetResolution.toUpperCase()}`);
                 return upscaledDataUrl;
             }
