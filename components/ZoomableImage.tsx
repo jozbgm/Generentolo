@@ -31,14 +31,6 @@ const ZoomableImage: React.FC<ZoomableImageProps> = ({ src, alt }) => {
         return Math.sqrt(dx * dx + dy * dy);
     };
 
-    // Get center point between two touches
-    const getTouchCenter = (touches: React.TouchList) => {
-        if (touches.length < 2) return { x: touches[0].clientX, y: touches[0].clientY };
-        return {
-            x: (touches[0].clientX + touches[1].clientX) / 2,
-            y: (touches[0].clientY + touches[1].clientY) / 2,
-        };
-    };
 
     // Handle pinch-to-zoom
     const handleTouchStart = (e: React.TouchEvent) => {
@@ -155,7 +147,7 @@ const ZoomableImage: React.FC<ZoomableImageProps> = ({ src, alt }) => {
 
     // Double tap to zoom
     const lastTapRef = useRef<number>(0);
-    const handleDoubleTap = (e: React.TouchEvent) => {
+    const handleDoubleTap = (e: React.MouseEvent | React.TouchEvent) => {
         const now = Date.now();
         const timeSinceLastTap = now - lastTapRef.current;
 

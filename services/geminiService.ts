@@ -1319,8 +1319,8 @@ export const editImage = async (prompt: string, imageFile: File, userApiKey?: st
         }
 
         for (const part of candidate.content.parts) {
-            if (part.inlineData) {
-                const base64ImageBytes: string = part.inlineData.data;
+            if (part.inlineData && part.inlineData.data) {
+                const base64ImageBytes = part.inlineData.data as string;
                 const mimeType: string = part.inlineData.mimeType || 'image/png';
                 return `data:${mimeType};base64,${base64ImageBytes}`;
             }
@@ -1366,8 +1366,8 @@ export const inpaintImage = async (prompt: string, imageFile: File, maskFile: Fi
         }
 
         for (const part of candidate.content.parts) {
-            if (part.inlineData) {
-                const base64ImageBytes: string = part.inlineData.data;
+            if (part.inlineData && part.inlineData.data) {
+                const base64ImageBytes = part.inlineData.data as string;
                 const mimeType: string = part.inlineData.mimeType || 'image/png';
                 return `data:${mimeType};base64,${base64ImageBytes}`;
             }
@@ -1562,7 +1562,7 @@ DO NOT add, remove, or modify any elements. This is a faithful high-resolution r
         }
 
         for (const part of candidate.content.parts) {
-            if (part.inlineData) {
+            if (part.inlineData && part.inlineData.data) {
                 const base64ImageBytes: string = part.inlineData.data;
                 const mimeType: string = part.inlineData.mimeType || 'image/png';
                 const upscaledDataUrl = `data:${mimeType};base64,${base64ImageBytes}`;

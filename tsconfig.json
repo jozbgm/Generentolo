@@ -11,7 +11,9 @@
     ],
     "skipLibCheck": true,
     "types": [
-      "node"
+      "node",
+      "react",
+      "react-dom"
     ],
     "moduleResolution": "bundler",
     "isolatedModules": true,
@@ -26,7 +28,6 @@
     "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "noEmit": true,
-
     /* Stricter Type Checking */
     "strict": true,
     "noUnusedLocals": true,

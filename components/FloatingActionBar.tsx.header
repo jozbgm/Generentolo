@@ -1,0 +1,94 @@
+import React, { useState, useCallback } from 'react';
+import { useLocalization } from '../App';
+import { ModelType, ResolutionType, TextInImageConfig } from '../types';
+
+interface FloatingActionBarProps {
+    // Prompt
+    prompt: string;
+    onPromptChange: (value: string) => void;
+    promptTextareaRef: React.RefObject<HTMLTextAreaElement | null>;
+
+    // Actions
+    onGenerate: () => void;
+    onAbortGeneration: () => void; // v1.3
+    onEnhancePrompt: () => void;
+    onGenerate3Prompts: () => void;
+
+    // State
+    isLoading: boolean;
+    isEnhancing: boolean;
+    hasReferences: boolean;
+
+    // Controls
+    aspectRatio: string;
+    onAspectRatioChange: (ratio: string) => void;
+    numImages: number;
+    onNumImagesChange: (num: number) => void;
+    seed: string;
+    onSeedChange: (seed: string) => void;
+    onRandomizeSeed: () => void;
+    negativePrompt: string;
+    onNegativePromptChange: (value: string) => void;
+
+    // v0.7: Precise Reference
+    preciseReference: boolean;
+    onPreciseReferenceChange: (enabled: boolean) => void;
+
+    // Dynamic Tools
+    dynamicTools: any[];
+    onGenerateTools: () => void;
+    isToolsLoading: boolean;
+
+    // v1.0: PRO features
+    selectedModel: ModelType;
+    onModelChange: (model: ModelType) => void;
+    selectedResolution: ResolutionType;
+    onResolutionChange: (resolution: ResolutionType) => void;
+    textInImageConfig: TextInImageConfig;
+    onTextInImageConfigChange: (config: TextInImageConfig) => void;
+}
+
+const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
+    prompt,
+    onPromptChange,
+    promptTextareaRef,
+    onGenerate,
+    onAbortGeneration,
+    onEnhancePrompt,
+    onGenerate3Prompts,
+    isLoading,
+    isEnhancing,
+    hasReferences,
+    aspectRatio,
+    onAspectRatioChange,
+    numImages,
+    onNumImagesChange,
+    seed,
+    onSeedChange,
+    onRandomizeSeed,
+    negativePrompt,
+    onNegativePromptChange,
+    preciseReference,
+    onPreciseReferenceChange,
+    dynamicTools,
+    onGenerateTools,
+    isToolsLoading,
+    // v1.0: PRO features
+    selectedModel,
+    onModelChange,
+    selectedResolution,
+    onResolutionChange,
+    textInImageConfig,
+    onTextInImageConfigChange,
+}) => {
+    const { t, language } = useLocalization();
+    const [isExpanded, setIsExpanded] = useState(false);
+    const [showAspectMenu, setShowAspectMenu] = useState(false);
+    const [showNumImagesMenu, setShowNumImagesMenu] = useState(false);
+    const [showAdvancedPanel, setShowAdvancedPanel] = useState(false);
+    // v1.0: Model/Resolution dropdowns
+    const [showModelMenu, setShowModelMenu] = useState(false);
+    const [showResolutionMenu, setShowResolutionMenu] = useState(false);
+
+    const aspectRatios = ["Auto", "1:1", "4:3", "3:4", "16:9", "9:16", "3:2", "2:3", "4:5", "5:4", "21:9"];
+    const numImagesOptions = [1, 2, 3, 4];

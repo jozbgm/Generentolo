@@ -1,24 +1,24 @@
 import React, { useState, useEffect, useCallback, useMemo, createContext, useContext, useRef } from 'react';
-import { GeneratedImage, DynamicTool, PromptPreset, ModelType, ResolutionType, TextInImageConfig } from './types';
+import { GeneratedImage, DynamicTool, PromptPreset, ModelType, ResolutionType } from './types';
 import * as geminiService from './services/geminiService';
 import * as presetsService from './services/presetsService';
 import { useKeyboardShortcuts, APP_SHORTCUTS } from './hooks/useKeyboardShortcuts';
-import { SunIcon, MoonIcon, UploadIcon, DownloadIcon, ZoomInIcon, SparklesIcon, CopyIcon, SettingsIcon, XIcon, CheckIcon, LanguageIcon, WandIcon, InfoIcon, AlertTriangleIcon, BrushIcon, DiceIcon, TrashIcon, ReloadIcon, EnvelopeIcon, StarIcon, CornerUpLeftIcon, ChevronLeftIcon, ChevronRightIcon, SearchIcon, ChartIcon } from './components/icons';
+import { SunIcon, MoonIcon, UploadIcon, DownloadIcon, SparklesIcon, CopyIcon, SettingsIcon, XIcon, CheckIcon, LanguageIcon, InfoIcon, AlertTriangleIcon, BrushIcon, DiceIcon, TrashIcon, ReloadIcon, EnvelopeIcon, StarIcon, CornerUpLeftIcon, ChevronLeftIcon, ChevronRightIcon, ChartIcon } from './components/icons';
+import { indexedDBService } from './services/indexedDB';
 import FloatingActionBar from './components/FloatingActionBar';
 import ZoomableImage from './components/ZoomableImage';
-import PromptLibrary from './components/PromptLibrary';
 import UsageTracker from './components/UsageTracker'; // v1.4
 import { STYLE_PRESETS, PHYSICS_PRESETS } from './data/stylePresets'; // v1.4
 import { fetchInvisibleReferences, removeBracketsFromPrompt } from './services/googleSearchService'; // v1.5.1
 
 // Polyfill for crypto.randomUUID() on browsers that don't support it (mobile Safari, etc)
 if (!crypto.randomUUID) {
-    crypto.randomUUID = function () {
+    (crypto as any).randomUUID = function () {
         return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
             const r = Math.random() * 16 | 0;
             const v = c === 'x' ? r : (r & 0x3 | 0x8);
             return v.toString(16);
-        });
+        }) as `${string}-${string}-${string}-${string}-${string}`;
     };
 }
 
@@ -188,6 +188,15 @@ const translations = {
         costPrompt: 'Prompt',
         costTotal: 'Total',
         costDisclaimer: '* Estimate based on official Google pricing',
+        // Compatibility for FloatingActionBar
+        advancedSettings: 'Advanced Settings',
+        negativePrompt: 'Negative Prompt',
+        seed: 'Seed',
+        randomSeed: 'Random',
+        professionalTools: 'Professional Tools',
+        generate: 'Generate',
+        toolsAvailable: 'tools available',
+        noToolsYet: 'Click generate to create professional tools',
     },
     it: {
         headerTitle: 'Generentolo PRO v1.6.0',
@@ -353,6 +362,15 @@ const translations = {
         costPrompt: 'Prompt',
         costTotal: 'Totale',
         costDisclaimer: '* Stima basata sui prezzi ufficiali Google',
+        // Compatibility for FloatingActionBar
+        advancedSettings: 'Impostazioni Avanzate',
+        negativePrompt: 'Prompt Negativo',
+        seed: 'Seed',
+        randomSeed: 'Casuale',
+        professionalTools: 'Strumenti Professionali',
+        generate: 'Genera',
+        toolsAvailable: 'strumenti disponibili',
+        noToolsYet: 'Clicca su genera per creare strumenti professionali',
     }
 };
 
@@ -440,7 +458,7 @@ const createThumbnailDataUrl = (dataUrl: string, maxSize = 256): Promise<string>
 const MAX_USER_IMAGES = 14; // v1.0: Increased for Nano Banana PRO support (up to 14 reference images)
 
 const SkeletonLoader: React.FC<{ className?: string }> = ({ className }) => (
-    <div className={`bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-lg animate-pulse ${className}`} />
+    <div className={`bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-lg animate-pulse ${className || ''}`} />
 );
 
 interface HeaderProps {
@@ -572,7 +590,7 @@ const ReferencePanel: React.FC<{
     setPreciseReference: (value: boolean) => void;
     useGrounding: boolean;
     setUseGrounding: (value: boolean) => void;
-}> = ({ onAddImages, onRemoveImage, referenceImages, onAddStyleImage, onRemoveStyleImage, styleImage, onAddStructureImage, onRemoveStructureImage, structureImage, selectedStylePreset, setSelectedStylePreset, selectedLighting, setSelectedLighting, selectedCamera, setSelectedCamera, selectedFocus, setSelectedFocus, selectedModel, setEditedPrompt, preciseReference, setPreciseReference, useGrounding, setUseGrounding }) => {
+}> = ({ onAddImages, onRemoveImage, referenceImages, onAddStyleImage, onRemoveStyleImage, styleImage, onAddStructureImage, onRemoveStructureImage, structureImage, selectedStylePreset, setSelectedStylePreset, selectedLighting, setSelectedLighting, selectedCamera, setSelectedCamera, selectedFocus, setSelectedFocus, setEditedPrompt, preciseReference, setPreciseReference, useGrounding, setUseGrounding }) => {
     const { t, language } = useLocalization();
     const [isDraggingRef, setIsDraggingRef] = useState(false);
     const [isDraggingStyle, setIsDraggingStyle] = useState(false);
@@ -872,420 +890,8 @@ const ReferencePanel: React.FC<{
     );
 };
 
-interface ToolSelectionModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    tool: DynamicTool | null;
-    initialSelections: string[];
-    onSave: (toolName: string, selections: string[]) => void;
-}
-const ToolSelectionModal: React.FC<ToolSelectionModalProps> = ({ isOpen, onClose, tool, initialSelections, onSave }) => {
-    const { t } = useLocalization();
-    const [selected, setSelected] = useState<Set<string>>(new Set());
-    useEffect(() => { if (tool) setSelected(new Set(initialSelections)); }, [tool, initialSelections, isOpen]);
-    if (!isOpen || !tool) return null;
-
-    const handleToggle = (option: string) => {
-        setSelected(prev => {
-            const newSet = new Set(prev);
-            if (newSet.has(option)) newSet.delete(option); else newSet.add(option);
-            return newSet;
-        });
-    };
-    const handleSave = () => { onSave(tool.name, Array.from(selected)); onClose(); };
-    const handleClear = () => setSelected(new Set());
-
-    return (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
-            <div className="bg-light-surface/80 dark:bg-dark-surface/80 backdrop-blur-xl border border-white/10 dark:border-white/10 rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col" onClick={e => e.stopPropagation()}>
-                <div className="flex justify-between items-center p-4 border-b border-light-border dark:border-dark-border">
-                    <h2 className="text-lg font-semibold text-light-text dark:text-dark-text">{tool.label}</h2>
-                    <button onClick={onClose} className="p-1 rounded-full text-light-text-muted dark:text-dark-text-muted hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent"><XIcon className="w-5 h-5" /></button>
-                </div>
-                <div className="overflow-y-auto max-h-[60vh] p-4">
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                        {tool.options.map(option => {
-                            const isSelected = selected.has(option);
-                            return (
-                                <label key={option} className={`relative flex items-center p-3 rounded-lg border cursor-pointer transition-all ${isSelected ? 'border-brand-yellow ring-2 ring-brand-purple' : 'border-light-border dark:border-dark-border hover:border-dark-text-muted'}`}>
-                                    <input type="checkbox" checked={isSelected} onChange={() => handleToggle(option)} className="absolute opacity-0 w-0 h-0" />
-                                    {isSelected && <div className="absolute top-1 right-1 text-brand-yellow"><CheckIcon className="w-4 h-4" /></div>}
-                                    <span className="text-sm select-none text-light-text dark:text-dark-text">{option}</span>
-                                </label>
-                            );
-                        })}
-                    </div>
-                </div>
-                <div className="flex justify-end gap-3 p-4 border-t border-light-border dark:border-dark-border">
-                    <button onClick={handleClear} className="px-4 py-2 rounded-lg border border-light-border dark:border-dark-border text-sm font-semibold hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors">{t.clearSelection}</button>
-                    <button onClick={handleSave} className="px-4 py-2 rounded-lg bg-gradient-to-r from-brand-yellow to-brand-magenta text-white text-sm font-semibold hover:opacity-90 transition-opacity">{t.save} ({selected.size})</button>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-interface ControlPanelProps {
-    dynamicTools: DynamicTool[];
-    selectedAspectRatio: string;
-    onAspectRatioChange: (ratio: string) => void;
-    onGenerateTools: () => void;
-    isLoading: boolean;
-    isToolsLoading: boolean;
-    isEnhancing: boolean;
-    referenceImages: File[];
-    styleReferenceImage: File | null;
-    numImages: number;
-    onNumImagesChange: (num: number) => void;
-    userApiKey: string;
-    language: Language;
-    editedPrompt: string;
-    onEditedPromptChange: (val: string) => void;
-    negativePrompt: string;
-    onNegativePromptChange: (val: string) => void;
-    seed: string;
-    onSeedChange: (val: string) => void;
-    onRandomizeSeed: () => void;
-    onCopySeed: () => void;
-    promptTextareaRef: React.RefObject<HTMLTextAreaElement>;
-    // v1.0: PRO features
-    selectedModel: ModelType;
-    onModelChange: (model: ModelType) => void;
-    selectedResolution: ResolutionType;
-    onResolutionChange: (resolution: ResolutionType) => void;
-    textInImageConfig: TextInImageConfig;
-    onTextInImageConfigChange: (config: TextInImageConfig) => void;
-}
-// Memoized Prompt Textarea to prevent flickering
-const PromptTextarea = React.memo<{
-    value: string;
-    onChange: (value: string) => void;
-    placeholder: string;
-    disabled: boolean;
-    textareaRef: React.RefObject<HTMLTextAreaElement>;
-}>(({ value, onChange, placeholder, disabled, textareaRef }) => {
-    const handlePaste = async () => {
-        try {
-            const text = await navigator.clipboard.readText();
-            onChange(text);
-        } catch (err) {
-            console.error('Failed to read clipboard:', err);
-        }
-    };
-
-    const handleClear = () => {
-        onChange('');
-        textareaRef.current?.focus();
-    };
-
-    return (
-        <div className="relative">
-            <textarea
-                ref={textareaRef}
-                value={value}
-                onChange={(e) => onChange(e.target.value)}
-                rows={4}
-                className="w-full p-3 pr-20 bg-light-surface/50 dark:bg-dark-surface/50 border border-light-border dark:border-dark-border rounded-xl focus:ring-2 focus:ring-brand-purple focus:outline-none text-light-text dark:text-dark-text placeholder-light-text-muted dark:placeholder-dark-text-muted"
-                placeholder={placeholder}
-                disabled={disabled}
-            />
-            <div className="absolute top-2 right-2 flex gap-1">
-                <button
-                    onClick={handlePaste}
-                    disabled={disabled}
-                    className="p-1.5 rounded-lg bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-all hover:scale-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-                    aria-label="Paste from clipboard"
-                    title="Paste"
-                >
-                    <CopyIcon className="w-4 h-4 text-light-text-muted dark:text-dark-text-muted" />
-                </button>
-                {value && (
-                    <button
-                        onClick={handleClear}
-                        disabled={disabled}
-                        className="p-1.5 rounded-lg bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border hover:bg-red-500/10 dark:hover:bg-red-500/20 transition-all hover:scale-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-                        aria-label="Clear prompt"
-                        title="Clear"
-                    >
-                        <XIcon className="w-4 h-4 text-red-500" />
-                    </button>
-                )}
-            </div>
-        </div>
-    );
-});
-
-const ControlPanel: React.FC<ControlPanelProps> = (props) => {
-    const {
-        dynamicTools, selectedAspectRatio, onAspectRatioChange, onGenerateTools,
-        isLoading, isToolsLoading, isEnhancing, referenceImages, styleReferenceImage, numImages, onNumImagesChange,
-        userApiKey, language, editedPrompt, onEditedPromptChange, negativePrompt, onNegativePromptChange, seed, onSeedChange, onRandomizeSeed, onCopySeed, promptTextareaRef,
-        // v1.0: PRO features
-        selectedModel, onModelChange, selectedResolution, onResolutionChange, textInImageConfig, onTextInImageConfigChange
-    } = props;
-    const { t } = useLocalization();
-    const [toolSettings, setToolSettings] = useState<Record<string, string[]>>({});
-    const [editingTool, setEditingTool] = useState<DynamicTool | null>(null);
-    const [isRewriting, setIsRewriting] = useState(false);
-    const [isGeneratingNegativePrompt, setIsGeneratingNegativePrompt] = useState(false);
-
-    useEffect(() => {
-        const newSettings: Record<string, string[]> = {};
-        dynamicTools.forEach(tool => { newSettings[tool.name] = []; });
-        setToolSettings(newSettings);
-    }, [dynamicTools]);
-
-    const handleGenerateNegativePrompt = useCallback(async () => {
-        if (!editedPrompt || isGeneratingNegativePrompt) return;
-
-        setIsGeneratingNegativePrompt(true);
-        try {
-            const newNegativePrompt = await geminiService.generateNegativePrompt(editedPrompt, referenceImages, styleReferenceImage, userApiKey, language);
-            onNegativePromptChange(newNegativePrompt);
-        } catch (error: any) {
-            console.error("Failed to generate negative prompt:", error);
-        } finally {
-            setIsGeneratingNegativePrompt(false);
-        }
-    }, [editedPrompt, referenceImages, styleReferenceImage, userApiKey, language, onNegativePromptChange, isGeneratingNegativePrompt]);
 
 
-    const handleToolSave = async (toolName: string, selections: string[]) => {
-        const newToolSettings = { ...toolSettings, [toolName]: selections };
-        setToolSettings(newToolSettings);
-
-        const toolModifiers = Object.keys(newToolSettings)
-            .filter((key) => newToolSettings[key].length > 0)
-            .map((key) => `${key.replace(/_/g, ' ')}: (${newToolSettings[key].join(', ')})`)
-            .join(', ');
-
-        if (toolModifiers) {
-            setIsRewriting(true);
-            try {
-                const rewrittenPrompt = await geminiService.rewritePromptWithOptions(editedPrompt || "A professional photograph", toolModifiers, userApiKey, language);
-                onEditedPromptChange(rewrittenPrompt);
-            } catch (e: any) {
-                console.error(e);
-                const conjunction = language === 'it' ? ', con ' : ', with ';
-                onEditedPromptChange(editedPrompt + conjunction + toolModifiers);
-            } finally {
-                setIsRewriting(false);
-            }
-        }
-    };
-
-    const aspectRatios = ["Auto", "1:1", "4:3", "3:4", "16:9", "9:16", "3:2", "2:3", "4:5", "5:4", "21:9"];
-    const isActionDisabled = isLoading || isRewriting || isEnhancing || isGeneratingNegativePrompt;
-    const hasImages = referenceImages.length > 0 || styleReferenceImage;
-    const isPromptEmpty = editedPrompt.trim() === '';
-
-    return (
-        <div className="p-4 space-y-6">
-            <div className="relative">
-                <div className={`absolute inset-0 bg-light-surface/50 dark:bg-dark-bg/50 z-10 flex items-center justify-center transition-opacity rounded-xl ${(isRewriting || isEnhancing) ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-                    <div className="w-5 h-5 border-2 border-brand-yellow border-t-transparent rounded-full animate-spin"></div>
-                </div>
-                <PromptTextarea
-                    value={editedPrompt}
-                    onChange={onEditedPromptChange}
-                    placeholder={t.promptPlaceholder}
-                    disabled={isRewriting || isEnhancing}
-                    textareaRef={promptTextareaRef}
-                />
-            </div>
-
-            <div>
-                <h3 className="font-semibold mb-3 text-light-text dark:text-dark-text">{t.professionalToolsTitle}</h3>
-                <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-3">
-                        {isToolsLoading && hasImages ? (
-                            <> <SkeletonLoader className="h-[52px]" /> <SkeletonLoader className="h-[52px]" /> </>
-                        ) : dynamicTools.length > 0 ? dynamicTools.map(tool => {
-                            const selectionCount = toolSettings[tool.name]?.length || 0;
-                            return (
-                                <div key={tool.name}>
-                                    <button onClick={() => setEditingTool(tool)} className="w-full text-left p-2 bg-light-surface dark:bg-dark-surface/50 border border-light-border dark:border-dark-border rounded-lg hover:border-brand-yellow transition-colors">
-                                        <div className="text-sm font-medium text-light-text-muted dark:text-dark-text-muted">{tool.label}</div>
-                                        <div className={`text-xs ${selectionCount > 0 ? 'text-brand-yellow' : 'text-light-text-muted dark:text-dark-text-muted'}`}>{selectionCount > 0 ? `${selectionCount} selected` : t.chooseOptions}</div>
-                                    </button>
-                                </div>
-                            )
-                        }) : (
-                            <div className="col-span-2">
-                                {hasImages ? (
-                                    <button onClick={onGenerateTools} disabled={isActionDisabled} className="w-full text-center py-2 px-4 rounded-lg bg-light-surface dark:bg-dark-surface/50 border border-light-border dark:border-dark-border hover:border-brand-yellow transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-sm">
-                                        {t.generateTools}
-                                    </button>
-                                ) : (
-                                    <p className="text-sm text-light-text-muted dark:text-dark-text-muted col-span-2">{t.toolsLoading}</p>
-                                )}
-                            </div>
-                        )}
-                    </div>
-
-                    {/* v1.0: Text-in-Image Controls */}
-                    {selectedModel === 'gemini-3-pro-image-preview' && (
-                        <div className="mt-4 p-3 rounded-lg bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/30">
-                            <div className="flex items-center justify-between mb-2">
-                                <h4 className="text-sm font-semibold text-light-text dark:text-dark-text">{t.textInImageTitle}</h4>
-                                <label className="relative inline-flex items-center cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        checked={textInImageConfig.enabled}
-                                        onChange={(e) => onTextInImageConfigChange({ ...textInImageConfig, enabled: e.target.checked })}
-                                        className="sr-only peer"
-                                    />
-                                    <div className="w-9 h-5 bg-light-surface-accent dark:bg-dark-surface-accent rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-gradient-to-r peer-checked:from-brand-yellow peer-checked:to-brand-magenta after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all"></div>
-                                </label>
-                            </div>
-
-                            {textInImageConfig.enabled && (
-                                <div className="space-y-2">
-                                    <input
-                                        type="text"
-                                        value={textInImageConfig.text || ''}
-                                        onChange={(e) => onTextInImageConfigChange({ ...textInImageConfig, text: e.target.value })}
-                                        placeholder={t.textInImagePlaceholder}
-                                        className="w-full p-2 text-sm bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded-lg focus:ring-2 focus:ring-brand-purple focus:outline-none"
-                                    />
-
-                                    <div className="grid grid-cols-2 gap-2">
-                                        <div>
-                                            <label className="text-xs text-light-text-muted dark:text-dark-text-muted mb-1 block">{t.textPosition}</label>
-                                            <select
-                                                value={textInImageConfig.position || 'center'}
-                                                onChange={(e) => onTextInImageConfigChange({ ...textInImageConfig, position: e.target.value as any })}
-                                                className="w-full p-2 text-sm bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded-lg focus:ring-2 focus:ring-brand-purple focus:outline-none"
-                                            >
-                                                <option value="top">{t.textPositionTop}</option>
-                                                <option value="center">{t.textPositionCenter}</option>
-                                                <option value="bottom">{t.textPositionBottom}</option>
-                                                <option value="overlay">{t.textPositionOverlay}</option>
-                                            </select>
-                                        </div>
-
-                                        <div>
-                                            <label className="text-xs text-light-text-muted dark:text-dark-text-muted mb-1 block">{t.fontStyle}</label>
-                                            <select
-                                                value={textInImageConfig.fontStyle || 'modern'}
-                                                onChange={(e) => onTextInImageConfigChange({ ...textInImageConfig, fontStyle: e.target.value as any })}
-                                                className="w-full p-2 text-sm bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded-lg focus:ring-2 focus:ring-brand-purple focus:outline-none"
-                                            >
-                                                <option value="bold">{t.fontBold}</option>
-                                                <option value="italic">{t.fontItalic}</option>
-                                                <option value="calligraphy">{t.fontCalligraphy}</option>
-                                                <option value="modern">{t.fontModern}</option>
-                                                <option value="vintage">{t.fontVintage}</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    )}
-                </div>
-            </div>
-
-            <div className="p-4 rounded-xl bg-light-surface dark:bg-dark-surface/50 border border-light-border dark:border-dark-border space-y-4">
-                <h4 className="text-sm font-semibold text-light-text dark:text-dark-text">{t.advancedSettingsTitle}</h4>
-                <div>
-                    <label htmlFor="num-images" className="block text-xs font-medium text-light-text-muted dark:text-dark-text-muted mb-2">{t.numImagesTitle}</label>
-                    <div className="grid grid-cols-4 gap-2">
-                        {[1, 2, 3, 4].map(num => (
-                            <button
-                                key={num}
-                                onClick={() => onNumImagesChange(num)}
-                                className={`p-3 rounded-lg font-semibold text-center transition-colors ${numImages === num ? 'bg-gradient-to-r from-brand-yellow to-brand-magenta text-white' : 'bg-light-surface-accent dark:bg-dark-surface-accent hover:bg-light-surface-accent/70 dark:hover:bg-dark-surface-accent/70'}`}
-                            >
-                                {num}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-                <div className="relative">
-                    <label htmlFor="negative-prompt" className="flex items-center gap-2 text-xs font-medium text-light-text-muted dark:text-dark-text-muted mb-1">
-                        <span>{t.negativePromptLabel}</span>
-                        {isGeneratingNegativePrompt && <div className="w-3 h-3 border-2 border-brand-yellow/50 border-t-transparent rounded-full animate-spin"></div>}
-                    </label>
-                    <textarea id="negative-prompt" value={negativePrompt} onChange={e => onNegativePromptChange(e.target.value)} rows={2} className="w-full p-2 pr-10 text-sm bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded-lg focus:ring-2 focus:ring-brand-purple focus:outline-none" placeholder={t.negativePromptPlaceholder} />
-                    <button onClick={handleGenerateNegativePrompt} disabled={isActionDisabled || !editedPrompt} title={t.generateNegativePrompt} className="absolute bottom-2 right-2 p-1.5 rounded-full text-brand-yellow hover:bg-brand-purple/20 transition-colors disabled:text-gray-400 disabled:hover:bg-transparent">
-                        <WandIcon className="w-5 h-5" />
-                    </button>
-                </div>
-                <div>
-                    <label htmlFor="seed" className="text-xs font-medium text-light-text-muted dark:text-dark-text-muted mb-1 block">
-                        {t.seedLabel}
-                    </label>
-                    <div className="flex gap-2">
-                        <input id="seed" type="text" value={seed} onChange={e => onSeedChange(e.target.value.replace(/\D/g, ''))} placeholder={t.seedPlaceholder} className="w-full p-2 text-sm bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded-lg focus:ring-2 focus:ring-brand-purple focus:outline-none" />
-                        <button onClick={onCopySeed} title={t.copySeed} className="p-2 rounded-lg bg-light-surface-accent dark:bg-dark-surface-accent border border-light-border dark:border-dark-border hover:border-dark-text-muted transition-colors"><CopyIcon className="w-5 h-5" /></button>
-                        <button onClick={onRandomizeSeed} title={t.randomize} className="p-2 rounded-lg bg-light-surface-accent dark:bg-dark-surface-accent border border-light-border dark:border-dark-border hover:border-dark-text-muted transition-colors"><DiceIcon className="w-5 h-5" /></button>
-                    </div>
-                </div>
-            </div>
-
-            <div>
-                <h3 className="font-semibold mb-3 text-light-text dark:text-dark-text">
-                    {t.aspectRatioTitle}
-                </h3>
-                <div className="grid grid-cols-3 gap-2">
-                    {aspectRatios.map(ratio => (
-                        <button key={ratio} onClick={() => onAspectRatioChange(ratio)} className={`w-full py-2 rounded-lg text-sm font-medium transition-colors ${selectedAspectRatio === ratio ? 'bg-gradient-to-r from-brand-yellow to-brand-magenta text-white' : 'bg-light-surface dark:bg-dark-surface/50 border border-light-border dark:border-dark-border hover:border-dark-text-muted'}`}>{ratio}</button>
-                    ))}
-                </div>
-            </div>
-
-            {/* v1.0: Model Selector */}
-            <div>
-                <div className="flex items-center gap-2 mb-3">
-                    <h3 className="font-semibold text-xs sm:text-sm text-light-text dark:text-dark-text">{t.modelTitle}</h3>
-                    <InfoIcon className="w-3 h-3 sm:w-4 sm:h-4 text-light-text-muted dark:text-dark-text-muted cursor-help" title={t.modelTooltip} />
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                    <button onClick={() => onModelChange('gemini-2.5-flash-image')} className={`w-full py-2 sm:py-2.5 px-2 sm:px-3 rounded-lg text-xs sm:text-sm font-medium transition-all ${selectedModel === 'gemini-2.5-flash-image' ? 'bg-gradient-to-r from-brand-yellow to-brand-magenta text-white shadow-lg' : 'bg-light-surface dark:bg-dark-surface/50 border border-light-border dark:border-dark-border hover:border-dark-text-muted'}`}>
-                        <div className="flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5">
-                            <SparklesIcon className="w-4 h-4" />
-                            <span className="text-[10px] sm:text-xs leading-tight">{t.modelFlash}</span>
-                        </div>
-                    </button>
-                    <button onClick={() => onModelChange('gemini-3-pro-image-preview')} className={`w-full py-2 sm:py-2.5 px-2 sm:px-3 rounded-lg text-xs sm:text-sm font-medium transition-all ${selectedModel === 'gemini-3-pro-image-preview' ? 'bg-gradient-to-r from-brand-yellow to-brand-magenta text-white shadow-lg' : 'bg-light-surface dark:bg-dark-surface/50 border border-light-border dark:border-dark-border hover:border-dark-text-muted'}`}>
-                        <div className="flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5">
-                            <StarIcon className="w-4 h-4" />
-                            <span className="text-[10px] sm:text-xs leading-tight">{t.modelPro}</span>
-                        </div>
-                    </button>
-                </div>
-            </div>
-
-            {/* v1.0: Resolution Selector (only for PRO model) */}
-            {selectedModel === 'gemini-3-pro-image-preview' && (
-                <div>
-                    <div className="flex items-center gap-2 mb-3">
-                        <h3 className="font-semibold text-xs sm:text-sm text-light-text dark:text-dark-text">{t.resolutionTitle}</h3>
-                        <InfoIcon className="w-3 h-3 sm:w-4 sm:h-4 text-light-text-muted dark:text-dark-text-muted cursor-help" title={t.resolutionTooltip} />
-                    </div>
-                    <div className="grid grid-cols-3 gap-2">
-                        <button onClick={() => onResolutionChange('1k')} className={`w-full py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${selectedResolution === '1k' ? 'bg-gradient-to-r from-brand-yellow to-brand-magenta text-white' : 'bg-light-surface dark:bg-dark-surface/50 border border-light-border dark:border-dark-border hover:border-dark-text-muted'}`}>{t.resolution1k}</button>
-                        <button onClick={() => onResolutionChange('2k')} className={`w-full py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${selectedResolution === '2k' ? 'bg-gradient-to-r from-brand-yellow to-brand-magenta text-white' : 'bg-light-surface dark:bg-dark-surface/50 border border-light-border dark:border-dark-border hover:border-dark-text-muted'}`}>{t.resolution2k}</button>
-                        <button onClick={() => onResolutionChange('4k')} className={`w-full py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${selectedResolution === '4k' ? 'bg-gradient-to-r from-brand-yellow to-brand-magenta text-white' : 'bg-light-surface dark:bg-dark-surface/50 border border-light-border dark:border-dark-border hover:border-dark-text-muted'}`}>{t.resolution4k}</button>
-                    </div>
-                </div>
-            )}
-
-            {/* v1.0: Estimated Cost Display */}
-            <div className="p-2.5 sm:p-3 rounded-lg bg-gradient-to-r from-yellow-500/10 to-amber-500/10 border border-yellow-500/30">
-                <div className="flex items-center justify-between gap-2">
-                    <span className="text-xs sm:text-sm font-medium text-light-text dark:text-dark-text whitespace-nowrap">{t.estimatedCost}:</span>
-                    <span className="text-base sm:text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-yellow-500 to-amber-500">
-                        ${geminiService.calculateEstimatedCost(selectedModel, selectedResolution, referenceImages.length + (styleReferenceImage ? 1 : 0)).toFixed(3)}
-                    </span>
-                </div>
-            </div>
-
-            <ToolSelectionModal isOpen={!!editingTool} onClose={() => setEditingTool(null)} tool={editingTool} initialSelections={editingTool ? toolSettings[editingTool.name] : []} onSave={handleToolSave} />
-        </div>
-    );
-};
 
 interface ImageDisplayProps {
     images: GeneratedImage[];
@@ -1503,8 +1109,8 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
                     <button
                         onClick={() => setShowFavoritesOnly(false)}
                         className={`flex-1 px-3 py-1.5 text-sm font-medium rounded-lg transition-all ${!showFavoritesOnly
-                                ? 'bg-white dark:bg-dark-surface text-light-text dark:text-dark-text shadow-sm'
-                                : 'text-light-text-muted dark:text-dark-text-muted hover:text-light-text dark:hover:text-dark-text'
+                            ? 'bg-white dark:bg-dark-surface text-light-text dark:text-dark-text shadow-sm'
+                            : 'text-light-text-muted dark:text-dark-text-muted hover:text-light-text dark:hover:text-dark-text'
                             }`}
                     >
                         {t.allHistory}
@@ -1512,8 +1118,8 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
                     <button
                         onClick={() => setShowFavoritesOnly(true)}
                         className={`flex-1 px-3 py-1.5 text-sm font-medium rounded-lg transition-all flex items-center justify-center gap-1.5 ${showFavoritesOnly
-                                ? 'bg-white dark:bg-dark-surface text-light-text dark:text-dark-text shadow-sm'
-                                : 'text-light-text-muted dark:text-dark-text-muted hover:text-light-text dark:hover:text-dark-text'
+                            ? 'bg-white dark:bg-dark-surface text-light-text dark:text-dark-text shadow-sm'
+                            : 'text-light-text-muted dark:text-dark-text-muted hover:text-light-text dark:hover:text-dark-text'
                             }`}
                     >
                         <StarIcon className="w-4 h-4" filled={showFavoritesOnly} />
@@ -1611,7 +1217,7 @@ interface PresetsPanelProps {
 const PresetsPanel: React.FC<PresetsPanelProps> = ({
     presets, onLoadPreset, onDeletePreset, onSavePreset, onExport, onImport, currentPrompt, currentNegativePrompt
 }) => {
-    const { t } = useLocalization();
+    useLocalization();
     const [showSaveDialog, setShowSaveDialog] = useState(false);
     const [presetName, setPresetName] = useState('');
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -1640,7 +1246,7 @@ const PresetsPanel: React.FC<PresetsPanelProps> = ({
             <div className="flex justify-between items-center mb-4">
                 <h2 className="font-semibold text-light-text dark:text-dark-text flex items-center gap-2">
                     <StarIcon className="w-5 h-5 text-brand-yellow" filled />
-                    Presets {presets.length > 0 && <span className="text-sm text-light-text-muted dark:text-dark-text-muted">({presets.length}/50)</span>}
+                    Presets {presets.length > 0 && <span className="text-sm text-light-text-muted dark:text-dark-text-muted">({presets.length}/50) </span>}
                 </h2>
                 <div className="flex items-center gap-2">
                     <button
@@ -2263,12 +1869,6 @@ export default function App() {
     // v1.0: New PRO features states
     const [selectedModel, setSelectedModel] = useState<ModelType>('gemini-2.5-flash-image');
     const [selectedResolution, setSelectedResolution] = useState<ResolutionType>('2k');
-    const [textInImageConfig, setTextInImageConfig] = useState<TextInImageConfig>({
-        enabled: false,
-        text: '',
-        position: 'center',
-        fontStyle: 'modern'
-    });
     const [currentImages, setCurrentImages] = useState<GeneratedImage[]>([]);
     const [history, setHistory] = useState<GeneratedImage[]>([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -2281,7 +1881,7 @@ export default function App() {
     const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
     const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
     const [isHelpOpen, setIsHelpOpen] = useState(false);
-    const [isPromptLibraryOpen, setIsPromptLibraryOpen] = useState(false);
+
     const [userApiKey, setUserApiKey] = useState<string>('');
     const [toast, setToast] = useState<{ id: number; message: string; type: 'success' | 'error' } | null>(null);
     const [isHistorySelectionMode, setIsHistorySelectionMode] = useState(false);
@@ -2324,9 +1924,7 @@ export default function App() {
         setAspectRatio(ratio);
     }, []);
 
-    const handleCopySeedCallback = useCallback(() => {
-        handleCopyToClipboard(seed);
-    }, [seed]);
+
 
     useEffect(() => {
         const root = window.document.documentElement;
@@ -2375,20 +1973,6 @@ export default function App() {
 
     const toggleTheme = () => setTheme(prev => prev === 'dark' ? 'light' : 'dark');
 
-    const generateInitialPrompt = useCallback(async (refFiles: File[], styleFile: File | null, structFile: File | null) => {
-        if (refFiles.length === 0 && !styleFile && !structFile) return;
-
-        setIsEnhancing(true);
-        try {
-            const newPrompt = await geminiService.generateSinglePromptFromImage(refFiles, styleFile, structFile, userApiKey, language);
-            setEditedPrompt(newPrompt);
-        } catch (error: any) {
-            console.error("Failed to generate initial prompt", error);
-            showToast(error.message || t.promptCreationFailed, 'error');
-        } finally {
-            setIsEnhancing(false);
-        }
-    }, [userApiKey, language, showToast, t.promptCreationFailed]);
 
     useEffect(() => {
         const hasImages = referenceImages.length > 0 || styleReferenceImage;
@@ -2452,6 +2036,8 @@ export default function App() {
 
     const handleGenerate = useCallback(async () => {
         if (referenceImages.length === 0 && !editedPrompt && !styleReferenceImage) return;
+
+        const startTime = Date.now();
 
         // v1.3: Create new AbortController for this generation
         const controller = new AbortController();
@@ -2548,7 +2134,7 @@ export default function App() {
                         preciseReference,
                         selectedModel,
                         selectedResolution,
-                        textInImageConfig,
+                        undefined,
                         controller.signal,
                         useGrounding // v1.4: Google Search Grounding
                     );
@@ -2577,7 +2163,7 @@ export default function App() {
                             preciseReference,
                             selectedModel,
                             selectedResolution,
-                            textInImageConfig,
+                            undefined,
                             controller.signal,
                             useGrounding // v1.4: Google Search Grounding
                         );
@@ -2614,6 +2200,16 @@ export default function App() {
 
             setCurrentImages(newImages);
             setHistory(prev => [...newImages, ...prev].slice(0, MAX_HISTORY_ITEMS));
+
+            // v1.4: Update usage stats
+            const generationTime = (Date.now() - startTime) / 1000;
+            setUsageStats(prev => ({
+                imagesGenerated: prev.imagesGenerated + newImages.length,
+                totalCost: prev.totalCost + estimatedCost,
+                tokensUsed: prev.tokensUsed + 0, // Gemini Image API cost is per image, not tokens
+                averageTime: (prev.averageTime * prev.imagesGenerated + generationTime) / (prev.imagesGenerated + 1),
+                generationTimes: [...prev.generationTimes, generationTime]
+            }));
         } catch (error: any) {
             console.error("Image generation failed", error);
             showToast(error.message || t.generationFailed, 'error');
@@ -2621,7 +2217,7 @@ export default function App() {
             setIsLoading(false);
             abortControllerRef.current = null; // v1.3: Clear abort controller
         }
-    }, [referenceImages, styleReferenceImage, structureImage, preciseReference, userApiKey, aspectRatio, showToast, t.generationFailed, language, editedPrompt, negativePrompt, seed, numImagesToGenerate, selectedModel, selectedResolution, textInImageConfig, useGrounding]);
+    }, [referenceImages, styleReferenceImage, structureImage, preciseReference, userApiKey, aspectRatio, showToast, t.generationFailed, language, editedPrompt, negativePrompt, seed, numImagesToGenerate, selectedModel, selectedResolution, useGrounding]);
 
     // v1.3: Abort generation
     const handleAbortGeneration = useCallback(() => {
@@ -2962,7 +2558,7 @@ export default function App() {
     // Preset handlers
     const handleSavePreset = useCallback((name: string, prompt: string, negativePrompt?: string) => {
         try {
-            const newPreset = presetsService.addPreset(name, prompt, negativePrompt);
+            presetsService.addPreset(name, prompt, negativePrompt);
             setPresets(presetsService.loadPresets());
             showToast('Preset saved successfully!', 'success');
         } catch (error: any) {
@@ -3226,8 +2822,8 @@ export default function App() {
                                 <button
                                     onClick={() => setSidebarTab('history')}
                                     className={`flex-1 py-2 px-4 rounded-xl text-sm font-medium transition-all ${sidebarTab === 'history'
-                                            ? 'bg-light-surface dark:bg-dark-surface text-light-text dark:text-dark-text shadow-sm'
-                                            : 'text-light-text-muted dark:text-dark-text-muted hover:bg-light-surface/50 dark:hover:bg-dark-surface/50'
+                                        ? 'bg-light-surface dark:bg-dark-surface text-light-text dark:text-dark-text shadow-sm'
+                                        : 'text-light-text-muted dark:text-dark-text-muted hover:bg-light-surface/50 dark:hover:bg-dark-surface/50'
                                         }`}
                                 >
                                     History
@@ -3235,8 +2831,8 @@ export default function App() {
                                 <button
                                     onClick={() => setSidebarTab('presets')}
                                     className={`flex-1 py-2 px-4 rounded-xl text-sm font-medium transition-all ${sidebarTab === 'presets'
-                                            ? 'bg-light-surface dark:bg-dark-surface text-light-text dark:text-dark-text shadow-sm'
-                                            : 'text-light-text-muted dark:text-dark-text-muted hover:bg-light-surface/50 dark:hover:bg-dark-surface/50'
+                                        ? 'bg-light-surface dark:bg-dark-surface text-light-text dark:text-dark-text shadow-sm'
+                                        : 'text-light-text-muted dark:text-dark-text-muted hover:bg-light-surface/50 dark:hover:bg-dark-surface/50'
                                         }`}
                                 >
                                     <StarIcon className="w-4 h-4 inline-block mr-1 -mt-0.5" filled={sidebarTab === 'presets'} />
@@ -3292,7 +2888,6 @@ export default function App() {
                     isLoading={isLoading}
                     isEnhancing={isEnhancing}
                     hasReferences={referenceImages.length > 0 || !!styleReferenceImage || !!structureImage}
-                    hasGeneratedImages={currentImages.length > 0}
                     aspectRatio={aspectRatio}
                     onAspectRatioChange={handleAspectRatioChange}
                     numImages={numImagesToGenerate}
@@ -3311,8 +2906,6 @@ export default function App() {
                     onModelChange={setSelectedModel}
                     selectedResolution={selectedResolution}
                     onResolutionChange={setSelectedResolution}
-                    textInImageConfig={textInImageConfig}
-                    onTextInImageConfigChange={setTextInImageConfig}
                 />
 
                 <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} onSave={handleSaveApiKey} currentApiKey={userApiKey} />
@@ -3328,22 +2921,8 @@ export default function App() {
                     language={language}
                 />
 
-                {/* Prompt Library now opens as standalone window via window.open() */}
-                {useEffect(() => {
-                    const handleMessage = (event: MessageEvent) => {
-                        if (event.data.type === 'USE_PROMPT') {
-                            setEditedPrompt(event.data.prompt);
-                            promptTextareaRef.current?.focus();
-                            showToast(language === 'it' ? 'Prompt applicato!' : 'Prompt applied!', 'success');
-                        } else if (event.data.type === 'GET_LANGUAGE') {
-                            if (event.source) {
-                                (event.source as Window).postMessage({ type: 'SET_LANGUAGE', language }, event.origin);
-                            }
-                        }
-                    };
-                    window.addEventListener('message', handleMessage);
-                    return () => window.removeEventListener('message', handleMessage);
-                }, [language, showToast])}
+
+                {editingImage && <InpaintEditor image={editingImage} onClose={() => setEditingImage(null)} onSave={handleInpaint} />}
 
                 {editingImage && <InpaintEditor image={editingImage} onClose={() => setEditingImage(null)} onSave={handleInpaint} />}
 

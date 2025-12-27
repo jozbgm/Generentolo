@@ -286,7 +286,7 @@ If any answer is NO, completely rework before returning.`;
         if (!result || !result.text) {
             console.warn('⚠️ Enhancement failed, using fallback');
             return {
-                enhancedPrompt: applyFallbackEnhancement(currentPrompt, hasImages, hasStyle, hasStructure, language),
+                enhancedPrompt: applyFallbackEnhancement(currentPrompt, hasStyle, hasStructure, language),
                 method: 'fallback'
             };
         }
@@ -298,12 +298,12 @@ If any answer is NO, completely rework before returning.`;
         enhancedPrompt = enhancedPrompt.replace(/^(Prompt:|Enhanced:|Migliorato:)\s*/i, '').trim();
 
         // STEP 3: Quality Validation (self-evaluation)
-        const qualityCheck = validateEnhancement(enhancedPrompt, currentPrompt, language);
+        const qualityCheck = validateEnhancement(enhancedPrompt, currentPrompt);
 
         if (!qualityCheck.isValid) {
             console.warn(`⚠️ Quality check failed: ${qualityCheck.reason}, applying fallback`);
             return {
-                enhancedPrompt: applyFallbackEnhancement(currentPrompt, hasImages, hasStyle, hasStructure, language),
+                enhancedPrompt: applyFallbackEnhancement(currentPrompt, hasStyle, hasStructure, language),
                 method: 'fallback',
                 qualityScore: qualityCheck.score
             };
@@ -333,11 +333,9 @@ If any answer is NO, completely rework before returning.`;
  */
 function validateEnhancement(
     enhanced: string,
-    original: string,
-    language: 'en' | 'it'
+    original: string
 ): { isValid: boolean; score: number; reason?: string } {
     const wordCount = enhanced.split(/\s+/).length;
-    const charCount = enhanced.length;
 
     // Check 1: Length validation
     if (wordCount < 20) {
@@ -389,7 +387,6 @@ function validateEnhancement(
  */
 function applyFallbackEnhancement(
     prompt: string,
-    hasImages: boolean,
     hasStyle: boolean,
     hasStructure: boolean,
     language: 'en' | 'it'

@@ -32,7 +32,7 @@ class IndexedDBService {
             return Promise.resolve();
         }
 
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             try {
                 const request = indexedDB.open(DB_NAME, DB_VERSION);
 
@@ -88,7 +88,7 @@ class IndexedDBService {
         if (!this.db) await this.init();
         if (!this.checkAvailability()) return Promise.resolve();
 
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             try {
                 const transaction = this.db!.transaction([STORE_NAME], 'readwrite');
                 const store = transaction.objectStore(STORE_NAME);

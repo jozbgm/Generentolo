@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef } from 'react';
-import { PROMPT_LIBRARY, PROMPT_CATEGORIES, PromptTemplate } from '../data/promptLibrary';
+import { PROMPT_LIBRARY, PROMPT_CATEGORIES } from '../data/promptLibrary';
 import { XIcon, SearchIcon, CopyIcon, CheckIcon, ChevronLeftIcon, ChevronRightIcon } from './icons';
 
 interface PromptLibraryProps {
@@ -202,11 +202,10 @@ const PromptLibrary: React.FC<PromptLibraryProps> = ({ isOpen, onClose, onUsePro
                                 key={category.id}
                                 onClick={() => setSelectedCategory(category.id)}
                                 title={getCategoryName(category.id)}
-                                className={`flex items-center gap-1 md:gap-1.5 px-3 md:px-3 py-2.5 md:py-2 rounded-lg whitespace-nowrap transition-all text-sm md:text-base min-h-[44px] ${
-                                    selectedCategory === category.id
+                                className={`flex items-center gap-1 md:gap-1.5 px-3 md:px-3 py-2.5 md:py-2 rounded-lg whitespace-nowrap transition-all text-sm md:text-base min-h-[44px] ${selectedCategory === category.id
                                         ? 'bg-gradient-to-r from-brand-purple to-brand-pink text-white shadow-lg'
                                         : 'bg-light-surface-accent dark:bg-dark-surface-accent text-light-text dark:text-dark-text hover:bg-light-border dark:hover:bg-dark-border'
-                                }`}
+                                    }`}
                             >
                                 <span className="text-base md:text-sm">{category.icon}</span>
                                 <span className="hidden lg:inline text-xs md:text-sm font-medium">{getCategoryName(category.id)}</span>
