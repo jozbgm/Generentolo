@@ -4,7 +4,7 @@ import * as geminiService from './services/geminiService';
 import * as presetsService from './services/presetsService';
 import { useKeyboardShortcuts, APP_SHORTCUTS } from './hooks/useKeyboardShortcuts';
 import { SunIcon, MoonIcon, UploadIcon, DownloadIcon, SparklesIcon, CopyIcon, SettingsIcon, XIcon, CheckIcon, LanguageIcon, InfoIcon, AlertTriangleIcon, BrushIcon, DiceIcon, TrashIcon, ReloadIcon, EnvelopeIcon, StarIcon, CornerUpLeftIcon, ChevronLeftIcon, ChevronRightIcon, ChartIcon } from './components/icons';
-import { indexedDBService } from './services/indexedDB';
+import { indexedDBService, DnaCharacter } from './services/indexedDB';
 import FloatingActionBar from './components/FloatingActionBar';
 import ZoomableImage from './components/ZoomableImage';
 import UsageTracker from './components/UsageTracker'; // v1.4
@@ -25,7 +25,7 @@ if (!crypto.randomUUID) {
 // --- Localization ---
 const translations = {
     en: {
-        headerTitle: 'Generentolo PRO v1.6.0',
+        headerTitle: 'Generentolo PRO v1.7.0',
         headerSubtitle: 'Let me do it for you!',
         refImagesTitle: 'Reference & Style Images',
         styleRefTitle: 'Style Reference',
@@ -197,9 +197,20 @@ const translations = {
         generate: 'Generate',
         toolsAvailable: 'tools available',
         noToolsYet: 'Click generate to create professional tools',
+        // v1.7: DNA Character
+        dnaCharacterTitle: 'DNA Character',
+        dnaCharacterSubtitle: 'Character Consistency',
+        dnaCharacterManage: 'Manage Character DNA',
+        dnaCharacterSave: 'Capture DNA',
+        dnaCharacterExtracting: 'Analizing DNA...',
+        dnaCharacterSuccess: 'DNA Profile Captured!',
+        dnaCharacterFailed: 'DNA Extraction Failed.',
+        dnaCharacterNone: 'No DNA active',
+        dnaCharacterDelete: 'Delete Profile',
+        dnaCharacterEnterName: 'Character Name',
     },
     it: {
-        headerTitle: 'Generentolo PRO v1.6.0',
+        headerTitle: 'Generentolo PRO v1.7.0',
         headerSubtitle: 'Let me do it for you!',
         refImagesTitle: 'Immagini di Riferimento e Stile',
         styleRefTitle: 'Riferimento Stile',
@@ -370,7 +381,18 @@ const translations = {
         professionalTools: 'Strumenti Professionali',
         generate: 'Genera',
         toolsAvailable: 'strumenti disponibili',
-        noToolsYet: 'Clicca su genera per creare strumenti professionali',
+        noToolsYet: 'Genera per creare strumenti professionali',
+        // v1.7: DNA Character
+        dnaCharacterTitle: 'DNA Character',
+        dnaCharacterSubtitle: 'Consistenza Personaggio',
+        dnaCharacterManage: 'Gestisci DNA Personaggi',
+        dnaCharacterSave: 'Cattura DNA',
+        dnaCharacterExtracting: 'Analisi DNA in corso...',
+        dnaCharacterSuccess: 'Profilo DNA salvato!',
+        dnaCharacterFailed: 'Estrazione DNA fallita.',
+        dnaCharacterNone: 'Nessun DNA attivo',
+        dnaCharacterDelete: 'Elimina Profilo',
+        dnaCharacterEnterName: 'Nome Personaggio',
     }
 };
 
@@ -585,12 +607,16 @@ const ReferencePanel: React.FC<{
     setSelectedFocus: (id: string | null) => void;
     selectedModel: ModelType;
     setEditedPrompt: (value: string | ((prev: string) => string)) => void;
-    // v1.4: Precise Reference & Google Search Grounding
     preciseReference: boolean;
     setPreciseReference: (value: boolean) => void;
     useGrounding: boolean;
     setUseGrounding: (value: boolean) => void;
-}> = ({ onAddImages, onRemoveImage, referenceImages, onAddStyleImage, onRemoveStyleImage, styleImage, onAddStructureImage, onRemoveStructureImage, structureImage, selectedStylePreset, setSelectedStylePreset, selectedLighting, setSelectedLighting, selectedCamera, setSelectedCamera, selectedFocus, setSelectedFocus, setEditedPrompt, preciseReference, setPreciseReference, useGrounding, setUseGrounding }) => {
+    // v1.7: DNA Character
+    dnaCharacters: DnaCharacter[];
+    selectedDnaId: string | null;
+    onSelectDna: (id: string | null) => void;
+    onManageDna: () => void;
+}> = ({ onAddImages, onRemoveImage, referenceImages, onAddStyleImage, onRemoveStyleImage, styleImage, onAddStructureImage, onRemoveStructureImage, structureImage, selectedStylePreset, setSelectedStylePreset, selectedLighting, setSelectedLighting, selectedCamera, setSelectedCamera, selectedFocus, setSelectedFocus, setEditedPrompt, preciseReference, setPreciseReference, useGrounding, setUseGrounding, dnaCharacters, selectedDnaId, onSelectDna, onManageDna }) => {
     const { t, language } = useLocalization();
     const [isDraggingRef, setIsDraggingRef] = useState(false);
     const [isDraggingStyle, setIsDraggingStyle] = useState(false);
@@ -703,6 +729,72 @@ const ReferencePanel: React.FC<{
                     )}
                     <input id="structure-file-upload" type="file" className="hidden" accept="image/*" onChange={handleStructureFileChange} />
                 </div>
+            </div>
+
+            {/* v1.7: DNA Character Section */}
+            <div className="border-t border-light-border dark:border-dark-border/50 pt-4"></div>
+            <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                    <h3 className="font-semibold text-light-text dark:text-dark-text flex items-center gap-2">
+                        <span>🧬</span>
+                        <span>{t.dnaCharacterTitle}</span>
+                    </h3>
+                    <button
+                        onClick={onManageDna}
+                        className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded bg-brand-purple/10 text-brand-purple hover:bg-brand-purple/20 transition-colors"
+                    >
+                        {t.select}
+                    </button>
+                </div>
+
+                {dnaCharacters.length === 0 ? (
+                    <div className="p-3 rounded-xl border border-dashed border-light-border dark:border-dark-border text-center">
+                        <p className="text-xs text-light-text-muted dark:text-dark-text-muted italic">{t.dnaCharacterNone}</p>
+                    </div>
+                ) : (
+                    <div className="flex gap-2 p-1 overflow-x-auto no-scrollbar">
+                        {dnaCharacters.slice(0, 5).map(char => (
+                            <button
+                                key={char.id}
+                                onClick={() => onSelectDna(char.id)}
+                                title={char.name}
+                                className={`flex-shrink-0 w-12 h-12 rounded-full border-2 transition-all relative group ${selectedDnaId === char.id ? 'border-brand-purple shadow-[0_0_10px_rgba(114,9,183,0.5)] scale-110' : 'border-transparent grayscale opacity-70 hover:grayscale-0 hover:opacity-100'}`}
+                            >
+                                {char.thumbnailData ? (
+                                    <img src={char.thumbnailData} alt={char.name} className="w-full h-full object-cover rounded-full" />
+                                ) : (
+                                    <div className="w-full h-full bg-light-surface-accent dark:bg-dark-surface-accent rounded-full flex items-center justify-center text-xs font-bold">
+                                        {char.name.charAt(0).toUpperCase()}
+                                    </div>
+                                )}
+                                {selectedDnaId === char.id && (
+                                    <div className="absolute -top-1 -right-1 bg-brand-purple text-white rounded-full w-4 h-4 flex items-center justify-center">
+                                        <CheckIcon className="w-2.5 h-2.5" />
+                                    </div>
+                                )}
+                            </button>
+                        ))}
+                        {dnaCharacters.length > 5 && (
+                            <button
+                                onClick={onManageDna}
+                                className="flex-shrink-0 w-12 h-12 rounded-full bg-light-surface-accent dark:bg-dark-surface-accent flex items-center justify-center text-sm font-bold opacity-70 hover:opacity-100 transition-opacity"
+                            >
+                                +{dnaCharacters.length - 5}
+                            </button>
+                        )}
+                    </div>
+                )}
+
+                {selectedDnaId && (
+                    <div className="px-3 py-1.5 rounded-lg bg-brand-purple/10 border border-brand-purple/20 flex items-center justify-between">
+                        <span className="text-xs font-semibold text-brand-purple truncate max-w-[150px]">
+                            {dnaCharacters.find(c => c.id === selectedDnaId)?.name}
+                        </span>
+                        <button onClick={() => onSelectDna(null)} className="text-brand-purple hover:opacity-70">
+                            <XIcon className="w-3.5 h-3.5" />
+                        </button>
+                    </div>
+                )}
             </div>
 
             {/* Control Checkboxes Section */}
@@ -903,18 +995,24 @@ interface ImageDisplayProps {
     onToggleFavorite: (imageId: string) => void; // v0.8
     onUpscale: (image: GeneratedImage, resolution: '2k' | '4k') => void; // v1.1
     upscalingImageId: string | null; // v1.1
+    onSaveDna: (image: GeneratedImage) => void; // v1.7
+    reasoningText?: string; // v1.7: Creative reasoning plan
 }
-const ImageDisplay: React.FC<ImageDisplayProps> = ({ images, isLoading, onDownload, onZoom, onEdit, onReroll, onToggleFavorite, onUpscale, upscalingImageId }) => {
+const ImageDisplay: React.FC<ImageDisplayProps> = ({ images, isLoading, onDownload, onZoom, onEdit, onReroll, onToggleFavorite, onUpscale, upscalingImageId, onSaveDna, reasoningText }) => {
     const { t } = useLocalization();
     const [showUpscaleMenu, setShowUpscaleMenu] = useState<string | null>(null);
 
     return (
         <div className="relative w-full h-full flex items-center justify-center bg-light-surface/50 dark:bg-dark-surface/30 rounded-2xl p-4">
             {isLoading && (
-                <div className="flex flex-col items-center text-light-text-muted dark:text-dark-text-muted">
-                    <div className="w-12 h-12 border-4 border-brand-yellow border-t-transparent rounded-full animate-spin mb-4"></div>
-                    <p className="font-semibold">{t.generatingStatus}</p>
-                    <p className="text-sm">{t.generatingSubtext}</p>
+                <div className="flex flex-col items-center text-center max-w-md px-6 text-light-text-muted dark:text-dark-text-muted">
+                    <div className="w-16 h-16 border-4 border-brand-yellow border-t-transparent rounded-full animate-spin mb-6"></div>
+                    <p className="font-bold text-lg mb-2 text-light-text dark:text-dark-text animate-pulse">{t.generatingStatus}</p>
+                    <div className="min-h-[3rem] flex items-center justify-center">
+                        <p className={`text-sm italic transition-opacity duration-1000 ${reasoningText ? 'opacity-100' : 'opacity-60'}`}>
+                            {reasoningText || t.generatingSubtext}
+                        </p>
+                    </div>
                 </div>
             )}
             {!isLoading && images.length > 0 && (
@@ -945,6 +1043,16 @@ const ImageDisplay: React.FC<ImageDisplayProps> = ({ images, isLoading, onDownlo
                                             title={image.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
                                         >
                                             <StarIcon className="w-5 h-5" />
+                                        </button>
+
+                                        {/* v1.7: Save as DNA button */}
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); onSaveDna(image); }}
+                                            className="p-2 rounded-full bg-black/50 text-white hover:bg-brand-purple transition-colors"
+                                            aria-label="Save as DNA Character"
+                                            title="🧬 Save as DNA Character Consistency"
+                                        >
+                                            <span className="text-xl leading-none">🧬</span>
                                         </button>
 
                                         <button onClick={() => onEdit(image)} className="p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors" aria-label={t.editAction}><BrushIcon className="w-5 h-5" /></button>
@@ -1026,11 +1134,12 @@ interface HistoryPanelProps {
     onGenerateVariations: (image: GeneratedImage) => void; // v1.3
     variationsLoadingId: string | null; // v1.3
     onCopySettings: (image: GeneratedImage) => void; // v1.3
+    onSaveDna: (image: GeneratedImage) => void; // v1.7
 }
 const HistoryPanel: React.FC<HistoryPanelProps> = ({
     history, onSelect, onZoom, onDelete, onClearAll,
     isSelectionMode, selectedIds, onEnterSelectionMode, onCancelSelectionMode, onToggleSelection, onDeleteSelected,
-    onGenerateVariations, variationsLoadingId, onCopySettings
+    onGenerateVariations, variationsLoadingId, onCopySettings, onSaveDna
 }) => {
     const { t } = useLocalization();
     const [displayCount, setDisplayCount] = useState(30); // Show 30 images initially
@@ -1162,6 +1271,14 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
                                                     title="📋 Copy all settings"
                                                 >
                                                     <CopyIcon className="w-4 h-4" />
+                                                </button>
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); onSaveDna(item); }}
+                                                    className="p-1.5 rounded-full bg-black/60 text-white transition-all hover:bg-brand-purple"
+                                                    aria-label="Save as DNA"
+                                                    title="🧬 Save as DNA Character"
+                                                >
+                                                    <span className="text-sm">🧬</span>
                                                 </button>
                                                 <button
                                                     onClick={(e) => { e.stopPropagation(); onGenerateVariations(item); }}
@@ -1849,6 +1966,163 @@ const InpaintEditor: React.FC<InpaintEditorProps> = ({ image, onClose, onSave })
 };
 
 
+// --- v1.7: DNA Character Modal ---
+interface DnaCharacterModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    characters: DnaCharacter[];
+    selectedId: string | null;
+    onSelect: (id: string | null) => void;
+    onSave: (image: File, name: string) => void;
+    onDelete: (id: string) => void;
+    isLoading: boolean;
+}
+
+const DnaCharacterModal: React.FC<DnaCharacterModalProps> = ({ isOpen, onClose, characters, selectedId, onSelect, onSave, onDelete, isLoading }) => {
+    const { t, language } = useLocalization();
+    const [newName, setNewName] = useState('');
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    if (!isOpen) return null;
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0];
+            setSelectedFile(file);
+            if (!newName) {
+                const fileName = file.name.split('.')[0];
+                setNewName(fileName);
+            }
+        }
+    };
+
+    const handleSave = () => {
+        if (selectedFile && newName.trim()) {
+            onSave(selectedFile, newName.trim());
+            setSelectedFile(null);
+            setNewName('');
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in" onClick={onClose}>
+            <div className="bg-light-surface dark:bg-dark-surface w-full max-w-2xl rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh] animate-scale-up" onClick={e => e.stopPropagation()}>
+                <div className="flex items-center justify-between p-6 border-b border-light-border dark:border-dark-border">
+                    <h2 className="text-xl font-bold flex items-center gap-2">
+                        <span className="text-2xl">🧬</span>
+                        {t.dnaCharacterTitle}
+                    </h2>
+                    <button onClick={onClose} className="p-2 rounded-full hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors">
+                        <XIcon className="w-6 h-6" />
+                    </button>
+                </div>
+
+                <div className="flex-1 overflow-y-auto p-6 space-y-8">
+                    {/* Add New DNA */}
+                    <div className="space-y-4">
+                        <h3 className="text-sm font-bold uppercase tracking-wider opacity-60 flex items-center gap-2">
+                            <span>✨</span> {language === 'it' ? 'Crea Nuovo Profilo' : 'Create New Profile'}
+                        </h3>
+                        <div className="p-4 bg-light-surface-accent dark:bg-dark-surface-accent rounded-2xl flex flex-col sm:flex-row gap-4">
+                            <div
+                                onClick={() => fileInputRef.current?.click()}
+                                className="w-full sm:w-24 h-24 rounded-xl border-2 border-dashed border-light-border dark:border-dark-border flex items-center justify-center cursor-pointer hover:border-brand-purple transition-colors bg-black/5 overflow-hidden"
+                            >
+                                {selectedFile ? (
+                                    <img src={URL.createObjectURL(selectedFile)} alt="Preview" className="w-full h-full object-cover" />
+                                ) : (
+                                    <div className="text-center">
+                                        <UploadIcon className="w-6 h-6 mx-auto opacity-50" />
+                                        <span className="text-[10px] mt-1 block opacity-50">{t.select}</span>
+                                    </div>
+                                )}
+                            </div>
+                            <div className="flex-1 flex flex-col gap-3">
+                                <input
+                                    type="text"
+                                    value={newName}
+                                    onChange={(e) => setNewName(e.target.value)}
+                                    placeholder={t.dnaCharacterEnterName}
+                                    className="w-full px-4 py-2 rounded-xl bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border focus:ring-2 focus:ring-brand-purple focus:outline-none transition-all text-sm"
+                                />
+                                <button
+                                    onClick={handleSave}
+                                    disabled={isLoading || !selectedFile || !newName.trim()}
+                                    className="w-full py-2.5 bg-brand-purple text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50"
+                                >
+                                    {isLoading ? (
+                                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                    ) : (
+                                        <span>🧬 {t.dnaCharacterSave}</span>
+                                    )}
+                                </button>
+                            </div>
+                        </div>
+                        <input ref={fileInputRef} type="file" className="hidden" accept="image/*" onChange={handleFileChange} />
+                    </div>
+
+                    {/* Existing DNA List */}
+                    <div className="space-y-4">
+                        <h3 className="text-sm font-bold uppercase tracking-wider opacity-60 flex items-center gap-2">
+                            <span>📂</span> {t.dnaCharacterSubtitle}
+                        </h3>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                            {characters.map(char => (
+                                <div
+                                    key={char.id}
+                                    className={`relative group rounded-2xl p-3 border-2 transition-all cursor-pointer ${selectedId === char.id ? 'border-brand-purple bg-brand-purple/5' : 'border-light-border dark:border-dark-border hover:border-light-text-muted dark:hover:border-dark-text-muted'}`}
+                                    onClick={() => onSelect(char.id)}
+                                >
+                                    <div className="aspect-square rounded-xl bg-black/10 overflow-hidden mb-2">
+                                        {char.thumbnailData ? (
+                                            <img src={char.thumbnailData} alt={char.name} className="w-full h-full object-cover" />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center text-2xl font-bold opacity-30">
+                                                {char.name.charAt(0)}
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="text-center truncate font-medium text-sm">
+                                        {char.name}
+                                    </div>
+
+                                    <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); onDelete(char.id); }}
+                                            className="p-1.5 bg-red-500/80 text-white rounded-lg hover:bg-red-600 transition-colors"
+                                        >
+                                            <TrashIcon className="w-3.5 h-3.5" />
+                                        </button>
+                                    </div>
+
+                                    {selectedId === char.id && (
+                                        <div className="absolute -top-2 -right-2 bg-brand-purple text-white rounded-full p-1 shadow-lg">
+                                            <CheckIcon className="w-3 h-3" />
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                            {characters.length === 0 && (
+                                <div className="col-span-full py-12 text-center text-light-text-muted dark:text-dark-text-muted italic bg-light-surface-accent dark:bg-dark-surface-accent rounded-3xl">
+                                    {t.dnaCharacterNone}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                <div className="p-6 bg-light-surface-accent dark:bg-dark-surface-accent flex justify-center">
+                    <button onClick={onClose} className="px-8 py-2.5 bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border rounded-2xl font-bold hover:opacity-80 transition-opacity">
+                        {t.save}
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+
 // --- Main App Component ---
 const MAX_HISTORY_ITEMS = 200; // Increased from 12 to support infinite scroll
 
@@ -1872,6 +2146,7 @@ export default function App() {
     const [currentImages, setCurrentImages] = useState<GeneratedImage[]>([]);
     const [history, setHistory] = useState<GeneratedImage[]>([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [reasoningText, setReasoningText] = useState<string>(''); // v1.7: Creative reasoning plan
     const [isToolsLoading, setIsToolsLoading] = useState(false);
     const [isEnhancing, setIsEnhancing] = useState(false);
     const [numImagesToGenerate, setNumImagesToGenerate] = useState(1);
@@ -1881,6 +2156,7 @@ export default function App() {
     const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
     const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
     const [isHelpOpen, setIsHelpOpen] = useState(false);
+    const [isDnaModalOpen, setIsDnaModalOpen] = useState(false);
 
     const [userApiKey, setUserApiKey] = useState<string>('');
     const [toast, setToast] = useState<{ id: number; message: string; type: 'success' | 'error' } | null>(null);
@@ -1890,6 +2166,11 @@ export default function App() {
     const [presets, setPresets] = useState<PromptPreset[]>([]);
     const [sidebarTab, setSidebarTab] = useState<'history' | 'presets'>('history');
     const [variationsLoadingId, setVariationsLoadingId] = useState<string | null>(null); // v1.3: For variations
+
+    // v1.7: DNA Character Consistency
+    const [dnaCharacters, setDnaCharacters] = useState<DnaCharacter[]>([]);
+    const [selectedDnaId, setSelectedDnaId] = useState<string | null>(null);
+    const [isDnaLoading, setIsDnaLoading] = useState(false);
 
     // v1.4: New features states
     const [useGrounding, setUseGrounding] = useState(false); // Google Search Grounding
@@ -1910,10 +2191,15 @@ export default function App() {
 
     const t = useMemo(() => translations[language], [language]);
 
-    // Load presets from localStorage on mount
+    // Load presets and DNA characters from storage on mount
     useEffect(() => {
         const loadedPresets = presetsService.loadPresets();
         setPresets(loadedPresets);
+
+        // Load DNA Characters from IndexedDB
+        indexedDBService.getAllDnaCharacters().then(chars => {
+            setDnaCharacters(chars);
+        });
     }, []);
 
     const showToast = useCallback((message: string, type: 'success' | 'error') => {
@@ -2017,6 +2303,64 @@ export default function App() {
         }
     }, [referenceImages, styleReferenceImage, structureImage, userApiKey, language, showToast]);
 
+    const handleSaveDna = async (imageFile: File, name: string) => {
+        setIsDnaLoading(true);
+        try {
+            const dna = await geminiService.extractCharacterDna(imageFile, userApiKey, language);
+            if (!dna) throw new Error("Could not extract DNA");
+
+            // Create thumbnail for the profile
+            let thumbnailData: string | undefined;
+            try {
+                const reader = new FileReader();
+                thumbnailData = await new Promise((resolve) => {
+                    reader.onloadend = () => resolve(reader.result as string);
+                    reader.readAsDataURL(imageFile);
+                });
+            } catch (e) {
+                console.error("Failed to create DNA thumbnail", e);
+            }
+
+            const newChar: DnaCharacter = {
+                id: crypto.randomUUID(),
+                name,
+                dna,
+                thumbnailData,
+                timestamp: Date.now()
+            };
+
+            await indexedDBService.saveDnaCharacter(newChar);
+            setDnaCharacters(prev => [newChar, ...prev]);
+            showToast(t.dnaCharacterSuccess, 'success');
+        } catch (error: any) {
+            console.error("Failed to save DNA", error);
+            showToast(t.dnaCharacterFailed, 'error');
+        } finally {
+            setIsDnaLoading(false);
+        }
+    };
+
+    const handleSaveImageAsDna = useCallback(async (image: GeneratedImage) => {
+        const name = window.prompt(language === 'it' ? 'Inserisci un nome per questo personaggio:' : 'Enter a name for this character:', 'Character Name');
+        if (!name) return;
+
+        const imageUrl = image.imageDataUrl || image.thumbnailDataUrl;
+        if (!imageUrl) return;
+
+        const file = dataURLtoFile(imageUrl, `dna-${image.id}.png`);
+        await handleSaveDna(file, name);
+    }, [language, handleSaveDna]);
+
+    const handleDeleteDna = async (id: string) => {
+        await indexedDBService.deleteDnaCharacter(id);
+        setDnaCharacters(prev => prev.filter(c => c.id !== id));
+        if (selectedDnaId === id) setSelectedDnaId(null);
+    };
+
+    const handleSelectDna = (id: string | null) => {
+        setSelectedDnaId(prev => prev === id ? null : id);
+    };
+
 
     const handleAddImages = (newFiles: File[]) => {
         setReferenceImages(prev => [...prev, ...newFiles].slice(0, MAX_USER_IMAGES));
@@ -2044,7 +2388,12 @@ export default function App() {
         abortControllerRef.current = controller;
 
         setIsLoading(true);
+        setReasoningText(''); // Reset reasoning
         setCurrentImages([]);
+
+        // v1.7: Start reasoning plan in parallel (don't await it to not block generation)
+        geminiService.getReasoningPlan(editedPrompt || "Image generation", userApiKey, language)
+            .then(plan => setReasoningText(plan));
         try {
             // v1.5.1: Fetch invisible reference images from Google if grounding is enabled
             let invisibleReferences: File[] = [];
@@ -2074,7 +2423,17 @@ export default function App() {
             const allReferenceFiles = [...referenceImages, ...invisibleReferences];
 
             // v1.5.1: Remove square brackets from prompt to avoid ambiguous keywords (e.g., "Coin" = money vs brand)
-            const cleanedPrompt = useGrounding ? removeBracketsFromPrompt(editedPrompt) : editedPrompt;
+            let cleanedPrompt = useGrounding ? removeBracketsFromPrompt(editedPrompt) : editedPrompt;
+
+            // v1.7: Inject DNA Character description if selected
+            if (selectedDnaId) {
+                const selectedDna = dnaCharacters.find(c => c.id === selectedDnaId);
+                if (selectedDna) {
+                    console.log(`🧬 Injecting DNA Character: ${selectedDna.name}`);
+                    cleanedPrompt = `${selectedDna.dna}. ${cleanedPrompt}`;
+                }
+            }
+
             console.log(useGrounding && editedPrompt !== cleanedPrompt
                 ? `🧹 Cleaned prompt for Gemini: "${cleanedPrompt}" (removed brackets)`
                 : '');
@@ -2753,13 +3112,17 @@ export default function App() {
                             setPreciseReference={setPreciseReference}
                             useGrounding={useGrounding}
                             setUseGrounding={setUseGrounding}
+                            dnaCharacters={dnaCharacters}
+                            selectedDnaId={selectedDnaId}
+                            onSelectDna={handleSelectDna}
+                            onManageDna={() => setIsDnaModalOpen(true)}
                         />
                     </aside>
 
                     {/* --- Main Content --- */}
                     <div className="flex-1 flex flex-col gap-2 lg:gap-6 min-w-0 h-full">
                         <div className="flex-1 min-h-0 bg-light-surface/50 dark:bg-dark-surface/30 rounded-3xl overflow-hidden">
-                            <ImageDisplay images={currentImages} isLoading={isLoading} onDownload={handleDownload} onZoom={handleZoom} onEdit={setEditingImage} onReroll={handleReroll} onToggleFavorite={handleToggleFavorite} onUpscale={handleUpscale} upscalingImageId={upscalingImageId} />
+                            <ImageDisplay images={currentImages} isLoading={isLoading} onDownload={handleDownload} onZoom={handleZoom} onEdit={setEditingImage} onReroll={handleReroll} onToggleFavorite={handleToggleFavorite} onUpscale={handleUpscale} upscalingImageId={upscalingImageId} onSaveDna={handleSaveImageAsDna} reasoningText={reasoningText} />
                         </div>
 
                         {((referenceImages.length > 0 || !!styleReferenceImage) || currentImages.length === 1) && (
@@ -2858,6 +3221,7 @@ export default function App() {
                                         onGenerateVariations={handleGenerateVariations}
                                         variationsLoadingId={variationsLoadingId}
                                         onCopySettings={handleCopySettings}
+                                        onSaveDna={handleSaveImageAsDna}
                                     />
                                 ) : (
                                     <PresetsPanel
@@ -2912,6 +3276,16 @@ export default function App() {
                 <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
                 <ShortcutsModal isOpen={isShortcutsOpen} onClose={() => setIsShortcutsOpen(false)} />
                 <FeedbackModal isOpen={isFeedbackOpen} onClose={() => setIsFeedbackOpen(false)} />
+                <DnaCharacterModal
+                    isOpen={isDnaModalOpen}
+                    onClose={() => setIsDnaModalOpen(false)}
+                    characters={dnaCharacters}
+                    selectedId={selectedDnaId}
+                    onSelect={handleSelectDna}
+                    onSave={handleSaveDna}
+                    onDelete={handleDeleteDna}
+                    isLoading={isDnaLoading}
+                />
 
                 {/* v1.4: Usage Tracker Modal */}
                 <UsageTracker
@@ -2920,9 +3294,6 @@ export default function App() {
                     onClose={() => setShowUsageTracker(false)}
                     language={language}
                 />
-
-
-                {editingImage && <InpaintEditor image={editingImage} onClose={() => setEditingImage(null)} onSave={handleInpaint} />}
 
                 {editingImage && <InpaintEditor image={editingImage} onClose={() => setEditingImage(null)} onSave={handleInpaint} />}
 
@@ -2985,6 +3356,13 @@ export default function App() {
                                         </div>
                                     )}
                                     <div className={`flex gap-2 ${!showNavigation ? 'ml-auto' : ''}`}>
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); handleSaveImageAsDna(zoomedImage); }}
+                                            className="p-2 rounded-full bg-black/60 text-white hover:bg-brand-purple transition-colors"
+                                            title="🧬 Save as DNA Character"
+                                        >
+                                            <span className="text-xl">🧬</span>
+                                        </button>
                                         <button onClick={() => handleDownload(zoomedImage)} className="p-2 rounded-full bg-black/60 text-white hover:bg-black/80 transition-colors" aria-label="Download image">
                                             <DownloadIcon className="w-6 h-6" />
                                         </button>

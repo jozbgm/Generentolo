@@ -17,6 +17,35 @@ export const getAiClient = (userApiKey?: string | null) => {
     return new GoogleGenAI({ apiKey });
 };
 
+/**
+ * v1.7: Generates a short creative reasoning plan for the image generation.
+ * This makes the AI feel more "conscious" and professional.
+ */
+export const getReasoningPlan = async (
+    prompt: string,
+    userApiKey?: string | null,
+    language: 'en' | 'it' = 'en'
+): Promise<string> => {
+    try {
+        const ai = getAiClient(userApiKey);
+
+        const systemPrompt = language === 'it'
+            ? "Sei un Art Director esperto. In base al prompt fornito, descrivi brevemente (max 2 frasi) come intendi impostare l'immagine (luci, composizione, mood). Sii professionale e ispiratore. Non usare introduzioni come 'Ecco il piano'."
+            : "You are an expert Art Director. Based on the provided prompt, briefly describe (max 2 sentences) how you plan to set up the image (lighting, composition, mood). Be professional and inspiring. Do not use intros like 'Here is the plan'.";
+
+        const result = await ai.models.generateContent({
+            model: "gemini-1.5-flash",
+            contents: [{ role: "user", parts: [{ text: systemPrompt + "\n\nPrompt: " + prompt }] }]
+        });
+
+        const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+        return text ? text.trim() : "";
+    } catch (error) {
+        console.error("Reasoning error:", error);
+        return ""; // Fallback to empty if reasoning fails
+    }
+};
+
 const handleError = (error: any, language: 'en' | 'it'): Error => {
     console.error("Gemini Service Error:", error);
 
@@ -82,6 +111,42 @@ export const fileToGenerativePart = async (file: File) => {
     return {
         inlineData: { data: await base64EncodedDataPromise, mimeType: file.type },
     };
+};
+
+/**
+ * v1.7: Extracts a detailed textual "DNA" description of a character's appearance.
+ * This is used for character consistency across different generations.
+ */
+export const extractCharacterDna = async (
+    imageFile: File,
+    userApiKey?: string | null,
+    language: 'en' | 'it' = 'en'
+): Promise<string> => {
+    try {
+        const ai = getAiClient(userApiKey);
+        const imagePart = await fileToGenerativePart(imageFile);
+
+        const systemPrompt = language === 'it'
+            ? "Analizza questa immagine e descrivi i tratti somatici e l'aspetto fisico del soggetto principale in modo estremamente dettagliato per scopi di 'character consistency'. Descrivi: forma del viso, colore e taglio dei capelli, forma e colore degli occhi, carnagione, segni particolari, espressione tipica e corporatura. Crea una descrizione semantica 'compatta' ma completa che possa essere usata come riferimento per generare lo stesso personaggio in altri contesti. Sii preciso e professionale."
+            : "Analyze this image and describe the physical features and appearance of the main subject in extreme detail for 'character consistency' purposes. Describe: face shape, hair color and style, eye shape and color, skin tone, unique marks, typical expression, and body type. Create a 'compact' but complete semantic description that can be used as a reference to generate the same character in other contexts. Be precise and professional.";
+
+        const result = await ai.models.generateContent({
+            model: "gemini-1.5-flash",
+            contents: [{
+                role: "user",
+                parts: [
+                    imagePart,
+                    { text: systemPrompt }
+                ]
+            }]
+        });
+
+        const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+        return text ? text.trim() : "";
+    } catch (error) {
+        console.error("DNA extraction error:", error);
+        throw error;
+    }
 };
 
 export const generatePromptsFromImage = async (imageFiles: File[], styleFile: File | null, structureFile: File | null, userApiKey?: string | null, language: 'en' | 'it' = 'en'): Promise<string[]> => {

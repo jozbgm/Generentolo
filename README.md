@@ -1,8 +1,8 @@
-# 🎨 Generentolo PRO v1.6.0
+# 🎨 Generentolo PRO v1.7.0
 
 **Professional AI-Powered Image Generation Web Application**
 
-A sophisticated web application for generating ultra-high-quality images using Google's Gemini models (Flash & **Nano Banana PRO 3.1**) with **Advanced Native 2K/4K Generation**, **advanced Google Search Grounding with explicit keyword control**, style presets, physics controls, usage tracking, ControlNet-like structure guidance, 4K resolution support, native upscaling, professional prompt library with optimized presets, and text-in-image capabilities. Designed for graphic design agencies, marketers, and creative professionals who demand the highest quality and precision.
+A sophisticated web application for generating ultra-high-quality images using Google's Gemini models (Flash & **Nano Banana PRO 3.1**) with **Advanced Native 2K/4K Generation**, **DNA Character Consistency**, **advanced Google Search Grounding with explicit keyword control**, style presets, physics controls, usage tracking, ControlNet-like structure guidance, 4K resolution support, native upscaling, professional prompt library with optimized presets, and text-in-image capabilities. Designed for graphic design agencies, marketers, and creative professionals who demand the highest quality and precision.
 
 [![Live Demo](https://img.shields.io/badge/Live-Demo-blue?style=for-the-badge)](https://www.dugongo.it/generentolo/)
 [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
@@ -10,6 +10,20 @@ A sophisticated web application for generating ultra-high-quality images using G
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
 
 ---
+
+## 🎯 **NEW v1.7.0: DNA Character Consistency**
+- **🧬 DNA Profile Extraction** - Capture the unique physical traits of a character from any image.
+  - Analyzes face shape, hair style, eye color, skin tone, and more.
+  - Stores a detailed "DNA Description" that acts as a consistent reference.
+- **📂 Character Management System** - Specialized local storage for your characters.
+  - Create and name custom characters with circular visual thumbnails.
+  - Quick-selection bar in the Reference Panel for instant access.
+  - Persistent storage across sessions using IndexedDB.
+- **🧠 Automatic "DNA" Infiltration** - Seamlessly inject character traits into your prompts.
+  - Works with BOTH Flash and PRO models.
+  - Ensures the character remains the same across different scenes, outfits, and contexts.
+- **✨ PRO Workflow**: Generate a character you like, then save its DNA to use it in your next 100 images.
+
 
 ## ✨ Features
 
@@ -354,6 +368,30 @@ A sophisticated web application for generating ultra-high-quality images using G
 ---
 
 ## 📋 Changelog
+
+### v1.7.0 (December 2025) 🧬
+**🎉 CHARACTER CONSISTENCY - DNA Profiling Upgrade:**
+
+**✨ NEW: DNA Character Consistency Engine**
+- **DNA Extraction**: Integrated `gemini-1.5-flash` to generate semantic descriptions of character's physical appearance.
+- **Persistent Character Store**: New IndexedDB implementation to save, manage, and retrieve character profiles with thumbnails.
+- **Save DNA from Results**: Instantly capture the identity of any generated character directly from the history, display panel, or lightbox.
+- **Prompt Injection Logic**: Automated prepending of character descriptions to user prompts for consistent visual identity.
+- **Circular Thumbnails**: Visual management system for easy identification of saved characters.
+
+**🔧 UI/UX Enhancements**
+- **Quick Character Bar**: New horizontal selection bar added to the Reference Panel.
+- **DNA Manager Modal**: Comprehensive management interface for creating and deleting character profiles.
+- **Bilingual Support**: Full English and Italian localized terms for all new features.
+- **Version Updates**: Synchronized version numbering (v1.7.0) across the entire stack.
+
+**⚡ Code & Performance**
+- Removed redundant modal rendering calls in the main App component.
+- Optimized reasoning logic for better Art Direction plan generation in parallel.
+- Verified and fixed TypeScript strictly across the new DNA feature modules.
+
+---
+
 
 ### v1.6.0 (December 2025) ✨
 **🎉 NATIVE 4K GENERATION - Nano Banana PRO 3.1 Upgrade:**

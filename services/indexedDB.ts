@@ -1,8 +1,17 @@
 // IndexedDB service for storing large images efficiently
 const DB_NAME = 'GenerentoloImageDB';
-const DB_VERSION = 1;
+const DB_VERSION = 2; // Incremented for DNA Characters store
 const STORE_NAME = 'images';
 const HISTORY_STORE = 'history';
+const DNA_STORE = 'dna_characters'; // v1.7: DNA Character Consistency
+
+export interface DnaCharacter {
+    id: string;
+    name: string;
+    dna: string; // The textual "genetic code" description
+    thumbnailData?: string; // Optional portrait image
+    timestamp: number;
+}
 
 interface ImageData {
     id: string;
@@ -62,6 +71,13 @@ class IndexedDBService {
                     if (!db.objectStoreNames.contains(HISTORY_STORE)) {
                         const historyStore = db.createObjectStore(HISTORY_STORE, { keyPath: 'id' });
                         historyStore.createIndex('timestamp', 'timestamp', { unique: false });
+                    }
+
+                    // Create DNA Characters store
+                    if (!db.objectStoreNames.contains(DNA_STORE)) {
+                        const dnaStore = db.createObjectStore(DNA_STORE, { keyPath: 'id' });
+                        dnaStore.createIndex('timestamp', 'timestamp', { unique: false });
+                        dnaStore.createIndex('name', 'name', { unique: false });
                     }
                 };
 
@@ -260,6 +276,84 @@ class IndexedDBService {
                 };
             } catch (error) {
                 console.error('Error in deleteMultiple:', error);
+                resolve();
+            }
+        });
+    }
+
+    // --- DNA Character Methods ---
+
+    async saveDnaCharacter(dnaChar: DnaCharacter): Promise<void> {
+        if (!this.db) await this.init();
+        if (!this.checkAvailability()) return Promise.resolve();
+
+        return new Promise((resolve) => {
+            try {
+                const transaction = this.db!.transaction([DNA_STORE], 'readwrite');
+                const store = transaction.objectStore(DNA_STORE);
+                const request = store.put(dnaChar);
+
+                request.onsuccess = () => resolve();
+                request.onerror = () => {
+                    console.error('Failed to save DNA Character:', request.error);
+                    resolve();
+                };
+            } catch (error) {
+                console.error('Error in saveDnaCharacter:', error);
+                resolve();
+            }
+        });
+    }
+
+    async getAllDnaCharacters(): Promise<DnaCharacter[]> {
+        if (!this.db) await this.init();
+        if (!this.checkAvailability()) return Promise.resolve([]);
+
+        return new Promise((resolve) => {
+            try {
+                const transaction = this.db!.transaction([DNA_STORE], 'readonly');
+                const store = transaction.objectStore(DNA_STORE);
+                const index = store.index('timestamp');
+                const request = index.openCursor(null, 'prev');
+
+                const results: DnaCharacter[] = [];
+                request.onsuccess = (event) => {
+                    const cursor = (event.target as IDBRequest).result;
+                    if (cursor) {
+                        results.push(cursor.value);
+                        cursor.continue();
+                    } else {
+                        resolve(results);
+                    }
+                };
+                request.onerror = () => {
+                    console.error('Failed to get DNA Characters:', request.error);
+                    resolve([]);
+                };
+            } catch (error) {
+                console.error('Error in getAllDnaCharacters:', error);
+                resolve([]);
+            }
+        });
+    }
+
+    async deleteDnaCharacter(id: string): Promise<void> {
+        if (!this.db) await this.init();
+        if (!this.checkAvailability()) return Promise.resolve();
+
+        return new Promise((resolve) => {
+            try {
+                const transaction = this.db!.transaction([DNA_STORE], 'readwrite');
+                const store = transaction.objectStore(DNA_STORE);
+                const request = store.delete(id);
+
+                request.onsuccess = () => resolve();
+                request.onerror = () => {
+                    console.error('Failed to delete DNA Character:', request.error);
+                    resolve();
+                };
+            } catch (error) {
+                console.error('Error in deleteDnaCharacter:', error);
                 resolve();
             }
         });
