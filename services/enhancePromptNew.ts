@@ -71,7 +71,7 @@ Describe concisely (max 3 sentences):
 Be specific and technical. Focus on details useful for generating similar images.`;
 
         const result = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-3-flash-preview',
             contents: { parts: [...visionParts, { text: captionPrompt }] },
             config: {
                 temperature: 0.4, // Low temp for accurate description
@@ -272,7 +272,7 @@ If any answer is NO, completely rework before returning.`;
             : `User prompt to enhance:\n"${currentPrompt}"\n\nEnhance this prompt strictly following all rules. Return ONLY the final enhanced prompt.`;
 
         const result = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-3-flash-preview',
             contents: { parts: [{ text: enhanceRequest }] },
             config: {
                 systemInstruction: costarSystemInstruction,
