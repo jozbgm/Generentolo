@@ -859,22 +859,20 @@ const extractStyleDescription = async (styleFile: File, userApiKey: string | nul
 // v1.0: Cost calculator for PRO model
 // Pricing from: https://ai.google.dev/gemini-api/docs/pricing#gemini-3-pro-image-preview
 export const calculateEstimatedCost = (model: ModelType, resolution: ResolutionType, referenceCount: number): number => {
-    if (model === 'gemini-3-flash-image-preview') {
-        return 0.039; // Flash is cheap and flat rate
+    // Basic per-image pricing
+    const basePrice = model === 'gemini-3-pro-image-preview' ? 0.05 : 0.01;
+    let cost = basePrice;
+
+    // v1.0: Resolution weighting (PRO model only)
+    if (model === 'gemini-3-pro-image-preview') {
+        if (resolution === '4k') cost *= 1.5; // 4K is more expensive
+        if (resolution === '2k') cost *= 1.2;
     }
 
-    // Nano Banana PRO pricing (Standard tier)
-    const inputImageCost = referenceCount * 0.0011; // $0.0011 per reference image
-    const promptCost = 0.002; // ~$2 per million tokens, estimate 1000 tokens = $0.002
+    // Input image processing cost (very rough estimate)
+    const referenceCost = referenceCount * 0.0005;
 
-    let outputCost = 0;
-    if (resolution === '4k') {
-        outputCost = 0.24; // $0.24 per 4K image
-    } else {
-        outputCost = 0.134; // $0.134 per 1K-2K image
-    }
-
-    return inputImageCost + promptCost + outputCost;
+    return cost + referenceCost;
 };
 
 export const generateImage = async (
@@ -888,7 +886,7 @@ export const generateImage = async (
     seed?: string,
     language: 'en' | 'it' = 'en',
     preciseReference: boolean = false,
-    model: ModelType = 'gemini-3-flash-image-preview',
+    model: ModelType = 'gemini-2.5-flash-image',
     resolution: ResolutionType = '2k',
     textInImage?: TextInImageConfig,
     abortSignal?: AbortSignal,
@@ -1276,7 +1274,7 @@ export const generateImage = async (
                         seed,
                         language,
                         preciseReference,
-                        'gemini-3-flash-image-preview', // Force Flash model
+                        'gemini-2.5-flash-image', // Force Flash model
                         resolution,
                         textInImage,
                         abortSignal,
@@ -1363,7 +1361,7 @@ export const editImage = async (prompt: string, imageFile: File, userApiKey?: st
         const parts: any[] = [imagePart, { text: prompt }];
 
         const result = await ai.models.generateContent({
-            model: 'gemini-3-flash-image-preview',
+            model: 'gemini-2.5-flash-image',
             contents: { parts },
             config: {
                 responseModalities: [Modality.IMAGE],
@@ -1410,7 +1408,7 @@ export const inpaintImage = async (prompt: string, imageFile: File, maskFile: Fi
         ];
 
         const result = await ai.models.generateContent({
-            model: 'gemini-3-flash-image-preview',
+            model: 'gemini-2.5-flash-image',
             contents: { parts },
             config: {
                 responseModalities: [Modality.IMAGE],
