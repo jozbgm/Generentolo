@@ -2419,19 +2419,38 @@ export default function App() {
                 }
             }
 
-            // Merge user's visible references with invisible Google references
-            const allReferenceFiles = [...referenceImages, ...invisibleReferences];
-
             // v1.5.1: Remove square brackets from prompt to avoid ambiguous keywords (e.g., "Coin" = money vs brand)
             let cleanedPrompt = useGrounding ? removeBracketsFromPrompt(editedPrompt) : editedPrompt;
 
-            // v1.7: Inject DNA Character description if selected
+            // v1.7: Inject DNA Character description and IMAGE reference if selected
+            let dnaReferenceFile: File | null = null;
             if (selectedDnaId) {
                 const selectedDna = dnaCharacters.find(c => c.id === selectedDnaId);
                 if (selectedDna) {
                     console.log(`🧬 Injecting DNA Character: ${selectedDna.name}`);
-                    cleanedPrompt = `${selectedDna.dna}. ${cleanedPrompt}`;
+
+                    // 1. Textual Injection
+                    const dnaHeader = language === 'it'
+                        ? `🧬 RIFERIMENTO DNA PERSONAGGIO (MANDATORIO): ${selectedDna.dna}. Il soggetto dell'immagine DEVE avere esattamente questo aspetto fisico e questi tratti somatici. Prompt Utente: `
+                        : `🧬 CHARACTER DNA REFERENCE (MANDATORY): ${selectedDna.dna}. The subject of the image MUST have this exact physical appearance and facial features. User Prompt: `;
+                    cleanedPrompt = `${dnaHeader}${cleanedPrompt}`;
+
+                    // 2. Visual Reference Injection (if thumbnail exists)
+                    if (selectedDna.thumbnailData) {
+                        try {
+                            dnaReferenceFile = dataURLtoFile(selectedDna.thumbnailData, `dna-ref-${selectedDnaId}.png`);
+                            console.log(`📸 Added DNA visual reference: ${selectedDna.name}`);
+                        } catch (e) {
+                            console.error("Failed to convert DNA thumbnail to file", e);
+                        }
+                    }
                 }
+            }
+
+            // Merge user's visible references with invisible Google references and DNA references
+            const allReferenceFiles = [...referenceImages, ...invisibleReferences];
+            if (dnaReferenceFile) {
+                allReferenceFiles.unshift(dnaReferenceFile); // Add DNA first to give it high priority
             }
 
             console.log(useGrounding && editedPrompt !== cleanedPrompt
@@ -2502,12 +2521,26 @@ export default function App() {
                 } else {
                     // Simple case: can generate in parallel
                     const generationPromises = Array(numImagesToGenerate).fill(0).map((_, idx) => {
-                        let vPrompt = editedPrompt;
+                        let vPrompt = cleanedPrompt;
                         if (numImagesToGenerate > 1 && idx > 0) {
+                            const keepSame = language === 'it'
+                                ? ', mantieni stesso soggetto e aspetto'
+                                : ', keep same subject appearance';
+
                             const variations = language === 'it'
-                                ? [', prospettiva alternativa', ', angolazione diversa', ', composizione alternativa', ', illuminazione variata']
-                                : [', alternate perspective', ', different angle', ', alternative composition', ', varied lighting'];
-                            vPrompt = editedPrompt + variations[idx % variations.length];
+                                ? [
+                                    ', prospettiva alternativa',
+                                    ', angolazione diversa',
+                                    ', composizione alternativa',
+                                    ', illuminazione variata'
+                                ]
+                                : [
+                                    ', alternate perspective',
+                                    ', different angle',
+                                    ', alternative composition',
+                                    ', varied lighting'
+                                ];
+                            vPrompt = cleanedPrompt + variations[idx % variations.length] + keepSame;
                         }
                         return geminiService.generateImage(
                             vPrompt,
