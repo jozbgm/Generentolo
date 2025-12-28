@@ -34,7 +34,7 @@ export const getReasoningPlan = async (
             : "You are an expert Art Director. Based on the provided prompt, briefly describe (max 2 sentences) how you plan to set up the image (lighting, composition, mood). Be professional and inspiring. Do not use intros like 'Here is the plan'.";
 
         const result = await ai.models.generateContent({
-            model: "gemini-1.5-flash",
+            model: "gemini-3-flash-preview",
             contents: [{ role: "user", parts: [{ text: systemPrompt + "\n\nPrompt: " + prompt }] }]
         });
 
@@ -131,7 +131,7 @@ export const extractCharacterDna = async (
             : "Analyze this image and describe the physical features and appearance of the main subject in extreme detail for 'character consistency' purposes. Describe: face shape, hair color and style, eye shape and color, skin tone, unique marks, typical expression, and body type. Create a 'compact' but complete semantic description that can be used as a reference to generate the same character in other contexts. Be precise and professional.";
 
         const result = await ai.models.generateContent({
-            model: "gemini-1.5-flash",
+            model: "gemini-3-flash-preview",
             contents: [{
                 role: "user",
                 parts: [
@@ -280,7 +280,7 @@ Restituisci un array JSON di 3 stringhe, ciascuna altamente dettagliata e profes
 Return a JSON array of 3 strings, each highly detailed and professional.`;
 
         const result = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-3-flash-preview',
             contents: {
                 parts: [
                     ...imageParts,
@@ -333,7 +333,7 @@ export const generateSinglePromptFromImage = async (imageFiles: File[], styleFil
             : `You are an art director and an expert prompt engineer for advertising imagery. Analyze ALL subjects and elements in ALL provided reference images. Your goal is to create A SINGLE professional and creative advertising image prompt that intelligently and artistically COMBINES the subjects from the different images. Instead of just describing the images, imagine an ideal advertising scenario that merges the subjects. ${stylePromptPart} ${structurePromptPart} Be detailed and aim to produce a high-quality image. Return only the prompt string.`;
 
         const result = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-3-flash-preview',
             contents: {
                 parts: [
                     ...imageParts,
@@ -415,7 +415,7 @@ CRITICAL RULE: If you identify multiple distinct subject types across the images
 For all tools, ensure the \`options\` array contains a wide variety of choices, at least 15-20 specific and creative options directly inspired by ALL the provided images. The goal is to provide professional-level control. Return a JSON array of objects, where each object has "name", "label" (in English), and "options" (in English) keys.`;
 
         const result = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-3-flash-preview',
             contents: {
                 parts: [
                     ...imageParts,
@@ -460,7 +460,7 @@ export const rewritePromptWithOptions = async (currentPrompt: string, toolSelect
             : `Rewrite this prompt: "${currentPrompt}" to include these elements: ${toolSelections}.`;
 
         const result = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-3-flash-preview',
             contents: { parts: [{ text: userMessage }] },
             config: {
                 systemInstruction: systemInstruction,
@@ -490,7 +490,7 @@ export const rewritePromptWithStyleImage = async (currentPrompt: string, styleFi
             : `User prompt to rewrite: "${currentPrompt}"`;
 
         const result = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-3-flash-preview',
             contents: { parts: [stylePart, { text: userMessage }] },
             config: {
                 systemInstruction: systemInstruction,
@@ -766,7 +766,7 @@ Examples of correct responses:
 3. cosmetic product`;
 
         const analysisResult = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-3-flash-preview',
             contents: { parts: [...imageParts, { text: analysisPrompt }] },
             config: { temperature: 0.1 }
         });
@@ -811,7 +811,7 @@ Original: "put the logo on the man's hoodie"
 Rewritten: "Create the man from Image 1 wearing a hoodie with the logo from Image 2"`;
 
         const enrichmentResult = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-3-flash-preview',
             contents: { parts: [{ text: enrichmentPrompt }] },
             config: { temperature: 0.2 }
         });
@@ -844,7 +844,7 @@ const extractStyleDescription = async (styleFile: File, userApiKey: string | nul
             : "Analyze this image and describe ONLY the stylistic elements: color palette, lighting type, mood/atmosphere, photographic or artistic style, textures. DO NOT describe the subjects or objects present, only the visual style. Be concise (max 2-3 sentences).";
 
         const result = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-3-flash-preview',
             contents: { parts: [stylePart, { text: promptText }] },
             config: { temperature: 0.3 }
         });
@@ -859,7 +859,7 @@ const extractStyleDescription = async (styleFile: File, userApiKey: string | nul
 // v1.0: Cost calculator for PRO model
 // Pricing from: https://ai.google.dev/gemini-api/docs/pricing#gemini-3-pro-image-preview
 export const calculateEstimatedCost = (model: ModelType, resolution: ResolutionType, referenceCount: number): number => {
-    if (model === 'gemini-2.5-flash-image') {
+    if (model === 'gemini-3-flash-image-preview') {
         return 0.039; // Flash is cheap and flat rate
     }
 
@@ -888,7 +888,7 @@ export const generateImage = async (
     seed?: string,
     language: 'en' | 'it' = 'en',
     preciseReference: boolean = false,
-    model: ModelType = 'gemini-2.5-flash-image',
+    model: ModelType = 'gemini-3-flash-image-preview',
     resolution: ResolutionType = '2k',
     textInImage?: TextInImageConfig,
     abortSignal?: AbortSignal,
@@ -1276,7 +1276,7 @@ export const generateImage = async (
                         seed,
                         language,
                         preciseReference,
-                        'gemini-2.5-flash-image', // Force Flash model
+                        'gemini-3-flash-image-preview', // Force Flash model
                         resolution,
                         textInImage,
                         abortSignal,
@@ -1363,7 +1363,7 @@ export const editImage = async (prompt: string, imageFile: File, userApiKey?: st
         const parts: any[] = [imagePart, { text: prompt }];
 
         const result = await ai.models.generateContent({
-            model: 'gemini-2.5-flash-image',
+            model: 'gemini-3-flash-image-preview',
             contents: { parts },
             config: {
                 responseModalities: [Modality.IMAGE],
@@ -1410,7 +1410,7 @@ export const inpaintImage = async (prompt: string, imageFile: File, maskFile: Fi
         ];
 
         const result = await ai.models.generateContent({
-            model: 'gemini-2.5-flash-image',
+            model: 'gemini-3-flash-image-preview',
             contents: { parts },
             config: {
                 responseModalities: [Modality.IMAGE],
@@ -1468,7 +1468,7 @@ export const generateNegativePrompt = async (prompt: string, referenceFiles: Fil
             : `User Prompt: "${prompt}"`;
 
         const result = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-3-flash-preview',
             contents: { parts: [...imageParts, { text: userMessage }] },
             config: {
                 systemInstruction,

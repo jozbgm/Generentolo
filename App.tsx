@@ -2141,7 +2141,7 @@ export default function App() {
     const [dynamicTools, setDynamicTools] = useState<DynamicTool[]>([]);
     const [aspectRatio, setAspectRatio] = useState<string>('1:1');
     // v1.0: New PRO features states
-    const [selectedModel, setSelectedModel] = useState<ModelType>('gemini-2.5-flash-image');
+    const [selectedModel, setSelectedModel] = useState<ModelType>('gemini-3-flash-image-preview');
     const [selectedResolution, setSelectedResolution] = useState<ResolutionType>('2k');
     const [currentImages, setCurrentImages] = useState<GeneratedImage[]>([]);
     const [history, setHistory] = useState<GeneratedImage[]>([]);
