@@ -120,14 +120,6 @@ export const AlertTriangleIcon: React.FC<{ className?: string }> = ({ className 
     </svg>
 );
 
-export const InfoIcon: React.FC<{ className?: string; title?: string }> = ({ className, title }) => (
-    <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        {title && <title>{title}</title>}
-        <circle cx="12" cy="12" r="10"></circle>
-        <line x1="12" y1="16" x2="12" y2="12"></line>
-        <line x1="12" y1="8" x2="12.01" y2="8"></line>
-    </svg>
-);
 
 export const BrushIcon: React.FC<{ className?: string }> = ({ className }) => (
     <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -166,12 +158,6 @@ export const ReloadIcon: React.FC<{ className?: string }> = ({ className }) => (
     </svg>
 );
 
-export const EnvelopeIcon: React.FC<{ className?: string }> = ({ className }) => (
-    <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="2" y="4" width="20" height="16" rx="2"></rect>
-        <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
-    </svg>
-);
 
 export const StarIcon: React.FC<{ className?: string; filled?: boolean; title?: string }> = ({ className, filled, title }) => (
     <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill={filled ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -208,10 +194,14 @@ export const ChevronRightIcon: React.FC<{ className?: string }> = ({ className }
     </svg>
 );
 
-export const ChartIcon: React.FC<{ className?: string }> = ({ className }) => (
+export const ChevronDownIcon: React.FC<{ className?: string }> = ({ className }) => (
     <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <line x1="18" y1="20" x2="18" y2="10"></line>
-        <line x1="12" y1="20" x2="12" y2="4"></line>
-        <line x1="6" y1="20" x2="6" y2="14"></line>
+        <polyline points="6 9 12 15 18 9"></polyline>
+    </svg>
+);
+
+export const ChevronUpIcon: React.FC<{ className?: string }> = ({ className }) => (
+    <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="18 15 12 9 6 15"></polyline>
     </svg>
 );

@@ -1,4 +1,4 @@
-# 🎨 Generentolo PRO v1.7.0
+# 🎨 Generentolo PRO v1.7.1
 
 **Professional AI-Powered Image Generation Web Application**
 
@@ -10,6 +10,9 @@ A sophisticated web application for generating ultra-high-quality images using G
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
 
 ---
+
+## 🎯 **NEW v1.7.1: Development Phase**
+- 🚧 Sviluppo in corso...
 
 ## 🎯 **NEW v1.7.0: DNA Character Consistency**
 - **🧬 DNA Profile Extraction** - Capture the unique physical traits of a character from any image.
@@ -368,6 +371,9 @@ A sophisticated web application for generating ultra-high-quality images using G
 ---
 
 ## 📋 Changelog
+
+### v1.7.1 (December 2025) 🚀
+- 🚧 Sviluppo in corso...
 
 ### v1.7.0 (December 2025) 🧬
 **🎉 CHARACTER CONSISTENCY - DNA Profiling Upgrade:**

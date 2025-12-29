@@ -3,7 +3,7 @@ import { GeneratedImage, DynamicTool, PromptPreset, ModelType, ResolutionType } 
 import * as geminiService from './services/geminiService';
 import * as presetsService from './services/presetsService';
 import { useKeyboardShortcuts, APP_SHORTCUTS } from './hooks/useKeyboardShortcuts';
-import { SunIcon, MoonIcon, UploadIcon, DownloadIcon, SparklesIcon, CopyIcon, SettingsIcon, XIcon, CheckIcon, LanguageIcon, InfoIcon, AlertTriangleIcon, BrushIcon, DiceIcon, TrashIcon, ReloadIcon, EnvelopeIcon, StarIcon, CornerUpLeftIcon, ChevronLeftIcon, ChevronRightIcon, ChartIcon } from './components/icons';
+import { SunIcon, MoonIcon, UploadIcon, DownloadIcon, SparklesIcon, CopyIcon, SettingsIcon, XIcon, CheckIcon, LanguageIcon, BrushIcon, DiceIcon, TrashIcon, ReloadIcon, StarIcon, CornerUpLeftIcon, ChevronLeftIcon, ChevronRightIcon, ChevronDownIcon, ChevronUpIcon } from './components/icons';
 import { indexedDBService, DnaCharacter } from './services/indexedDB';
 import FloatingActionBar from './components/FloatingActionBar';
 import ZoomableImage from './components/ZoomableImage';
@@ -25,7 +25,7 @@ if (!crypto.randomUUID) {
 // --- Localization ---
 const translations = {
     en: {
-        headerTitle: 'Generentolo PRO v1.7.0',
+        headerTitle: 'Generentolo PRO v1.7.1',
         headerSubtitle: 'Let me do it for you!',
         refImagesTitle: 'Reference & Style Images',
         styleRefTitle: 'Style Reference',
@@ -210,7 +210,7 @@ const translations = {
         dnaCharacterEnterName: 'Character Name',
     },
     it: {
-        headerTitle: 'Generentolo PRO v1.7.0',
+        headerTitle: 'Generentolo PRO v1.7.1',
         headerSubtitle: 'Let me do it for you!',
         refImagesTitle: 'Immagini di Riferimento e Stile',
         styleRefTitle: 'Riferimento Stile',
@@ -487,13 +487,10 @@ interface HeaderProps {
     theme: 'dark' | 'light';
     toggleTheme: () => void;
     onOpenSettings: () => void;
-    onOpenFeedback: () => void;
     onOpenShortcuts: () => void;
-    onOpenHelp: () => void;
     onOpenPromptLibrary: () => void;
-    onOpenUsageTracker: () => void; // v1.4
 }
-const Header: React.FC<HeaderProps> = ({ theme, toggleTheme, onOpenSettings, onOpenFeedback, onOpenShortcuts, onOpenHelp, onOpenPromptLibrary, onOpenUsageTracker }) => {
+const Header: React.FC<HeaderProps> = ({ theme, toggleTheme, onOpenSettings, onOpenShortcuts, onOpenPromptLibrary }) => {
     const { t, language, setLanguage } = useLocalization();
     const toggleLanguage = () => setLanguage(language === 'en' ? 'it' : 'en');
     return (
@@ -517,17 +514,8 @@ const Header: React.FC<HeaderProps> = ({ theme, toggleTheme, onOpenSettings, onO
                     <SparklesIcon className="w-4 h-4" />
                     <span className="hidden sm:inline">Prompts</span>
                 </button>
-                <button onClick={onOpenUsageTracker} className="p-2 rounded-full text-light-text-muted dark:text-dark-text-muted hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors" title={t.usageTrackerTitle}>
-                    <ChartIcon className="w-5 h-5" />
-                </button>
-                <button onClick={onOpenHelp} className="p-2 rounded-full text-light-text-muted dark:text-dark-text-muted hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors" title="Help Guide">
-                    <InfoIcon className="w-5 h-5" />
-                </button>
                 <button onClick={onOpenShortcuts} className="p-2 rounded-full text-light-text-muted dark:text-dark-text-muted hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors" title="Keyboard Shortcuts">
                     <span className="text-lg">⌨️</span>
-                </button>
-                <button onClick={onOpenFeedback} className="p-2 rounded-full text-light-text-muted dark:text-dark-text-muted hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors">
-                    <EnvelopeIcon className="w-5 h-5" />
                 </button>
                 <button onClick={toggleLanguage} className="p-2 rounded-full text-light-text-muted dark:text-dark-text-muted hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors">
                     <LanguageIcon className="w-5 h-5" />
@@ -611,7 +599,6 @@ const ReferencePanel: React.FC<{
     setPreciseReference: (value: boolean) => void;
     useGrounding: boolean;
     setUseGrounding: (value: boolean) => void;
-    // v1.7: DNA Character
     dnaCharacters: DnaCharacter[];
     selectedDnaId: string | null;
     onSelectDna: (id: string | null) => void;
@@ -621,6 +608,11 @@ const ReferencePanel: React.FC<{
     const [isDraggingRef, setIsDraggingRef] = useState(false);
     const [isDraggingStyle, setIsDraggingStyle] = useState(false);
     const [isDraggingStructure, setIsDraggingStructure] = useState(false);
+
+    // v1.7.1: Collapsible sections to save space
+    const [showPresets, setShowPresets] = useState(false);
+    const [showPhysics, setShowPhysics] = useState(false);
+
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -839,144 +831,163 @@ const ReferencePanel: React.FC<{
                 </div>
             </div>
 
-            {/* Style Presets Section - Always Visible */}
-            <div className="border-t border-light-border dark:border-dark-border/50 pt-4"></div>
-            <div className="space-y-2">
-                <h3 className="font-semibold text-light-text dark:text-dark-text flex items-center gap-2">
-                    <span>🎨</span>
-                    <span>{t.stylePresetsTitle}</span>
-                </h3>
-                <select
-                    value={selectedStylePreset || ''}
-                    onChange={(e) => {
-                        const presetId = e.target.value || null;
-                        setSelectedStylePreset(presetId);
-                        if (presetId) {
-                            const preset = STYLE_PRESETS.find(p => p.id === presetId);
-                            if (preset) {
-                                setEditedPrompt(prev => {
-                                    const cleanPrompt = prev.replace(/,\s*(oil painting style|watercolor style|anime style|pixel art style|vector illustration|professional product photography|professional portrait photography|cinematic film style|street photography|macro photography|isometric view|UI\/UX design mockup|infographic design|social media post design|typography art)[^,]*/gi, '');
-                                    return cleanPrompt + preset.promptSuffix;
-                                });
-                            }
-                        }
-                    }}
-                    className="w-full px-3 py-2 rounded-lg bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border text-light-text dark:text-dark-text text-sm focus:outline-none focus:ring-2 focus:ring-brand-yellow/50"
+            {/* Style Presets Section - Collapsible v1.7.1 */}
+            <div className="border-t border-light-border dark:border-dark-border/50 pt-3">
+                <button
+                    onClick={() => setShowPresets(!showPresets)}
+                    className="w-full flex items-center justify-between font-semibold text-light-text dark:text-dark-text group hover:text-brand-yellow transition-colors"
                 >
-                    <option value="">{language === 'it' ? 'Nessuno' : 'None'}</option>
-                    {STYLE_PRESETS.map(preset => (
-                        <option key={preset.id} value={preset.id}>
-                            {preset.icon} {language === 'it' ? preset.nameIt : preset.name}
-                        </option>
-                    ))}
-                </select>
-                {selectedStylePreset && (
-                    <p className="text-xs text-light-text-muted dark:text-dark-text-muted">
-                        {STYLE_PRESETS.find(p => p.id === selectedStylePreset)?.[language === 'it' ? 'descriptionIt' : 'description']}
-                    </p>
+                    <div className="flex items-center gap-2 text-sm">
+                        <span>🎨</span>
+                        <span>{t.stylePresetsTitle}</span>
+                    </div>
+                    {showPresets ? <ChevronUpIcon className="w-4 h-4 opacity-50 group-hover:opacity-100" /> : <ChevronDownIcon className="w-4 h-4 opacity-50 group-hover:opacity-100" />}
+                </button>
+
+                {showPresets && (
+                    <div className="mt-2 space-y-2 animate-in fade-in slide-in-from-top-1 duration-200">
+                        <select
+                            value={selectedStylePreset || ''}
+                            onChange={(e) => {
+                                const presetId = e.target.value || null;
+                                setSelectedStylePreset(presetId);
+                                if (presetId) {
+                                    const preset = STYLE_PRESETS.find(p => p.id === presetId);
+                                    if (preset) {
+                                        setEditedPrompt(prev => {
+                                            const cleanPrompt = prev.replace(/,\s*(oil painting style|watercolor style|anime style|pixel art style|vector illustration|professional product photography|professional portrait photography|cinematic film style|street photography|macro photography|isometric view|UI\/UX design mockup|infographic design|social media post design|typography art)[^,]*/gi, '');
+                                            return cleanPrompt + preset.promptSuffix;
+                                        });
+                                    }
+                                }
+                            }}
+                            className="w-full px-3 py-1.5 rounded-lg bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border text-light-text dark:text-dark-text text-xs focus:outline-none focus:ring-2 focus:ring-brand-yellow/50"
+                        >
+                            <option value="">{language === 'it' ? 'Nessuno' : 'None'}</option>
+                            {STYLE_PRESETS.map(preset => (
+                                <option key={preset.id} value={preset.id}>
+                                    {preset.icon} {language === 'it' ? preset.nameIt : preset.name}
+                                </option>
+                            ))}
+                        </select>
+                        {selectedStylePreset && (
+                            <p className="text-[10px] text-light-text-muted dark:text-dark-text-muted leading-tight">
+                                {STYLE_PRESETS.find(p => p.id === selectedStylePreset)?.[language === 'it' ? 'descriptionIt' : 'description']}
+                            </p>
+                        )}
+                    </div>
                 )}
             </div>
 
-            {/* Physics Controls Section - Always Visible */}
-            <div className="border-t border-light-border dark:border-dark-border/50 pt-4"></div>
-            <div className="space-y-3">
-                <h3 className="font-semibold text-light-text dark:text-dark-text flex items-center gap-2">
-                    <span>⚙️</span>
-                    <span>{t.physicsControlTitle}</span>
-                </h3>
+            {/* Physics Controls Section - Collapsible v1.7.1 */}
+            <div className="border-t border-light-border dark:border-dark-border/50 pt-3">
+                <button
+                    onClick={() => setShowPhysics(!showPhysics)}
+                    className="w-full flex items-center justify-between font-semibold text-light-text dark:text-dark-text group hover:text-brand-magenta transition-colors"
+                >
+                    <div className="flex items-center gap-2 text-sm">
+                        <span>⚙️</span>
+                        <span>{t.physicsControlTitle}</span>
+                    </div>
+                    {showPhysics ? <ChevronUpIcon className="w-4 h-4 opacity-50 group-hover:opacity-100" /> : <ChevronDownIcon className="w-4 h-4 opacity-50 group-hover:opacity-100" />}
+                </button>
 
-                {/* Lighting Control */}
-                <div className="space-y-1">
-                    <label className="text-xs font-medium text-light-text-muted dark:text-dark-text-muted">
-                        {language === 'it' ? 'Illuminazione' : 'Lighting'}
-                    </label>
-                    <select
-                        value={selectedLighting || ''}
-                        onChange={(e) => {
-                            const lightingId = e.target.value || null;
-                            setSelectedLighting(lightingId);
-                            if (lightingId) {
-                                const preset = PHYSICS_PRESETS.lighting.find(p => p.id === lightingId);
-                                if (preset) {
-                                    setEditedPrompt(prev => {
-                                        const cleanPrompt = prev.replace(/,\s*(soft studio lighting|golden hour lighting|dramatic lighting|neon lighting|natural daylight)[^,]*/gi, '');
-                                        return cleanPrompt + ', ' + preset.prompt;
-                                    });
-                                }
-                            }
-                        }}
-                        className="w-full px-3 py-2 rounded-lg bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border text-light-text dark:text-dark-text text-sm focus:outline-none focus:ring-2 focus:ring-brand-yellow/50"
-                    >
-                        <option value="">{language === 'it' ? 'Nessuna' : 'None'}</option>
-                        {PHYSICS_PRESETS.lighting.map(preset => (
-                            <option key={preset.id} value={preset.id}>
-                                {language === 'it' ? preset.nameIt : preset.name}
-                            </option>
-                        ))}
-                    </select>
-                </div>
+                {showPhysics && (
+                    <div className="mt-3 space-y-3 animate-in fade-in slide-in-from-top-1 duration-200">
+                        {/* Lighting Control */}
+                        <div className="space-y-1">
+                            <label className="text-[10px] font-bold uppercase tracking-wider text-light-text-muted dark:text-dark-text-muted">
+                                {language === 'it' ? 'Illuminazione' : 'Lighting'}
+                            </label>
+                            <select
+                                value={selectedLighting || ''}
+                                onChange={(e) => {
+                                    const lightingId = e.target.value || null;
+                                    setSelectedLighting(lightingId);
+                                    if (lightingId) {
+                                        const preset = PHYSICS_PRESETS.lighting.find(p => p.id === lightingId);
+                                        if (preset) {
+                                            setEditedPrompt(prev => {
+                                                const cleanPrompt = prev.replace(/,\s*(soft studio lighting|golden hour lighting|dramatic lighting|neon lighting|natural daylight)[^,]*/gi, '');
+                                                return cleanPrompt + ', ' + preset.prompt;
+                                            });
+                                        }
+                                    }
+                                }}
+                                className="w-full px-3 py-1.5 rounded-lg bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border text-light-text dark:text-dark-text text-xs focus:outline-none focus:ring-2 focus:ring-brand-yellow/50"
+                            >
+                                <option value="">{language === 'it' ? 'Nessuna' : 'None'}</option>
+                                {PHYSICS_PRESETS.lighting.map(preset => (
+                                    <option key={preset.id} value={preset.id}>
+                                        {language === 'it' ? preset.nameIt : preset.name}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
 
-                {/* Camera Control */}
-                <div className="space-y-1">
-                    <label className="text-xs font-medium text-light-text-muted dark:text-dark-text-muted">
-                        {language === 'it' ? 'Fotocamera' : 'Camera'}
-                    </label>
-                    <select
-                        value={selectedCamera || ''}
-                        onChange={(e) => {
-                            const cameraId = e.target.value || null;
-                            setSelectedCamera(cameraId);
-                            if (cameraId) {
-                                const preset = PHYSICS_PRESETS.camera.find(p => p.id === cameraId);
-                                if (preset) {
-                                    setEditedPrompt(prev => {
-                                        const cleanPrompt = prev.replace(/,\s*(wide angle lens|portrait lens|macro lens|telephoto lens|fisheye lens)[^,]*/gi, '');
-                                        return cleanPrompt + ', ' + preset.prompt;
-                                    });
-                                }
-                            }
-                        }}
-                        className="w-full px-3 py-2 rounded-lg bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border text-light-text dark:text-dark-text text-sm focus:outline-none focus:ring-2 focus:ring-brand-yellow/50"
-                    >
-                        <option value="">{language === 'it' ? 'Nessuna' : 'None'}</option>
-                        {PHYSICS_PRESETS.camera.map(preset => (
-                            <option key={preset.id} value={preset.id}>
-                                {language === 'it' ? preset.nameIt : preset.name}
-                            </option>
-                        ))}
-                    </select>
-                </div>
+                        {/* Camera Control */}
+                        <div className="space-y-1">
+                            <label className="text-[10px] font-bold uppercase tracking-wider text-light-text-muted dark:text-dark-text-muted">
+                                {language === 'it' ? 'Fotocamera' : 'Camera'}
+                            </label>
+                            <select
+                                value={selectedCamera || ''}
+                                onChange={(e) => {
+                                    const cameraId = e.target.value || null;
+                                    setSelectedCamera(cameraId);
+                                    if (cameraId) {
+                                        const preset = PHYSICS_PRESETS.camera.find(p => p.id === cameraId);
+                                        if (preset) {
+                                            setEditedPrompt(prev => {
+                                                const cleanPrompt = prev.replace(/,\s*(wide angle lens|portrait lens|macro lens|telephoto lens|fisheye lens)[^,]*/gi, '');
+                                                return cleanPrompt + ', ' + preset.prompt;
+                                            });
+                                        }
+                                    }
+                                }}
+                                className="w-full px-3 py-1.5 rounded-lg bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border text-light-text dark:text-dark-text text-xs focus:outline-none focus:ring-2 focus:ring-brand-yellow/50"
+                            >
+                                <option value="">{language === 'it' ? 'Nessuna' : 'None'}</option>
+                                {PHYSICS_PRESETS.camera.map(preset => (
+                                    <option key={preset.id} value={preset.id}>
+                                        {language === 'it' ? preset.nameIt : preset.name}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
 
-                {/* Focus Control */}
-                <div className="space-y-1">
-                    <label className="text-xs font-medium text-light-text-muted dark:text-dark-text-muted">
-                        {language === 'it' ? 'Messa a Fuoco' : 'Focus'}
-                    </label>
-                    <select
-                        value={selectedFocus || ''}
-                        onChange={(e) => {
-                            const focusId = e.target.value || null;
-                            setSelectedFocus(focusId);
-                            if (focusId) {
-                                const preset = PHYSICS_PRESETS.focus.find(p => p.id === focusId);
-                                if (preset) {
-                                    setEditedPrompt(prev => {
-                                        const cleanPrompt = prev.replace(/,\s*(shallow depth of field|tack sharp|cinematic depth of field|tilt-shift effect|soft focus)[^,]*/gi, '');
-                                        return cleanPrompt + ', ' + preset.prompt;
-                                    });
-                                }
-                            }
-                        }}
-                        className="w-full px-3 py-2 rounded-lg bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border text-light-text dark:text-dark-text text-sm focus:outline-none focus:ring-2 focus:ring-brand-yellow/50"
-                    >
-                        <option value="">{language === 'it' ? 'Nessuna' : 'None'}</option>
-                        {PHYSICS_PRESETS.focus.map(preset => (
-                            <option key={preset.id} value={preset.id}>
-                                {language === 'it' ? preset.nameIt : preset.name}
-                            </option>
-                        ))}
-                    </select>
-                </div>
+                        {/* Focus Control */}
+                        <div className="space-y-1">
+                            <label className="text-[10px] font-bold uppercase tracking-wider text-light-text-muted dark:text-dark-text-muted">
+                                {language === 'it' ? 'Messa a Fuoco' : 'Focus'}
+                            </label>
+                            <select
+                                value={selectedFocus || ''}
+                                onChange={(e) => {
+                                    const focusId = e.target.value || null;
+                                    setSelectedFocus(focusId);
+                                    if (focusId) {
+                                        const preset = PHYSICS_PRESETS.focus.find(p => p.id === focusId);
+                                        if (preset) {
+                                            setEditedPrompt(prev => {
+                                                const cleanPrompt = prev.replace(/,\s*(shallow depth of field|tack sharp|cinematic depth of field|tilt-shift effect|soft focus)[^,]*/gi, '');
+                                                return cleanPrompt + ', ' + preset.prompt;
+                                            });
+                                        }
+                                    }
+                                }}
+                                className="w-full px-3 py-1.5 rounded-lg bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border text-light-text dark:text-dark-text text-xs focus:outline-none focus:ring-2 focus:ring-brand-yellow/50"
+                            >
+                                <option value="">{language === 'it' ? 'Nessuna' : 'None'}</option>
+                                {PHYSICS_PRESETS.focus.map(preset => (
+                                    <option key={preset.id} value={preset.id}>
+                                        {language === 'it' ? preset.nameIt : preset.name}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );
@@ -1254,48 +1265,54 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
                                         </div>
                                     ) : (
                                         <>
-                                            <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl"></div>
-                                            <div className="absolute top-1.5 right-1.5 z-10 flex flex-col gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl"></div>
+
+                                            {/* Top Left: Delete/Destructive Actions */}
+                                            <div className="absolute top-1.5 left-1.5 z-20 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); onDelete(item.id); }}
+                                                    className="p-1.5 rounded-full bg-red-600/60 text-white transition-all hover:bg-red-500 hover:scale-110 active:scale-95 shadow-lg backdrop-blur-md"
+                                                    aria-label={t.deleteAction}
+                                                    title={t.deleteAction}
+                                                >
+                                                    <TrashIcon className="w-3.5 h-3.5" />
+                                                </button>
+                                            </div>
+
+                                            {/* Top Right: Creative & Utility Actions */}
+                                            <div className="absolute top-1.5 right-1.5 z-20 flex flex-col gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity max-h-[calc(100%-12px)] flex-wrap-reverse content-end items-end">
                                                 <button
                                                     onClick={(e) => { e.stopPropagation(); onSelect(item); }}
-                                                    className="p-1.5 rounded-full bg-black/60 text-white transition-all hover:bg-brand-purple"
+                                                    className="p-1.5 rounded-full bg-black/60 text-white transition-all hover:bg-brand-purple hover:scale-110 active:scale-95 shadow-lg backdrop-blur-md"
                                                     aria-label={t.reuseAction}
                                                     title={t.reuseAction}
                                                 >
-                                                    <ReloadIcon className="w-4 h-4" />
+                                                    <ReloadIcon className="w-3.5 h-3.5" />
                                                 </button>
                                                 <button
                                                     onClick={(e) => { e.stopPropagation(); onCopySettings(item); }}
-                                                    className="p-1.5 rounded-full bg-black/60 text-white transition-all hover:bg-brand-magenta"
+                                                    className="p-1.5 rounded-full bg-black/60 text-white transition-all hover:bg-brand-magenta hover:scale-110 active:scale-95 shadow-lg backdrop-blur-md"
                                                     aria-label="Copy settings"
                                                     title="📋 Copy all settings"
                                                 >
-                                                    <CopyIcon className="w-4 h-4" />
+                                                    <CopyIcon className="w-3.5 h-3.5" />
                                                 </button>
                                                 <button
                                                     onClick={(e) => { e.stopPropagation(); onSaveDna(item); }}
-                                                    className="p-1.5 rounded-full bg-black/60 text-white transition-all hover:bg-brand-purple"
+                                                    className="p-1.5 rounded-full bg-black/60 text-white transition-all hover:bg-indigo-500 hover:scale-110 active:scale-95 shadow-lg backdrop-blur-md"
                                                     aria-label="Save as DNA"
                                                     title="🧬 Save as DNA Character"
                                                 >
-                                                    <span className="text-sm">🧬</span>
+                                                    <span className="text-xs">🧬</span>
                                                 </button>
                                                 <button
                                                     onClick={(e) => { e.stopPropagation(); onGenerateVariations(item); }}
-                                                    className="p-1.5 rounded-full bg-brand-yellow/80 text-black transition-all hover:bg-brand-yellow disabled:opacity-50"
+                                                    className="p-1.5 rounded-full bg-black/60 text-white transition-all hover:bg-brand-yellow hover:text-black hover:scale-110 active:scale-95 shadow-lg backdrop-blur-md disabled:opacity-50"
                                                     aria-label="Generate variations"
                                                     title="🎲 Generate 4 variations"
                                                     disabled={variationsLoadingId !== null}
                                                 >
-                                                    <DiceIcon className="w-4 h-4" />
-                                                </button>
-                                                <button
-                                                    onClick={(e) => { e.stopPropagation(); onDelete(item.id); }}
-                                                    className="p-1.5 rounded-full bg-red-600/80 text-white transition-all hover:bg-red-500"
-                                                    aria-label={t.deleteAction}
-                                                    title={t.deleteAction}
-                                                >
-                                                    <TrashIcon className="w-4 h-4" />
+                                                    <DiceIcon className="w-3.5 h-3.5" />
                                                 </button>
                                             </div>
                                         </>
@@ -1652,7 +1669,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
             <div className="bg-light-surface/90 dark:bg-dark-surface/90 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl w-full max-w-3xl max-h-[85vh] flex flex-col" onClick={e => e.stopPropagation()}>
                 <div className="flex items-center justify-between p-6 border-b border-light-border dark:border-dark-border">
                     <div className="flex items-center gap-3">
-                        <InfoIcon className="w-6 h-6 text-brand-yellow" />
+                        <span className="text-2xl">ℹ️</span>
                         <h2 className="text-2xl font-bold text-light-text dark:text-dark-text">{t.helpGuide}</h2>
                     </div>
                     <button onClick={onClose} className="p-2 rounded-full text-light-text-muted dark:text-dark-text-muted hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors">
@@ -1827,7 +1844,7 @@ const Toast: React.FC<ToastProps> = ({ message, type, onClose }) => {
 
     return (
         <div className={`fixed top-5 right-5 z-50 flex items-center gap-3 p-3 rounded-lg shadow-2xl border animate-fade-in-down ${isSuccess ? 'bg-green-500/20 text-green-200 border-green-500/30' : 'bg-red-500/20 text-red-200 border-red-500/30'}`}>
-            {isSuccess ? <InfoIcon className="w-5 h-5" /> : <AlertTriangleIcon className="w-5 h-5" />}
+            {isSuccess ? <span>✅</span> : <span>⚠️</span>}
             <span className="text-sm font-medium">{message}</span>
             <button onClick={onClose} className="p-1 -mr-1 rounded-full hover:bg-white/10"><XIcon className="w-4 h-4" /></button>
         </div>
@@ -3110,7 +3127,7 @@ export default function App() {
     return (
         <LanguageContext.Provider value={{ language, setLanguage, t }}>
             <div className="h-screen w-screen bg-light-bg dark:bg-dark-bg text-light-text dark:text-dark-text flex flex-col font-sans">
-                <Header theme={theme} toggleTheme={toggleTheme} onOpenSettings={() => setIsSettingsOpen(true)} onOpenFeedback={() => setIsFeedbackOpen(true)} onOpenShortcuts={() => setIsShortcutsOpen(true)} onOpenHelp={() => setIsHelpOpen(true)} onOpenUsageTracker={() => setShowUsageTracker(true)} onOpenPromptLibrary={() => {
+                <Header theme={theme} toggleTheme={toggleTheme} onOpenSettings={() => setIsSettingsOpen(true)} onOpenShortcuts={() => setIsShortcutsOpen(true)} onOpenPromptLibrary={() => {
                     const libraryWindow = window.open('./prompt-library.html', '_blank', 'width=1400,height=900');
                     if (libraryWindow) {
                         libraryWindow.addEventListener('load', () => {
@@ -3120,7 +3137,7 @@ export default function App() {
                 }} />
                 <main className="flex-1 flex flex-col lg:flex-row gap-4 lg:gap-6 px-4 pt-4 pb-32 lg:pb-28 overflow-y-auto lg:overflow-hidden">
                     {/* --- Left Sidebar (only references/style/structure) --- */}
-                    <aside className="w-full lg:w-[280px] flex-shrink-0 bg-light-surface/50 dark:bg-dark-surface/30 backdrop-blur-xl rounded-3xl overflow-y-auto h-full">
+                    <aside className="w-full lg:w-[280px] flex-shrink-0 bg-light-surface/50 dark:bg-dark-surface/30 backdrop-blur-xl rounded-3xl overflow-y-auto h-full custom-scrollbar">
                         <ReferencePanel
                             onAddImages={handleAddImages}
                             onRemoveImage={handleRemoveImage}
