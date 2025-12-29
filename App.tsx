@@ -10,6 +10,8 @@ import ZoomableImage from './components/ZoomableImage';
 import UsageTracker from './components/UsageTracker'; // v1.4
 import { STYLE_PRESETS, PHYSICS_PRESETS } from './data/stylePresets'; // v1.4
 import { fetchInvisibleReferences, removeBracketsFromPrompt } from './services/googleSearchService'; // v1.5.1
+import StudioPanel from './components/StudioPanel'; // v1.8: Studio Mode
+import { CAMERAS, LENSES, FOCAL_LENGTHS, LIGHT_DIRECTIONS, WARDROBE_CATEGORIES, SHOTS, PRODUCTION_KITS } from './data/studioPresets';
 
 // Polyfill for crypto.randomUUID() on browsers that don't support it (mobile Safari, etc)
 if (!crypto.randomUUID) {
@@ -25,7 +27,7 @@ if (!crypto.randomUUID) {
 // --- Localization ---
 const translations = {
     en: {
-        headerTitle: 'Generentolo PRO v1.7.1',
+        headerTitle: 'Generentolo PRO v1.8',
         headerSubtitle: 'Let me do it for you!',
         refImagesTitle: 'Reference & Style Images',
         styleRefTitle: 'Style Reference',
@@ -208,9 +210,35 @@ const translations = {
         dnaCharacterNone: 'No DNA active',
         dnaCharacterDelete: 'Delete Profile',
         dnaCharacterEnterName: 'Character Name',
+        // v1.8: Studio Mode
+        studioModeToggleClassic: 'Classic',
+        studioModeToggleStudio: 'Studio',
+        studioCinemaRigTitle: 'Cinema Rig',
+        studioLightForgeTitle: 'Light Forge',
+        studioWardrobeTitle: 'Wardrobe Studio',
+        studioCameraModel: 'Camera Model',
+        studioLensModel: 'Lens Type',
+        studioFocalLength: 'Focal Length',
+        studioLightDirection: 'Direction',
+        studioLightQuality: 'Quality',
+        studioLightColor: 'Light Color',
+        studioLightSoft: 'Soft / Diffused',
+        studioLightHard: 'Hard / Sharp',
+        studioWardrobeGender: 'Gender',
+        studioWardrobeTop: 'Top',
+        studioWardrobeOuter: 'Outerwear',
+        studioWardrobeBottom: 'Bottom',
+        studioWardrobeSet: 'Full Set',
+        studioShotGridTitle: 'Production Shots',
+        studioShotFront: 'Frontal',
+        studioShotSide: 'Profile',
+        studioShotLow: 'Hero (Low)',
+        studioShotHigh: 'Bird\'s Eye',
+        studioShotClose: 'Close-up',
+        studioShotWide: 'Wide Shot',
     },
     it: {
-        headerTitle: 'Generentolo PRO v1.7.1',
+        headerTitle: 'Generentolo PRO v1.8',
         headerSubtitle: 'Let me do it for you!',
         refImagesTitle: 'Immagini di Riferimento e Stile',
         styleRefTitle: 'Riferimento Stile',
@@ -393,6 +421,32 @@ const translations = {
         dnaCharacterNone: 'Nessun DNA attivo',
         dnaCharacterDelete: 'Elimina Profilo',
         dnaCharacterEnterName: 'Nome Personaggio',
+        // v1.8: Studio Mode
+        studioModeToggleClassic: 'Classico',
+        studioModeToggleStudio: 'Studio',
+        studioCinemaRigTitle: 'Cinema Rig',
+        studioLightForgeTitle: 'Light Forge',
+        studioWardrobeTitle: 'Wardrobe Studio',
+        studioCameraModel: 'Modello Camera',
+        studioLensModel: 'Tipo Lente',
+        studioFocalLength: 'Focale',
+        studioLightDirection: 'Direzione',
+        studioLightQuality: 'Qualità',
+        studioLightColor: 'Colore Luce',
+        studioLightSoft: 'Morbida / Diffusa',
+        studioLightHard: 'Dura / Netta',
+        studioWardrobeGender: 'Genere',
+        studioWardrobeTop: 'Sopra',
+        studioWardrobeOuter: 'Capispalla',
+        studioWardrobeBottom: 'Sotto',
+        studioWardrobeSet: 'Set Completo',
+        studioShotGridTitle: 'Inquadrature Production',
+        studioShotFront: 'Frontale',
+        studioShotSide: 'Profilo',
+        studioShotLow: 'Hero (Basso)',
+        studioShotHigh: 'Bird\'s Eye',
+        studioShotClose: 'Primo Piano',
+        studioShotWide: 'Campo Largo',
     }
 };
 
@@ -603,7 +657,12 @@ const ReferencePanel: React.FC<{
     selectedDnaId: string | null;
     onSelectDna: (id: string | null) => void;
     onManageDna: () => void;
-}> = ({ onAddImages, onRemoveImage, referenceImages, onAddStyleImage, onRemoveStyleImage, styleImage, onAddStructureImage, onRemoveStructureImage, structureImage, selectedStylePreset, setSelectedStylePreset, selectedLighting, setSelectedLighting, selectedCamera, setSelectedCamera, selectedFocus, setSelectedFocus, setEditedPrompt, preciseReference, setPreciseReference, useGrounding, setUseGrounding, dnaCharacters, selectedDnaId, onSelectDna, onManageDna }) => {
+    // v1.8: Studio Mode
+    appMode: 'classic' | 'studio';
+    setAppMode: (mode: 'classic' | 'studio') => void;
+    studioConfig: any;
+    setStudioConfig: (config: any) => void;
+}> = ({ onAddImages, onRemoveImage, referenceImages, onAddStyleImage, onRemoveStyleImage, styleImage, onAddStructureImage, onRemoveStructureImage, structureImage, selectedStylePreset, setSelectedStylePreset, selectedLighting, setSelectedLighting, selectedCamera, setSelectedCamera, selectedFocus, setSelectedFocus, setEditedPrompt, preciseReference, setPreciseReference, useGrounding, setUseGrounding, dnaCharacters, selectedDnaId, onSelectDna, onManageDna, appMode, setAppMode, studioConfig, setStudioConfig }) => {
     const { t, language } = useLocalization();
     const [isDraggingRef, setIsDraggingRef] = useState(false);
     const [isDraggingStyle, setIsDraggingStyle] = useState(false);
@@ -656,337 +715,363 @@ const ReferencePanel: React.FC<{
     };
 
     return (
-        <div className="p-4 space-y-4">
-            <h3 className="font-semibold text-light-text dark:text-dark-text">{t.refImagesTitle}</h3>
-            <div
-                onDragEnter={handleRefDragEnter} onDragLeave={handleRefDragLeave} onDragOver={handleDragOver} onDrop={handleRefDrop}
-                className={`rounded-xl transition-all relative ${isDraggingRef ? 'border-2 border-dashed border-brand-yellow bg-brand-purple/10 p-1' : 'border-2 border-transparent'}`}
-            >
-                <div className="grid grid-cols-3 gap-3">
-                    {referenceImages.map((file, index) => (
-                        <ImagePreview key={`${file.name}-${file.lastModified}-${index}`} file={file} index={index} onRemove={onRemoveImage} />
-                    ))}
-
-                    {referenceImages.length < MAX_USER_IMAGES && (
-                        <div onClick={() => fileInputRef.current?.click()} className="relative group aspect-square rounded-xl shadow-[0_0_12px_3px_rgba(94,139,255,0.5)] bg-light-surface/50 dark:bg-dark-surface/30 flex items-center justify-center cursor-pointer">
-                            <div className="text-light-text-muted dark:text-dark-text-muted text-center">
-                                <UploadIcon className="w-6 h-6 mx-auto" />
-                                <span className="text-xs mt-1 block">{t.addImage}</span>
-                            </div>
-                        </div>
-                    )}
-                </div>
-            </div>
-            <input ref={fileInputRef} id="file-upload" type="file" className="hidden" multiple accept="image/*" onChange={handleFileChange} />
-
-            <div className="border-t border-light-border dark:border-dark-border/50"></div>
-
-            <div
-                onDragEnter={handleStyleDragEnter} onDragLeave={handleStyleDragLeave} onDragOver={handleDragOver} onDrop={handleStyleDrop}
-                className={`rounded-xl transition-all relative ${isDraggingStyle ? 'border-2 border-dashed border-brand-pink bg-brand-pink/10 p-1' : 'border-2 border-transparent'}`}
-            >
-                <div className="relative group shadow-[0_0_8px_2px_rgba(255,217,61,0.5)] rounded-xl">
-                    <div className="absolute top-2 left-2 px-2 py-1 bg-brand-yellow/90 text-black text-xs rounded-full font-semibold backdrop-blur-sm z-10">STYLE</div>
-                    {styleImage ? (
-                        <StyleImagePreview file={styleImage} onRemove={onRemoveStyleImage} />
-                    ) : (
-                        <label htmlFor="style-file-upload" className="cursor-pointer w-full bg-light-surface dark:bg-dark-surface/50 border-2 border-dashed border-light-border dark:border-dark-border rounded-xl flex flex-col justify-center items-center text-light-text-muted dark:text-dark-text-muted hover:border-brand-yellow transition-colors p-6 text-center">
-                            <UploadIcon className="w-8 h-8 mb-2" />
-                            <span className="text-sm font-medium">{t.addStyleImage}</span>
-                            <span className="text-xs mt-1">{t.styleRefTitle} ({t.optional})</span>
-                        </label>
-                    )}
-                    <input id="style-file-upload" type="file" className="hidden" accept="image/*" onChange={handleStyleFileChange} />
-                </div>
-            </div>
-
-            <div className="border-t border-light-border dark:border-dark-border/50"></div>
-
-            <div
-                onDragEnter={handleStructureDragEnter} onDragLeave={handleStructureDragLeave} onDragOver={handleDragOver} onDrop={handleStructureDrop}
-                className={`rounded-xl transition-all relative ${isDraggingStructure ? 'border-2 border-dashed border-brand-blue bg-brand-blue/10 p-1' : 'border-2 border-transparent'}`}
-            >
-                <div className="relative group shadow-[0_0_8px_2px_rgba(255,0,110,0.5)] rounded-xl">
-                    <div className="absolute top-2 left-2 px-2 py-1 bg-brand-magenta/90 text-white text-xs rounded-full font-semibold backdrop-blur-sm z-10">
-                        STRUCTURE
-                    </div>
-                    {structureImage ? (
-                        <StyleImagePreview file={structureImage} onRemove={onRemoveStructureImage} />
-                    ) : (
-                        <label htmlFor="structure-file-upload" className="cursor-pointer w-full bg-light-surface dark:bg-dark-surface/50 border-2 border-dashed border-light-border dark:border-dark-border rounded-xl flex flex-col justify-center items-center text-light-text-muted dark:text-dark-text-muted hover:border-brand-magenta transition-colors p-6 text-center">
-                            <UploadIcon className="w-8 h-8 mb-2" />
-                            <span className="text-sm font-medium">{t.addStructureImage}</span>
-                            <span className="text-xs mt-1">{t.structureRefTitle} ({t.optional})</span>
-                        </label>
-                    )}
-                    <input id="structure-file-upload" type="file" className="hidden" accept="image/*" onChange={handleStructureFileChange} />
-                </div>
-            </div>
-
-            {/* v1.7: DNA Character Section */}
-            <div className="border-t border-light-border dark:border-dark-border/50 pt-4"></div>
-            <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                    <h3 className="font-semibold text-light-text dark:text-dark-text flex items-center gap-2">
-                        <span>🧬</span>
-                        <span>{t.dnaCharacterTitle}</span>
-                    </h3>
+        <div className="flex flex-col h-full overflow-hidden">
+            {/* Scrollable Content */}
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-4">
+                {/* v1.8: Mode Toggle */}
+                <div className="flex p-0.5 rounded-xl bg-light-surface-accent dark:bg-dark-surface-accent border border-light-border dark:border-dark-border/50 mb-2">
                     <button
-                        onClick={onManageDna}
-                        className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded bg-brand-purple/10 text-brand-purple hover:bg-brand-purple/20 transition-colors"
+                        onClick={() => setAppMode('classic')}
+                        className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${appMode === 'classic' ? 'bg-white dark:bg-dark-surface text-light-text dark:text-dark-text shadow-sm border border-light-border dark:border-dark-border/30' : 'text-light-text-muted dark:text-dark-text-muted hover:text-light-text dark:hover:text-dark-text'}`}
                     >
-                        {t.select}
+                        {t.studioModeToggleClassic}
+                    </button>
+                    <button
+                        onClick={() => setAppMode('studio')}
+                        className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${appMode === 'studio' ? 'bg-gradient-to-r from-brand-yellow to-brand-magenta text-white shadow-sm' : 'text-light-text-muted dark:text-dark-text-muted hover:text-light-text dark:hover:text-dark-text'}`}
+                    >
+                        <SparklesIcon className="w-3.5 h-3.5" />
+                        {t.studioModeToggleStudio}
                     </button>
                 </div>
 
-                {dnaCharacters.length === 0 ? (
-                    <div className="p-3 rounded-xl border border-dashed border-light-border dark:border-dark-border text-center">
-                        <p className="text-xs text-light-text-muted dark:text-dark-text-muted italic">{t.dnaCharacterNone}</p>
-                    </div>
-                ) : (
-                    <div className="flex gap-2 p-1 overflow-x-auto no-scrollbar">
-                        {dnaCharacters.slice(0, 5).map(char => (
-                            <button
-                                key={char.id}
-                                onClick={() => onSelectDna(char.id)}
-                                title={char.name}
-                                className={`flex-shrink-0 w-12 h-12 rounded-full border-2 transition-all relative group ${selectedDnaId === char.id ? 'border-brand-purple shadow-[0_0_10px_rgba(114,9,183,0.5)] scale-110' : 'border-transparent grayscale opacity-70 hover:grayscale-0 hover:opacity-100'}`}
-                            >
-                                {char.thumbnailData ? (
-                                    <img src={char.thumbnailData} alt={char.name} className="w-full h-full object-cover rounded-full" />
-                                ) : (
-                                    <div className="w-full h-full bg-light-surface-accent dark:bg-dark-surface-accent rounded-full flex items-center justify-center text-xs font-bold">
-                                        {char.name.charAt(0).toUpperCase()}
-                                    </div>
-                                )}
-                                {selectedDnaId === char.id && (
-                                    <div className="absolute -top-1 -right-1 bg-brand-purple text-white rounded-full w-4 h-4 flex items-center justify-center">
-                                        <CheckIcon className="w-2.5 h-2.5" />
-                                    </div>
-                                )}
-                            </button>
+                <h3 className="font-semibold text-light-text dark:text-dark-text">{t.refImagesTitle}</h3>
+                <div
+                    onDragEnter={handleRefDragEnter} onDragLeave={handleRefDragLeave} onDragOver={handleDragOver} onDrop={handleRefDrop}
+                    className={`rounded-xl transition-all relative ${isDraggingRef ? 'border-2 border-dashed border-brand-yellow bg-brand-purple/10 p-1' : 'border-2 border-transparent'}`}
+                >
+                    <div className="grid grid-cols-3 gap-3">
+                        {referenceImages.map((file, index) => (
+                            <ImagePreview key={`${file.name}-${file.lastModified}-${index}`} file={file} index={index} onRemove={onRemoveImage} />
                         ))}
-                        {dnaCharacters.length > 5 && (
-                            <button
-                                onClick={onManageDna}
-                                className="flex-shrink-0 w-12 h-12 rounded-full bg-light-surface-accent dark:bg-dark-surface-accent flex items-center justify-center text-sm font-bold opacity-70 hover:opacity-100 transition-opacity"
-                            >
-                                +{dnaCharacters.length - 5}
-                            </button>
+
+                        {referenceImages.length < MAX_USER_IMAGES && (
+                            <div onClick={() => fileInputRef.current?.click()} className="relative group aspect-square rounded-xl shadow-[0_0_12px_3px_rgba(94,139,255,0.5)] bg-light-surface/50 dark:bg-dark-surface/30 flex items-center justify-center cursor-pointer">
+                                <div className="text-light-text-muted dark:text-dark-text-muted text-center">
+                                    <UploadIcon className="w-6 h-6 mx-auto" />
+                                    <span className="text-xs mt-1 block">{t.addImage}</span>
+                                </div>
+                            </div>
                         )}
                     </div>
-                )}
+                </div>
+                <input ref={fileInputRef} id="file-upload" type="file" className="hidden" multiple accept="image/*" onChange={handleFileChange} />
 
-                {selectedDnaId && (
-                    <div className="px-3 py-1.5 rounded-lg bg-brand-purple/10 border border-brand-purple/20 flex items-center justify-between">
-                        <span className="text-xs font-semibold text-brand-purple truncate max-w-[150px]">
-                            {dnaCharacters.find(c => c.id === selectedDnaId)?.name}
-                        </span>
-                        <button onClick={() => onSelectDna(null)} className="text-brand-purple hover:opacity-70">
-                            <XIcon className="w-3.5 h-3.5" />
+                <div className="border-t border-light-border dark:border-dark-border/50"></div>
+
+                <div
+                    onDragEnter={handleStyleDragEnter} onDragLeave={handleStyleDragLeave} onDragOver={handleDragOver} onDrop={handleStyleDrop}
+                    className={`rounded-xl transition-all relative ${isDraggingStyle ? 'border-2 border-dashed border-brand-pink bg-brand-pink/10 p-1' : 'border-2 border-transparent'}`}
+                >
+                    <div className="relative group shadow-[0_0_8px_2px_rgba(255,217,61,0.5)] rounded-xl">
+                        <div className="absolute top-2 left-2 px-2 py-1 bg-brand-yellow/90 text-black text-xs rounded-full font-semibold backdrop-blur-sm z-10">STYLE</div>
+                        {styleImage ? (
+                            <StyleImagePreview file={styleImage} onRemove={onRemoveStyleImage} />
+                        ) : (
+                            <label htmlFor="style-file-upload" className="cursor-pointer w-full bg-light-surface dark:bg-dark-surface/50 border-2 border-dashed border-light-border dark:border-dark-border rounded-xl flex flex-col justify-center items-center text-light-text-muted dark:text-dark-text-muted hover:border-brand-yellow transition-colors p-6 text-center">
+                                <UploadIcon className="w-8 h-8 mb-2" />
+                                <span className="text-sm font-medium">{t.addStyleImage}</span>
+                                <span className="text-xs mt-1">{t.styleRefTitle} ({t.optional})</span>
+                            </label>
+                        )}
+                        <input id="style-file-upload" type="file" className="hidden" accept="image/*" onChange={handleStyleFileChange} />
+                    </div>
+                </div>
+
+                <div className="border-t border-light-border dark:border-dark-border/50"></div>
+
+                <div
+                    onDragEnter={handleStructureDragEnter} onDragLeave={handleStructureDragLeave} onDragOver={handleDragOver} onDrop={handleStructureDrop}
+                    className={`rounded-xl transition-all relative ${isDraggingStructure ? 'border-2 border-dashed border-brand-blue bg-brand-blue/10 p-1' : 'border-2 border-transparent'}`}
+                >
+                    <div className="relative group shadow-[0_0_8px_2px_rgba(255,0,110,0.5)] rounded-xl">
+                        <div className="absolute top-2 left-2 px-2 py-1 bg-brand-magenta/90 text-white text-xs rounded-full font-semibold backdrop-blur-sm z-10">
+                            STRUCTURE
+                        </div>
+                        {structureImage ? (
+                            <StyleImagePreview file={structureImage} onRemove={onRemoveStructureImage} />
+                        ) : (
+                            <label htmlFor="structure-file-upload" className="cursor-pointer w-full bg-light-surface dark:bg-dark-surface/50 border-2 border-dashed border-light-border dark:border-dark-border rounded-xl flex flex-col justify-center items-center text-light-text-muted dark:text-dark-text-muted hover:border-brand-magenta transition-colors p-6 text-center">
+                                <UploadIcon className="w-8 h-8 mb-2" />
+                                <span className="text-sm font-medium">{t.addStructureImage}</span>
+                                <span className="text-xs mt-1">{t.structureRefTitle} ({t.optional})</span>
+                            </label>
+                        )}
+                        <input id="structure-file-upload" type="file" className="hidden" accept="image/*" onChange={handleStructureFileChange} />
+                    </div>
+                </div>
+
+                {/* v1.7: DNA Character Section */}
+                <div className="border-t border-light-border dark:border-dark-border/50 pt-4"></div>
+                <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                        <h3 className="font-semibold text-light-text dark:text-dark-text flex items-center gap-2">
+                            <span>🧬</span>
+                            <span>{t.dnaCharacterTitle}</span>
+                        </h3>
+                        <button
+                            onClick={onManageDna}
+                            className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded bg-brand-purple/10 text-brand-purple hover:bg-brand-purple/20 transition-colors"
+                        >
+                            {t.select}
                         </button>
                     </div>
-                )}
-            </div>
 
-            {/* Control Checkboxes Section */}
-            <div className="border-t border-light-border dark:border-dark-border/50 pt-4"></div>
-            <div className="space-y-3">
-                {/* Precise Reference Mode */}
-                <div className="flex items-start gap-3">
-                    <input
-                        type="checkbox"
-                        id="precise-reference-toggle"
-                        checked={preciseReference}
-                        onChange={(e) => setPreciseReference(e.target.checked)}
-                        className="mt-0.5 w-4 h-4 rounded border-light-border dark:border-dark-border bg-light-surface dark:bg-dark-surface text-brand-purple focus:ring-2 focus:ring-brand-purple focus:ring-offset-0"
-                    />
-                    <label htmlFor="precise-reference-toggle" className="flex-1 cursor-pointer">
-                        <div className="text-sm font-medium text-light-text dark:text-dark-text">
-                            👤 {t.preciseReference}
+                    {dnaCharacters.length === 0 ? (
+                        <div className="p-3 rounded-xl border border-dashed border-light-border dark:border-dark-border text-center">
+                            <p className="text-xs text-light-text-muted dark:text-dark-text-muted italic">{t.dnaCharacterNone}</p>
                         </div>
-                        <div className="text-xs text-light-text-muted dark:text-dark-text-muted mt-0.5">
-                            {t.preciseReferenceTooltip}
-                        </div>
-                    </label>
-                </div>
-
-                {/* Google Search Grounding - v1.5.1: Now available for all models */}
-                <div className="flex items-start gap-3">
-                    <input
-                        type="checkbox"
-                        id="grounding-toggle"
-                        checked={useGrounding}
-                        onChange={(e) => setUseGrounding(e.target.checked)}
-                        className="mt-0.5 w-4 h-4 rounded border-light-border dark:border-dark-border bg-light-surface dark:bg-dark-surface text-brand-yellow focus:ring-2 focus:ring-brand-yellow focus:ring-offset-0"
-                    />
-                    <label htmlFor="grounding-toggle" className="flex-1 cursor-pointer">
-                        <div className="text-sm font-medium text-light-text dark:text-dark-text">
-                            🌐 {t.groundingLabel}
-                        </div>
-                        <div className="text-xs text-light-text-muted dark:text-dark-text-muted mt-0.5">
-                            {t.groundingTooltip}
-                        </div>
-                    </label>
-                </div>
-            </div>
-
-            {/* Style Presets Section - Collapsible v1.7.1 */}
-            <div className="border-t border-light-border dark:border-dark-border/50 pt-3">
-                <button
-                    onClick={() => setShowPresets(!showPresets)}
-                    className="w-full flex items-center justify-between font-semibold text-light-text dark:text-dark-text group hover:text-brand-yellow transition-colors"
-                >
-                    <div className="flex items-center gap-2 text-sm">
-                        <span>🎨</span>
-                        <span>{t.stylePresetsTitle}</span>
-                    </div>
-                    {showPresets ? <ChevronUpIcon className="w-4 h-4 opacity-50 group-hover:opacity-100" /> : <ChevronDownIcon className="w-4 h-4 opacity-50 group-hover:opacity-100" />}
-                </button>
-
-                {showPresets && (
-                    <div className="mt-2 space-y-2 animate-in fade-in slide-in-from-top-1 duration-200">
-                        <select
-                            value={selectedStylePreset || ''}
-                            onChange={(e) => {
-                                const presetId = e.target.value || null;
-                                setSelectedStylePreset(presetId);
-                                if (presetId) {
-                                    const preset = STYLE_PRESETS.find(p => p.id === presetId);
-                                    if (preset) {
-                                        setEditedPrompt(prev => {
-                                            const cleanPrompt = prev.replace(/,\s*(oil painting style|watercolor style|anime style|pixel art style|vector illustration|professional product photography|professional portrait photography|cinematic film style|street photography|macro photography|isometric view|UI\/UX design mockup|infographic design|social media post design|typography art)[^,]*/gi, '');
-                                            return cleanPrompt + preset.promptSuffix;
-                                        });
-                                    }
-                                }
-                            }}
-                            className="w-full px-3 py-1.5 rounded-lg bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border text-light-text dark:text-dark-text text-xs focus:outline-none focus:ring-2 focus:ring-brand-yellow/50"
-                        >
-                            <option value="">{language === 'it' ? 'Nessuno' : 'None'}</option>
-                            {STYLE_PRESETS.map(preset => (
-                                <option key={preset.id} value={preset.id}>
-                                    {preset.icon} {language === 'it' ? preset.nameIt : preset.name}
-                                </option>
+                    ) : (
+                        <div className="flex gap-2 p-1 overflow-x-auto no-scrollbar">
+                            {dnaCharacters.slice(0, 5).map(char => (
+                                <button
+                                    key={char.id}
+                                    onClick={() => onSelectDna(char.id)}
+                                    title={char.name}
+                                    className={`flex-shrink-0 w-12 h-12 rounded-full border-2 transition-all relative group ${selectedDnaId === char.id ? 'border-brand-purple shadow-[0_0_10px_rgba(114,9,183,0.5)] scale-110' : 'border-transparent grayscale opacity-70 hover:grayscale-0 hover:opacity-100'}`}
+                                >
+                                    {char.thumbnailData ? (
+                                        <img src={char.thumbnailData} alt={char.name} className="w-full h-full object-cover rounded-full" />
+                                    ) : (
+                                        <div className="w-full h-full bg-light-surface-accent dark:bg-dark-surface-accent rounded-full flex items-center justify-center text-xs font-bold">
+                                            {char.name.charAt(0).toUpperCase()}
+                                        </div>
+                                    )}
+                                    {selectedDnaId === char.id && (
+                                        <div className="absolute -top-1 -right-1 bg-brand-purple text-white rounded-full w-4 h-4 flex items-center justify-center">
+                                            <CheckIcon className="w-2.5 h-2.5" />
+                                        </div>
+                                    )}
+                                </button>
                             ))}
-                        </select>
-                        {selectedStylePreset && (
-                            <p className="text-[10px] text-light-text-muted dark:text-dark-text-muted leading-tight">
-                                {STYLE_PRESETS.find(p => p.id === selectedStylePreset)?.[language === 'it' ? 'descriptionIt' : 'description']}
-                            </p>
-                        )}
-                    </div>
-                )}
-            </div>
+                            {dnaCharacters.length > 5 && (
+                                <button
+                                    onClick={onManageDna}
+                                    className="flex-shrink-0 w-12 h-12 rounded-full bg-light-surface-accent dark:bg-dark-surface-accent flex items-center justify-center text-sm font-bold opacity-70 hover:opacity-100 transition-opacity"
+                                >
+                                    +{dnaCharacters.length - 5}
+                                </button>
+                            )}
+                        </div>
+                    )}
 
-            {/* Physics Controls Section - Collapsible v1.7.1 */}
-            <div className="border-t border-light-border dark:border-dark-border/50 pt-3">
-                <button
-                    onClick={() => setShowPhysics(!showPhysics)}
-                    className="w-full flex items-center justify-between font-semibold text-light-text dark:text-dark-text group hover:text-brand-magenta transition-colors"
-                >
-                    <div className="flex items-center gap-2 text-sm">
-                        <span>⚙️</span>
-                        <span>{t.physicsControlTitle}</span>
-                    </div>
-                    {showPhysics ? <ChevronUpIcon className="w-4 h-4 opacity-50 group-hover:opacity-100" /> : <ChevronDownIcon className="w-4 h-4 opacity-50 group-hover:opacity-100" />}
-                </button>
+                    {selectedDnaId && (
+                        <div className="px-3 py-1.5 rounded-lg bg-brand-purple/10 border border-brand-purple/20 flex items-center justify-between">
+                            <span className="text-xs font-semibold text-brand-purple truncate max-w-[150px]">
+                                {dnaCharacters.find(c => c.id === selectedDnaId)?.name}
+                            </span>
+                            <button onClick={() => onSelectDna(null)} className="text-brand-purple hover:opacity-70">
+                                <XIcon className="w-3.5 h-3.5" />
+                            </button>
+                        </div>
+                    )}
+                </div>
 
-                {showPhysics && (
-                    <div className="mt-3 space-y-3 animate-in fade-in slide-in-from-top-1 duration-200">
-                        {/* Lighting Control */}
-                        <div className="space-y-1">
-                            <label className="text-[10px] font-bold uppercase tracking-wider text-light-text-muted dark:text-dark-text-muted">
-                                {language === 'it' ? 'Illuminazione' : 'Lighting'}
-                            </label>
-                            <select
-                                value={selectedLighting || ''}
-                                onChange={(e) => {
-                                    const lightingId = e.target.value || null;
-                                    setSelectedLighting(lightingId);
-                                    if (lightingId) {
-                                        const preset = PHYSICS_PRESETS.lighting.find(p => p.id === lightingId);
-                                        if (preset) {
-                                            setEditedPrompt(prev => {
-                                                const cleanPrompt = prev.replace(/,\s*(soft studio lighting|golden hour lighting|dramatic lighting|neon lighting|natural daylight)[^,]*/gi, '');
-                                                return cleanPrompt + ', ' + preset.prompt;
-                                            });
-                                        }
-                                    }
-                                }}
-                                className="w-full px-3 py-1.5 rounded-lg bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border text-light-text dark:text-dark-text text-xs focus:outline-none focus:ring-2 focus:ring-brand-yellow/50"
+                {/* Control Checkboxes Section */}
+                <div className="border-t border-light-border dark:border-dark-border/50 pt-4"></div>
+                <div className="space-y-3">
+                    {/* Precise Reference Mode */}
+                    <div className="flex items-start gap-3">
+                        <input
+                            type="checkbox"
+                            id="precise-reference-toggle"
+                            checked={preciseReference}
+                            onChange={(e) => setPreciseReference(e.target.checked)}
+                            className="mt-0.5 w-4 h-4 rounded border-light-border dark:border-dark-border bg-light-surface dark:bg-dark-surface text-brand-purple focus:ring-2 focus:ring-brand-purple focus:ring-offset-0"
+                        />
+                        <label htmlFor="precise-reference-toggle" className="flex-1 cursor-pointer">
+                            <div className="text-sm font-medium text-light-text dark:text-dark-text">
+                                👤 {t.preciseReference}
+                            </div>
+                            <div className="text-xs text-light-text-muted dark:text-dark-text-muted mt-0.5">
+                                {t.preciseReferenceTooltip}
+                            </div>
+                        </label>
+                    </div>
+
+                    {/* Google Search Grounding - v1.5.1: Now available for all models */}
+                    <div className="flex items-start gap-3">
+                        <input
+                            type="checkbox"
+                            id="grounding-toggle"
+                            checked={useGrounding}
+                            onChange={(e) => setUseGrounding(e.target.checked)}
+                            className="mt-0.5 w-4 h-4 rounded border-light-border dark:border-dark-border bg-light-surface dark:bg-dark-surface text-brand-yellow focus:ring-2 focus:ring-brand-yellow focus:ring-offset-0"
+                        />
+                        <label htmlFor="grounding-toggle" className="flex-1 cursor-pointer">
+                            <div className="text-sm font-medium text-light-text dark:text-dark-text">
+                                🌐 {t.groundingLabel}
+                            </div>
+                            <div className="text-xs text-light-text-muted dark:text-dark-text-muted mt-0.5">
+                                {t.groundingTooltip}
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                {appMode === 'classic' ? (
+                    <>
+                        {/* v1.4: Style Presets Section - Collapsible v1.7.1 */}
+                        <div className="border-t border-light-border dark:border-dark-border/50 pt-3">
+                            <button
+                                onClick={() => setShowPresets(!showPresets)}
+                                className="w-full flex items-center justify-between font-semibold text-light-text dark:text-dark-text group hover:text-brand-yellow transition-colors"
                             >
-                                <option value="">{language === 'it' ? 'Nessuna' : 'None'}</option>
-                                {PHYSICS_PRESETS.lighting.map(preset => (
-                                    <option key={preset.id} value={preset.id}>
-                                        {language === 'it' ? preset.nameIt : preset.name}
-                                    </option>
-                                ))}
-                            </select>
+                                <div className="flex items-center gap-2 text-sm">
+                                    <span>🎨</span>
+                                    <span>{t.stylePresetsTitle}</span>
+                                </div>
+                                {showPresets ? <ChevronUpIcon className="w-4 h-4 opacity-50 group-hover:opacity-100" /> : <ChevronDownIcon className="w-4 h-4 opacity-50 group-hover:opacity-100" />}
+                            </button>
+
+                            {showPresets && (
+                                <div className="mt-2 space-y-2 animate-in fade-in slide-in-from-top-1 duration-200">
+                                    <select
+                                        value={selectedStylePreset || ''}
+                                        onChange={(e) => {
+                                            const presetId = e.target.value || null;
+                                            setSelectedStylePreset(presetId);
+                                            if (presetId) {
+                                                const preset = STYLE_PRESETS.find(p => p.id === presetId);
+                                                if (preset) {
+                                                    setEditedPrompt(prev => {
+                                                        const cleanPrompt = prev.replace(/,\s*(oil painting style|watercolor style|anime style|pixel art style|vector illustration|professional product photography|professional portrait photography|cinematic film style|street photography|macro photography|isometric view|UI\/UX design mockup|infographic design|social media post design|typography art)[^,]*/gi, '');
+                                                        return cleanPrompt + preset.promptSuffix;
+                                                    });
+                                                }
+                                            }
+                                        }}
+                                        className="w-full px-3 py-1.5 rounded-lg bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border text-light-text dark:text-dark-text text-xs focus:outline-none focus:ring-2 focus:ring-brand-yellow/50"
+                                    >
+                                        <option value="">{language === 'it' ? 'Nessuno' : 'None'}</option>
+                                        {STYLE_PRESETS.map(preset => (
+                                            <option key={preset.id} value={preset.id}>
+                                                {preset.icon} {language === 'it' ? preset.nameIt : preset.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    {selectedStylePreset && (
+                                        <p className="text-[10px] text-light-text-muted dark:text-dark-text-muted leading-tight">
+                                            {STYLE_PRESETS.find(p => p.id === selectedStylePreset)?.[language === 'it' ? 'descriptionIt' : 'description']}
+                                        </p>
+                                    )}
+                                </div>
+                            )}
                         </div>
 
-                        {/* Camera Control */}
-                        <div className="space-y-1">
-                            <label className="text-[10px] font-bold uppercase tracking-wider text-light-text-muted dark:text-dark-text-muted">
-                                {language === 'it' ? 'Fotocamera' : 'Camera'}
-                            </label>
-                            <select
-                                value={selectedCamera || ''}
-                                onChange={(e) => {
-                                    const cameraId = e.target.value || null;
-                                    setSelectedCamera(cameraId);
-                                    if (cameraId) {
-                                        const preset = PHYSICS_PRESETS.camera.find(p => p.id === cameraId);
-                                        if (preset) {
-                                            setEditedPrompt(prev => {
-                                                const cleanPrompt = prev.replace(/,\s*(wide angle lens|portrait lens|macro lens|telephoto lens|fisheye lens)[^,]*/gi, '');
-                                                return cleanPrompt + ', ' + preset.prompt;
-                                            });
-                                        }
-                                    }
-                                }}
-                                className="w-full px-3 py-1.5 rounded-lg bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border text-light-text dark:text-dark-text text-xs focus:outline-none focus:ring-2 focus:ring-brand-yellow/50"
+                        {/* Physics Controls Section - Collapsible v1.7.1 */}
+                        <div className="border-t border-light-border dark:border-dark-border/50 pt-3">
+                            <button
+                                onClick={() => setShowPhysics(!showPhysics)}
+                                className="w-full flex items-center justify-between font-semibold text-light-text dark:text-dark-text group hover:text-brand-magenta transition-colors"
                             >
-                                <option value="">{language === 'it' ? 'Nessuna' : 'None'}</option>
-                                {PHYSICS_PRESETS.camera.map(preset => (
-                                    <option key={preset.id} value={preset.id}>
-                                        {language === 'it' ? preset.nameIt : preset.name}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
+                                <div className="flex items-center gap-2 text-sm">
+                                    <span>⚙️</span>
+                                    <span>{t.physicsControlTitle}</span>
+                                </div>
+                                {showPhysics ? <ChevronUpIcon className="w-4 h-4 opacity-50 group-hover:opacity-100" /> : <ChevronDownIcon className="w-4 h-4 opacity-50 group-hover:opacity-100" />}
+                            </button>
 
-                        {/* Focus Control */}
-                        <div className="space-y-1">
-                            <label className="text-[10px] font-bold uppercase tracking-wider text-light-text-muted dark:text-dark-text-muted">
-                                {language === 'it' ? 'Messa a Fuoco' : 'Focus'}
-                            </label>
-                            <select
-                                value={selectedFocus || ''}
-                                onChange={(e) => {
-                                    const focusId = e.target.value || null;
-                                    setSelectedFocus(focusId);
-                                    if (focusId) {
-                                        const preset = PHYSICS_PRESETS.focus.find(p => p.id === focusId);
-                                        if (preset) {
-                                            setEditedPrompt(prev => {
-                                                const cleanPrompt = prev.replace(/,\s*(shallow depth of field|tack sharp|cinematic depth of field|tilt-shift effect|soft focus)[^,]*/gi, '');
-                                                return cleanPrompt + ', ' + preset.prompt;
-                                            });
-                                        }
-                                    }
-                                }}
-                                className="w-full px-3 py-1.5 rounded-lg bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border text-light-text dark:text-dark-text text-xs focus:outline-none focus:ring-2 focus:ring-brand-yellow/50"
-                            >
-                                <option value="">{language === 'it' ? 'Nessuna' : 'None'}</option>
-                                {PHYSICS_PRESETS.focus.map(preset => (
-                                    <option key={preset.id} value={preset.id}>
-                                        {language === 'it' ? preset.nameIt : preset.name}
-                                    </option>
-                                ))}
-                            </select>
+                            {showPhysics && (
+                                <div className="mt-3 space-y-3 animate-in fade-in slide-in-from-top-1 duration-200">
+                                    {/* Lighting Control */}
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] font-bold uppercase tracking-wider text-light-text-muted dark:text-dark-text-muted">
+                                            {language === 'it' ? 'Illuminazione' : 'Lighting'}
+                                        </label>
+                                        <select
+                                            value={selectedLighting || ''}
+                                            onChange={(e) => {
+                                                const lightingId = e.target.value || null;
+                                                setSelectedLighting(lightingId);
+                                                if (lightingId) {
+                                                    const preset = PHYSICS_PRESETS.lighting.find(p => p.id === lightingId);
+                                                    if (preset) {
+                                                        setEditedPrompt(prev => {
+                                                            const cleanPrompt = prev.replace(/,\s*(soft studio lighting|golden hour lighting|dramatic lighting|neon lighting|natural daylight)[^,]*/gi, '');
+                                                            return cleanPrompt + ', ' + preset.prompt;
+                                                        });
+                                                    }
+                                                }
+                                            }}
+                                            className="w-full px-3 py-1.5 rounded-lg bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border text-light-text dark:text-dark-text text-xs focus:outline-none focus:ring-2 focus:ring-brand-yellow/50"
+                                        >
+                                            <option value="">{language === 'it' ? 'Nessuna' : 'None'}</option>
+                                            {PHYSICS_PRESETS.lighting.map(preset => (
+                                                <option key={preset.id} value={preset.id}>
+                                                    {language === 'it' ? preset.nameIt : preset.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    {/* Camera Control */}
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] font-bold uppercase tracking-wider text-light-text-muted dark:text-dark-text-muted">
+                                            {language === 'it' ? 'Fotocamera' : 'Camera'}
+                                        </label>
+                                        <select
+                                            value={selectedCamera || ''}
+                                            onChange={(e) => {
+                                                const cameraId = e.target.value || null;
+                                                setSelectedCamera(cameraId);
+                                                if (cameraId) {
+                                                    const preset = PHYSICS_PRESETS.camera.find(p => p.id === cameraId);
+                                                    if (preset) {
+                                                        setEditedPrompt(prev => {
+                                                            const cleanPrompt = prev.replace(/,\s*(wide angle lens|portrait lens|macro lens|telephoto lens|fisheye lens)[^,]*/gi, '');
+                                                            return cleanPrompt + ', ' + preset.prompt;
+                                                        });
+                                                    }
+                                                }
+                                            }}
+                                            className="w-full px-3 py-1.5 rounded-lg bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border text-light-text dark:text-dark-text text-xs focus:outline-none focus:ring-2 focus:ring-brand-yellow/50"
+                                        >
+                                            <option value="">{language === 'it' ? 'Nessuna' : 'None'}</option>
+                                            {PHYSICS_PRESETS.camera.map(preset => (
+                                                <option key={preset.id} value={preset.id}>
+                                                    {language === 'it' ? preset.nameIt : preset.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    {/* Focus Control */}
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] font-bold uppercase tracking-wider text-light-text-muted dark:text-dark-text-muted">
+                                            {language === 'it' ? 'Messa a Fuoco' : 'Focus'}
+                                        </label>
+                                        <select
+                                            value={selectedFocus || ''}
+                                            onChange={(e) => {
+                                                const focusId = e.target.value || null;
+                                                setSelectedFocus(focusId);
+                                                if (focusId) {
+                                                    const preset = PHYSICS_PRESETS.focus.find(p => p.id === focusId);
+                                                    if (preset) {
+                                                        setEditedPrompt(prev => {
+                                                            const cleanPrompt = prev.replace(/,\s*(shallow depth of field|tack sharp|cinematic depth of field|tilt-shift effect|soft focus)[^,]*/gi, '');
+                                                            return cleanPrompt + ', ' + preset.prompt;
+                                                        });
+                                                    }
+                                                }
+                                            }}
+                                            className="w-full px-3 py-1.5 rounded-lg bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border text-light-text dark:text-dark-text text-xs focus:outline-none focus:ring-2 focus:ring-brand-yellow/50"
+                                        >
+                                            <option value="">{language === 'it' ? 'Nessuna' : 'None'}</option>
+                                            {PHYSICS_PRESETS.focus.map(preset => (
+                                                <option key={preset.id} value={preset.id}>
+                                                    {language === 'it' ? preset.nameIt : preset.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+                            )}
                         </div>
-                    </div>
+                    </>
+                ) : (
+                    <StudioPanel t={t} language={language} studioConfig={studioConfig} setStudioConfig={setStudioConfig} />
                 )}
             </div>
         </div>
@@ -1774,11 +1859,11 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose }) => {
         const subject = encodeURIComponent(`Feedback for Generentolo`);
         const body = encodeURIComponent(
             `Rating: ${rating}/5
-Name: ${name}
-Email: ${email}
+                                                                Name: ${name}
+                                                                Email: ${email}
 
-Message:
-${message}`
+                                                                Message:
+                                                                ${message}`
         );
         window.location.href = `mailto:bergamasterz@gmail.com?subject=${subject}&body=${body}`;
         onClose();
@@ -2189,6 +2274,24 @@ export default function App() {
     const [selectedDnaId, setSelectedDnaId] = useState<string | null>(null);
     const [isDnaLoading, setIsDnaLoading] = useState(false);
 
+    // v1.8: Studio Mode
+    const [appMode, setAppMode] = useState<'classic' | 'studio'>('classic');
+    const [studioConfig, setStudioConfig] = useState<{
+        camera?: string;
+        lens?: string;
+        focal?: string;
+        lightDir?: string;
+        lightQuality?: 'soft' | 'hard';
+        lightColor?: string;
+        wardrobeGender?: 'male' | 'female' | 'unisex';
+        wardrobeTop?: string;
+        wardrobeOuter?: string;
+        wardrobeBottom?: string;
+        wardrobeSet?: string;
+        shot?: string;
+        kit?: string;
+    }>({});
+
     // v1.4: New features states
     const [useGrounding, setUseGrounding] = useState(false); // Google Search Grounding
     const [selectedStylePreset, setSelectedStylePreset] = useState<string | null>(null);
@@ -2461,6 +2564,62 @@ export default function App() {
                             console.error("Failed to convert DNA thumbnail to file", e);
                         }
                     }
+                }
+            }
+
+            // v1.8: Studio Mode Prompt Injection
+            if (appMode === 'studio') {
+                const studioSnippets: string[] = [];
+
+                if (studioConfig.camera) {
+                    const camera = CAMERAS.find(c => c.id === studioConfig.camera);
+                    if (camera) studioSnippets.push(camera.prompt);
+                }
+                if (studioConfig.lens) {
+                    const lens = LENSES.find(l => l.id === studioConfig.lens);
+                    if (lens) studioSnippets.push(lens.prompt);
+                }
+                if (studioConfig.focal) {
+                    const focal = FOCAL_LENGTHS.find(f => f.id === studioConfig.focal);
+                    if (focal) studioSnippets.push(focal.prompt);
+                }
+                if (studioConfig.lightDir) {
+                    const light = LIGHT_DIRECTIONS.find(l => l.id === studioConfig.lightDir);
+                    if (light) studioSnippets.push(light.prompt);
+                }
+                if (studioConfig.lightQuality) {
+                    studioSnippets.push(studioConfig.lightQuality === 'soft' ? 'soft lighting' : 'hard contrast lighting');
+                }
+                if (studioConfig.lightColor) {
+                    studioSnippets.push(`${studioConfig.lightColor} colored light`);
+                }
+                if (studioConfig.wardrobeTop) {
+                    const top = WARDROBE_CATEGORIES.tops.find(t => t.id === studioConfig.wardrobeTop);
+                    if (top) studioSnippets.push(top.prompt);
+                }
+                if (studioConfig.wardrobeOuter) {
+                    const outer = WARDROBE_CATEGORIES.outerwear.find(o => o.id === studioConfig.wardrobeOuter);
+                    if (outer) studioSnippets.push(outer.prompt);
+                }
+                if (studioConfig.wardrobeBottom) {
+                    const bottom = WARDROBE_CATEGORIES.bottoms.find(b => b.id === studioConfig.wardrobeBottom);
+                    if (bottom) studioSnippets.push(bottom.prompt);
+                }
+                if (studioConfig.wardrobeSet) {
+                    const set = WARDROBE_CATEGORIES.sets.find(s => s.id === studioConfig.wardrobeSet);
+                    if (set) studioSnippets.push(set.prompt);
+                }
+                if (studioConfig.shot) {
+                    const shot = SHOTS.find(s => s.id === studioConfig.shot);
+                    if (shot) studioSnippets.push(shot.prompt);
+                }
+                if (studioConfig.kit) {
+                    const kit = PRODUCTION_KITS.find(k => k.id === studioConfig.kit);
+                    if (kit) studioSnippets.push(kit.prompt);
+                }
+
+                if (studioSnippets.length > 0) {
+                    cleanedPrompt = `${cleanedPrompt}, ${studioSnippets.join(', ')}`;
                 }
             }
 
@@ -3166,6 +3325,10 @@ export default function App() {
                             selectedDnaId={selectedDnaId}
                             onSelectDna={handleSelectDna}
                             onManageDna={() => setIsDnaModalOpen(true)}
+                            appMode={appMode}
+                            setAppMode={setAppMode}
+                            studioConfig={studioConfig}
+                            setStudioConfig={setStudioConfig}
                         />
                     </aside>
 

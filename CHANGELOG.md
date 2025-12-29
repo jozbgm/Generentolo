@@ -7,6 +7,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.8.0] - 2025-12-29 🎞️
+
+### 🎉 MAJOR RELEASE - Virtual Studio & Cinema Mode
+
+This major update introduces professional-grade cinematography controls, allowing users to simulate high-end film production environments directly within Generentolo.
+
+### ✨ Added
+
+#### Cinema Studio Mode
+- **Cinema Rig**:
+  - Professional camera model selection (Arri Alexa 35, Red V-Raptor, Sony Venice 2, IMAX 70mm, etc.)
+  - High-end lens types including Anamorphic, Zeiss Ultra Primes, and vintage Helios 44-2 lenses
+  - Precise focal length controls (14mm to 135mm telephoto)
+- **Light Forge**:
+  - Dynamic light direction controls (God rays, Rim lighting, Rembrandt style, Bottom/Horror)
+  - Light quality toggle (Soft/Diffused vs Hard/Sharp)
+  - Advanced color picker for atmospheric lighting effects
+- **Wardrobe Studio**:
+  - Gendered clothing presets (Tops, Outerwear, Bottoms, Full Sets)
+  - Fashion-forward categories from high-end designer aesthetics
+- **Production Shots**:
+  - One-click grid for standard cinematic shot types (Frontal, Profile, Hero Low-Angle, Bird's eye)
+- **Production Kits**:
+  - **Urban Cut**: Paparazzi street photography simulation
+  - **BTS**: "Behind the Scenes" meta-generation showing crew and equipment
+  - **Billboard Ad**: High-end commercial commercial look
+
+#### UI/UX Enhancements
+- **Mode Toggle**: Seamlessly switch between Classic (Standard) and Studio (Pro) modes
+- **Refined Scrollbars**: Global and local custom scrollbar styling for a cleaner sidebar interface
+- **Optimized Layout**: Better sidebar containment for complex studio configurations
+
+### 🎨 Changed
+- Sidebar components refactored for better performance and conditional rendering
+- Unified Studio state management for consistent prompt injection
+- Enhanced prompt building logic to integrate technical cinematic parameters
+
+---
+
 ## [1.0.0] - 2025-11-21 🚀
 
 ### 🎉 MAJOR RELEASE - Nano Banana PRO 3.0 Integration
