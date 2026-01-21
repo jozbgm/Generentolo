@@ -1129,14 +1129,12 @@ export const generateImage = async (
             }
         }
 
-        // v1.3: Add abort signal support
+        // v1.3: Add abort signal and long timeout to config
         if (abortSignal) {
-            config.abortSignal = abortSignal;
+            (config as any).abortSignal = abortSignal;
         }
-
-        // v1.3: Add timeout via httpOptions
-        config.httpOptions = {
-            timeout: model === 'gemini-3-pro-image-preview' ? 180000 : 90000 // 3min for Pro, 1.5min for Flash
+        (config as any).httpOptions = {
+            timeout: model === 'gemini-3-pro-image-preview' ? 300000 : 120000, // 5min for Pro, 2min for Flash
         };
 
         console.log(`🚀 Model: ${model} | Resolution: ${resolution} | References: ${referenceFiles.length}`);
@@ -1205,24 +1203,26 @@ export const generateImage = async (
                     throw new Error(msg);
                 }
 
-                // v1.3: Check for timeout
+                // v1.3: Check for timeout - now handled by retry logic below
                 if (errorMessage.includes('timeout') || errorMessage.includes('TIMEOUT')) {
-                    const timeoutMs = config.httpOptions?.timeout || 90000;
-                    const msg = language === 'it'
-                        ? `⏱️ Timeout dopo ${timeoutMs / 1000}s. ${model === 'gemini-3-pro-image-preview' ? 'Nano Banana Pro richiede più tempo.' : ''} Prova: 1) Riprova 2) Usa meno immagini 3) Semplifica prompt 4) Usa Nano Banana Flash.`
-                        : `⏱️ Timeout after ${timeoutMs / 1000}s. ${model === 'gemini-3-pro-image-preview' ? 'Nano Banana Pro requires more time.' : ''} Try: 1) Retry 2) Fewer images 3) Simpler prompt 4) Use Nano Banana Flash.`;
-                    throw new Error(msg);
+                    console.warn(`⏱️ Attempt ${attempt + 1} timed out, retrying...`);
                 }
 
                 // Check if error is retriable (500, 503, 429, network errors)
                 const isRetriable =
                     errorMessage.includes('500') ||
                     errorMessage.includes('503') ||
+                    errorMessage.includes('504') || // Gateway Timeout
                     errorMessage.includes('INTERNAL') ||
                     errorMessage.includes('UNAVAILABLE') ||
                     errorMessage.includes('overloaded') ||
                     errorMessage.includes('429') ||
-                    errorMessage.includes('RESOURCE_EXHAUSTED');
+                    errorMessage.includes('RESOURCE_EXHAUSTED') ||
+                    errorMessage.includes('deadline') ||
+                    errorMessage.includes('DEADLINE') ||
+                    errorMessage.includes('expired') ||
+                    errorMessage.includes('timeout') ||
+                    errorMessage.includes('TIMEOUT');
 
                 if (isRetriable && attempt < MAX_RETRIES - 1) {
                     console.warn(`⚠️ Retriable server error on attempt ${attempt + 1}/${MAX_RETRIES}:`, errorMessage);
@@ -1610,6 +1610,8 @@ DO NOT add, remove, or modify any elements. This is a faithful high-resolution r
         };
 
         console.log(`🔍 Upscaling to ${targetResolution.toUpperCase()} with aspect ratio ${aspectRatio}`);
+
+        (config as any).httpOptions = { timeout: 300000 };
 
         const result = await ai.models.generateContent({
             model: 'gemini-3-pro-image-preview', // Nano Banana Pro - supports up to 4K
