@@ -11,12 +11,13 @@ interface FloatingActionBarProps {
     // Actions
     onGenerate: () => void;
     onAbortGeneration: () => void; // v1.3
-    onEnhancePrompt: () => void;
-    onGenerate3Prompts: () => void;
+
+    // v1.9 Pro: Auto Enhance
+    autoEnhance: boolean;
+    onAutoEnhanceChange: (enabled: boolean) => void;
 
     // State
     isLoading: boolean;
-    isEnhancing: boolean;
     hasReferences: boolean;
 
     // Controls
@@ -52,10 +53,9 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
     promptTextareaRef,
     onGenerate,
     onAbortGeneration,
-    onEnhancePrompt,
-    onGenerate3Prompts,
+    autoEnhance,
+    onAutoEnhanceChange,
     isLoading,
-    isEnhancing,
     hasReferences,
     aspectRatio,
     onAspectRatioChange,
@@ -384,31 +384,56 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                             </div>
                         )}
 
-                        {/* v0.7: Precise Reference Toggle Switch */}
-                        {hasReferences && (
-                            <div className="relative group/tooltip flex items-center gap-2 lg:gap-2.5 px-2 lg:px-3 py-1.5 lg:py-2 bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-lg">
-                                <span className="text-base lg:text-lg" title={t.preciseReferenceTooltip}>
-                                    👨
-                                </span>
-                                <button
-                                    onClick={() => onPreciseReferenceChange(!preciseReference)}
-                                    className={`relative inline-flex h-5 lg:h-6 w-9 lg:w-11 items-center rounded-full transition-all duration-300 ${preciseReference
-                                        ? 'bg-yellow-400 shadow-[0_0_10px_rgba(250,204,21,0.5)]'
-                                        : 'bg-gray-300 dark:bg-gray-600'
+                        {/* v1.9: Auto Enhance Toggle Switch (Always visible) */}
+                        <div className="relative group/tooltip flex items-center gap-2 lg:gap-2.5 px-2 lg:px-3 py-1.5 lg:py-2 bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-lg">
+                            <span className="text-base lg:text-lg" title={t.autoEnhanceTooltip || "Auto Enhance Prompt"}>
+                                ✨
+                            </span>
+                            <button
+                                onClick={() => onAutoEnhanceChange(!autoEnhance)}
+                                className={`relative inline-flex h-5 lg:h-6 w-9 lg:w-11 items-center rounded-full transition-all duration-300 ${autoEnhance
+                                    ? 'bg-brand-purple shadow-[0_0_10px_rgba(139,69,255,0.5)]'
+                                    : 'bg-gray-300 dark:bg-gray-600'
+                                    }`}
+                                disabled={isLoading}
+                                title={t.autoEnhance || "Auto Enhance"}
+                            >
+                                <span
+                                    className={`inline-block h-4 lg:h-5 w-4 lg:w-5 transform rounded-full bg-white shadow-lg transition-transform duration-300 ${autoEnhance ? 'translate-x-5 lg:translate-x-6' : 'translate-x-0.5'
                                         }`}
-                                    disabled={isLoading}
-                                >
-                                    <span
-                                        className={`inline-block h-4 lg:h-5 w-4 lg:w-5 transform rounded-full bg-white shadow-lg transition-transform duration-300 ${preciseReference ? 'translate-x-5 lg:translate-x-6' : 'translate-x-0.5'
-                                            }`}
-                                    />
-                                </button>
-                                {/* Tooltip */}
-                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-2 bg-black/90 text-white text-xs rounded-lg opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 pointer-events-none z-50">
-                                    {t.preciseReferenceTooltip}
-                                </div>
+                                />
+                            </button>
+                            {/* Tooltip */}
+                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-2 bg-black/90 text-white text-xs rounded-lg opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 pointer-events-none z-50">
+                                {t.autoEnhanceTooltip || "Automatically optimizes your prompt using AI before generating. May increase waiting time."}
                             </div>
-                        )}
+                        </div>
+
+                        {/* v0.7: Precise Reference Toggle Switch (Always visible in v1.9) */}
+                        <div className={`relative group/tooltip flex items-center gap-2 lg:gap-2.5 px-2 lg:px-3 py-1.5 lg:py-2 bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-lg ${!hasReferences ? 'opacity-50 grayscale' : ''}`}>
+                            <span className="text-base lg:text-lg" title={t.preciseReferenceTooltip}>
+                                👨
+                            </span>
+                            <button
+                                onClick={() => hasReferences && onPreciseReferenceChange(!preciseReference)}
+                                className={`relative inline-flex h-5 lg:h-6 w-9 lg:w-11 items-center rounded-full transition-all duration-300 ${preciseReference
+                                    ? 'bg-yellow-400 shadow-[0_0_10px_rgba(250,204,21,0.5)]'
+                                    : 'bg-gray-300 dark:bg-gray-600'
+                                    }`}
+                                disabled={isLoading || !hasReferences}
+                            >
+                                <span
+                                    className={`inline-block h-4 lg:h-5 w-4 lg:w-5 transform rounded-full bg-white shadow-lg transition-transform duration-300 ${preciseReference ? 'translate-x-5 lg:translate-x-6' : 'translate-x-0.5'
+                                        }`}
+                                />
+                            </button>
+                            {/* Tooltip */}
+                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-2 bg-black/90 text-white text-xs rounded-lg opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 pointer-events-none z-50">
+                                {!hasReferences
+                                    ? (language === 'it' ? 'Carica un\'immagine di riferimento per attivare.' : 'Upload a reference image to activate.')
+                                    : t.preciseReferenceTooltip}
+                            </div>
+                        </div>
 
                         {/* Primary Action - HERO BUTTON */}
                         <button
@@ -608,21 +633,7 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
 
                         {/* All Controls Row */}
                         <div className="flex items-center gap-1.5 lg:gap-2 flex-wrap">
-                            {/* Quick Actions */}
-                            <button
-                                onClick={onEnhancePrompt}
-                                disabled={isEnhancing || !prompt}
-                                className="px-2 lg:px-3 py-1.5 bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-lg text-xs hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 active:scale-95 transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-                            >
-                                ✨ <span className="hidden sm:inline">Enhance</span>
-                            </button>
-                            <button
-                                onClick={onGenerate3Prompts}
-                                disabled={isEnhancing || !hasReferences}
-                                className="px-2 lg:px-3 py-1.5 bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-lg text-xs hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 active:scale-95 transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-                            >
-                                📝 <span className="hidden sm:inline">3 Prompts</span>
-                            </button>
+                            {/* v1.9: Manual enhance/3-prompts buttons removed */}
 
                             {/* Divider */}
                             <div className="h-6 w-px bg-light-border dark:bg-dark-border hidden sm:block"></div>
@@ -800,31 +811,56 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                                 </div>
                             )}
 
-                            {/* v0.7: Precise Reference Toggle Switch (Expanded Mode) */}
-                            {hasReferences && (
-                                <div className="relative group/tooltip flex items-center gap-2 lg:gap-2.5 px-2 lg:px-3 py-1.5 bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-lg">
-                                    <span className="text-base lg:text-lg" title={t.preciseReferenceTooltip}>
-                                        👨
-                                    </span>
-                                    <button
-                                        onClick={() => onPreciseReferenceChange(!preciseReference)}
-                                        className={`relative inline-flex h-5 lg:h-6 w-9 lg:w-11 items-center rounded-full transition-all duration-300 ${preciseReference
-                                            ? 'bg-yellow-400 shadow-[0_0_10px_rgba(250,204,21,0.5)]'
-                                            : 'bg-gray-300 dark:bg-gray-600'
+                            {/* v1.9: Auto Enhance Toggle Switch (Expanded Mode) */}
+                            <div className="relative group/tooltip flex items-center gap-2 lg:gap-2.5 px-2 lg:px-3 py-1.5 bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-lg">
+                                <span className="text-base lg:text-lg" title={t.autoEnhanceTooltip || "Auto Enhance Prompt"}>
+                                    ✨
+                                </span>
+                                <button
+                                    onClick={() => onAutoEnhanceChange(!autoEnhance)}
+                                    className={`relative inline-flex h-5 lg:h-6 w-9 lg:w-11 items-center rounded-full transition-all duration-300 ${autoEnhance
+                                        ? 'bg-brand-purple shadow-[0_0_10px_rgba(139,69,255,0.5)]'
+                                        : 'bg-gray-300 dark:bg-gray-600'
+                                        }`}
+                                    disabled={isLoading}
+                                    title={t.autoEnhance || "Auto Enhance"}
+                                >
+                                    <span
+                                        className={`inline-block h-4 lg:h-5 w-4 lg:w-5 transform rounded-full bg-white shadow-lg transition-transform duration-300 ${autoEnhance ? 'translate-x-5 lg:translate-x-6' : 'translate-x-0.5'
                                             }`}
-                                        disabled={isLoading}
-                                    >
-                                        <span
-                                            className={`inline-block h-4 lg:h-5 w-4 lg:w-5 transform rounded-full bg-white shadow-lg transition-transform duration-300 ${preciseReference ? 'translate-x-5 lg:translate-x-6' : 'translate-x-0.5'
-                                                }`}
-                                        />
-                                    </button>
-                                    {/* Tooltip */}
-                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-2 bg-black/90 text-white text-xs rounded-lg opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 pointer-events-none z-50">
-                                        {t.preciseReferenceTooltip}
-                                    </div>
+                                    />
+                                </button>
+                                {/* Tooltip */}
+                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-2 bg-black/90 text-white text-xs rounded-lg opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 pointer-events-none z-50">
+                                    {t.autoEnhanceTooltip || "Automatically optimizes your prompt using AI before generating. May increase waiting time."}
                                 </div>
-                            )}
+                            </div>
+
+                            {/* v0.7: Precise Reference Toggle Switch (Always visible in v1.9) */}
+                            <div className={`relative group/tooltip flex items-center gap-2 lg:gap-2.5 px-2 lg:px-3 py-1.5 bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-lg ${!hasReferences ? 'opacity-50 grayscale' : ''}`}>
+                                <span className="text-base lg:text-lg" title={t.preciseReferenceTooltip}>
+                                    👨
+                                </span>
+                                <button
+                                    onClick={() => hasReferences && onPreciseReferenceChange(!preciseReference)}
+                                    className={`relative inline-flex h-5 lg:h-6 w-9 lg:w-11 items-center rounded-full transition-all duration-300 ${preciseReference
+                                        ? 'bg-yellow-400 shadow-[0_0_10px_rgba(250,204,21,0.5)]'
+                                        : 'bg-gray-300 dark:bg-gray-600'
+                                        }`}
+                                    disabled={isLoading || !hasReferences}
+                                >
+                                    <span
+                                        className={`inline-block h-4 lg:h-5 w-4 lg:w-5 transform rounded-full bg-white shadow-lg transition-transform duration-300 ${preciseReference ? 'translate-x-5 lg:translate-x-6' : 'translate-x-0.5'
+                                            }`}
+                                    />
+                                </button>
+                                {/* Tooltip */}
+                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-2 bg-black/90 text-white text-xs rounded-lg opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 pointer-events-none z-50">
+                                    {!hasReferences
+                                        ? (language === 'it' ? 'Carica un\'immagine di riferimento per attivare.' : 'Upload a reference image to activate.')
+                                        : t.preciseReferenceTooltip}
+                                </div>
+                            </div>
 
                             <div className="flex-1" />
 

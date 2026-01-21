@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.9.0] - 2026-01-21 🪄
+
+### 🎉 MAJOR RELEASE - Auto-Enhance PRO & UI Streamlining
+
+This update focuses on streamlining the prompt optimization workflow, moving from manual enhancement to a more intelligent, automated system.
+
+### ✨ Added
+- **Auto-Enhance System**: New toggle switch that automatically optimizes your prompt using AI before every generation.
+- **Enhanced Always-Visible Precise Reference**: The Precise Reference feature is now always visible in the toolbar for faster access, with smart tooltips for image requirements.
+
+### 🎨 Changed
+- **Manual Buttons Removal**: Removed manual "Enhance Prompt" and "3 Prompts" buttons to reduce interface clutter.
+- **Improved Workspace Layout**: Optimized the floating bar to accommodate new switches while maintaining a clean aesthetic.
+
+---
+
 ## [1.8.0] - 2025-12-29 🎞️
 
 ### 🎉 MAJOR RELEASE - Virtual Studio & Cinema Mode

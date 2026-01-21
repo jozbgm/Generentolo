@@ -1,4 +1,4 @@
-# 🎨 Generentolo PRO v1.7.1
+# 🎨 Generentolo PRO v1.9
 
 **Professional AI-Powered Image Generation Web Application**
 
@@ -11,8 +11,13 @@ A sophisticated web application for generating ultra-high-quality images using G
 
 ---
 
-## 🎯 **NEW v1.7.1: Development Phase**
-- 🚧 Sviluppo in corso...
+## 🎯 **NEW v1.9.0: Auto-Enhance PRO & UI Streamlining**
+- **✨ Auto-Enhance System** - New toggle switch that automatically optimizes your prompt using AI before every generation.
+- **🪄 Streamlined UI** - Removed redundant manual enhancement buttons for a cleaner, faster workflow.
+- **👨 Always-Visible Precise Reference** - Instant access to facial fidelity controls directly from the toolbar.
+
+## 🎯 **NEW v1.7.1: DNA Profiling stability**
+- 🚧 Improved stability for DNA extraction.
 
 ## 🎯 **NEW v1.7.0: DNA Character Consistency**
 - **🧬 DNA Profile Extraction** - Capture the unique physical traits of a character from any image.
@@ -372,8 +377,26 @@ A sophisticated web application for generating ultra-high-quality images using G
 
 ## 📋 Changelog
 
+### v1.9.0 (January 2026) 🪄
+**🎉 AUTO-ENHANCE PRO - Intelligent Workflow Upgrade:**
+
+**✨ NEW: Automatic Prompt Optimization**
+- **AI-Powered Pre-processing**: Option to automatically enhance prompts before generation, ensuring maximum creative quality.
+- **Contextual Awareness**: Enhancement takes into account all reference, style, and structure images.
+- **State Preservation**: The original prompt is updated with the enhanced version for user review.
+
+**🔧 UI/UX Streamlining**
+- **Clean Sidebar**: Removal of legacy creative prompt and manual enhance buttons.
+- **Quick-Access Toolbar**: Precise Reference is now permanently available in the floating action bar.
+- **Smart Tooltips**: Enhanced guidance for all new controls in both EN/IT.
+
+### v1.8.0 (December 2025) 🎞️
+**🎉 VIRTUAL STUDIO & CINEMA MODE:**
+- Professional cinematography controls (Arri Alexa, Red V-Raptor, etc.)
+- Dynamic lighting and wardrobe presets.
+
 ### v1.7.1 (December 2025) 🚀
-- 🚧 Sviluppo in corso...
+- 🚧 DNA Profiling stability improvements.
 
 ### v1.7.0 (December 2025) 🧬
 **🎉 CHARACTER CONSISTENCY - DNA Profiling Upgrade:**

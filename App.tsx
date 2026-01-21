@@ -27,7 +27,7 @@ if (!crypto.randomUUID) {
 // --- Localization ---
 const translations = {
     en: {
-        headerTitle: 'Generentolo PRO v1.8',
+        headerTitle: 'Generentolo PRO v1.9',
         headerSubtitle: 'Let me do it for you!',
         refImagesTitle: 'Reference & Style Images',
         styleRefTitle: 'Style Reference',
@@ -236,9 +236,11 @@ const translations = {
         studioShotHigh: 'Bird\'s Eye',
         studioShotClose: 'Close-up',
         studioShotWide: 'Wide Shot',
+        autoEnhance: 'Auto Enhance',
+        autoEnhanceTooltip: 'Automatically optimizes your prompt using AI before generating. May increase waiting time.',
     },
     it: {
-        headerTitle: 'Generentolo PRO v1.8',
+        headerTitle: 'Generentolo PRO v1.9',
         headerSubtitle: 'Let me do it for you!',
         refImagesTitle: 'Immagini di Riferimento e Stile',
         styleRefTitle: 'Riferimento Stile',
@@ -447,6 +449,8 @@ const translations = {
         studioShotHigh: 'Bird\'s Eye',
         studioShotClose: 'Primo Piano',
         studioShotWide: 'Campo Largo',
+        autoEnhance: 'Auto-Miglioramento',
+        autoEnhanceTooltip: 'Ottimizza automaticamente il prompt tramite AI prima della generazione. Può aumentare i tempi di attesa.',
     }
 };
 
@@ -2252,6 +2256,7 @@ export default function App() {
     const [isToolsLoading, setIsToolsLoading] = useState(false);
     const [isEnhancing, setIsEnhancing] = useState(false);
     const [numImagesToGenerate, setNumImagesToGenerate] = useState(1);
+    const [autoEnhance, setAutoEnhance] = useState(false); // v1.9 Pro: Default OFF as requested
     const [zoomedImage, setZoomedImage] = useState<GeneratedImage | null>(null);
     const [editingImage, setEditingImage] = useState<GeneratedImage | null>(null);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -2511,9 +2516,28 @@ export default function App() {
         setReasoningText(''); // Reset reasoning
         setCurrentImages([]);
 
-        // v1.7: Start reasoning plan in parallel (don't await it to not block generation)
-        geminiService.getReasoningPlan(editedPrompt || "Image generation", userApiKey, language)
-            .then(plan => setReasoningText(plan));
+        // v1.9 Pro: Optional Auto Enhancement before generation
+        let cleanedPrompt = editedPrompt;
+        if (autoEnhance && editedPrompt) {
+            setIsEnhancing(true);
+            try {
+                console.log('✨ Auto-enhancing prompt...');
+                const enhanced = await geminiService.enhancePrompt(editedPrompt, referenceImages, styleReferenceImage, structureImage, userApiKey, language);
+                setEditedPrompt(enhanced);
+                setReasoningText(enhanced); // Show enhanced prompt in the center preview
+                cleanedPrompt = enhanced;
+                console.log('✅ Auto-enhancement complete');
+            } catch (error) {
+                console.error("Auto-enhancement failed", error);
+            } finally {
+                setIsEnhancing(false);
+            }
+        } else {
+            // v1.7: Start reasoning plan in parallel (only if auto-enhance is OFF)
+            geminiService.getReasoningPlan(editedPrompt || "Image generation", userApiKey, language)
+                .then(plan => setReasoningText(plan));
+        }
+
         try {
             // v1.5.1: Fetch invisible reference images from Google if grounding is enabled
             let invisibleReferences: File[] = [];
@@ -2540,7 +2564,7 @@ export default function App() {
             }
 
             // v1.5.1: Remove square brackets from prompt to avoid ambiguous keywords (e.g., "Coin" = money vs brand)
-            let cleanedPrompt = useGrounding ? removeBracketsFromPrompt(editedPrompt) : editedPrompt;
+            cleanedPrompt = useGrounding ? removeBracketsFromPrompt(cleanedPrompt) : cleanedPrompt;
 
             // v1.7: Inject DNA Character description and IMAGE reference if selected
             let dnaReferenceFile: File | null = null;
@@ -2994,24 +3018,7 @@ export default function App() {
         }
     }
 
-    const handleEnhancePrompt = useCallback(async () => {
-        if (!editedPrompt) return;
-        setIsEnhancing(true);
-        try {
-            console.log('🔄 Starting enhance with prompt:', editedPrompt);
-            const enhanced = await geminiService.enhancePrompt(editedPrompt, referenceImages, styleReferenceImage, structureImage, userApiKey, language);
-            console.log('✅ Enhanced result:', enhanced);
-
-            // Always update and show success
-            setEditedPrompt(enhanced);
-            showToast(language === 'it' ? '✨ Prompt migliorato!' : '✨ Prompt enhanced!', 'success');
-        } catch (error: any) {
-            console.error("Prompt enhancement failed", error);
-            showToast(error.message || t.promptEnhancementFailed, 'error');
-        } finally {
-            setIsEnhancing(false);
-        }
-    }, [editedPrompt, referenceImages, styleReferenceImage, structureImage, userApiKey, language, showToast, t.promptEnhancementFailed]);
+    // v1.9: Manual enhance button removed as per PRD
 
     const handleDownload = (image: GeneratedImage) => {
         const downloadUrl = image.imageDataUrl || image.thumbnailDataUrl;
@@ -3272,14 +3279,14 @@ export default function App() {
     // Keyboard shortcuts
     const shortcuts = useMemo(() => [
         { ...APP_SHORTCUTS.GENERATE, action: () => !isActionDisabled && handleGenerate() },
-        { ...APP_SHORTCUTS.ENHANCE_PROMPT, action: () => !isActionDisabled && handleEnhancePrompt() },
+        { ...APP_SHORTCUTS.ENHANCE_PROMPT, action: () => !isActionDisabled && setAutoEnhance(prev => !prev) }, // v1.9: Toggle instead of manual call
         { ...APP_SHORTCUTS.RANDOM_SEED, action: handleRandomizeSeed },
         { ...APP_SHORTCUTS.CLEAR_INTERFACE, action: handleResetInterface },
         { ...APP_SHORTCUTS.OPEN_SETTINGS, action: () => setIsSettingsOpen(true) },
         { ...APP_SHORTCUTS.FOCUS_PROMPT, action: () => promptTextareaRef.current?.focus() },
         { ...APP_SHORTCUTS.TOGGLE_THEME, action: toggleTheme },
         { ...APP_SHORTCUTS.HELP, action: () => setIsShortcutsOpen(true) }, // v0.8
-    ], [isActionDisabled, handleGenerate, handleEnhancePrompt, handleRandomizeSeed, handleResetInterface, toggleTheme]);
+    ], [isActionDisabled, handleGenerate, handleRandomizeSeed, handleResetInterface, toggleTheme, autoEnhance]);
 
     useKeyboardShortcuts(shortcuts, !isLoading && !isEnhancing);
 
@@ -3460,10 +3467,9 @@ export default function App() {
                     promptTextareaRef={promptTextareaRef}
                     onGenerate={handleGenerate}
                     onAbortGeneration={handleAbortGeneration}
-                    onEnhancePrompt={handleEnhancePrompt}
-                    onGenerate3Prompts={handleGenerateCreativePrompts}
+                    autoEnhance={autoEnhance}
+                    onAutoEnhanceChange={setAutoEnhance}
                     isLoading={isLoading}
-                    isEnhancing={isEnhancing}
                     hasReferences={referenceImages.length > 0 || !!styleReferenceImage || !!structureImage}
                     aspectRatio={aspectRatio}
                     onAspectRatioChange={handleAspectRatioChange}
