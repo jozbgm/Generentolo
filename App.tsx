@@ -2281,6 +2281,7 @@ export default function App() {
     const [isDnaLoading, setIsDnaLoading] = useState(false);
     const [loadingMessage, setLoadingMessage] = useState<string>('');
     const [isPromptEnhancedInternal, setIsPromptEnhancedInternal] = useState(false); // v1.9.3: UI state for enhanced prompt
+    const [activeDisplayPrompt, setActiveDisplayPrompt] = useState<string>(''); // v1.9.3: Ephemeral prompt for UI display
 
     // v1.8: Studio Mode
     const [appMode, setAppMode] = useState<'classic' | 'studio'>('classic');
@@ -2546,6 +2547,7 @@ export default function App() {
         let displayPrompt = editedPrompt; // Local variable to capture the version to be saved/displayed
         let invisibleReferences: File[] = [];
         setIsPromptEnhancedInternal(false); // Reset UI state
+        setActiveDisplayPrompt(editedPrompt); // Initialize with user's prompt
 
         try {
             const preProcessingStart = Date.now();
@@ -2560,7 +2562,7 @@ export default function App() {
                     geminiService.enhancePrompt(editedPrompt, referenceImages, styleReferenceImage, structureImage, userApiKey, language)
                         .then(result => {
                             if (result.method !== 'fallback') {
-                                setEditedPrompt(result.enhancedPrompt);
+                                setActiveDisplayPrompt(result.enhancedPrompt);
                                 setReasoningText(result.artDirectorPlan);
                                 cleanedPrompt = result.enhancedPrompt;
                                 displayPrompt = result.enhancedPrompt; // Ensure UI capture
@@ -3418,7 +3420,7 @@ export default function App() {
                                                             {language === 'it' ? 'Miglioramento creativo in corso...' : 'Creative enhancement in progress...'}
                                                         </span>
                                                     ) : (
-                                                        isLoading ? editedPrompt : (currentImages[0]?.prompt || editedPrompt)
+                                                        isLoading ? (isPromptEnhancedInternal ? activeDisplayPrompt : editedPrompt) : (currentImages[0]?.prompt || editedPrompt)
                                                     )}
                                                 </p>
                                             </div>
