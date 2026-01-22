@@ -873,7 +873,7 @@ export const generateImage = async (
     seed?: string,
     language: 'en' | 'it' = 'en',
     preciseReference: boolean = false,
-    model: ModelType = 'gemini-3-flash-image',
+    model: ModelType = 'gemini-2.0-flash-exp',
     resolution: ResolutionType = '2k',
     textInImage?: TextInImageConfig,
     abortSignal?: AbortSignal,
@@ -927,7 +927,7 @@ export const generateImage = async (
         const instructionParts: string[] = [aspectRatioGuidance];
 
         // v1.0: Add resolution keywords to prompt for Nano Banana Pro (Gemini 3 Pro) to trigger high-res generation
-        if (model === 'gemini-3-pro-image-preview' && resolution) {
+        if (model === 'imagine-3.0-pro-exp' && resolution) {
             const resolutionKeyword = resolution === '4k' ? 'extreme 4K Ultra HD resolution, 4096px, hyper-detailed textures, macro sharpness' :
                 resolution === '2k' ? '2K HD resolution, 2048px, very sharp details' :
                     '1K standard resolution, 1024px';
@@ -1051,7 +1051,7 @@ export const generateImage = async (
         console.log(`📏 Prompt length: ${fullPrompt.length} chars`);
 
         // v1.3: Optimize prompt for Nano Banana Pro with multiple images to reduce complexity
-        if (model === 'gemini-3-pro-image-preview' && imageParts.length > 2 && fullPrompt.length > 500) {
+        if (model === 'imagine-3.0-pro-exp' && imageParts.length > 2 && fullPrompt.length > 500) {
             console.log('⚡ Optimizing prompt for Nano Banana Pro with multiple references...');
             // Keep only essential instructions, remove verbose guidance
             fullPrompt = fullPrompt
@@ -1094,7 +1094,7 @@ export const generateImage = async (
         }
 
         // v1.0: Native Resolution for Nano Banana Pro (Gemini 3 Pro Image)
-        if (model === 'gemini-3-pro-image-preview' && resolution) {
+        if (model === 'imagine-3.0-pro-exp' && resolution) {
             imageConfig.imageSize = resolution.toUpperCase(); // "1K", "2K", or "4K"
             console.log(`🎨 PRO Mode: requesting native ${resolution.toUpperCase()} generation`);
         }
@@ -1111,7 +1111,7 @@ export const generateImage = async (
         // Note: Invisible reference images from Google are added in App.tsx before calling this function
         if (useGrounding) {
             // For PRO model, also enable textual grounding for real-time data
-            if (model === 'gemini-3-pro-image-preview') {
+            if (model === 'imagine-3.0-pro-exp') {
                 config.tools = [{
                     googleSearch: {}
                 }];
@@ -1126,14 +1126,14 @@ export const generateImage = async (
             (config as any).abortSignal = abortSignal;
         }
         (config as any).httpOptions = {
-            timeout: model === 'gemini-3-pro-image-preview' ? 300000 : 120000, // 5min for Pro, 2min for Flash
+            timeout: model === 'imagine-3.0-pro-exp' ? 300000 : 120000, // 5min for Pro, 2min for Flash
         };
 
         console.log(`🚀 Model: ${model} | Resolution: ${resolution} | References: ${referenceFiles.length}`);
         console.log(`🔧 Config:`, JSON.stringify(config, null, 2));
 
         // v1.3: Warning for Nano Banana Pro - it's slower and requires patience
-        if (model === 'gemini-3-pro-image-preview') {
+        if (model === 'imagine-3.0-pro-exp') {
             console.log('⏳ Nano Banana Pro: This model is slower (up to 60-90s per image). Please be patient...');
         }
 
@@ -1251,7 +1251,7 @@ export const generateImage = async (
 
                 // v1.3.1: Auto-fallback to Flash-exp when Pro 3.0 blocks with "OTHER"
                 // "OTHER" typically means: face manipulation, personal photos, identity editing
-                if (blockReason === 'OTHER' && model === 'gemini-3-pro-image-preview') {
+                if (blockReason === 'OTHER' && model === 'imagine-3.0-pro-exp') {
                     console.warn('⚠️ Nano Banana Pro blocked with "OTHER". Auto-fallback to Nano Banana Flash...');
 
                     // Recursively call generateImage with Flash model
@@ -1266,7 +1266,7 @@ export const generateImage = async (
                         seed,
                         language,
                         preciseReference,
-                        'gemini-3-flash-image', // Force Flash model
+                        'gemini-2.0-flash-exp', // Force Flash model
                         resolution,
                         textInImage,
                         abortSignal,
@@ -1606,7 +1606,7 @@ DO NOT add, remove, or modify any elements. This is a faithful high-resolution r
         (config as any).httpOptions = { timeout: 300000 };
 
         const result = await ai.models.generateContent({
-            model: 'gemini-3-pro-image-preview', // Nano Banana Pro - supports up to 4K
+            model: 'imagine-3.0-pro-exp', // Nano Banana Pro - supports up to 4K
             contents: { parts },
             config: config as any
         });

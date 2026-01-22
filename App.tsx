@@ -2248,7 +2248,7 @@ export default function App() {
     const [dynamicTools, setDynamicTools] = useState<DynamicTool[]>([]);
     const [aspectRatio, setAspectRatio] = useState<string>('1:1');
     // v1.0: New PRO features states
-    const [selectedModel, setSelectedModel] = useState<ModelType>('gemini-3-flash-image');
+    const [selectedModel, setSelectedModel] = useState<ModelType>('gemini-2.0-flash-exp');
     const [selectedResolution, setSelectedResolution] = useState<ResolutionType>('2k');
     const [currentImages, setCurrentImages] = useState<GeneratedImage[]>([]);
     const [history, setHistory] = useState<GeneratedImage[]>([]);
@@ -2510,8 +2510,8 @@ export default function App() {
             "Generentolo is skibidibopping...",
             "Generentolo is scoatting...",
             "Generentolo is swagging...",
-            "Gerentolo is Jozzoling...",
-            "Generentolo is smarmellating..",
+            "Generentolo is Jozzoling...",
+            "Generentolo is smarmellating...",
             "Generentolo is sboccing...",
             "Generentolo is gnegneing your prompt...",
             "Generentolo is gigachadding the image...",
@@ -2745,7 +2745,7 @@ export default function App() {
 
                 // Generate sequentially if there are multiple references/complex setup to avoid API overload
                 // Otherwise parallel is fine
-                if (hasMultipleReferences || selectedModel === 'gemini-3-pro-image-preview') {
+                if (hasMultipleReferences || selectedModel === 'imagine-3.0-pro-exp') {
                     const imageDataUrl = await geminiService.generateImage(
                         variantPrompt,
                         aspectRatio,

@@ -1,4 +1,4 @@
-export type ModelType = 'gemini-3-flash-image' | 'gemini-3-pro-image-preview';
+export type ModelType = 'gemini-2.0-flash-exp' | 'imagine-3.0-pro-exp';
 export type ResolutionType = '1k' | '2k' | '4k';
 
 export interface GeneratedImage {
