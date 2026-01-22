@@ -1097,8 +1097,9 @@ interface ImageDisplayProps {
     upscalingImageId: string | null; // v1.1
     onSaveDna: (image: GeneratedImage) => void; // v1.7
     reasoningText?: string; // v1.7: Creative reasoning plan
+    loadingMessage?: string; // v1.9.2: Funny loading messages
 }
-const ImageDisplay: React.FC<ImageDisplayProps> = ({ images, isLoading, onDownload, onZoom, onEdit, onReroll, onToggleFavorite, onUpscale, upscalingImageId, onSaveDna, reasoningText }) => {
+const ImageDisplay: React.FC<ImageDisplayProps> = ({ images, isLoading, onDownload, onZoom, onEdit, onReroll, onToggleFavorite, onUpscale, upscalingImageId, onSaveDna, reasoningText, loadingMessage }) => {
     const { t } = useLocalization();
     const [showUpscaleMenu, setShowUpscaleMenu] = useState<string | null>(null);
 
@@ -1107,7 +1108,7 @@ const ImageDisplay: React.FC<ImageDisplayProps> = ({ images, isLoading, onDownlo
             {isLoading && (
                 <div className="flex flex-col items-center text-center max-w-md px-6 text-light-text-muted dark:text-dark-text-muted">
                     <div className="w-16 h-16 border-4 border-brand-yellow border-t-transparent rounded-full animate-spin mb-6"></div>
-                    <p className="font-bold text-lg mb-2 text-light-text dark:text-dark-text animate-pulse">{t.generatingStatus}</p>
+                    <p className="font-bold text-lg mb-2 text-light-text dark:text-dark-text animate-pulse">{loadingMessage || t.generatingStatus}</p>
                     <div className="min-h-[3rem] flex items-center justify-center">
                         <p className={`text-sm italic transition-opacity duration-1000 ${reasoningText ? 'opacity-100' : 'opacity-60'}`}>
                             {reasoningText || t.generatingSubtext}
@@ -2278,6 +2279,7 @@ export default function App() {
     const [dnaCharacters, setDnaCharacters] = useState<DnaCharacter[]>([]);
     const [selectedDnaId, setSelectedDnaId] = useState<string | null>(null);
     const [isDnaLoading, setIsDnaLoading] = useState(false);
+    const [loadingMessage, setLoadingMessage] = useState<string>(''); // v1.9.2: Funny loading messages
 
     // v1.8: Studio Mode
     const [appMode, setAppMode] = useState<'classic' | 'studio'>('classic');
@@ -2500,6 +2502,35 @@ export default function App() {
         if (referenceImages.length === 0 && !editedPrompt && !styleReferenceImage) return;
 
 
+
+        // v1.9.2: Funny loading messages
+        const funnyMessages = [
+            "Generentolo is generentoling...",
+            "Generentolo is rantoling...",
+            "Generentolo is skibidibopping...",
+            "Generentolo is scoatting...",
+            "Generentolo is swagging...",
+            "Gerentolo is Jozzoling...",
+            "Generentolo is smarmellating..",
+            "Generentolo is sboccing...",
+            "Generentolo is gnegneing your prompt...",
+            "Generentolo is gigachadding the image...",
+            "Generentolo is trying to remember how to draw...",
+            "Generentolo is vibetrolling...",
+            "Generentolo is fighting the GPU...",
+            "Generentolo is Throat-punching the latency...",
+            "Generentolo is Oh-mio-deoing the canvas...",
+            "Generentolo is Main-character-ing the whole app...",
+            "Generentolo is Alpha-dogging the progress bar...",
+            "Generentolo is establishing dominance over the GPU...",
+            "Generentolo is sbrodoling...",
+            "Generentolo is alpha-maleing...",
+            "Generentolo is meow meowing...",
+            "Generentolo is sbarlafusing...",
+            "Generentolo is casoncelling...",
+            "Generentolo is architettoling..."
+        ];
+        setLoadingMessage(funnyMessages[Math.floor(Math.random() * funnyMessages.length)]);
 
         // v1.3: Create new AbortController for this generation
         const controller = new AbortController();
@@ -3350,7 +3381,7 @@ export default function App() {
                     {/* --- Main Content --- */}
                     <div className="flex-1 flex flex-col gap-2 lg:gap-6 min-w-0 h-full">
                         <div className="flex-1 min-h-0 bg-light-surface/50 dark:bg-dark-surface/30 rounded-3xl overflow-hidden">
-                            <ImageDisplay images={currentImages} isLoading={isLoading} onDownload={handleDownload} onZoom={handleZoom} onEdit={setEditingImage} onReroll={handleReroll} onToggleFavorite={handleToggleFavorite} onUpscale={handleUpscale} upscalingImageId={upscalingImageId} onSaveDna={handleSaveImageAsDna} reasoningText={reasoningText} />
+                            <ImageDisplay images={currentImages} isLoading={isLoading} onDownload={handleDownload} onZoom={handleZoom} onEdit={setEditingImage} onReroll={handleReroll} onToggleFavorite={handleToggleFavorite} onUpscale={handleUpscale} upscalingImageId={upscalingImageId} onSaveDna={handleSaveImageAsDna} reasoningText={reasoningText} loadingMessage={loadingMessage} />
                         </div>
 
                         {((referenceImages.length > 0 || !!styleReferenceImage) || currentImages.length > 0 || isLoading) && (
