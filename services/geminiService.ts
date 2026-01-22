@@ -1,6 +1,5 @@
 import { GoogleGenAI, Type, Modality } from "@google/genai";
 import { DynamicTool, ModelType, ResolutionType, TextInImageConfig } from '../types';
-import { enhancePromptV2 } from './enhancePromptNew';
 
 const DEFAULT_API_KEY = import.meta.env.VITE_API_KEY;
 
@@ -351,14 +350,19 @@ export const generateSinglePromptFromImage = async (imageFiles: File[], styleFil
     }
 };
 
-export const enhancePrompt = async (currentPrompt: string, imageFiles: File[], styleFile: File | null, structureFile: File | null, userApiKey?: string | null, language: 'en' | 'it' = 'en'): Promise<string> => {
+import { enhancePromptV2, EnhancementResult } from './enhancePromptNew';
+
+export const enhancePrompt = async (currentPrompt: string, imageFiles: File[], styleFile: File | null, structureFile: File | null, userApiKey?: string | null, language: 'en' | 'it' = 'en'): Promise<EnhancementResult> => {
     try {
-        // Use new revolutionary v2 system
-        const result = await enhancePromptV2(currentPrompt, imageFiles, styleFile, structureFile, userApiKey, language);
-        return result.enhancedPrompt;
+        // Use new revolutionary v2.1 system
+        return await enhancePromptV2(currentPrompt, imageFiles, styleFile, structureFile, userApiKey, language);
     } catch (error) {
-        console.error('❌ Enhancement v2 failed, returning original:', error);
-        return currentPrompt;
+        console.error('❌ Enhancement failed, returning original:', error);
+        return {
+            enhancedPrompt: currentPrompt,
+            artDirectorPlan: "",
+            method: 'fallback'
+        };
     }
 }
 
@@ -856,24 +860,7 @@ const extractStyleDescription = async (styleFile: File, userApiKey: string | nul
     }
 };
 
-// v1.0: Cost calculator for PRO model
-// Pricing from: https://ai.google.dev/gemini-api/docs/pricing#gemini-3-pro-image-preview
-export const calculateEstimatedCost = (model: ModelType, resolution: ResolutionType, referenceCount: number): number => {
-    // Basic per-image pricing
-    const basePrice = model === 'gemini-3-pro-image-preview' ? 0.05 : 0.01;
-    let cost = basePrice;
 
-    // v1.0: Resolution weighting (PRO model only)
-    if (model === 'gemini-3-pro-image-preview') {
-        if (resolution === '4k') cost *= 1.5; // 4K is more expensive
-        if (resolution === '2k') cost *= 1.2;
-    }
-
-    // Input image processing cost (very rough estimate)
-    const referenceCost = referenceCount * 0.0005;
-
-    return cost + referenceCost;
-};
 
 export const generateImage = async (
     prompt: string,
@@ -886,11 +873,12 @@ export const generateImage = async (
     seed?: string,
     language: 'en' | 'it' = 'en',
     preciseReference: boolean = false,
-    model: ModelType = 'gemini-2.5-flash-image',
+    model: ModelType = 'gemini-3-flash-image',
     resolution: ResolutionType = '2k',
     textInImage?: TextInImageConfig,
     abortSignal?: AbortSignal,
-    useGrounding?: boolean // v1.4: Google Search Grounding
+    useGrounding?: boolean, // v1.4: Google Search Grounding
+    skipPreprocessing?: boolean // v1.9.2: Speed optimization
 ): Promise<string> => {
     try {
         const ai = getAiClient(userApiKey);
@@ -914,11 +902,24 @@ export const generateImage = async (
             imageParts.push(await fileToGenerativePart(file));
         }
 
-        // STEP 1: Enrich user prompt with explicit "Image 1", "Image 2" references (if multiple references)
-        let enrichedPrompt = prompt;
-        if (referenceFiles.length > 1) {
-            enrichedPrompt = await enrichPromptWithImageReferences(prompt, referenceFiles, userApiKey, language);
-        }
+        /* 
+         * STEP 1 & 2: Parallel Pre-processing (Enrichment + Style Extraction)
+         * Optimized for speed: these Flash calls run at the same time.
+         * v1.9.2: Skipped if prompt is already SUPER-ENHANCED.
+         */
+        const [enrichedPromptResult, styleDescriptionResult] = skipPreprocessing
+            ? [prompt, ""]
+            : await Promise.all([
+                referenceFiles.length > 1
+                    ? enrichPromptWithImageReferences(prompt, referenceFiles, userApiKey, language)
+                    : Promise.resolve(prompt),
+                styleFile
+                    ? extractStyleDescription(styleFile, userApiKey, language)
+                    : Promise.resolve("")
+            ]);
+
+        const enrichedPrompt = enrichedPromptResult;
+        const styleDescription = styleDescriptionResult;
 
         // v1.0: Aspect ratio is now handled natively via imageConfig.aspectRatio
         // Text guidance is minimal - just a reminder to fill the frame
@@ -968,24 +969,17 @@ export const generateImage = async (
         // Extract style description from style image (if provided) and add to prompt text
         // v0.7.1 FIX: Make explicit that style should be APPLIED to reference subjects
         // v0.7.2 FIX: Log warning when style extraction fails
-        let styleDescription = "";
-        if (styleFile) {
-            styleDescription = await extractStyleDescription(styleFile, userApiKey, language);
-            if (styleDescription) {
-                // If there are reference images, explicitly tell AI to apply style TO them
-                if (referenceFiles.length > 0) {
-                    instructionParts.push(language === 'it'
-                        ? `🎨 APPLICA STILE: Usa i soggetti dalle immagini di riferimento MA con questo stile: ${styleDescription}. I prodotti/persone restano quelli delle reference, ma adotta palette, illuminazione e mood dello stile.`
-                        : `🎨 APPLY STYLE: Use subjects from reference images BUT with this style: ${styleDescription}. Products/people remain from references, but adopt palette, lighting and mood from style.`);
-                } else {
-                    // No references, just apply the style to the prompt
-                    instructionParts.push(language === 'it'
-                        ? `🎨 Stile: ${styleDescription}`
-                        : `🎨 Style: ${styleDescription}`);
-                }
+        if (styleFile && styleDescription) {
+            // If there are reference images, explicitly tell AI to apply style TO them
+            if (referenceFiles.length > 0) {
+                instructionParts.push(language === 'it'
+                    ? `🎨 APPLICA STILE: Usa i soggetti dalle immagini di riferimento MA con questo stile: ${styleDescription}. I prodotti/persone restano quelli delle reference, ma adotta palette, illuminazione e mood dello stile.`
+                    : `🎨 APPLY STYLE: Use subjects from reference images BUT with this style: ${styleDescription}. Products/people remain from references, but adopt palette, lighting and mood from style.`);
             } else {
-                // Style extraction failed - log warning (user will still see style image in generation)
-                console.warn('⚠️ Style extraction failed, style image will be used visually without text description');
+                // No references, just apply the style to the prompt
+                instructionParts.push(language === 'it'
+                    ? `🎨 Stile: ${styleDescription}`
+                    : `🎨 Style: ${styleDescription}`);
             }
         }
 
@@ -1076,10 +1070,8 @@ export const generateImage = async (
 
         const config: any = {
             responseModalities: [Modality.IMAGE],
-            // NOTE: outputOptions/outputMimeType NOT supported in GenerateContentConfig
-            // Gemini Image models return PNG by default (verified in SDK types)
-            // Temperature 0.9 to reduce IMAGE_RECITATION false positives
-            temperature: 0.9,
+            // Temperature 0.65 - 0.7 for better balance across all 3.0 models
+            temperature: 0.7,
 
             // v1.0.2: Commenting out safetySettings - testing if explicit BLOCK_NONE causes issues
             // Theory: LM Arena might NOT set safetySettings at all, using model defaults instead
@@ -1274,7 +1266,7 @@ export const generateImage = async (
                         seed,
                         language,
                         preciseReference,
-                        'gemini-2.5-flash-image', // Force Flash model
+                        'gemini-3-flash-image', // Force Flash model
                         resolution,
                         textInImage,
                         abortSignal,
@@ -1361,7 +1353,7 @@ export const editImage = async (prompt: string, imageFile: File, userApiKey?: st
         const parts: any[] = [imagePart, { text: prompt }];
 
         const result = await ai.models.generateContent({
-            model: 'gemini-2.5-flash-image',
+            model: 'gemini-3-flash-image',
             contents: { parts },
             config: {
                 responseModalities: [Modality.IMAGE],
@@ -1408,7 +1400,7 @@ export const inpaintImage = async (prompt: string, imageFile: File, maskFile: Fi
         ];
 
         const result = await ai.models.generateContent({
-            model: 'gemini-2.5-flash-image',
+            model: 'gemini-3-flash-image',
             contents: { parts },
             config: {
                 responseModalities: [Modality.IMAGE],

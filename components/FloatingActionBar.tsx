@@ -299,8 +299,8 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                                 }}
                                 className="flex items-center gap-1 lg:gap-1.5 px-3 lg:px-3 py-2.5 lg:py-2 bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-lg text-xs text-light-text dark:text-dark-text hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 active:scale-95 transition-all duration-150 whitespace-nowrap min-h-[44px]"
                             >
-                                <span>{selectedModel === 'gemini-2.5-flash-image' ? '⚡' : '⭐'}</span>
-                                <span className="hidden sm:inline">{selectedModel === 'gemini-2.5-flash-image' ? 'Flash' : 'PRO'}</span>
+                                <span>{selectedModel === 'gemini-3-flash-image' ? '⚡' : '⭐'}</span>
+                                <span className="hidden sm:inline">{selectedModel === 'gemini-3-flash-image' ? 'Flash' : 'PRO'}</span>
                             </button>
                             {showModelMenu && (
                                 <>
@@ -308,10 +308,10 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                                     <div className="absolute bottom-full mb-2 right-0 bg-light-surface dark:bg-dark-surface rounded-xl shadow-2xl p-2 min-w-[140px] border border-light-border dark:border-dark-border z-[70] animate-slideDown">
                                         <button
                                             onClick={() => {
-                                                onModelChange('gemini-2.5-flash-image');
+                                                onModelChange('gemini-3-flash-image');
                                                 setShowModelMenu(false);
                                             }}
-                                            className={`w-full px-3 py-2.5 text-left text-sm rounded-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 transition-all duration-150 flex items-center gap-2 min-h-[44px] ${selectedModel === 'gemini-2.5-flash-image' ? 'bg-brand-purple/20 text-brand-purple' : 'text-light-text dark:text-dark-text'}`}
+                                            className={`w-full px-3 py-2.5 text-left text-sm rounded-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 transition-all duration-150 flex items-center gap-2 min-h-[44px] ${selectedModel === 'gemini-3-flash-image' ? 'bg-brand-purple/20 text-brand-purple' : 'text-light-text dark:text-dark-text'}`}
                                         >
                                             <span>⚡</span>
                                             <span>{t.modelFlash}</span>
@@ -727,8 +727,8 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                                     }}
                                     className="flex items-center gap-1 lg:gap-1.5 px-2 lg:px-3 py-1.5 bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-lg text-xs text-light-text dark:text-dark-text hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 active:scale-95 transition-all duration-150 whitespace-nowrap"
                                 >
-                                    <span>{selectedModel === 'gemini-2.5-flash-image' ? '⚡' : '⭐'}</span>
-                                    <span className="hidden sm:inline">{selectedModel === 'gemini-2.5-flash-image' ? 'Flash' : 'PRO'}</span>
+                                    <span>{selectedModel === 'gemini-3-flash-image' ? '⚡' : '⭐'}</span>
+                                    <span className="hidden sm:inline">{selectedModel === 'gemini-3-flash-image' ? 'Flash' : 'PRO'}</span>
                                 </button>
                                 {showModelMenu && (
                                     <>
@@ -736,10 +736,10 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                                         <div className="absolute bottom-full mb-2 left-0 bg-light-surface dark:bg-dark-surface rounded-xl shadow-2xl p-2 min-w-[140px] border border-light-border dark:border-dark-border z-[70] animate-slideDown">
                                             <button
                                                 onClick={() => {
-                                                    onModelChange('gemini-2.5-flash-image');
+                                                    onModelChange('gemini-3-flash-image');
                                                     setShowModelMenu(false);
                                                 }}
-                                                className={`w-full px-3 py-2.5 text-left text-sm rounded-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 transition-all duration-150 flex items-center gap-2 min-h-[44px] ${selectedModel === 'gemini-2.5-flash-image' ? 'bg-brand-purple/20 text-brand-purple' : 'text-light-text dark:text-dark-text'}`}
+                                                className={`w-full px-3 py-2.5 text-left text-sm rounded-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 transition-all duration-150 flex items-center gap-2 min-h-[44px] ${selectedModel === 'gemini-3-flash-image' ? 'bg-brand-purple/20 text-brand-purple' : 'text-light-text dark:text-dark-text'}`}
                                             >
                                                 <span>⚡</span>
                                                 <span>{t.modelFlash}</span>

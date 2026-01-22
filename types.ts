@@ -1,4 +1,4 @@
-export type ModelType = 'gemini-2.5-flash-image' | 'gemini-3-pro-image-preview';
+export type ModelType = 'gemini-3-flash-image' | 'gemini-3-pro-image-preview';
 export type ResolutionType = '1k' | '2k' | '4k';
 
 export interface GeneratedImage {
@@ -14,7 +14,6 @@ export interface GeneratedImage {
   isFavorite?: boolean; // v0.8: Bookmark/favorite system
   model?: ModelType; // v1.0: Model used for generation
   resolution?: ResolutionType; // v1.0: Resolution used (only for PRO model)
-  estimatedCost?: number; // v1.0: Estimated cost in USD
 }
 
 export interface DynamicTool {

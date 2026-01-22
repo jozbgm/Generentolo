@@ -7,7 +7,7 @@ import { SunIcon, MoonIcon, UploadIcon, DownloadIcon, SparklesIcon, CopyIcon, Se
 import { indexedDBService, DnaCharacter } from './services/indexedDB';
 import FloatingActionBar from './components/FloatingActionBar';
 import ZoomableImage from './components/ZoomableImage';
-import UsageTracker from './components/UsageTracker'; // v1.4
+
 import { STYLE_PRESETS, PHYSICS_PRESETS } from './data/stylePresets'; // v1.4
 import { fetchInvisibleReferences, removeBracketsFromPrompt } from './services/googleSearchService'; // v1.5.1
 import StudioPanel from './components/StudioPanel'; // v1.8: Studio Mode
@@ -27,7 +27,7 @@ if (!crypto.randomUUID) {
 // --- Localization ---
 const translations = {
     en: {
-        headerTitle: 'Generentolo PRO v1.9',
+        headerTitle: 'Generentolo PRO v1.9.2',
         headerSubtitle: 'Let me do it for you!',
         refImagesTitle: 'Reference & Style Images',
         styleRefTitle: 'Style Reference',
@@ -72,7 +72,7 @@ const translations = {
         resolution2k: '2K (High)',
         resolution4k: '4K (Ultra)',
         resolutionTooltip: "PRO model only. Higher resolution = better quality but slower and more expensive.",
-        estimatedCost: 'Estimated Cost',
+
         textInImageTitle: 'Text in Image',
         textInImageEnable: 'Add Text',
         textInImagePlaceholder: 'Enter text to display...',
@@ -240,7 +240,7 @@ const translations = {
         autoEnhanceTooltip: 'Automatically optimizes your prompt using AI before generating. May increase waiting time.',
     },
     it: {
-        headerTitle: 'Generentolo PRO v1.9',
+        headerTitle: 'Generentolo PRO v1.9.2',
         headerSubtitle: 'Let me do it for you!',
         refImagesTitle: 'Immagini di Riferimento e Stile',
         styleRefTitle: 'Riferimento Stile',
@@ -2247,7 +2247,7 @@ export default function App() {
     const [dynamicTools, setDynamicTools] = useState<DynamicTool[]>([]);
     const [aspectRatio, setAspectRatio] = useState<string>('1:1');
     // v1.0: New PRO features states
-    const [selectedModel, setSelectedModel] = useState<ModelType>('gemini-2.5-flash-image');
+    const [selectedModel, setSelectedModel] = useState<ModelType>('gemini-3-flash-image');
     const [selectedResolution, setSelectedResolution] = useState<ResolutionType>('2k');
     const [currentImages, setCurrentImages] = useState<GeneratedImage[]>([]);
     const [history, setHistory] = useState<GeneratedImage[]>([]);
@@ -2303,14 +2303,7 @@ export default function App() {
     const [selectedLighting, setSelectedLighting] = useState<string | null>(null);
     const [selectedCamera, setSelectedCamera] = useState<string | null>(null);
     const [selectedFocus, setSelectedFocus] = useState<string | null>(null);
-    const [showUsageTracker, setShowUsageTracker] = useState(false);
-    const [usageStats, setUsageStats] = useState({
-        imagesGenerated: 0,
-        totalCost: 0,
-        tokensUsed: 0,
-        averageTime: 0,
-        generationTimes: [] as number[]
-    });
+
     const promptTextareaRef = useRef<HTMLTextAreaElement>(null);
     const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -2506,7 +2499,7 @@ export default function App() {
     const handleGenerate = useCallback(async () => {
         if (referenceImages.length === 0 && !editedPrompt && !styleReferenceImage) return;
 
-        const startTime = Date.now();
+
 
         // v1.3: Create new AbortController for this generation
         const controller = new AbortController();
@@ -2516,52 +2509,76 @@ export default function App() {
         setReasoningText(''); // Reset reasoning
         setCurrentImages([]);
 
-        // v1.9 Pro: Optional Auto Enhancement before generation
+        // v1.9.2: Parallel Pre-processing System (Auto-Enhance Master Brain, Grounding)
         let cleanedPrompt = editedPrompt;
-        if (autoEnhance && editedPrompt) {
-            setIsEnhancing(true);
-            try {
-                console.log('✨ Auto-enhancing prompt...');
-                const enhanced = await geminiService.enhancePrompt(editedPrompt, referenceImages, styleReferenceImage, structureImage, userApiKey, language);
-                setEditedPrompt(enhanced);
-                setReasoningText(enhanced); // Show enhanced prompt in the center preview
-                cleanedPrompt = enhanced;
-                console.log('✅ Auto-enhancement complete');
-            } catch (error) {
-                console.error("Auto-enhancement failed", error);
-            } finally {
-                setIsEnhancing(false);
+        let invisibleReferences: File[] = [];
+        let isPromptEnhanced = false;
+
+        try {
+            const preProcessingStart = Date.now();
+            console.log('🚀 Starting Parallel Pre-processing...');
+
+            const tasks: Promise<any>[] = [];
+
+            // Task 1: Prompt Enhancement Master Brain
+            if (autoEnhance && editedPrompt) {
+                setIsEnhancing(true);
+                tasks.push(
+                    geminiService.enhancePrompt(editedPrompt, referenceImages, styleReferenceImage, structureImage, userApiKey, language)
+                        .then(result => {
+                            if (result.method !== 'fallback') {
+                                setEditedPrompt(result.enhancedPrompt);
+                                setReasoningText(result.artDirectorPlan); // Show the plan, not the final prompt
+                                cleanedPrompt = result.enhancedPrompt;
+                                isPromptEnhanced = true;
+                                console.log('✨ Master Brain Enhancement: DONE');
+                            } else {
+                                console.log('⚠️ Master Brain fell back to original prompt');
+                            }
+                            setIsEnhancing(false);
+                        })
+                );
+            } else {
+                // Classic reasoning plan if Auto-Enhance is off
+                tasks.push(
+                    geminiService.getReasoningPlan(editedPrompt || "Image generation", userApiKey, language)
+                        .then(plan => {
+                            setReasoningText(plan);
+                            console.log('🧠 Reasoning Plan: DONE');
+                        })
+                );
             }
-        } else {
-            // v1.7: Start reasoning plan in parallel (only if auto-enhance is OFF)
-            geminiService.getReasoningPlan(editedPrompt || "Image generation", userApiKey, language)
-                .then(plan => setReasoningText(plan));
+
+            // Task 2: Google Search Grounding
+            if (useGrounding && editedPrompt) {
+                console.log('🔍 Grounding Search: START');
+                tasks.push(
+                    fetchInvisibleReferences(editedPrompt, 2)
+                        .then(refs => {
+                            invisibleReferences = refs;
+                            if (refs.length > 0) {
+                                console.log(`🌐 Grounding: Found ${refs.length} refs`);
+                                showToast(
+                                    language === 'it'
+                                        ? `✅ ${refs.length} immagini di riferimento da Google`
+                                        : `✅ ${refs.length} reference images from Google`,
+                                    'success'
+                                );
+                            }
+                        })
+                );
+            }
+
+            // Execute all pre-processing in parallel
+            await Promise.all(tasks);
+            console.log(`⏱️ Pre-processing completed in ${Date.now() - preProcessingStart}ms`);
+
+        } catch (error) {
+            console.error("Pre-processing error (non-fatal):", error);
+            setIsEnhancing(false);
         }
 
         try {
-            // v1.5.1: Fetch invisible reference images from Google if grounding is enabled
-            let invisibleReferences: File[] = [];
-            if (useGrounding && editedPrompt) {
-                console.log('🌐 Google Search Grounding active - fetching reference images...');
-                showToast(
-                    language === 'it'
-                        ? '🔍 Ricerca immagini di riferimento da Google...'
-                        : '🔍 Fetching reference images from Google...',
-                    'success'
-                );
-                invisibleReferences = await fetchInvisibleReferences(editedPrompt, 2);
-                if (invisibleReferences.length > 0) {
-                    console.log(`✅ Added ${invisibleReferences.length} invisible reference images from Google`);
-                    showToast(
-                        language === 'it'
-                            ? `✅ ${invisibleReferences.length} immagini di riferimento trovate`
-                            : `✅ ${invisibleReferences.length} reference images found`,
-                        'success'
-                    );
-                } else {
-                    console.log('⚠️ No reference images found from Google Search');
-                }
-            }
 
             // v1.5.1: Remove square brackets from prompt to avoid ambiguous keywords (e.g., "Coin" = money vs brand)
             cleanedPrompt = useGrounding ? removeBracketsFromPrompt(cleanedPrompt) : cleanedPrompt;
@@ -2657,13 +2674,7 @@ export default function App() {
                 ? `🧹 Cleaned prompt for Gemini: "${cleanedPrompt}" (removed brackets)`
                 : '');
 
-            // v1.0: Calculate estimated cost
-            const estimatedCost = geminiService.calculateEstimatedCost(
-                selectedModel,
-                selectedResolution,
-                allReferenceFiles.length + (styleReferenceImage ? 1 : 0) + (structureImage ? 1 : 0)
-            );
-            console.log(`💰 Estimated cost: $${estimatedCost.toFixed(3)}`);
+
 
             // Batch generation: add prompt variations for each image to create diversity
             // NOTE: Gemini API doesn't support seed parameter for image models, so we add subtle prompt variations
@@ -2714,7 +2725,8 @@ export default function App() {
                         selectedResolution,
                         undefined,
                         controller.signal,
-                        useGrounding // v1.4: Google Search Grounding
+                        useGrounding, // v1.4: Google Search Grounding
+                        isPromptEnhanced // v1.9.2: Speed optimization
                     );
                     imageDataUrls.push(imageDataUrl);
                     console.log(`✅ Image ${index + 1}/${numImagesToGenerate} generated`);
@@ -2757,7 +2769,8 @@ export default function App() {
                             selectedResolution,
                             undefined,
                             controller.signal,
-                            useGrounding // v1.4: Google Search Grounding
+                            useGrounding, // v1.4: Google Search Grounding
+                            isPromptEnhanced // v1.9.2: Speed optimization
                         );
                     });
                     imageDataUrls.push(...await Promise.all(generationPromises));
@@ -2785,7 +2798,6 @@ export default function App() {
                         timestamp: Date.now(),
                         model: selectedModel, // v1.0: Store model used
                         resolution: selectedResolution, // v1.0: Store resolution used
-                        estimatedCost // v1.0: Store estimated cost
                     });
                 })
             );
@@ -2793,15 +2805,7 @@ export default function App() {
             setCurrentImages(newImages);
             setHistory(prev => [...newImages, ...prev].slice(0, MAX_HISTORY_ITEMS));
 
-            // v1.4: Update usage stats
-            const generationTime = (Date.now() - startTime) / 1000;
-            setUsageStats(prev => ({
-                imagesGenerated: prev.imagesGenerated + newImages.length,
-                totalCost: prev.totalCost + estimatedCost,
-                tokensUsed: prev.tokensUsed + 0, // Gemini Image API cost is per image, not tokens
-                averageTime: (prev.averageTime * prev.imagesGenerated + generationTime) / (prev.imagesGenerated + 1),
-                generationTimes: [...prev.generationTimes, generationTime]
-            }));
+
         } catch (error: any) {
             console.error("Image generation failed", error);
             showToast(error.message || t.generationFailed, 'error');
@@ -3279,7 +3283,6 @@ export default function App() {
     // Keyboard shortcuts
     const shortcuts = useMemo(() => [
         { ...APP_SHORTCUTS.GENERATE, action: () => !isActionDisabled && handleGenerate() },
-        { ...APP_SHORTCUTS.ENHANCE_PROMPT, action: () => !isActionDisabled && setAutoEnhance(prev => !prev) }, // v1.9: Toggle instead of manual call
         { ...APP_SHORTCUTS.RANDOM_SEED, action: handleRandomizeSeed },
         { ...APP_SHORTCUTS.CLEAR_INTERFACE, action: handleResetInterface },
         { ...APP_SHORTCUTS.OPEN_SETTINGS, action: () => setIsSettingsOpen(true) },
@@ -3345,7 +3348,7 @@ export default function App() {
                             <ImageDisplay images={currentImages} isLoading={isLoading} onDownload={handleDownload} onZoom={handleZoom} onEdit={setEditingImage} onReroll={handleReroll} onToggleFavorite={handleToggleFavorite} onUpscale={handleUpscale} upscalingImageId={upscalingImageId} onSaveDna={handleSaveImageAsDna} reasoningText={reasoningText} />
                         </div>
 
-                        {((referenceImages.length > 0 || !!styleReferenceImage) || currentImages.length === 1) && (
+                        {((referenceImages.length > 0 || !!styleReferenceImage) || currentImages.length > 0 || isLoading) && (
                             <div className="flex-shrink-0 space-y-2 lg:space-y-4 overflow-y-auto max-h-[300px] lg:max-h-[250px]">
                                 {(referenceImages.length > 0 || !!styleReferenceImage) && (
                                     <CreativePromptsPanel
@@ -3358,16 +3361,29 @@ export default function App() {
                                     />
                                 )}
 
-                                {currentImages.length === 1 && (
-                                    <div className="w-full p-4 bg-light-surface/50 dark:bg-dark-surface/30 backdrop-blur-xl rounded-2xl border border-light-border dark:border-dark-border/50 shadow-sm">
-                                        <div className="flex justify-between items-start">
-                                            <div>
-                                                <h4 className="text-xs font-semibold mb-1 text-light-text-muted dark:text-dark-text-muted uppercase tracking-wider">{t.generationPromptTitle}</h4>
-                                                <p className="text-sm mr-4">{currentImages[0].prompt}</p>
+                                {(currentImages.length > 0 || isLoading) && (
+                                    <div className="w-full p-4 bg-light-surface/60 dark:bg-dark-surface/40 backdrop-blur-2xl rounded-2xl border border-light-border dark:border-dark-border/50 shadow-lg animate-fadeIn">
+                                        <div className="flex justify-between items-start gap-4">
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center gap-2 mb-1.5">
+                                                    <h4 className="text-[10px] lg:text-xs font-bold text-light-text-muted dark:text-dark-text-muted uppercase tracking-[0.1em]">{t.generationPromptTitle}</h4>
+                                                    {autoEnhance && (
+                                                        <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-brand-purple/20 text-brand-purple text-[9px] font-bold uppercase tracking-wider animate-pulse">
+                                                            <SparklesIcon className="w-2.5 h-2.5" />
+                                                            AI Enhanced
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <p className="text-xs lg:text-sm text-light-text dark:text-dark-text leading-relaxed line-clamp-3 hover:line-clamp-none transition-all duration-300">
+                                                    {isLoading ? editedPrompt : currentImages[0]?.prompt}
+                                                </p>
                                             </div>
-                                            <button onClick={() => handleCopyToClipboard(currentImages[0].prompt)} className="flex-shrink-0 flex items-center gap-1.5 text-xs px-2 py-1 rounded-md bg-light-surface-accent dark:bg-dark-surface-accent border border-light-border dark:border-dark-border hover:border-dark-text-muted transition-colors">
-                                                <CopyIcon className="w-3 h-3" />
-                                                <span>{t.copy}</span>
+                                            <button
+                                                onClick={() => handleCopyToClipboard(isLoading ? editedPrompt : (currentImages[0]?.prompt || ''))}
+                                                className="flex-shrink-0 p-2 rounded-xl bg-light-surface-accent dark:bg-dark-surface-accent border border-light-border dark:border-dark-border hover:border-brand-purple/50 active:scale-95 transition-all duration-200"
+                                                title={t.copy}
+                                            >
+                                                <CopyIcon className="w-4 h-4 text-light-text-muted dark:text-dark-text-muted group-hover:text-brand-purple" />
                                             </button>
                                         </div>
                                     </div>
@@ -3506,13 +3522,7 @@ export default function App() {
                     isLoading={isDnaLoading}
                 />
 
-                {/* v1.4: Usage Tracker Modal */}
-                <UsageTracker
-                    stats={usageStats}
-                    isVisible={showUsageTracker}
-                    onClose={() => setShowUsageTracker(false)}
-                    language={language}
-                />
+
 
                 {editingImage && <InpaintEditor image={editingImage} onClose={() => setEditingImage(null)} onSave={handleInpaint} />}
 
