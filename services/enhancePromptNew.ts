@@ -80,8 +80,7 @@ You are the Supreme Art Director of Generentolo. You have an infallible eye for 
             },
             config: {
                 systemInstruction,
-                temperature: 0.7,
-                responseMimeType: "application/json"
+                temperature: 0.7
             }
         });
 
@@ -98,7 +97,15 @@ You are the Supreme Art Director of Generentolo. You have an infallible eye for 
         }
 
         try {
-            const data = JSON.parse(cleanedText);
+            let data;
+            if (cleanedText.includes('{')) {
+                const start = cleanedText.indexOf('{');
+                const end = cleanedText.lastIndexOf('}') + 1;
+                data = JSON.parse(cleanedText.substring(start, end));
+            } else {
+                data = { enhancedPrompt: cleanedText, artDirectorPlan: "" };
+            }
+
             return {
                 enhancedPrompt: data.enhancedPrompt || currentPrompt,
                 artDirectorPlan: data.artDirectorPlan || "",

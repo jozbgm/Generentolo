@@ -2248,7 +2248,7 @@ export default function App() {
     const [dynamicTools, setDynamicTools] = useState<DynamicTool[]>([]);
     const [aspectRatio, setAspectRatio] = useState<string>('1:1');
     // v1.0: New PRO features states
-    const [selectedModel, setSelectedModel] = useState<ModelType>('gemini-2.0-flash-exp');
+    const [selectedModel, setSelectedModel] = useState<ModelType>('gemini-2.5-flash-image');
     const [selectedResolution, setSelectedResolution] = useState<ResolutionType>('2k');
     const [currentImages, setCurrentImages] = useState<GeneratedImage[]>([]);
     const [history, setHistory] = useState<GeneratedImage[]>([]);
@@ -2279,7 +2279,8 @@ export default function App() {
     const [dnaCharacters, setDnaCharacters] = useState<DnaCharacter[]>([]);
     const [selectedDnaId, setSelectedDnaId] = useState<string | null>(null);
     const [isDnaLoading, setIsDnaLoading] = useState(false);
-    const [loadingMessage, setLoadingMessage] = useState<string>(''); // v1.9.2: Funny loading messages
+    const [loadingMessage, setLoadingMessage] = useState<string>('');
+    const [isPromptEnhancedInternal, setIsPromptEnhancedInternal] = useState(false); // v1.9.3: UI state for enhanced prompt
 
     // v1.8: Studio Mode
     const [appMode, setAppMode] = useState<'classic' | 'studio'>('classic');
@@ -2544,7 +2545,7 @@ export default function App() {
         let cleanedPrompt = editedPrompt;
         let displayPrompt = editedPrompt; // Local variable to capture the version to be saved/displayed
         let invisibleReferences: File[] = [];
-        let isPromptEnhanced = false;
+        setIsPromptEnhancedInternal(false); // Reset UI state
 
         try {
             const preProcessingStart = Date.now();
@@ -2560,10 +2561,10 @@ export default function App() {
                         .then(result => {
                             if (result.method !== 'fallback') {
                                 setEditedPrompt(result.enhancedPrompt);
-                                setReasoningText(result.artDirectorPlan); // Show the plan, not the final prompt
+                                setReasoningText(result.artDirectorPlan);
                                 cleanedPrompt = result.enhancedPrompt;
-                                displayPrompt = result.enhancedPrompt; // Update display version
-                                isPromptEnhanced = true;
+                                displayPrompt = result.enhancedPrompt; // Ensure UI capture
+                                setIsPromptEnhancedInternal(true);
                                 console.log('✨ Master Brain Enhancement: DONE');
                             } else {
                                 console.log('⚠️ Master Brain fell back to original prompt');
@@ -2745,7 +2746,7 @@ export default function App() {
 
                 // Generate sequentially if there are multiple references/complex setup to avoid API overload
                 // Otherwise parallel is fine
-                if (hasMultipleReferences || selectedModel === 'imagine-3.0-pro-exp') {
+                if (hasMultipleReferences || selectedModel === 'gemini-3-pro-image-preview') {
                     const imageDataUrl = await geminiService.generateImage(
                         variantPrompt,
                         aspectRatio,
@@ -2762,7 +2763,7 @@ export default function App() {
                         undefined,
                         controller.signal,
                         useGrounding, // v1.4: Google Search Grounding
-                        isPromptEnhanced // v1.9.2: Speed optimization
+                        isPromptEnhancedInternal // v1.9.2: Speed optimization
                     );
                     imageDataUrls.push(imageDataUrl);
                     console.log(`✅ Image ${index + 1}/${numImagesToGenerate} generated`);
@@ -2806,7 +2807,7 @@ export default function App() {
                             undefined,
                             controller.signal,
                             useGrounding, // v1.4: Google Search Grounding
-                            isPromptEnhanced // v1.9.2: Speed optimization
+                            isPromptEnhancedInternal // v1.9.2: Speed optimization
                         );
                     });
                     imageDataUrls.push(...await Promise.all(generationPromises));
@@ -3403,7 +3404,7 @@ export default function App() {
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center gap-2 mb-1.5">
                                                     <h4 className="text-[10px] lg:text-xs font-bold text-light-text-muted dark:text-dark-text-muted uppercase tracking-[0.1em]">{t.generationPromptTitle}</h4>
-                                                    {autoEnhance && (
+                                                    {(autoEnhance || isPromptEnhancedInternal) && (
                                                         <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-brand-purple/20 text-brand-purple text-[9px] font-bold uppercase tracking-wider animate-pulse">
                                                             <SparklesIcon className="w-2.5 h-2.5" />
                                                             AI Enhanced

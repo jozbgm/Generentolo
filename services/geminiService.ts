@@ -130,7 +130,7 @@ export const extractCharacterDna = async (
             : "Analyze this image and describe the physical features and appearance of the main subject in extreme detail for 'character consistency' purposes. Describe: face shape, hair color and style, eye shape and color, skin tone, unique marks, typical expression, and body type. Create a 'compact' but complete semantic description that can be used as a reference to generate the same character in other contexts. Be precise and professional.";
 
         const result = await ai.models.generateContent({
-            model: "gemini-3-flash-preview",
+            model: "gemini-3-pro-preview",
             contents: [{
                 role: "user",
                 parts: [
@@ -510,10 +510,11 @@ export const rewritePromptWithStyleImage = async (currentPrompt: string, styleFi
 };
 
 // Helper function to get ULTRA-AGGRESSIVE aspect ratio composition guidance
-const getAspectRatioGuidance = (aspectRatio: string, language: 'en' | 'it' = 'en'): string => {
+const getAspectRatioGuidance = (aspectRatio: string, language: 'en' | 'it' = 'en', model?: string): string => {
     // v1.0 UPDATE: Now using native imageConfig.aspectRatio parameter for specific ratios
-    // Text guidance is only needed for "Auto" mode (to match reference image aspect ratio)
-    // For specific ratios (1:1, 16:9, etc.) the API handles it natively - no text tricks needed!
+    // Text guidance is only needed for "Auto" mode OR models without native support (Flash)
+
+    const isPro = model === 'gemini-3-pro-image-preview';
 
     if (aspectRatio === 'Auto') {
         // Auto mode: tell the model to match reference image's aspect ratio
@@ -524,8 +525,16 @@ const getAspectRatioGuidance = (aspectRatio: string, language: 'en' | 'it' = 'en
         }
     }
 
-    // For specific aspect ratios, the native imageConfig.aspectRatio handles it
-    // We only add a minimal reminder to fill the frame (helps avoid white bars)
+    // For models without native support (e.g. Flash), add explicit text guidance
+    if (!isPro && aspectRatio !== '1:1') {
+        if (language === 'it') {
+            return `Usa proporzioni ${aspectRatio}. Componi la scena per questo formato, riempiendo tutto il fotogramma senza bordi vuoti.`;
+        } else {
+            return `Use ${aspectRatio} aspect ratio. Compose the scene for this format, filling the entire frame with no empty borders.`;
+        }
+    }
+
+    // For Pro (native support), we only add a minimal reminder to fill the frame
     if (language === 'it') {
         return "Riempi tutto il fotogramma senza bordi vuoti.";
     } else {
@@ -873,7 +882,7 @@ export const generateImage = async (
     seed?: string,
     language: 'en' | 'it' = 'en',
     preciseReference: boolean = false,
-    model: ModelType = 'gemini-2.0-flash-exp',
+    model: ModelType = 'gemini-2.5-flash-image',
     resolution: ResolutionType = '2k',
     textInImage?: TextInImageConfig,
     abortSignal?: AbortSignal,
@@ -923,11 +932,11 @@ export const generateImage = async (
 
         // v1.0: Aspect ratio is now handled natively via imageConfig.aspectRatio
         // Text guidance is minimal - just a reminder to fill the frame
-        const aspectRatioGuidance = getAspectRatioGuidance(aspectRatio, language);
+        const aspectRatioGuidance = getAspectRatioGuidance(aspectRatio, language, model);
         const instructionParts: string[] = [aspectRatioGuidance];
 
         // v1.0: Add resolution keywords to prompt for Nano Banana Pro (Gemini 3 Pro) to trigger high-res generation
-        if (model === 'imagine-3.0-pro-exp' && resolution) {
+        if (model === 'gemini-3-pro-image-preview' && resolution) {
             const resolutionKeyword = resolution === '4k' ? 'extreme 4K Ultra HD resolution, 4096px, hyper-detailed textures, macro sharpness' :
                 resolution === '2k' ? '2K HD resolution, 2048px, very sharp details' :
                     '1K standard resolution, 1024px';
@@ -1051,7 +1060,7 @@ export const generateImage = async (
         console.log(`📏 Prompt length: ${fullPrompt.length} chars`);
 
         // v1.3: Optimize prompt for Nano Banana Pro with multiple images to reduce complexity
-        if (model === 'imagine-3.0-pro-exp' && imageParts.length > 2 && fullPrompt.length > 500) {
+        if (model === 'gemini-3-pro-image-preview' && imageParts.length > 2 && fullPrompt.length > 500) {
             console.log('⚡ Optimizing prompt for Nano Banana Pro with multiple references...');
             // Keep only essential instructions, remove verbose guidance
             fullPrompt = fullPrompt
@@ -1094,7 +1103,7 @@ export const generateImage = async (
         }
 
         // v1.0: Native Resolution for Nano Banana Pro (Gemini 3 Pro Image)
-        if (model === 'imagine-3.0-pro-exp' && resolution) {
+        if (model === 'gemini-3-pro-image-preview' && resolution) {
             imageConfig.imageSize = resolution.toUpperCase(); // "1K", "2K", or "4K"
             console.log(`🎨 PRO Mode: requesting native ${resolution.toUpperCase()} generation`);
         }
@@ -1111,7 +1120,7 @@ export const generateImage = async (
         // Note: Invisible reference images from Google are added in App.tsx before calling this function
         if (useGrounding) {
             // For PRO model, also enable textual grounding for real-time data
-            if (model === 'imagine-3.0-pro-exp') {
+            if (model === 'gemini-3-pro-image-preview') {
                 config.tools = [{
                     googleSearch: {}
                 }];
@@ -1126,14 +1135,14 @@ export const generateImage = async (
             (config as any).abortSignal = abortSignal;
         }
         (config as any).httpOptions = {
-            timeout: model === 'imagine-3.0-pro-exp' ? 300000 : 120000, // 5min for Pro, 2min for Flash
+            timeout: model === 'gemini-3-pro-image-preview' ? 300000 : 120000, // 5min for Pro, 2min for Flash
         };
 
         console.log(`🚀 Model: ${model} | Resolution: ${resolution} | References: ${referenceFiles.length}`);
         console.log(`🔧 Config:`, JSON.stringify(config, null, 2));
 
         // v1.3: Warning for Nano Banana Pro - it's slower and requires patience
-        if (model === 'imagine-3.0-pro-exp') {
+        if (model === 'gemini-3-pro-image-preview') {
             console.log('⏳ Nano Banana Pro: This model is slower (up to 60-90s per image). Please be patient...');
         }
 
@@ -1251,7 +1260,7 @@ export const generateImage = async (
 
                 // v1.3.1: Auto-fallback to Flash-exp when Pro 3.0 blocks with "OTHER"
                 // "OTHER" typically means: face manipulation, personal photos, identity editing
-                if (blockReason === 'OTHER' && model === 'imagine-3.0-pro-exp') {
+                if (blockReason === 'OTHER' && model === 'gemini-3-pro-image-preview') {
                     console.warn('⚠️ Nano Banana Pro blocked with "OTHER". Auto-fallback to Nano Banana Flash...');
 
                     // Recursively call generateImage with Flash model
@@ -1266,7 +1275,7 @@ export const generateImage = async (
                         seed,
                         language,
                         preciseReference,
-                        'gemini-2.0-flash-exp', // Force Flash model
+                        'gemini-2.5-flash-image', // Force Flash model
                         resolution,
                         textInImage,
                         abortSignal,
@@ -1353,7 +1362,7 @@ export const editImage = async (prompt: string, imageFile: File, userApiKey?: st
         const parts: any[] = [imagePart, { text: prompt }];
 
         const result = await ai.models.generateContent({
-            model: 'gemini-3-flash-image',
+            model: 'gemini-2.5-flash-image',
             contents: { parts },
             config: {
                 responseModalities: [Modality.IMAGE],
@@ -1400,7 +1409,7 @@ export const inpaintImage = async (prompt: string, imageFile: File, maskFile: Fi
         ];
 
         const result = await ai.models.generateContent({
-            model: 'gemini-3-flash-image',
+            model: 'gemini-2.5-flash-image',
             contents: { parts },
             config: {
                 responseModalities: [Modality.IMAGE],
@@ -1606,7 +1615,7 @@ DO NOT add, remove, or modify any elements. This is a faithful high-resolution r
         (config as any).httpOptions = { timeout: 300000 };
 
         const result = await ai.models.generateContent({
-            model: 'imagine-3.0-pro-exp', // Nano Banana Pro - supports up to 4K
+            model: 'gemini-3-pro-image-preview', // Nano Banana Pro - supports up to 4K
             contents: { parts },
             config: config as any
         });
