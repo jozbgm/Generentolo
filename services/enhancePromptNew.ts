@@ -85,13 +85,28 @@ You are the Supreme Art Director of Generentolo. You have an infallible eye for 
             }
         });
 
-        if (result && result.text) {
-            const data = JSON.parse(result.text.trim());
+        const responseText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (!responseText) {
+            throw new Error("Empty response from Master Brain");
+        }
+
+        let cleanedText = responseText.trim();
+
+        // Remove markdown code blocks if present
+        if (cleanedText.startsWith('```')) {
+            cleanedText = cleanedText.replace(/^```(json)?/, '').replace(/```$/, '').trim();
+        }
+
+        try {
+            const data = JSON.parse(cleanedText);
             return {
                 enhancedPrompt: data.enhancedPrompt || currentPrompt,
                 artDirectorPlan: data.artDirectorPlan || "",
                 method: visionParts.length > 0 ? 'vision-aware' : 'standard'
             };
+        } catch (parseError) {
+            console.error('❌ Failed to parse Master Brain JSON:', cleanedText);
+            throw parseError;
         }
     } catch (error) {
         console.error('❌ Master Brain Single-Pass failed:', error);

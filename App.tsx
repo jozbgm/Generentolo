@@ -2511,6 +2511,7 @@ export default function App() {
 
         // v1.9.2: Parallel Pre-processing System (Auto-Enhance Master Brain, Grounding)
         let cleanedPrompt = editedPrompt;
+        let displayPrompt = editedPrompt; // Local variable to capture the version to be saved/displayed
         let invisibleReferences: File[] = [];
         let isPromptEnhanced = false;
 
@@ -2530,6 +2531,7 @@ export default function App() {
                                 setEditedPrompt(result.enhancedPrompt);
                                 setReasoningText(result.artDirectorPlan); // Show the plan, not the final prompt
                                 cleanedPrompt = result.enhancedPrompt;
+                                displayPrompt = result.enhancedPrompt; // Update display version
                                 isPromptEnhanced = true;
                                 console.log('✨ Master Brain Enhancement: DONE');
                             } else {
@@ -2581,7 +2583,10 @@ export default function App() {
         try {
 
             // v1.5.1: Remove square brackets from prompt to avoid ambiguous keywords (e.g., "Coin" = money vs brand)
-            cleanedPrompt = useGrounding ? removeBracketsFromPrompt(cleanedPrompt) : cleanedPrompt;
+            if (useGrounding) {
+                cleanedPrompt = removeBracketsFromPrompt(cleanedPrompt);
+                displayPrompt = removeBracketsFromPrompt(displayPrompt);
+            }
 
             // v1.7: Inject DNA Character description and IMAGE reference if selected
             let dnaReferenceFile: File | null = null;
@@ -2791,7 +2796,7 @@ export default function App() {
                         id: crypto.randomUUID(),
                         imageDataUrl,
                         thumbnailDataUrl,
-                        prompt: editedPrompt,
+                        prompt: displayPrompt,
                         aspectRatio,
                         negativePrompt,
                         seed,
@@ -3375,7 +3380,14 @@ export default function App() {
                                                     )}
                                                 </div>
                                                 <p className="text-xs lg:text-sm text-light-text dark:text-dark-text leading-relaxed line-clamp-3 hover:line-clamp-none transition-all duration-300">
-                                                    {isLoading ? editedPrompt : currentImages[0]?.prompt}
+                                                    {isEnhancing ? (
+                                                        <span className="italic opacity-70 flex items-center gap-2 animate-pulse">
+                                                            <span className="w-1.5 h-1.5 bg-brand-purple rounded-full"></span>
+                                                            {language === 'it' ? 'Miglioramento creativo in corso...' : 'Creative enhancement in progress...'}
+                                                        </span>
+                                                    ) : (
+                                                        isLoading ? editedPrompt : (currentImages[0]?.prompt || editedPrompt)
+                                                    )}
                                                 </p>
                                             </div>
                                             <button

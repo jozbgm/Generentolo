@@ -442,7 +442,7 @@ For all tools, ensure the \`options\` array contains a wide variety of choices, 
                 }
             }
         });
-        const responseText = result.text?.trim() || "[]";
+        const responseText = result.candidates?.[0]?.content?.parts?.[0]?.text || "[]";
         const tools = JSON.parse(responseText);
         return Array.isArray(tools) ? tools : [];
     } catch (error) {
@@ -1467,7 +1467,7 @@ export const generateNegativePrompt = async (prompt: string, referenceFiles: Fil
             }
         });
 
-        const responseText = result.text?.trim() || "";
+        const responseText = result.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
         const negativePrompt = responseText.replace(/negative prompt: /i, '');
         return negativePrompt || "text, watermark, blurry, low quality, ugly, deformed";
 
