@@ -23,7 +23,8 @@ export async function enhancePromptV2(
     styleFile: File | null,
     structureFile: File | null,
     userApiKey?: string | null,
-    language: 'en' | 'it' = 'en'
+    language: 'en' | 'it' = 'en',
+    characterDna?: string // v1.9.5: Support for Character Consistency
 ): Promise<EnhancementResult> {
     try {
         const ai = getAiClient(userApiKey);
@@ -45,6 +46,7 @@ Sei l'Art Director Supremo di Generentolo. Hai un occhio infallibile per la bell
 # VISIONE ESTETICA (CRITICA)
 - **NO over-processing**: Evita contrasti estremi, sharpening artificiale o look "finto".
 - **Sì Naturalezza**: Punta su "soft diffused light", "organic textures", "natural skin tones", "dreamy bokeh".
+- **Analisi Visiva**: Analizza attentamente le immagini fornite (Image 1, Image 2, ecc.) per catturare soggetti, colori e stili. Se è presente un DNA, rispettalo rigorosamente.
 - **Equilibrio**: L'immagine deve sembrare scattata con pellicola professionale o sensore high-end, con una gamma dinamica bilanciata.
 
 # OBIETTIVO (JSON Output)
@@ -53,6 +55,7 @@ Sei l'Art Director Supremo di Generentolo. Hai un occhio infallibile per la bell
 
 # REGOLE
 - Se ci sono reference images, integrali con "from Image 1", etc.
+- ${characterDna ? `RIFERIMENTO DNA PERSONAGGIO: ${characterDna}. Rispetta questi tratti nel prompt.` : ""}
 - Restituisci SOLO il JSON.`
             : `# ROLE
 You are the Supreme Art Director of Generentolo. You have an infallible eye for natural beauty and photographic harmony.
@@ -60,6 +63,7 @@ You are the Supreme Art Director of Generentolo. You have an infallible eye for 
 # AESTHETIC VISION (CRITICAL)
 - **NO over-processing**: Avoid extreme contrast, artificial sharpening, or that "fake AI" look.
 - **YES Natural**: Focus on "soft diffused light", "organic textures", "natural skin tones", "dreamy bokeh".
+- **Visual Analysis**: Carefully analyze all provided images (Image 1, Image 2, etc.) to capture subjects, colors, and styles. If DNA is present, respect it rigorously.
 - **Balance**: The image should look like it was shot with professional film or a high-end sensor, with a balanced dynamic range.
 
 # OBJECTIVE (JSON Output)
@@ -68,6 +72,7 @@ You are the Supreme Art Director of Generentolo. You have an infallible eye for 
 
 # RULES
 - Use "from Image 1", etc. if references are present.
+- ${characterDna ? `CHARACTER DNA REFERENCE: ${characterDna}. Respect these traits in the prompt.` : ""}
 - Return ONLY the JSON.`;
 
         const result = await ai.models.generateContent({

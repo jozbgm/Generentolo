@@ -2549,6 +2549,9 @@ export default function App() {
         setIsPromptEnhancedInternal(false); // Reset UI state
         setActiveDisplayPrompt(editedPrompt); // Initialize with user's prompt
 
+        // v1.9.5: Get active DNA for enhancement context
+        const activeDnaText = selectedDnaId ? dnaCharacters.find(c => c.id === selectedDnaId)?.dna : undefined;
+
         try {
             const preProcessingStart = Date.now();
             console.log('🚀 Starting Parallel Pre-processing...');
@@ -2559,7 +2562,7 @@ export default function App() {
             if (autoEnhance && editedPrompt) {
                 setIsEnhancing(true);
                 tasks.push(
-                    geminiService.enhancePrompt(editedPrompt, referenceImages, styleReferenceImage, structureImage, userApiKey, language)
+                    geminiService.enhancePrompt(editedPrompt, referenceImages, styleReferenceImage, structureImage, userApiKey, language, activeDnaText)
                         .then(result => {
                             if (result.method !== 'fallback') {
                                 setActiveDisplayPrompt(result.enhancedPrompt);
