@@ -1,4 +1,4 @@
-# 🎨 Generentolo PRO v1.9
+# 🎨 Generentolo PRO v1.9.2 Thunder
 
 **Professional AI-Powered Image Generation Web Application**
 
@@ -10,6 +10,12 @@ A sophisticated web application for generating ultra-high-quality images using G
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
 
 ---
+
+## 🎯 **NEW v1.9.2: THUNDER EDITION - Gemini 3.0 Flash Engine**
+- **⚡ Gemini 3.0 Flash Upgrade** - Entire engine migrated to G3 Flash for super-sonic speeds and higher intelligence.
+- **🪄 Dynamic Prompt UI** - Real-time "AI Enhanced" prompt visibility during generation.
+- **🌿 Aesthetic Refinement** - Master Brain tuned for natural beauty, soft lighting, and organic textures (No more AI over-processing!).
+- **🧹 Clean Interface** - Removed Cost Calculator and Usage Tracker for a faster, focused workspace.
 
 ## 🎯 **NEW v1.9.0: Auto-Enhance PRO & UI Streamlining**
 - **✨ Auto-Enhance System** - New toggle switch that automatically optimizes your prompt using AI before every generation.
