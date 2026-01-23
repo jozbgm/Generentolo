@@ -7,12 +7,11 @@ import {
 
 interface StudioPanelProps {
     t: any;
-    language: string;
     studioConfig: any;
     setStudioConfig: (config: any) => void;
 }
 
-const StudioPanel: React.FC<StudioPanelProps> = ({ t, language, studioConfig, setStudioConfig }) => {
+const StudioPanel: React.FC<StudioPanelProps> = ({ t, studioConfig, setStudioConfig }) => {
     const [openSection, setOpenSection] = useState<string | null>('cinema');
 
     const updateConfig = (key: string, value: any) => {
@@ -33,7 +32,7 @@ const StudioPanel: React.FC<StudioPanelProps> = ({ t, language, studioConfig, se
                 onChange={(e) => onChange(e.target.value)}
                 className="w-full px-3 py-1.5 rounded-lg bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border text-light-text dark:text-dark-text text-xs focus:outline-none focus:ring-2 focus:ring-brand-purple/50"
             >
-                <option value="">{language === 'it' ? 'Nessuno' : 'None'}</option>
+                <option value="">{t.noneOption}</option>
                 {options.map(opt => (
                     <option key={opt.id} value={opt.id}>{opt.name}</option>
                 ))}
@@ -181,7 +180,7 @@ const StudioPanel: React.FC<StudioPanelProps> = ({ t, language, studioConfig, se
             <div className="pt-2 space-y-2">
                 <div className="flex items-center gap-2 px-1">
                     <SparklesIcon className="w-3.5 h-3.5 text-brand-magenta" />
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-light-text-muted dark:text-dark-text-muted">Production Kits</span>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-light-text-muted dark:text-dark-text-muted">{t.studioProductionKitsTitle}</span>
                 </div>
                 <div className="grid grid-cols-1 gap-2">
                     {PRODUCTION_KITS.map(kit => (
@@ -192,9 +191,9 @@ const StudioPanel: React.FC<StudioPanelProps> = ({ t, language, studioConfig, se
                         >
                             <span className="text-xs font-bold">{kit.name}</span>
                             <span className="text-[9px] opacity-60 mt-0.5 leading-tight text-left">
-                                {kit.id === 'urban-cut' ? 'Simulates paparazzi street photography' :
-                                    kit.id === 'bts' ? 'Shows the studio environment & crew' :
-                                        'Optimized for commercial & billboard use'}
+                                {kit.id === 'urban-cut' ? t.kitUrbanCutDesc :
+                                    kit.id === 'bts' ? t.kitBtsDesc :
+                                        t.kitBillboardDesc}
                             </span>
                         </button>
                     ))}

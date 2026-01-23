@@ -633,7 +633,6 @@ const aggressiveCropAndResize = (imageDataUrl: string, targetAspectRatio: string
             let sourceHeight = img.height - borders.top - borders.bottom;
 
             // Debug logging
-            console.log(`[Aspect Ratio Processing] Target: ${targetAspectRatio}, Original size: ${img.width}x${img.height}, Borders detected: T${borders.top} B${borders.bottom} L${borders.left} R${borders.right}`);
 
             // Only apply border detection if significant borders found (>3% on any side)
             const borderThreshold = 0.03;
@@ -719,7 +718,6 @@ const aggressiveCropAndResize = (imageDataUrl: string, targetAspectRatio: string
             );
 
             // Debug logging for final output
-            console.log(`[Aspect Ratio Processing] Final output: ${outputWidth}x${outputHeight} (${resolution.toUpperCase()}, ratio: ${(outputWidth / outputHeight).toFixed(3)}, target: ${targetRatio.toFixed(3)})`);
 
             // Return as high-quality PNG
             resolve(canvas.toDataURL('image/png', 1.0));
@@ -837,7 +835,6 @@ Rewritten: "Create the man from Image 1 wearing a hoodie with the logo from Imag
             return userPrompt;
         }
 
-        console.log('✅ Prompt enriched with explicit references:', enrichedPrompt);
         return enrichedPrompt;
 
     } catch (error) {
@@ -1017,7 +1014,6 @@ export const generateImage = async (
                 : `🎯 PRECISE: Keep face features, skin, eyes, nose, hair IDENTICAL to references. Maximum fidelity.`;
 
             instructionParts.push(preciseReferenceGuidance);
-            console.log('🎯 Precise Reference Mode: ACTIVE');
         }
 
         // STEP 6: v1.0 - Add Text-in-Image guidance (PRO feature)
@@ -1045,7 +1041,6 @@ export const generateImage = async (
                 : `📝 TEXT IN IMAGE: Include the text "${textInImage.text}" ${positionMap[position]}, using ${fontStyleMap[fontStyle]}. Text must be LEGIBLE, well integrated in composition, with adequate contrast against background.`;
 
             instructionParts.push(textGuidance);
-            console.log('📝 Text-in-Image Mode: ACTIVE -', textInImage.text);
         }
 
         // Build full prompt with enriched user prompt
@@ -1057,11 +1052,9 @@ export const generateImage = async (
             fullPrompt += ` --no ${negativePrompt.trim()}`;
         }
 
-        console.log(`📏 Prompt length: ${fullPrompt.length} chars`);
 
         // v1.3: Optimize prompt for Nano Banana Pro with multiple images to reduce complexity
         if (model === 'gemini-3-pro-image-preview' && imageParts.length > 2 && fullPrompt.length > 500) {
-            console.log('⚡ Optimizing prompt for Nano Banana Pro with multiple references...');
             // Keep only essential instructions, remove verbose guidance
             fullPrompt = fullPrompt
                 .replace(/⚠️ COMBINA tutti.*?\./g, '')
@@ -1071,7 +1064,6 @@ export const generateImage = async (
                 .replace(/mantieni stesso soggetto e aspetto/g, '')
                 .replace(/keep same subject appearance/g, '')
                 .trim();
-            console.log(`📏 Optimized prompt length: ${fullPrompt.length} chars`);
         }
 
         // CRITICAL: Images must come BEFORE text for proper reference interpretation
@@ -1105,7 +1097,6 @@ export const generateImage = async (
         // v1.0: Native Resolution for Nano Banana Pro (Gemini 3 Pro Image)
         if (model === 'gemini-3-pro-image-preview' && resolution) {
             imageConfig.imageSize = resolution.toUpperCase(); // "1K", "2K", or "4K"
-            console.log(`🎨 PRO Mode: requesting native ${resolution.toUpperCase()} generation`);
         }
 
         if (Object.keys(imageConfig).length > 0) {
@@ -1124,9 +1115,7 @@ export const generateImage = async (
                 config.tools = [{
                     googleSearch: {}
                 }];
-                console.log('🌐 Google Search Grounding enabled - using real-time data + reference images');
             } else {
-                console.log('🌐 Google Search Grounding enabled - using reference images from Google');
             }
         }
 
@@ -1135,15 +1124,12 @@ export const generateImage = async (
             (config as any).abortSignal = abortSignal;
         }
         (config as any).httpOptions = {
-            timeout: model === 'gemini-3-pro-image-preview' ? 300000 : 120000, // 5min for Pro, 2min for Flash
+            timeout: model === 'gemini-3-pro-image-preview' ? 600000 : 300000, // 10min for Pro, 5min for Flash
         };
 
-        console.log(`🚀 Model: ${model} | Resolution: ${resolution} | References: ${referenceFiles.length}`);
-        console.log(`🔧 Config:`, JSON.stringify(config, null, 2));
 
         // v1.3: Warning for Nano Banana Pro - it's slower and requires patience
         if (model === 'gemini-3-pro-image-preview') {
-            console.log('⏳ Nano Banana Pro: This model is slower (up to 60-90s per image). Please be patient...');
         }
 
         // Enhanced retry logic: IMAGE_RECITATION/IMAGE_OTHER with prompt variations + 500/503 server errors
@@ -1610,7 +1596,6 @@ DO NOT add, remove, or modify any elements. This is a faithful high-resolution r
             }
         };
 
-        console.log(`🔍 Upscaling to ${targetResolution.toUpperCase()} with aspect ratio ${aspectRatio}`);
 
         (config as any).httpOptions = { timeout: 300000 };
 
@@ -1632,7 +1617,6 @@ DO NOT add, remove, or modify any elements. This is a faithful high-resolution r
                 const base64ImageBytes: string = part.inlineData.data;
                 const mimeType: string = part.inlineData.mimeType || 'image/png';
                 const upscaledDataUrl = `data:${mimeType};base64,${base64ImageBytes}`;
-                console.log(`✅ Upscaling completed to ${targetResolution.toUpperCase()}`);
                 return upscaledDataUrl;
             }
         }

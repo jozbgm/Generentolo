@@ -7,6 +7,73 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.9.6] - 2026-01-23 🌍
+
+### 🎉 QUALITY UPDATE - Complete Localization & UX Refinements
+
+This update focuses on polishing the user experience with complete bilingual support, improved visual feedback, and refined interaction patterns.
+
+### ✨ Added
+- **Complete Localization System**: 
+  - Centralized translation keys for all UI elements
+  - Full EN/IT support for Queue, Smart Hints, Studio controls, and all toast messages
+  - Removed all hardcoded language checks for cleaner codebase
+- **Storyboard Loading State**: 
+  - Visual feedback when generating cinematic variations
+  - Animated spinner with descriptive text
+  - Clear indication that AI is analyzing the image
+- **Enhanced Queue Visibility**:
+  - Queue dashboard now appears above the floating menu (z-index 65)
+  - Improved spacing and positioning for better accessibility
+  - Higher opacity background for better readability
+
+### 🎨 Changed
+- **Storyboard UI Improvements**:
+  - Fixed-height prompt boxes with internal scrollbars
+  - Eliminated layout glitches from hover-expansion
+  - Stable, predictable grid layout
+- **Abort Behavior Enhancement**:
+  - Abort button now clears both current generation AND entire queue
+  - Intelligent toast messages indicating what was cancelled
+  - Prevents frustrating continuation of queued tasks after abort
+
+### 🐛 Fixed
+- Layout glitches in storyboard grid when hovering over prompts
+- Queue dashboard being hidden behind floating action bar
+- Abort not stopping queued storyboard generations
+- Inconsistent language handling across components
+- Unused props in StudioPanel component
+
+### 🔧 Technical Improvements
+- Removed 250+ lines of redundant language ternary operators
+- Type-safe translation system across all components
+- Cleaner component interfaces with proper prop validation
+- Improved code maintainability and future localization support
+
+---
+
+## [1.9.5] - 2026-01-23 🎬
+
+### 🎉 MAJOR RELEASE - Cinematic Storyboard & Generation Queue
+
+This update introduces a professional production workflow, allowing users to generate technical cinematic sequences and manage large generation tasks with a new queue system.
+
+### ✨ Added
+- **Cinematic Storyboard System**: Generate a technical 9-frame storyboard from any reference image using Gemini 3 Flash.
+  - Analysis of subjects, environment, and lighting for consistency.
+  - 9 sequential technical prompts (ELS, MS, CU, etc.) with directorial specifications.
+  - Integrated "Generate All" feature via the new queue system.
+- **Generation Queue**: Manage multiple generation tasks simultaneously.
+  - View pending tasks in a dedicated visual queue.
+  - Automatic sequential execution of all tasks.
+  - Freedom to keep prompting while others are processed.
+
+### 🎨 Changed
+- **UI Optimization**: Added Storyboard shortcuts to Reference Panel and Image Display for faster workflows.
+- **Version Update**: Global version bump to PRO v1.9.5.
+
+---
+
 ## [1.9.0] - 2026-01-21 🪄
 
 ### 🎉 MAJOR RELEASE - Auto-Enhance PRO & UI Streamlining

@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { useLocalization } from '../App';
-import { ModelType, ResolutionType } from '../types';
+import { ModelType, ResolutionType, GenerationTask } from '../types';
+import { XIcon } from './icons';
 
 interface FloatingActionBarProps {
     // Prompt
@@ -45,6 +46,10 @@ interface FloatingActionBarProps {
     onModelChange: (model: ModelType) => void;
     selectedResolution: ResolutionType;
     onResolutionChange: (resolution: ResolutionType) => void;
+
+    // v1.9.5: Generation Queue
+    queue: GenerationTask[];
+    onRemoveFromQueue: (id: string) => void;
 }
 
 const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
@@ -76,6 +81,8 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
     onModelChange,
     selectedResolution,
     onResolutionChange,
+    queue,
+    onRemoveFromQueue,
 }) => {
     const { t, language } = useLocalization();
     const [isExpanded, setIsExpanded] = useState(false);
@@ -87,7 +94,7 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
     const [showResolutionMenu, setShowResolutionMenu] = useState(false);
 
     const aspectRatios = ["Auto", "1:1", "4:3", "3:4", "16:9", "9:16", "3:2", "2:3", "4:5", "5:4", "21:9"];
-    const numImagesOptions = [1, 2, 3, 4];
+    const numImagesOptions = [1, 2];
 
     // Visual icon for aspect ratios
     const getAspectRatioIcon = (ratio: string) => {
@@ -187,6 +194,56 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                     )}
                 </div>
             )}
+
+            {/* v1.9.5: Generation Queue Dashboard */}
+            {queue.length > 0 && (
+                <div className={`fixed ${isExpanded ? 'bottom-[216px]' : 'bottom-[104px]'} left-1/2 -translate-x-1/2 w-[90%] max-w-lg bg-light-surface/95 dark:bg-dark-surface/95 backdrop-blur-md border border-light-border dark:border-dark-border rounded-2xl shadow-xl z-[65] overflow-hidden animate-slideUp`}>
+                    <div className="px-4 py-2 bg-brand-purple/10 border-b border-light-border dark:border-dark-border flex items-center justify-between">
+                        <span className="text-xs font-bold uppercase tracking-wider text-brand-purple flex items-center gap-2">
+                            <span className="animate-pulse">⏳</span> {t.generationQueue} ({queue.length})
+                        </span>
+                        <div className="flex gap-1">
+                            <div className="w-1.5 h-1.5 rounded-full bg-brand-purple animate-bounce" style={{ animationDelay: '0ms' }} />
+                            <div className="w-1.5 h-1.5 rounded-full bg-brand-purple animate-bounce" style={{ animationDelay: '150ms' }} />
+                            <div className="w-1.5 h-1.5 rounded-full bg-brand-purple animate-bounce" style={{ animationDelay: '300ms' }} />
+                        </div>
+                    </div>
+                    <div className="max-h-[160px] overflow-y-auto">
+                        {queue.map((task, idx) => (
+                            <div key={task.id} className="group px-4 py-3 flex items-center justify-between hover:bg-light-surface-accent/30 dark:hover:bg-dark-surface-accent/30 transition-colors border-b border-light-border/50 dark:border-dark-border/50 last:border-0">
+                                <div className="flex items-center gap-3 overflow-hidden">
+                                    <div className="relative flex-shrink-0 w-8 h-8 rounded-lg bg-brand-purple/20 flex items-center justify-center text-xs font-bold text-brand-purple border border-brand-purple/30">
+                                        {idx + 1}
+                                    </div>
+                                    <div className="overflow-hidden">
+                                        <p className="text-sm text-light-text dark:text-dark-text font-medium truncate">
+                                            {task.prompt || t.untitledTask}
+                                        </p>
+                                        <div className="flex items-center gap-2 mt-0.5">
+                                            <span className="text-[10px] px-1.5 py-0.5 bg-light-surface-accent dark:bg-dark-surface-accent rounded text-light-text-muted dark:text-dark-text-muted">
+                                                {task.model === 'gemini-3-pro-image-preview' ? 'PRO' : 'Flash'}
+                                            </span>
+                                            <span className="text-[10px] px-1.5 py-0.5 bg-light-surface-accent dark:bg-dark-surface-accent rounded text-light-text-muted dark:text-dark-text-muted">
+                                                {task.numImages}x
+                                            </span>
+                                            {task.selectedDnaId && <span className="text-[10px]">🧬</span>}
+                                            {task.referenceImages.length > 0 && <span className="text-[10px]">🖼️ {task.referenceImages.length}</span>}
+                                        </div>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => onRemoveFromQueue(task.id)}
+                                    className="p-2 text-red-400 hover:text-red-500 hover:bg-red-500/10 rounded-full transition-all group-hover:opacity-100 opacity-0 md:opacity-100"
+                                    title={t.removeFromQueue}
+                                >
+                                    ✕
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )
+            }
 
             {/* Main Floating Bar */}
             <div className="fixed bottom-4 left-1/2 -translate-x-1/2 lg:left-[calc(50%-20px)] lg:-translate-x-1/2 w-[95%] lg:w-[calc(100%-360px)] max-w-5xl bg-light-surface/98 dark:bg-dark-surface/98 backdrop-blur-xl border border-light-border dark:border-dark-border rounded-2xl shadow-2xl z-[60] transition-all duration-300 ease-out">
@@ -436,15 +493,29 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                         </div>
 
                         {/* Primary Action - HERO BUTTON */}
-                        <button
-                            onClick={isLoading ? onAbortGeneration : onGenerate}
-                            className={`relative px-4 lg:px-6 py-2.5 lg:py-3 ${isLoading
-                                ? 'bg-gradient-to-r from-brand-purple/80 via-brand-magenta/60 to-brand-purple/80 shadow-[0_0_20px_rgba(139,69,255,0.4)] hover:shadow-[0_0_30px_rgba(139,69,255,0.6)]'
-                                : 'bg-gradient-to-r from-brand-yellow via-brand-magenta to-brand-yellow bg-[length:200%_100%] hover:bg-[position:100%_0] shadow-[0_0_20px_rgba(255,217,61,0.5)] hover:shadow-[0_0_30px_rgba(255,217,61,0.8)]'
-                                } hover:scale-110 active:scale-95 rounded-xl font-bold text-white text-sm lg:text-base transition-all duration-300 whitespace-nowrap`}
-                        >
-                            {isLoading ? <span className="inline-block">⏸</span> : "⚡"} <span className="hidden sm:inline">{isLoading ? t.abort || "Abort" : t.generateButton || "Generate"}</span>
-                        </button>
+                        <div className="flex flex-col gap-1.5 min-w-[120px]">
+                            {/* Primary Control (Generate/Abort) */}
+                            <button
+                                onClick={() => (isLoading ? onAbortGeneration() : onGenerate())}
+                                className={`relative px-4 lg:px-6 py-2 lg:py-2.5 ${isLoading
+                                    ? 'bg-red-500/10 text-red-500 border border-red-500/30'
+                                    : 'bg-gradient-to-r from-brand-yellow via-brand-magenta to-brand-yellow bg-[length:200%_100%] hover:bg-[position:100%_0] shadow-[0_0_15px_rgba(255,217,61,0.4)] text-white'
+                                    } hover:scale-105 active:scale-95 rounded-xl font-bold text-xs lg:text-sm transition-all duration-300 whitespace-nowrap flex items-center justify-center gap-2`}
+                            >
+                                {isLoading ? <XIcon className="w-3.5 h-3.5" /> : "⚡"}
+                                <span>{isLoading ? t.abort : (t.generateButton || "Generate")}</span>
+                            </button>
+
+                            {/* Secondary Queue Control (Only when loading) */}
+                            {isLoading && (
+                                <button
+                                    onClick={onGenerate}
+                                    className="px-4 py-1.5 bg-brand-purple/20 text-brand-purple border border-brand-purple/20 hover:bg-brand-purple/30 rounded-lg text-[9px] font-black uppercase tracking-tighter transition-all flex items-center justify-center gap-1.5"
+                                >
+                                    <span>➕</span> {t.putInQueue}
+                                </button>
+                            )}
+                        </div>
                     </div>
                 )}
 
@@ -515,14 +586,14 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                                 if (!promptLower.match(/\b(pose|posing|standing|sitting|looking|smiling|posa|in piedi|seduto|guardando|sorridendo)\b/)) {
                                     tips.push({
                                         icon: '🧍',
-                                        text: isItalian ? "Posa" : "Pose",
+                                        text: t.hintPose,
                                         example: isItalian ? "posa sicura, sguardo verso camera, sorriso naturale" : "confident pose, looking at camera, natural smile"
                                     });
                                 }
                                 if (!promptLower.match(/\b(outfit|dress|wearing|abbigliamento|vestito|indossa)\b/)) {
                                     tips.push({
                                         icon: '👗',
-                                        text: isItalian ? "Abbigliamento" : "Outfit",
+                                        text: t.hintOutfit,
                                         example: isItalian ? "elegante outfit business casual, vestito moderno" : "elegant business casual outfit, modern dress"
                                     });
                                 }
@@ -533,8 +604,8 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                                 if (!promptLower.match(/\b(playing|sleeping|running|jumping|eating|giocando|dormendo|correndo|saltando|mangiando)\b/)) {
                                     tips.push({
                                         icon: '🐾',
-                                        text: isItalian ? "Azione" : "Action",
-                                        example: isItalian ? "giocando con filo di lana, stiracchiandosi al sole" : "playing with yarn, stretching in sunlight"
+                                        text: t.hintAction,
+                                        example: isItalian ? "giocando con filo di lana, stiracchiandosi al sole" : "playing with yarn, texture detailed fur"
                                     });
                                 }
                             }
@@ -544,14 +615,14 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                                 if (!promptLower.match(/\b(surface|background|table|marble|wood|superficie|sfondo|tavolo|marmo|legno)\b/)) {
                                     tips.push({
                                         icon: '📦',
-                                        text: isItalian ? "Superficie" : "Surface",
+                                        text: t.hintSurface,
                                         example: isItalian ? "su piano di marmo bianco, sfondo minimalista neutro" : "on white marble surface, minimal neutral background"
                                     });
                                 }
                                 if (!promptLower.match(/\b(droplet|water|ice|reflection|goccia|acqua|ghiaccio|riflesso)\b/)) {
                                     tips.push({
                                         icon: '💧',
-                                        text: isItalian ? "Dettagli" : "Details",
+                                        text: t.hintDetails,
                                         example: isItalian ? "con gocce d'acqua, riflessi lucidi sulla superficie" : "with water droplets, glossy surface reflections"
                                     });
                                 }
@@ -562,7 +633,7 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                                 if (!promptLower.match(/\b(fresh|hot|steam|garnish|fresco|caldo|vapore|guarnizione)\b/)) {
                                     tips.push({
                                         icon: '🍽️',
-                                        text: isItalian ? "Presentazione" : "Presentation",
+                                        text: t.hintPresentation,
                                         example: isItalian ? "appena sfornato, vapore visibile, guarnizione fresca" : "freshly cooked, visible steam, fresh garnish"
                                     });
                                 }
@@ -573,40 +644,37 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                                 if (!promptLower.match(/\b(sunset|sunrise|dawn|dusk|golden hour|tramonto|alba|crepuscolo)\b/)) {
                                     tips.push({
                                         icon: '🌅',
-                                        text: isItalian ? "Momento" : "Time",
+                                        text: t.hintTime,
                                         example: isItalian ? "al tramonto dorato, luce calda del crepuscolo" : "at golden sunset, warm twilight light"
                                     });
                                 }
                             }
 
-                            // ALWAYS SUGGEST: Missing technical photography terms
+                            // Technical photography terms
                             if (!promptLower.match(/\b(shot|angle|lens|camera|8k|photography|professional|inquadratura|angolo|obiettivo|fotografia|professionale)\b/) && wordCount >= 3) {
                                 tips.push({
                                     icon: '📸',
-                                    text: isItalian ? "Camera" : "Camera",
+                                    text: t.hintCamera,
                                     example: isItalian ? "foto professionale, obiettivo 85mm, inquadratura bilanciata" : "professional photography, 85mm lens, balanced composition"
                                 });
                             }
 
-                            // ALWAYS SUGGEST: Missing lighting if no light-related terms
                             if (!promptLower.match(/\b(light|lighting|glow|bright|dark|shadow|golden hour|studio|luce|illuminazione|bagliore|ombra|dorato)\b/) && wordCount >= 3) {
                                 tips.push({
                                     icon: '💡',
-                                    text: isItalian ? "Illuminazione" : "Lighting",
+                                    text: t.hintLighting,
                                     example: isItalian ? "luce naturale dorata, illuminazione da studio professionale" : "golden natural light, professional studio lighting"
                                 });
                             }
 
-                            // ALWAYS SUGGEST: Missing mood/quality if very basic prompt
                             if (!promptLower.match(/\b(cinematic|dramatic|serene|moody|vibrant|hyperrealistic|8k|cinematico|drammatico|sereno|vivace|iper-realistico)\b/) && wordCount >= 4) {
                                 tips.push({
                                     icon: '✨',
-                                    text: isItalian ? "Qualità" : "Quality",
+                                    text: t.hintQuality,
                                     example: isItalian ? "iper-realistico, 8K ultra HD, mood cinematografico" : "hyper-realistic, 8K ultra HD, cinematic mood"
                                 });
                             }
 
-                            // Show max 3 tips to avoid clutter
                             const displayTips = tips.slice(0, 3);
 
                             return displayTips.length > 0 ? (
@@ -615,14 +683,12 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                                         <button
                                             key={idx}
                                             onClick={() => {
-                                                // Add the example to the prompt
                                                 const newPrompt = prompt.trim() + (prompt.trim().endsWith(',') ? ' ' : ', ') + tip.example;
                                                 onPromptChange(newPrompt);
-                                                // Focus textarea
                                                 setTimeout(() => promptTextareaRef.current?.focus(), 100);
                                             }}
                                             className="px-2 py-1 rounded-md transition-all duration-150 bg-brand-yellow/20 dark:bg-brand-yellow/10 text-brand-yellow dark:text-brand-yellow hover:bg-brand-yellow/30 dark:hover:bg-brand-yellow/20 hover:scale-105 active:scale-95 cursor-pointer"
-                                            title={isItalian ? `Clicca per aggiungere: ${tip.example}` : `Click to add: ${tip.example}`}
+                                            title={`${t.hintClickAdd} ${tip.example}`}
                                         >
                                             {tip.icon} {tip.text}
                                         </button>
@@ -872,16 +938,27 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                                 ▼
                             </button>
 
-                            {/* Generate - HERO BUTTON */}
-                            <button
-                                onClick={isLoading ? onAbortGeneration : onGenerate}
-                                className={`relative px-4 lg:px-6 py-2 lg:py-2.5 ${isLoading
-                                    ? 'bg-gradient-to-r from-brand-purple/80 via-brand-magenta/60 to-brand-purple/80 shadow-[0_0_20px_rgba(139,69,255,0.4)] hover:shadow-[0_0_30px_rgba(139,69,255,0.6)]'
-                                    : 'bg-gradient-to-r from-brand-yellow via-brand-magenta to-brand-yellow bg-[length:200%_100%] hover:bg-[position:100%_0] shadow-[0_0_20px_rgba(255,217,61,0.5)] hover:shadow-[0_0_30px_rgba(255,217,61,0.8)]'
-                                    } hover:scale-110 active:scale-95 rounded-xl font-bold text-white text-xs lg:text-sm transition-all duration-300 whitespace-nowrap`}
-                            >
-                                {isLoading ? <span className="inline-block">⏸</span> : "⚡"} <span className="hidden sm:inline">{isLoading ? t.abort || "Abort" : t.generateButton || "Generate"}</span>
-                            </button>
+                            <div className="flex flex-col gap-2 min-w-[140px]">
+                                <button
+                                    onClick={() => (isLoading ? onAbortGeneration() : onGenerate())}
+                                    className={`relative px-6 lg:px-8 py-3 lg:py-4 ${isLoading
+                                        ? 'bg-red-500/10 text-red-500 border border-red-500/30'
+                                        : 'bg-gradient-to-r from-brand-yellow via-brand-magenta to-brand-yellow bg-[length:200%_100%] hover:bg-[position:100%_0] shadow-[0_0_25px_rgba(255,217,61,0.6)] text-white'
+                                        } hover:scale-105 active:scale-95 rounded-2xl font-black text-sm lg:text-base uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-3`}
+                                >
+                                    {isLoading ? <XIcon className="w-5 h-5" /> : "⚡"}
+                                    {isLoading ? t.abort : (t.generateButton || "Generate")}
+                                </button>
+
+                                {isLoading && (
+                                    <button
+                                        onClick={onGenerate}
+                                        className="w-full py-2 bg-brand-purple/20 text-brand-purple border border-brand-purple/20 hover:bg-brand-purple/30 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2"
+                                    >
+                                        <span>➕</span> {t.putInQueue}
+                                    </button>
+                                )}
+                            </div>
                         </div>
                     </div>
                 )}

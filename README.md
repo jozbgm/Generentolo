@@ -1,8 +1,8 @@
-# 🎨 Generentolo PRO v1.9.2 Thunder
+# 🎨 Generentolo PRO v1.9.5 Directorate
 
-**Professional AI-Powered Image Generation Web Application**
+**Professional AI-Powered Image Generation & Storyboarding Suite**
 
-A sophisticated web application for generating ultra-high-quality images using Google's Gemini models (Flash & **Nano Banana PRO 3.1**) with **Advanced Native 2K/4K Generation**, **DNA Character Consistency**, **advanced Google Search Grounding with explicit keyword control**, style presets, physics controls, usage tracking, ControlNet-like structure guidance, 4K resolution support, native upscaling, professional prompt library with optimized presets, and text-in-image capabilities. Designed for graphic design agencies, marketers, and creative professionals who demand the highest quality and precision.
+A sophisticated web application for generating ultra-high-quality images using Google's Gemini models (Flash & **Gemini 3 Flash**) with **Advanced Native 2K/4K Generation**, **Cinematic Storyboarding**, **Generation Queue**, **DNA Character Consistency**, **advanced Google Search Grounding**, and professional production controls.
 
 [![Live Demo](https://img.shields.io/badge/Live-Demo-blue?style=for-the-badge)](https://www.dugongo.it/generentolo/)
 [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
@@ -11,11 +11,11 @@ A sophisticated web application for generating ultra-high-quality images using G
 
 ---
 
-## 🎯 **NEW v1.9.2: THUNDER EDITION - Gemini 3.0 Flash Engine**
-- **⚡ Gemini 3.0 Flash Upgrade** - Entire engine migrated to G3 Flash for super-sonic speeds and higher intelligence.
-- **🪄 Dynamic Prompt UI** - Real-time "AI Enhanced" prompt visibility during generation.
-- **🌿 Aesthetic Refinement** - Master Brain tuned for natural beauty, soft lighting, and organic textures (No more AI over-processing!).
-- **🧹 Clean Interface** - Removed Cost Calculator and Usage Tracker for a faster, focused workspace.
+## 🎯 **NEW v1.9.5: DIRECTORATE EDITION - Storyboard & Queue**
+- **🎬 Cinematic Storyboard System** - Transform ONE reference image into a technical 9-frame storyboard with perfect continuity.
+- **🔄 Smart Generation Queue** - Queue multiple tasks and monitor progress while you keep designing.
+- **⚡ Gemini 3 Flash Master** - Optimized prompts for the latest G3 Flash engine.
+- **🌊 Fluid Production UI** - Enhanced navigation and production shortcuts in the workspace.
 
 ## 🎯 **NEW v1.9.0: Auto-Enhance PRO & UI Streamlining**
 - **✨ Auto-Enhance System** - New toggle switch that automatically optimizes your prompt using AI before every generation.

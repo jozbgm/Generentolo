@@ -40,12 +40,10 @@ export const extractSearchKeywords = (prompt: string): string => {
 
     if (bracketMatch && bracketMatch[1]) {
         const explicitKeywords = bracketMatch[1].trim();
-        console.log(`🎯 Using explicit search keywords from brackets: "${explicitKeywords}"`);
         return explicitKeywords;
     }
 
     // Fallback to automatic extraction if no brackets found
-    console.log(`🤖 No brackets found, using automatic keyword extraction`);
 
     // Remove everything AFTER style mentions to get only the subject
     let cleanPrompt = prompt.toLowerCase();
@@ -99,7 +97,6 @@ export const searchGoogleImages = async (query: string, maxResults: number = 10)
             return [];
         }
 
-        console.log(`🔍 Searching Google Images for: "${query}"`);
 
         const url = new URL('https://www.googleapis.com/customsearch/v1');
         url.searchParams.set('key', GOOGLE_SEARCH_API_KEY);
@@ -197,12 +194,9 @@ export const fetchInvisibleReferences = async (prompt: string, maxImages: number
         const searchQuery = extractSearchKeywords(prompt);
 
         if (!searchQuery || searchQuery.length < 3) {
-            console.log('⚠️ Prompt too short for image search, skipping grounding');
             return [];
         }
 
-        console.log(`🌐 Google Search Grounding: extracting keywords from prompt`);
-        console.log(`🔍 Search query: "${searchQuery}"`);
 
         // Search Google Images
         const imageUrls = await searchGoogleImages(searchQuery, maxImages);
@@ -221,7 +215,6 @@ export const fetchInvisibleReferences = async (prompt: string, maxImages: number
         // Filter out failed fetches
         const validFiles = files.filter((f): f is File => f !== null);
 
-        console.log(`✅ Successfully fetched ${validFiles.length}/${imageUrls.length} invisible reference images`);
 
         return validFiles;
     } catch (error) {

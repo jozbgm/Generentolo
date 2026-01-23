@@ -1,12 +1,15 @@
 import React, { useState, useEffect, useCallback, useMemo, createContext, useContext, useRef } from 'react';
-import { GeneratedImage, DynamicTool, PromptPreset, ModelType, ResolutionType } from './types';
+import { GeneratedImage, DynamicTool, PromptPreset, ModelType, ResolutionType, GenerationTask } from './types';
 import * as geminiService from './services/geminiService';
 import * as presetsService from './services/presetsService';
+import * as storyboardService from './services/storyboardService';
+import { StoryboardPrompt } from './services/storyboardService';
 import { useKeyboardShortcuts, APP_SHORTCUTS } from './hooks/useKeyboardShortcuts';
 import { SunIcon, MoonIcon, UploadIcon, DownloadIcon, SparklesIcon, CopyIcon, SettingsIcon, XIcon, CheckIcon, LanguageIcon, BrushIcon, DiceIcon, TrashIcon, ReloadIcon, StarIcon, CornerUpLeftIcon, ChevronLeftIcon, ChevronRightIcon, ChevronDownIcon, ChevronUpIcon } from './components/icons';
 import { indexedDBService, DnaCharacter } from './services/indexedDB';
 import FloatingActionBar from './components/FloatingActionBar';
 import ZoomableImage from './components/ZoomableImage';
+import StoryboardGrid from './components/StoryboardGrid';
 
 import { STYLE_PRESETS, PHYSICS_PRESETS } from './data/stylePresets'; // v1.4
 import { fetchInvisibleReferences, removeBracketsFromPrompt } from './services/googleSearchService'; // v1.5.1
@@ -27,7 +30,7 @@ if (!crypto.randomUUID) {
 // --- Localization ---
 const translations = {
     en: {
-        headerTitle: 'Generentolo PRO v1.9.2',
+        headerTitle: 'Generentolo PRO v1.9.6',
         headerSubtitle: 'Let me do it for you!',
         refImagesTitle: 'Reference & Style Images',
         styleRefTitle: 'Style Reference',
@@ -72,6 +75,7 @@ const translations = {
         resolution2k: '2K (High)',
         resolution4k: '4K (Ultra)',
         resolutionTooltip: "PRO model only. Higher resolution = better quality but slower and more expensive.",
+        estimatedCost: 'Estimated Cost',
 
         textInImageTitle: 'Text in Image',
         textInImageEnable: 'Add Text',
@@ -238,9 +242,63 @@ const translations = {
         studioShotWide: 'Wide Shot',
         autoEnhance: 'Auto Enhance',
         autoEnhanceTooltip: 'Automatically optimizes your prompt using AI before generating. May increase waiting time.',
+        // v1.9.5: Queue & Storyboard
+        addToQueue: 'Add to Queue',
+        putInQueue: 'Put in Queue',
+        queueNext: 'Queue Next',
+        cinematicStoryboardTitle: 'Cinematic Storyboard',
+        storyboardSubtext: '9 directorial variations',
+        storyboardAnalyzing: 'Analyzing frame...',
+        uploadForStoryboard: 'Upload an image for storyboard',
+        validImageForStoryboard: 'Upload a valid reference image for the storyboard',
+        creativeEnhancementInProgress: 'Creative enhancement in progress...',
+        // v1.9.5: Queue UI
+        generationQueue: 'Generation Queue',
+        untitledTask: 'Untitled',
+        removeFromQueue: 'Remove from queue',
+        // v1.9: Smart Hints
+        hintPose: 'Pose',
+        hintOutfit: 'Outfit',
+        hintAction: 'Action',
+        hintSurface: 'Surface',
+        hintDetails: 'Details',
+        hintPresentation: 'Presentation',
+        hintTime: 'Time',
+        hintCamera: 'Camera',
+        hintLighting: 'Lighting',
+        hintQuality: 'Quality',
+        hintClickAdd: 'Click to add:',
+        // v1.9.6: Final localizations
+        noneOption: 'None',
+        reroll: 'Re-roll (generate variant)',
+        rerollTooltip: 'Generate variant with new seed',
+        storyboardTooltip: 'Generate Cinematic Storyboard variations',
+        dnaTooltip: 'Save as DNA Character Consistency',
+        // Studio specific
+        studioProductionKitsTitle: 'Production Kits',
+        kitUrbanCutDesc: 'Simulates paparazzi street photography',
+        kitBtsDesc: 'Shows the studio environment & crew',
+        kitBillboardDesc: 'Optimized for commercial & billboard use',
+        // Toasts & Labels
+        generationCancelled: '🛑 Generation cancelled',
+        generatingVariations: '🎲 Generating variations...',
+        variationsGenerated: '✅ Variations generated!',
+        variationsFailed: 'Variation generation failed',
+        settingsCopied: '📋 Settings copied!',
+        variantGenerated: '🎲 Variant generated!',
+        shotsAddedToQueue: 'shots added to queue',
+        storyboardFailed: 'Storyboard generation failed',
+        presetsSaved: 'Presets saved successfully!',
+        presetsFailed: 'Failed to save preset',
+        presetLoaded: 'Loaded preset:',
+        presetDeleted: 'Preset deleted',
+        presetsExported: 'Presets exported successfully!',
+        presetsExportFailed: 'Failed to export presets',
+        presetsImported: 'Presets imported successfully!',
+        presetsImportFailed: 'Failed to import presets. Invalid file format.',
     },
     it: {
-        headerTitle: 'Generentolo PRO v1.9.2',
+        headerTitle: 'Generentolo PRO v1.9.5',
         headerSubtitle: 'Let me do it for you!',
         refImagesTitle: 'Immagini di Riferimento e Stile',
         styleRefTitle: 'Riferimento Stile',
@@ -286,6 +344,7 @@ const translations = {
         resolution4k: '4K (Ultra)',
         resolutionTooltip: "Solo modello PRO. Risoluzione maggiore = qualità migliore ma più lento e costoso.",
         estimatedCost: 'Costo Stimato',
+
         textInImageTitle: 'Testo nell\'Immagine',
         textInImageEnable: 'Aggiungi Testo',
         textInImagePlaceholder: 'Inserisci il testo da mostrare...',
@@ -451,6 +510,60 @@ const translations = {
         studioShotWide: 'Campo Largo',
         autoEnhance: 'Auto-Miglioramento',
         autoEnhanceTooltip: 'Ottimizza automaticamente il prompt tramite AI prima della generazione. Può aumentare i tempi di attesa.',
+        // v1.9.5: Queue & Storyboard
+        addToQueue: 'Aggiungi alla coda',
+        putInQueue: 'Metti in coda',
+        queueNext: 'Metti in coda',
+        cinematicStoryboardTitle: 'Cinematic Storyboard',
+        storyboardSubtext: '9 varianti registiche',
+        storyboardAnalyzing: 'Analisi in corso...',
+        uploadForStoryboard: 'Carica un\'immagine per lo storyboard',
+        validImageForStoryboard: 'Carica un\'immagine di riferimento valida per lo storyboard',
+        creativeEnhancementInProgress: 'Miglioramento creativo in corso...',
+        // v1.9.5: Queue UI
+        generationQueue: 'Coda Generazione',
+        untitledTask: 'Senza titolo',
+        removeFromQueue: 'Rimuovi dalla coda',
+        // v1.9: Smart Hints
+        hintPose: 'Posa',
+        hintOutfit: 'Abbigliamento',
+        hintAction: 'Azione',
+        hintSurface: 'Superficie',
+        hintDetails: 'Dettagli',
+        hintPresentation: 'Presentazione',
+        hintTime: 'Momento',
+        hintCamera: 'Camera',
+        hintLighting: 'Illuminazione',
+        hintQuality: 'Qualità',
+        hintClickAdd: 'Clicca per aggiungere:',
+        // v1.9.6: Final localizations
+        noneOption: 'Nessuna',
+        reroll: 'Rigenera (nuova variante)',
+        rerollTooltip: 'Genera una variante con un nuovo seed',
+        storyboardTooltip: 'Genera varianti Cinematic Storyboard',
+        dnaTooltip: 'Salva come DNA Character Consistency',
+        // Studio specific
+        studioProductionKitsTitle: 'Production Kits',
+        kitUrbanCutDesc: 'Simula la fotografia street dei paparazzi',
+        kitBtsDesc: 'Mostra l\'ambiente dello studio e la troupe',
+        kitBillboardDesc: 'Ottimizzato per uso commerciale e billboard',
+        // Toasts & Labels
+        generationCancelled: '🛑 Generazione annullata',
+        generatingVariations: '🎲 Generando variazioni...',
+        variationsGenerated: '✅ Variazioni generate!',
+        variationsFailed: 'Generazione variazioni fallita',
+        settingsCopied: '📋 Parametri copiati!',
+        variantGenerated: '🎲 Variante generata!',
+        shotsAddedToQueue: 'inquadrature aggiunte alla coda',
+        storyboardFailed: 'Generazione storyboard fallita',
+        presetsSaved: 'Preset salvato con successo!',
+        presetsFailed: 'Impossibile salvare il preset',
+        presetLoaded: 'Preset caricato:',
+        presetDeleted: 'Preset eliminato',
+        presetsExported: 'Preset esportati con successo!',
+        presetsExportFailed: 'Impossibile esportare i preset',
+        presetsImported: 'Preset importati con successo!',
+        presetsImportFailed: 'Impossibile importare i preset. Formato file non valido.',
     }
 };
 
@@ -592,17 +705,30 @@ const Header: React.FC<HeaderProps> = ({ theme, toggleTheme, onOpenSettings, onO
 // Memoized ImagePreview component to prevent flickering
 const ImagePreview = React.memo<{ file: File; index: number; isGuide?: boolean; onRemove?: (index: number) => void }>(
     ({ file, index, isGuide, onRemove }) => {
-        const previewUrl = useMemo(() => URL.createObjectURL(file), [file]);
+        const [previewUrl, setPreviewUrl] = useState<string>('');
+
         useEffect(() => {
-            return () => URL.revokeObjectURL(previewUrl);
-        }, [previewUrl]);
+            if (!file || !(file instanceof Blob)) return;
+            let url: string | null = null;
+            try {
+                url = URL.createObjectURL(file);
+                setPreviewUrl(url);
+            } catch (e) {
+                console.error("Failed to create preview URL", e);
+            }
+            return () => {
+                if (url) URL.revokeObjectURL(url);
+            };
+        }, [file]);
+
+        if (!previewUrl) return <div className="aspect-square rounded-xl bg-light-surface-accent animate-pulse" />;
 
         return (
-            <div className="relative group aspect-square rounded-xl shadow-[0_0_12px_3px_rgba(250,204,21,0.6)] bg-light-surface/50 dark:bg-dark-surface/30 flex items-center justify-center">
+            <div className="relative group aspect-square rounded-xl shadow-[0_0_12px_3px_rgba(250,204,21,0.6)] bg-white dark:bg-dark-surface flex items-center justify-center overflow-hidden">
                 <div className={`absolute top-1.5 left-1.5 px-1.5 py-0.5 text-[10px] font-bold rounded-full backdrop-blur-sm z-10 ${isGuide ? 'bg-blue-400/20 text-blue-800 dark:text-blue-300' : 'bg-yellow-400/30 text-yellow-800 dark:text-yellow-300'}`}>
                     {isGuide ? 'GUIDE' : `REF.${index + 1}`}
                 </div>
-                <img src={previewUrl} alt={`Reference ${index + 1}`} className="w-full h-full object-cover rounded-xl" />
+                <img src={previewUrl} alt={`Reference ${index + 1}`} className="w-full h-full object-cover" />
                 {!isGuide && onRemove && (
                     <button onClick={(e) => { e.stopPropagation(); onRemove(index); }} className="absolute top-1.5 right-1.5 bg-black/60 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity z-10" aria-label={`Remove image ${index + 1}`}>
                         <XIcon className="w-3 h-3" />
@@ -616,18 +742,31 @@ const ImagePreview = React.memo<{ file: File; index: number; isGuide?: boolean; 
 // Memoized StyleImagePreview component to prevent flickering
 const StyleImagePreview = React.memo<{ file: File; onRemove: () => void }>(
     ({ file, onRemove }) => {
-        const previewUrl = useMemo(() => URL.createObjectURL(file), [file]);
+        const [previewUrl, setPreviewUrl] = useState<string>('');
+
         useEffect(() => {
-            return () => URL.revokeObjectURL(previewUrl);
-        }, [previewUrl]);
+            if (!file || !(file instanceof Blob)) return;
+            let url: string | null = null;
+            try {
+                url = URL.createObjectURL(file);
+                setPreviewUrl(url);
+            } catch (e) {
+                console.error("Failed to create style preview URL", e);
+            }
+            return () => {
+                if (url) URL.revokeObjectURL(url);
+            };
+        }, [file]);
+
+        if (!previewUrl) return <div className="aspect-square rounded-xl bg-light-surface-accent animate-pulse" />;
 
         return (
-            <>
-                <img src={previewUrl} alt="Style reference" className="w-full h-auto max-h-48 object-cover rounded-xl" />
+            <div className="relative group overflow-hidden rounded-xl bg-white dark:bg-dark-surface">
+                <img src={previewUrl} alt="Style reference" className="w-full h-auto max-h-48 object-cover translate-y-0" />
                 <button onClick={onRemove} className="absolute top-2 right-2 bg-black/60 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm opacity-0 group-hover:opacity-100 transition-opacity z-10" aria-label="Remove style image">
                     <XIcon className="w-4 h-4" />
                 </button>
-            </>
+            </div>
         );
     }
 );
@@ -666,7 +805,9 @@ const ReferencePanel: React.FC<{
     setAppMode: (mode: 'classic' | 'studio') => void;
     studioConfig: any;
     setStudioConfig: (config: any) => void;
-}> = ({ onAddImages, onRemoveImage, referenceImages, onAddStyleImage, onRemoveStyleImage, styleImage, onAddStructureImage, onRemoveStructureImage, structureImage, selectedStylePreset, setSelectedStylePreset, selectedLighting, setSelectedLighting, selectedCamera, setSelectedCamera, selectedFocus, setSelectedFocus, setEditedPrompt, preciseReference, setPreciseReference, useGrounding, setUseGrounding, dnaCharacters, selectedDnaId, onSelectDna, onManageDna, appMode, setAppMode, studioConfig, setStudioConfig }) => {
+    onGenerateStoryboard: () => void;
+    isStoryboardLoading: boolean;
+}> = ({ onAddImages, onRemoveImage, referenceImages, onAddStyleImage, onRemoveStyleImage, styleImage, onAddStructureImage, onRemoveStructureImage, structureImage, selectedStylePreset, setSelectedStylePreset, selectedLighting, setSelectedLighting, selectedCamera, setSelectedCamera, selectedFocus, setSelectedFocus, setEditedPrompt, preciseReference, setPreciseReference, useGrounding, setUseGrounding, dnaCharacters, selectedDnaId, onSelectDna, onManageDna, appMode, setAppMode, studioConfig, setStudioConfig, onGenerateStoryboard, isStoryboardLoading }) => {
     const { t, language } = useLocalization();
     const [isDraggingRef, setIsDraggingRef] = useState(false);
     const [isDraggingStyle, setIsDraggingStyle] = useState(false);
@@ -760,6 +901,38 @@ const ReferencePanel: React.FC<{
                     </div>
                 </div>
                 <input ref={fileInputRef} id="file-upload" type="file" className="hidden" multiple accept="image/*" onChange={handleFileChange} />
+
+                <div className="border-t border-light-border dark:border-dark-border/50"></div>
+
+                {/* v1.9.5: Cinematic Storyboard Shortcut */}
+                <div className="py-2">
+                    <button
+                        onClick={() => onGenerateStoryboard()}
+                        disabled={referenceImages.length === 0 || isStoryboardLoading}
+                        className={`w-full group relative overflow-hidden flex items-center justify-center gap-3 py-3 bg-gradient-to-br from-brand-purple/20 to-brand-pink/10 border border-brand-purple/30 rounded-2xl transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:hover:scale-100 ${isStoryboardLoading ? 'animate-pulse' : ''}`}
+                    >
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                        <span className="text-xl">🎬</span>
+                        <div className="text-left">
+                            <span className="block text-[10px] font-black uppercase tracking-widest text-brand-purple">
+                                {t.cinematicStoryboardTitle}
+                            </span>
+                            <span className="block text-[9px] text-light-text-muted dark:text-dark-text-muted font-medium">
+                                {isStoryboardLoading
+                                    ? t.storyboardAnalyzing
+                                    : t.storyboardSubtext}
+                            </span>
+                        </div>
+                        {isStoryboardLoading && (
+                            <div className="ml-auto mr-2 w-3 h-3 border-2 border-brand-purple border-t-transparent rounded-full animate-spin" />
+                        )}
+                    </button>
+                    {referenceImages.length === 0 && (
+                        <p className="mt-1 text-[8px] text-center text-light-text-muted dark:text-dark-text-muted italic">
+                            {t.uploadForStoryboard}
+                        </p>
+                    )}
+                </div>
 
                 <div className="border-t border-light-border dark:border-dark-border/50"></div>
 
@@ -1000,7 +1173,7 @@ const ReferencePanel: React.FC<{
                                             }}
                                             className="w-full px-3 py-1.5 rounded-lg bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border text-light-text dark:text-dark-text text-xs focus:outline-none focus:ring-2 focus:ring-brand-yellow/50"
                                         >
-                                            <option value="">{language === 'it' ? 'Nessuna' : 'None'}</option>
+                                            <option value="">{t.noneOption}</option>
                                             {PHYSICS_PRESETS.lighting.map(preset => (
                                                 <option key={preset.id} value={preset.id}>
                                                     {language === 'it' ? preset.nameIt : preset.name}
@@ -1012,7 +1185,7 @@ const ReferencePanel: React.FC<{
                                     {/* Camera Control */}
                                     <div className="space-y-1">
                                         <label className="text-[10px] font-bold uppercase tracking-wider text-light-text-muted dark:text-dark-text-muted">
-                                            {language === 'it' ? 'Fotocamera' : 'Camera'}
+                                            {t.cameraLabel}
                                         </label>
                                         <select
                                             value={selectedCamera || ''}
@@ -1031,7 +1204,7 @@ const ReferencePanel: React.FC<{
                                             }}
                                             className="w-full px-3 py-1.5 rounded-lg bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border text-light-text dark:text-dark-text text-xs focus:outline-none focus:ring-2 focus:ring-brand-yellow/50"
                                         >
-                                            <option value="">{language === 'it' ? 'Nessuna' : 'None'}</option>
+                                            <option value="">{t.noneOption}</option>
                                             {PHYSICS_PRESETS.camera.map(preset => (
                                                 <option key={preset.id} value={preset.id}>
                                                     {language === 'it' ? preset.nameIt : preset.name}
@@ -1043,7 +1216,7 @@ const ReferencePanel: React.FC<{
                                     {/* Focus Control */}
                                     <div className="space-y-1">
                                         <label className="text-[10px] font-bold uppercase tracking-wider text-light-text-muted dark:text-dark-text-muted">
-                                            {language === 'it' ? 'Messa a Fuoco' : 'Focus'}
+                                            {t.focusLabel}
                                         </label>
                                         <select
                                             value={selectedFocus || ''}
@@ -1062,7 +1235,7 @@ const ReferencePanel: React.FC<{
                                             }}
                                             className="w-full px-3 py-1.5 rounded-lg bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border text-light-text dark:text-dark-text text-xs focus:outline-none focus:ring-2 focus:ring-brand-yellow/50"
                                         >
-                                            <option value="">{language === 'it' ? 'Nessuna' : 'None'}</option>
+                                            <option value="">{t.noneOption}</option>
                                             {PHYSICS_PRESETS.focus.map(preset => (
                                                 <option key={preset.id} value={preset.id}>
                                                     {language === 'it' ? preset.nameIt : preset.name}
@@ -1075,7 +1248,7 @@ const ReferencePanel: React.FC<{
                         </div>
                     </>
                 ) : (
-                    <StudioPanel t={t} language={language} studioConfig={studioConfig} setStudioConfig={setStudioConfig} />
+                    <StudioPanel t={t} studioConfig={studioConfig} setStudioConfig={setStudioConfig} />
                 )}
             </div>
         </div>
@@ -1096,10 +1269,11 @@ interface ImageDisplayProps {
     onUpscale: (image: GeneratedImage, resolution: '2k' | '4k') => void; // v1.1
     upscalingImageId: string | null; // v1.1
     onSaveDna: (image: GeneratedImage) => void; // v1.7
+    onGenerateStoryboard: (image: GeneratedImage) => void; // v1.9.5
     reasoningText?: string; // v1.7: Creative reasoning plan
     loadingMessage?: string; // v1.9.2: Funny loading messages
 }
-const ImageDisplay: React.FC<ImageDisplayProps> = ({ images, isLoading, onDownload, onZoom, onEdit, onReroll, onToggleFavorite, onUpscale, upscalingImageId, onSaveDna, reasoningText, loadingMessage }) => {
+const ImageDisplay: React.FC<ImageDisplayProps> = ({ images, isLoading, onDownload, onZoom, onEdit, onReroll, onToggleFavorite, onUpscale, upscalingImageId, onSaveDna, onGenerateStoryboard, reasoningText, loadingMessage }) => {
     const { t } = useLocalization();
     const [showUpscaleMenu, setShowUpscaleMenu] = useState<string | null>(null);
 
@@ -1146,12 +1320,22 @@ const ImageDisplay: React.FC<ImageDisplayProps> = ({ images, isLoading, onDownlo
                                             <StarIcon className="w-5 h-5" />
                                         </button>
 
+                                        {/* v1.9.5: Storyboard button */}
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); onGenerateStoryboard(image); }}
+                                            className="p-2 rounded-full bg-black/50 text-white hover:bg-brand-pink transition-colors"
+                                            aria-label={t.cinematicStoryboardTitle}
+                                            title={t.storyboardTooltip}
+                                        >
+                                            <span className="text-xl leading-none">🎬</span>
+                                        </button>
+
                                         {/* v1.7: Save as DNA button */}
                                         <button
                                             onClick={(e) => { e.stopPropagation(); onSaveDna(image); }}
                                             className="p-2 rounded-full bg-black/50 text-white hover:bg-brand-purple transition-colors"
-                                            aria-label="Save as DNA Character"
-                                            title="🧬 Save as DNA Character Consistency"
+                                            aria-label={t.dnaCharacterTitle}
+                                            title={t.dnaTooltip}
                                         >
                                             <span className="text-xl leading-none">🧬</span>
                                         </button>
@@ -1195,8 +1379,8 @@ const ImageDisplay: React.FC<ImageDisplayProps> = ({ images, isLoading, onDownlo
                                         <button
                                             onClick={() => onReroll(image)}
                                             className="p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
-                                            aria-label="Re-roll (generate variant)"
-                                            title="🎲 Generate variant with new seed"
+                                            aria-label={t.reroll}
+                                            title={t.rerollTooltip}
                                         >
                                             <DiceIcon className="w-5 h-5" />
                                         </button>
@@ -2301,6 +2485,14 @@ export default function App() {
         kit?: string;
     }>({});
 
+    // v1.9.5: Generation Queue
+    const [queue, setQueue] = useState<GenerationTask[]>([]);
+
+    // v1.9.5: Cinematic Storyboard
+    const [storyboardPrompts, setStoryboardPrompts] = useState<StoryboardPrompt[]>([]);
+    const [isStoryboardOpen, setIsStoryboardOpen] = useState(false);
+    const [isStoryboardLoading, setIsStoryboardLoading] = useState(false);
+
     // v1.4: New features states
     const [useGrounding, setUseGrounding] = useState(false); // Google Search Grounding
     const [selectedStylePreset, setSelectedStylePreset] = useState<string | null>(null);
@@ -2322,7 +2514,8 @@ export default function App() {
         indexedDBService.getAllDnaCharacters().then(chars => {
             setDnaCharacters(chars);
         });
-    }, []);
+    }, [t]);
+
 
     const showToast = useCallback((message: string, type: 'success' | 'error') => {
         setToast({ id: Date.now(), message, type });
@@ -2500,8 +2693,55 @@ export default function App() {
         setStyleReferenceImage(null);
     };
 
-    const handleGenerate = useCallback(async () => {
-        if (referenceImages.length === 0 && !editedPrompt && !styleReferenceImage) return;
+    const handleRemoveFromQueue = (id: string) => {
+        setQueue(prev => prev.filter(task => task.id !== id));
+    };
+
+    const handleGenerate = useCallback(async (task?: GenerationTask) => {
+        if (isLoading && !task) {
+            // v1.9.5: Add to queue if already generating
+            const newTask: GenerationTask = {
+                id: crypto.randomUUID(),
+                prompt: editedPrompt,
+                negativePrompt: negativePrompt,
+                seed: seed,
+                aspectRatio: aspectRatio,
+                numImages: Math.min(numImagesToGenerate, 2),
+                model: selectedModel,
+                resolution: selectedResolution,
+                referenceImages: [...referenceImages],
+                styleImage: styleReferenceImage,
+                structureImage: structureImage,
+                selectedDnaId: selectedDnaId,
+                studioConfig: { ...studioConfig },
+                useGrounding: useGrounding,
+                preciseReference: preciseReference,
+                autoEnhance: autoEnhance,
+                timestamp: Date.now(),
+            };
+            setQueue(prev => [...prev, newTask]);
+            showToast(language === 'it' ? 'Richiesta aggiunta alla coda' : 'Request added to queue', 'success');
+            return;
+        }
+
+        const isTask = !!task;
+        const currentRefImages = isTask ? task.referenceImages : referenceImages;
+        const currentStyleImage = isTask ? task.styleImage : styleReferenceImage;
+        const currentStructureImage = isTask ? task.structureImage : structureImage;
+        const currentPrompt = isTask ? task.prompt : editedPrompt;
+        const currentModel = isTask ? task.model : selectedModel;
+        const currentRes = isTask ? task.resolution : selectedResolution;
+        const currentAspect = isTask ? task.aspectRatio : aspectRatio;
+        const currentNeg = isTask ? task.negativePrompt : negativePrompt;
+        const currentSeed = isTask ? task.seed : seed;
+        const currentNumImages = isTask ? task.numImages : Math.min(numImagesToGenerate, 2);
+        const currentDnaId = isTask ? task.selectedDnaId : selectedDnaId;
+        const currentStudioCfg = isTask ? task.studioConfig : studioConfig;
+        const currentGrounding = isTask ? task.useGrounding : useGrounding;
+        const currentPrecise = isTask ? task.preciseReference : preciseReference;
+        const currentAutoEnhance = isTask ? task.autoEnhance : autoEnhance;
+
+        if (currentRefImages.length === 0 && !currentPrompt && !currentStyleImage) return;
 
 
 
@@ -2543,36 +2783,30 @@ export default function App() {
         setCurrentImages([]);
 
         // v1.9.2: Parallel Pre-processing System (Auto-Enhance Master Brain, Grounding)
-        let cleanedPrompt = editedPrompt;
-        let displayPrompt = editedPrompt; // Local variable to capture the version to be saved/displayed
+        let cleanedPrompt = currentPrompt;
+        let displayPrompt = currentPrompt; // Local variable to capture the version to be saved/displayed
         let invisibleReferences: File[] = [];
         setIsPromptEnhancedInternal(false); // Reset UI state
-        setActiveDisplayPrompt(editedPrompt); // Initialize with user's prompt
+        setActiveDisplayPrompt(currentPrompt); // Initialize with user's prompt
 
         // v1.9.5: Get active DNA for enhancement context
-        const activeDnaText = selectedDnaId ? dnaCharacters.find(c => c.id === selectedDnaId)?.dna : undefined;
+        const activeDnaText = currentDnaId ? dnaCharacters.find(c => c.id === currentDnaId)?.dna : undefined;
 
         try {
-            const preProcessingStart = Date.now();
-            console.log('🚀 Starting Parallel Pre-processing...');
-
             const tasks: Promise<any>[] = [];
 
             // Task 1: Prompt Enhancement Master Brain
-            if (autoEnhance && editedPrompt) {
+            if (currentAutoEnhance && currentPrompt) {
                 setIsEnhancing(true);
                 tasks.push(
-                    geminiService.enhancePrompt(editedPrompt, referenceImages, styleReferenceImage, structureImage, userApiKey, language, activeDnaText)
+                    geminiService.enhancePrompt(currentPrompt, currentRefImages, currentStyleImage, currentStructureImage, userApiKey, language, activeDnaText)
                         .then(result => {
                             if (result.method !== 'fallback') {
                                 setActiveDisplayPrompt(result.enhancedPrompt);
                                 setReasoningText(result.artDirectorPlan);
                                 cleanedPrompt = result.enhancedPrompt;
-                                displayPrompt = result.enhancedPrompt; // Ensure UI capture
+                                displayPrompt = result.enhancedPrompt;
                                 setIsPromptEnhancedInternal(true);
-                                console.log('✨ Master Brain Enhancement: DONE');
-                            } else {
-                                console.log('⚠️ Master Brain fell back to original prompt');
                             }
                             setIsEnhancing(false);
                         })
@@ -2580,29 +2814,20 @@ export default function App() {
             } else {
                 // Classic reasoning plan if Auto-Enhance is off
                 tasks.push(
-                    geminiService.getReasoningPlan(editedPrompt || "Image generation", userApiKey, language)
+                    geminiService.getReasoningPlan(currentPrompt || "Image generation", userApiKey, language)
                         .then(plan => {
                             setReasoningText(plan);
-                            console.log('🧠 Reasoning Plan: DONE');
                         })
                 );
             }
 
             // Task 2: Google Search Grounding
-            if (useGrounding && editedPrompt) {
-                console.log('🔍 Grounding Search: START');
+            if (currentGrounding && currentPrompt) {
                 tasks.push(
-                    fetchInvisibleReferences(editedPrompt, 2)
+                    fetchInvisibleReferences(currentPrompt, 2)
                         .then(refs => {
-                            invisibleReferences = refs;
                             if (refs.length > 0) {
-                                console.log(`🌐 Grounding: Found ${refs.length} refs`);
-                                showToast(
-                                    language === 'it'
-                                        ? `✅ ${refs.length} immagini di riferimento da Google`
-                                        : `✅ ${refs.length} reference images from Google`,
-                                    'success'
-                                );
+                                invisibleReferences = refs;
                             }
                         })
                 );
@@ -2610,7 +2835,6 @@ export default function App() {
 
             // Execute all pre-processing in parallel
             await Promise.all(tasks);
-            console.log(`⏱️ Pre-processing completed in ${Date.now() - preProcessingStart}ms`);
 
         } catch (error) {
             console.error("Pre-processing error (non-fatal):", error);
@@ -2620,17 +2844,16 @@ export default function App() {
         try {
 
             // v1.5.1: Remove square brackets from prompt to avoid ambiguous keywords (e.g., "Coin" = money vs brand)
-            if (useGrounding) {
+            if (currentGrounding) {
                 cleanedPrompt = removeBracketsFromPrompt(cleanedPrompt);
                 displayPrompt = removeBracketsFromPrompt(displayPrompt);
             }
 
             // v1.7: Inject DNA Character description and IMAGE reference if selected
             let dnaReferenceFile: File | null = null;
-            if (selectedDnaId) {
-                const selectedDna = dnaCharacters.find(c => c.id === selectedDnaId);
+            if (currentDnaId) {
+                const selectedDna = dnaCharacters.find(c => c.id === currentDnaId);
                 if (selectedDna) {
-                    console.log(`🧬 Injecting DNA Character: ${selectedDna.name}`);
 
                     // 1. Textual Injection
                     const dnaHeader = language === 'it'
@@ -2642,7 +2865,6 @@ export default function App() {
                     if (selectedDna.thumbnailData) {
                         try {
                             dnaReferenceFile = dataURLtoFile(selectedDna.thumbnailData, `dna-ref-${selectedDnaId}.png`);
-                            console.log(`📸 Added DNA visual reference: ${selectedDna.name}`);
                         } catch (e) {
                             console.error("Failed to convert DNA thumbnail to file", e);
                         }
@@ -2654,50 +2876,50 @@ export default function App() {
             if (appMode === 'studio') {
                 const studioSnippets: string[] = [];
 
-                if (studioConfig.camera) {
-                    const camera = CAMERAS.find(c => c.id === studioConfig.camera);
+                if (currentStudioCfg.camera) {
+                    const camera = CAMERAS.find(c => c.id === currentStudioCfg.camera);
                     if (camera) studioSnippets.push(camera.prompt);
                 }
-                if (studioConfig.lens) {
-                    const lens = LENSES.find(l => l.id === studioConfig.lens);
+                if (currentStudioCfg.lens) {
+                    const lens = LENSES.find(l => l.id === currentStudioCfg.lens);
                     if (lens) studioSnippets.push(lens.prompt);
                 }
-                if (studioConfig.focal) {
-                    const focal = FOCAL_LENGTHS.find(f => f.id === studioConfig.focal);
+                if (currentStudioCfg.focal) {
+                    const focal = FOCAL_LENGTHS.find(f => f.id === currentStudioCfg.focal);
                     if (focal) studioSnippets.push(focal.prompt);
                 }
-                if (studioConfig.lightDir) {
-                    const light = LIGHT_DIRECTIONS.find(l => l.id === studioConfig.lightDir);
+                if (currentStudioCfg.lightDir) {
+                    const light = LIGHT_DIRECTIONS.find(l => l.id === currentStudioCfg.lightDir);
                     if (light) studioSnippets.push(light.prompt);
                 }
-                if (studioConfig.lightQuality) {
-                    studioSnippets.push(studioConfig.lightQuality === 'soft' ? 'soft lighting' : 'hard contrast lighting');
+                if (currentStudioCfg.lightQuality) {
+                    studioSnippets.push(currentStudioCfg.lightQuality === 'soft' ? 'soft lighting' : 'hard contrast lighting');
                 }
-                if (studioConfig.lightColor) {
-                    studioSnippets.push(`${studioConfig.lightColor} colored light`);
+                if (currentStudioCfg.lightColor) {
+                    studioSnippets.push(`${currentStudioCfg.lightColor} colored light`);
                 }
-                if (studioConfig.wardrobeTop) {
-                    const top = WARDROBE_CATEGORIES.tops.find(t => t.id === studioConfig.wardrobeTop);
+                if (currentStudioCfg.wardrobeTop) {
+                    const top = WARDROBE_CATEGORIES.tops.find(t => t.id === currentStudioCfg.wardrobeTop);
                     if (top) studioSnippets.push(top.prompt);
                 }
-                if (studioConfig.wardrobeOuter) {
-                    const outer = WARDROBE_CATEGORIES.outerwear.find(o => o.id === studioConfig.wardrobeOuter);
+                if (currentStudioCfg.wardrobeOuter) {
+                    const outer = WARDROBE_CATEGORIES.outerwear.find(o => o.id === currentStudioCfg.wardrobeOuter);
                     if (outer) studioSnippets.push(outer.prompt);
                 }
-                if (studioConfig.wardrobeBottom) {
-                    const bottom = WARDROBE_CATEGORIES.bottoms.find(b => b.id === studioConfig.wardrobeBottom);
+                if (currentStudioCfg.wardrobeBottom) {
+                    const bottom = WARDROBE_CATEGORIES.bottoms.find(b => b.id === currentStudioCfg.wardrobeBottom);
                     if (bottom) studioSnippets.push(bottom.prompt);
                 }
-                if (studioConfig.wardrobeSet) {
-                    const set = WARDROBE_CATEGORIES.sets.find(s => s.id === studioConfig.wardrobeSet);
+                if (currentStudioCfg.wardrobeSet) {
+                    const set = WARDROBE_CATEGORIES.sets.find(s => s.id === currentStudioCfg.wardrobeSet);
                     if (set) studioSnippets.push(set.prompt);
                 }
-                if (studioConfig.shot) {
-                    const shot = SHOTS.find(s => s.id === studioConfig.shot);
+                if (currentStudioCfg.shot) {
+                    const shot = SHOTS.find(s => s.id === currentStudioCfg.shot);
                     if (shot) studioSnippets.push(shot.prompt);
                 }
-                if (studioConfig.kit) {
-                    const kit = PRODUCTION_KITS.find(k => k.id === studioConfig.kit);
+                if (currentStudioCfg.kit) {
+                    const kit = PRODUCTION_KITS.find(k => k.id === currentStudioCfg.kit);
                     if (kit) studioSnippets.push(kit.prompt);
                 }
 
@@ -2707,12 +2929,12 @@ export default function App() {
             }
 
             // Merge user's visible references with invisible Google references and DNA references
-            const allReferenceFiles = [...referenceImages, ...invisibleReferences];
+            const allReferenceFiles = [...currentRefImages, ...invisibleReferences];
             if (dnaReferenceFile) {
                 allReferenceFiles.unshift(dnaReferenceFile); // Add DNA first to give it high priority
             }
 
-            console.log(useGrounding && editedPrompt !== cleanedPrompt
+            console.log(currentGrounding && currentPrompt !== cleanedPrompt
                 ? `🧹 Cleaned prompt for Gemini: "${cleanedPrompt}" (removed brackets)`
                 : '');
 
@@ -2721,14 +2943,14 @@ export default function App() {
             // Batch generation: add prompt variations for each image to create diversity
             // NOTE: Gemini API doesn't support seed parameter for image models, so we add subtle prompt variations
             // v1.3 FIX: Generate sequentially instead of parallel to avoid NO_IMAGE errors with multiple references
-            const hasMultipleReferences = allReferenceFiles.length > 1 || styleReferenceImage || structureImage;
+            const hasMultipleReferences = allReferenceFiles.length > 1 || currentStyleImage || currentStructureImage;
             const imageDataUrls: string[] = [];
 
-            for (let index = 0; index < numImagesToGenerate; index++) {
+            for (let index = 0; index < currentNumImages; index++) {
                 let variantPrompt = cleanedPrompt;
 
                 // Add subtle variations to prompt for batch generation (index > 0)
-                if (numImagesToGenerate > 1 && index > 0) {
+                if (currentNumImages > 1 && index > 0) {
                     const keepSame = language === 'it'
                         ? ', mantieni stesso soggetto e aspetto'
                         : ', keep same subject appearance';
@@ -2751,32 +2973,31 @@ export default function App() {
 
                 // Generate sequentially if there are multiple references/complex setup to avoid API overload
                 // Otherwise parallel is fine
-                if (hasMultipleReferences || selectedModel === 'gemini-3-pro-image-preview') {
+                if (hasMultipleReferences || currentModel === 'gemini-3-pro-image-preview') {
                     const imageDataUrl = await geminiService.generateImage(
                         variantPrompt,
-                        aspectRatio,
+                        currentAspect,
                         allReferenceFiles,
-                        styleReferenceImage,
-                        structureImage,
+                        currentStyleImage,
+                        currentStructureImage,
                         userApiKey,
-                        negativePrompt,
-                        seed,
+                        currentNeg,
+                        currentSeed,
                         language,
-                        preciseReference,
-                        selectedModel,
-                        selectedResolution,
+                        currentPrecise,
+                        currentModel,
+                        currentRes,
                         undefined,
                         controller.signal,
-                        useGrounding, // v1.4: Google Search Grounding
+                        currentGrounding, // v1.4: Google Search Grounding
                         isPromptEnhancedInternal // v1.9.2: Speed optimization
                     );
                     imageDataUrls.push(imageDataUrl);
-                    console.log(`✅ Image ${index + 1}/${numImagesToGenerate} generated`);
                 } else {
                     // Simple case: can generate in parallel
-                    const generationPromises = Array(numImagesToGenerate).fill(0).map((_, idx) => {
+                    const generationPromises = Array(currentNumImages).fill(0).map((_, idx) => {
                         let vPrompt = cleanedPrompt;
-                        if (numImagesToGenerate > 1 && idx > 0) {
+                        if (currentNumImages > 1 && idx > 0) {
                             const keepSame = language === 'it'
                                 ? ', mantieni stesso soggetto e aspetto'
                                 : ', keep same subject appearance';
@@ -2798,20 +3019,20 @@ export default function App() {
                         }
                         return geminiService.generateImage(
                             vPrompt,
-                            aspectRatio,
+                            currentAspect,
                             allReferenceFiles,
-                            styleReferenceImage,
-                            structureImage,
+                            currentStyleImage,
+                            currentStructureImage,
                             userApiKey,
-                            negativePrompt,
-                            seed,
+                            currentNeg,
+                            currentSeed,
                             language,
-                            preciseReference,
-                            selectedModel,
-                            selectedResolution,
+                            currentPrecise,
+                            currentModel,
+                            currentRes,
                             undefined,
                             controller.signal,
-                            useGrounding, // v1.4: Google Search Grounding
+                            currentGrounding, // v1.4: Google Search Grounding
                             isPromptEnhancedInternal // v1.9.2: Speed optimization
                         );
                     });
@@ -2834,19 +3055,18 @@ export default function App() {
                         imageDataUrl,
                         thumbnailDataUrl,
                         prompt: displayPrompt,
-                        aspectRatio,
-                        negativePrompt,
-                        seed,
+                        aspectRatio: currentAspect,
+                        negativePrompt: currentNeg,
+                        seed: currentSeed,
                         timestamp: Date.now(),
-                        model: selectedModel, // v1.0: Store model used
-                        resolution: selectedResolution, // v1.0: Store resolution used
+                        model: currentModel, // v1.0: Store model used
+                        resolution: currentRes, // v1.0: Store resolution used
                     });
                 })
             );
 
             setCurrentImages(newImages);
             setHistory(prev => [...newImages, ...prev].slice(0, MAX_HISTORY_ITEMS));
-
 
         } catch (error: any) {
             console.error("Image generation failed", error);
@@ -2857,15 +3077,36 @@ export default function App() {
         }
     }, [referenceImages, styleReferenceImage, structureImage, preciseReference, userApiKey, aspectRatio, showToast, t.generationFailed, language, editedPrompt, negativePrompt, seed, numImagesToGenerate, selectedModel, selectedResolution, useGrounding]);
 
+    // v1.9.5: Generation Queue Processor
+    useEffect(() => {
+        if (!isLoading && queue.length > 0) {
+            const nextTask = queue[0];
+
+            // Remove from queue and start generation
+            setQueue(prev => prev.slice(1));
+            handleGenerate(nextTask);
+        }
+    }, [queue, isLoading, handleGenerate]);
+
     // v1.3: Abort generation
     const handleAbortGeneration = useCallback(() => {
         if (abortControllerRef.current) {
             abortControllerRef.current.abort();
             abortControllerRef.current = null;
             setIsLoading(false);
-            showToast(language === 'it' ? '🛑 Generazione annullata' : '🛑 Generation cancelled', 'success');
+
+            // v1.9.5: Also clear the queue when aborting
+            const queueCleared = queue.length > 0;
+            setQueue([]);
+
+            showToast(
+                queueCleared
+                    ? (language === 'it' ? '🛑 Generazione e coda annullate' : '🛑 Generation and queue cancelled')
+                    : t.generationCancelled,
+                'success'
+            );
         }
-    }, [language, showToast]);
+    }, [queue.length, language, showToast, t.generationCancelled]);
 
     // v1.3: Generate 4 variations of an image
     const handleGenerateVariations = useCallback(async (sourceImage: GeneratedImage) => {
@@ -2878,9 +3119,7 @@ export default function App() {
             const variations: GeneratedImage[] = [];
 
             showToast(
-                language === 'it'
-                    ? `🎲 Generando ${NUM_VARIATIONS} variazioni...`
-                    : `🎲 Generating ${NUM_VARIATIONS} variations...`,
+                t.generatingVariations,
                 'success'
             );
 
@@ -2921,7 +3160,6 @@ export default function App() {
                 };
 
                 variations.push(newImage);
-                console.log(`✅ Variation ${i + 1}/${NUM_VARIATIONS} generated`);
             }
 
             // Add variations to current images and history
@@ -2929,14 +3167,12 @@ export default function App() {
             setHistory(prev => [...variations, ...prev].slice(0, MAX_HISTORY_ITEMS));
 
             showToast(
-                language === 'it'
-                    ? `✅ ${NUM_VARIATIONS} variazioni generate!`
-                    : `✅ ${NUM_VARIATIONS} variations generated!`,
+                t.variationsGenerated,
                 'success'
             );
         } catch (error: any) {
             console.error("Variation generation failed", error);
-            showToast(error.message || (language === 'it' ? 'Generazione variazioni fallita' : 'Variation generation failed'), 'error');
+            showToast(error.message || t.variationsFailed, 'error');
         } finally {
             setVariationsLoadingId(null);
         }
@@ -2952,9 +3188,7 @@ export default function App() {
         if (sourceImage.negativePrompt) setNegativePrompt(sourceImage.negativePrompt);
 
         showToast(
-            language === 'it'
-                ? '📋 Parametri copiati!'
-                : '📋 Settings copied!',
+            t.settingsCopied,
             'success'
         );
     }, [language, showToast]);
@@ -3119,7 +3353,7 @@ export default function App() {
 
             setCurrentImages([newImage]);
             setHistory(prev => [newImage, ...prev].slice(0, MAX_HISTORY_ITEMS));
-            showToast(language === 'it' ? '🎲 Variante generata!' : '🎲 Variant generated!', 'success');
+            showToast(t.variantGenerated, 'success');
         } catch (error: any) {
             console.error("Re-roll failed", error);
             showToast(error.message || t.generationFailed, 'error');
@@ -3176,14 +3410,78 @@ export default function App() {
         }
     }, [userApiKey, language, showToast, t.upscaleSuccess, t.upscaleFailed]);
 
+    // v1.9.5: Storyboard Handlers
+    const handleGenerateStoryboard = useCallback(async (customImage?: File) => {
+        // Validation: ensure we have a valid File/Blob
+        const imageToAnalyze = customImage || (referenceImages.length > 0 ? referenceImages[0] : null);
+
+        if (!imageToAnalyze || !(imageToAnalyze instanceof Blob)) {
+            showToast(t.validImageForStoryboard, 'error');
+            return;
+        }
+
+        setIsStoryboardLoading(true);
+        setIsStoryboardOpen(true);
+
+        try {
+            const prompts = await storyboardService.generateCinematicStoryboard(imageToAnalyze, userApiKey, language);
+            setStoryboardPrompts(prompts);
+        } catch (error: any) {
+            showToast(error.message || t.storyboardFailed, 'error');
+            setIsStoryboardOpen(false);
+        } finally {
+            setIsStoryboardLoading(false);
+        }
+    }, [referenceImages, userApiKey, language, showToast]);
+
+    const handleStoryboardGenerateAll = useCallback(() => {
+        if (storyboardPrompts.length === 0) return;
+
+        // Use the first reference image as the constant for all storyboard generations
+        const masterRef = referenceImages[0];
+
+        const newTasks: GenerationTask[] = storyboardPrompts.map(item => ({
+            id: crypto.randomUUID(),
+            prompt: item.prompt,
+            negativePrompt: negativePrompt,
+            seed: seed,
+            aspectRatio: aspectRatio,
+            numImages: 1, // Usually 1 for storyboard frames
+            model: selectedModel,
+            resolution: selectedResolution,
+            referenceImages: masterRef ? [masterRef] : [],
+            styleImage: styleReferenceImage,
+            structureImage: structureImage,
+            selectedDnaId: selectedDnaId,
+            studioConfig: { ...studioConfig },
+            useGrounding: useGrounding,
+            preciseReference: preciseReference,
+            autoEnhance: false, // Don't auto-enhance technical cinematic prompts
+            timestamp: Date.now(),
+        }));
+
+        setQueue(prev => [...prev, ...newTasks]);
+        setIsStoryboardOpen(false);
+        showToast(`${newTasks.length} ${t.shotsAddedToQueue}`, 'success');
+
+        // If not already generating, the effect will pick up the queue
+    }, [storyboardPrompts, referenceImages, negativePrompt, seed, aspectRatio, selectedModel, selectedResolution, styleReferenceImage, structureImage, selectedDnaId, studioConfig, useGrounding, preciseReference, language, showToast]);
+
+    const handleStoryboardGenerateOne = useCallback((prompt: string) => {
+        setEditedPrompt(prompt);
+        setIsStoryboardOpen(false);
+        // We trigger generation manually or the user can click generate
+        handleGenerate();
+    }, [handleGenerate]);
+
     // Preset handlers
     const handleSavePreset = useCallback((name: string, prompt: string, negativePrompt?: string) => {
         try {
             presetsService.addPreset(name, prompt, negativePrompt);
             setPresets(presetsService.loadPresets());
-            showToast('Preset saved successfully!', 'success');
+            showToast(t.presetsSaved, 'success');
         } catch (error: any) {
-            showToast(error.message || 'Failed to save preset', 'error');
+            showToast(error.message || t.presetsFailed, 'error');
         }
     }, [showToast]);
 
@@ -3192,13 +3490,13 @@ export default function App() {
         if (preset.negativePrompt) {
             setNegativePrompt(preset.negativePrompt);
         }
-        showToast(`Loaded preset: ${preset.name}`, 'success');
+        showToast(`${t.presetLoaded} ${preset.name}`, 'success');
     }, [showToast]);
 
     const handleDeletePreset = useCallback((id: string) => {
         presetsService.deletePreset(id);
         setPresets(presetsService.loadPresets());
-        showToast('Preset deleted', 'success');
+        showToast(t.presetDeleted, 'success');
     }, [showToast]);
 
     const handleExportPresets = useCallback(() => {
@@ -3213,9 +3511,9 @@ export default function App() {
             link.click();
             document.body.removeChild(link);
             URL.revokeObjectURL(url);
-            showToast('Presets exported successfully!', 'success');
+            showToast(t.presetsExported, 'success');
         } catch (error) {
-            showToast('Failed to export presets', 'error');
+            showToast(t.presetsExportFailed, 'error');
         }
     }, [showToast]);
 
@@ -3226,9 +3524,9 @@ export default function App() {
                 const content = e.target?.result as string;
                 presetsService.importPresets(content);
                 setPresets(presetsService.loadPresets());
-                showToast('Presets imported successfully!', 'success');
+                showToast(t.presetsImported, 'success');
             } catch (error) {
-                showToast('Failed to import presets. Invalid file format.', 'error');
+                showToast(t.presetsImportFailed, 'error');
             }
         };
         reader.readAsText(file);
@@ -3324,7 +3622,7 @@ export default function App() {
 
     // Keyboard shortcuts
     const shortcuts = useMemo(() => [
-        { ...APP_SHORTCUTS.GENERATE, action: () => !isActionDisabled && handleGenerate() },
+        { ...APP_SHORTCUTS.GENERATE, action: () => !isEnhancing && handleGenerate() },
         { ...APP_SHORTCUTS.RANDOM_SEED, action: handleRandomizeSeed },
         { ...APP_SHORTCUTS.CLEAR_INTERFACE, action: handleResetInterface },
         { ...APP_SHORTCUTS.OPEN_SETTINGS, action: () => setIsSettingsOpen(true) },
@@ -3381,13 +3679,33 @@ export default function App() {
                             setAppMode={setAppMode}
                             studioConfig={studioConfig}
                             setStudioConfig={setStudioConfig}
+                            onGenerateStoryboard={handleGenerateStoryboard}
+                            isStoryboardLoading={isStoryboardLoading}
                         />
                     </aside>
 
                     {/* --- Main Content --- */}
                     <div className="flex-1 flex flex-col gap-2 lg:gap-6 min-w-0 h-full">
                         <div className="flex-1 min-h-0 bg-light-surface/50 dark:bg-dark-surface/30 rounded-3xl overflow-hidden">
-                            <ImageDisplay images={currentImages} isLoading={isLoading} onDownload={handleDownload} onZoom={handleZoom} onEdit={setEditingImage} onReroll={handleReroll} onToggleFavorite={handleToggleFavorite} onUpscale={handleUpscale} upscalingImageId={upscalingImageId} onSaveDna={handleSaveImageAsDna} reasoningText={reasoningText} loadingMessage={loadingMessage} />
+                            <ImageDisplay
+                                images={currentImages}
+                                isLoading={isLoading}
+                                onDownload={handleDownload}
+                                onZoom={handleZoom}
+                                onEdit={setEditingImage}
+                                onReroll={handleReroll}
+                                onToggleFavorite={handleToggleFavorite}
+                                onUpscale={handleUpscale}
+                                upscalingImageId={upscalingImageId}
+                                onSaveDna={handleSaveImageAsDna}
+                                onGenerateStoryboard={(img) => {
+                                    // Handle image translation to file for storyboard
+                                    const file = dataURLtoFile(img.imageDataUrl || img.thumbnailDataUrl!, `storyboard-${img.id}.png`);
+                                    handleGenerateStoryboard(file);
+                                }}
+                                reasoningText={reasoningText}
+                                loadingMessage={loadingMessage}
+                            />
                         </div>
 
                         {((referenceImages.length > 0 || !!styleReferenceImage) || currentImages.length > 0 || isLoading) && (
@@ -3420,7 +3738,7 @@ export default function App() {
                                                     {isEnhancing ? (
                                                         <span className="italic opacity-70 flex items-center gap-2 animate-pulse">
                                                             <span className="w-1.5 h-1.5 bg-brand-purple rounded-full"></span>
-                                                            {language === 'it' ? 'Miglioramento creativo in corso...' : 'Creative enhancement in progress...'}
+                                                            {t.creativeEnhancementInProgress}
                                                         </span>
                                                     ) : (
                                                         isLoading ? (isPromptEnhancedInternal ? activeDisplayPrompt : editedPrompt) : (currentImages[0]?.prompt || editedPrompt)
@@ -3443,11 +3761,28 @@ export default function App() {
 
                     {/* --- Right Column (Buttons + History) --- */}
                     <div className="w-full lg:w-[320px] flex-shrink-0 flex flex-col gap-4">
-                        <div className="space-y-4 p-4 bg-light-surface/50 dark:bg-dark-surface/30 backdrop-blur-xl rounded-3xl">
-                            <button onClick={handleGenerate} disabled={isActionDisabled} className="w-full flex justify-center items-center gap-2 bg-gradient-to-r from-brand-yellow to-brand-magenta text-white font-semibold py-3 rounded-xl hover:opacity-90 transition-all duration-300 hover:shadow-[0_0_20px_rgba(255,217,61,0.5)] disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none">
-                                {isLoading ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : <SparklesIcon className="w-5 h-5" />}
-                                <span>{isLoading ? t.generatingButton : t.generateButton}</span>
+                        <div className="space-y-3 p-4 bg-light-surface/50 dark:bg-dark-surface/30 backdrop-blur-xl rounded-3xl">
+                            <button
+                                onClick={() => isLoading ? handleAbortGeneration() : handleGenerate()}
+                                disabled={isEnhancing}
+                                className={`w-full flex justify-center items-center gap-2 font-semibold py-3 rounded-xl transition-all duration-300 disabled:opacity-50 ${isLoading
+                                    ? 'bg-red-500/20 text-red-500 border border-red-500/30 hover:bg-red-500/30'
+                                    : 'bg-gradient-to-r from-brand-yellow to-brand-magenta text-white hover:shadow-[0_0_20px_rgba(255,217,61,0.5)]'
+                                    }`}
+                            >
+                                {isLoading ? <XIcon className="w-5 h-5" /> : <SparklesIcon className="w-5 h-5" />}
+                                <span>{isLoading ? t.abort : t.generateButton}</span>
                             </button>
+
+                            {/* Secondary Queue button in sidebar */}
+                            {isLoading && (
+                                <button
+                                    onClick={() => handleGenerate()}
+                                    className="w-full py-2 rounded-xl bg-brand-purple/10 text-brand-purple border border-brand-purple/20 text-xs font-bold hover:bg-brand-purple/20 transition-all flex items-center justify-center gap-2"
+                                >
+                                    <span>➕</span> {t.addToQueue}
+                                </button>
+                            )}
                             <div className="flex flex-col gap-3">
                                 <button onClick={handleUseAsReference} disabled={isActionDisabled || currentImages.length === 0 || referenceImages.length >= MAX_USER_IMAGES} className="w-full p-[2px] bg-gradient-to-r from-yellow-400 to-amber-500 rounded-xl disabled:opacity-50 group transition-all">
                                     <div className="w-full h-full bg-light-surface dark:bg-dark-surface-accent rounded-[10px] flex justify-center items-center gap-2 text-light-text dark:text-dark-text font-semibold py-2 transition-all group-hover:bg-opacity-80 disabled:group-hover:bg-opacity-100 dark:group-hover:bg-opacity-80">
@@ -3530,7 +3865,7 @@ export default function App() {
                     prompt={editedPrompt}
                     onPromptChange={setEditedPrompt}
                     promptTextareaRef={promptTextareaRef}
-                    onGenerate={handleGenerate}
+                    onGenerate={() => handleGenerate()}
                     onAbortGeneration={handleAbortGeneration}
                     autoEnhance={autoEnhance}
                     onAutoEnhanceChange={setAutoEnhance}
@@ -3554,6 +3889,8 @@ export default function App() {
                     onModelChange={setSelectedModel}
                     selectedResolution={selectedResolution}
                     onResolutionChange={setSelectedResolution}
+                    queue={queue}
+                    onRemoveFromQueue={handleRemoveFromQueue}
                 />
 
                 <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} onSave={handleSaveApiKey} currentApiKey={userApiKey} />
@@ -3581,6 +3918,18 @@ export default function App() {
                         message={toast.message}
                         type={toast.type}
                         onClose={() => setToast(null)}
+                    />
+                )}
+
+                {isStoryboardOpen && (
+                    <StoryboardGrid
+                        prompts={storyboardPrompts}
+                        onClose={() => setIsStoryboardOpen(false)}
+                        onUsePrompt={(p: string) => { setEditedPrompt(p); setIsStoryboardOpen(false); }}
+                        onGenerateAll={handleStoryboardGenerateAll}
+                        onGenerateOne={handleStoryboardGenerateOne}
+                        isLoading={isStoryboardLoading}
+                        language={language}
                     />
                 )}
 
@@ -3640,6 +3989,17 @@ export default function App() {
                                             title="🧬 Save as DNA Character"
                                         >
                                             <span className="text-xl">🧬</span>
+                                        </button>
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                const file = dataURLtoFile(zoomedImage.imageDataUrl || zoomedImage.thumbnailDataUrl!, `storyboard-${zoomedImage.id}.png`);
+                                                handleGenerateStoryboard(file);
+                                            }}
+                                            className="p-2 rounded-full bg-black/60 text-white hover:bg-brand-pink transition-colors"
+                                            title="🎬 Generate Cinematic Storyboard"
+                                        >
+                                            <span className="text-xl">🎬</span>
                                         </button>
                                         <button onClick={() => handleDownload(zoomedImage)} className="p-2 rounded-full bg-black/60 text-white hover:bg-black/80 transition-colors" aria-label="Download image">
                                             <DownloadIcon className="w-6 h-6" />

@@ -36,3 +36,23 @@ export interface TextInImageConfig {
   position?: 'top' | 'center' | 'bottom' | 'overlay';
   fontStyle?: 'bold' | 'italic' | 'calligraphy' | 'modern' | 'vintage';
 }
+
+export interface GenerationTask {
+  id: string;
+  prompt: string;
+  negativePrompt: string;
+  seed: string;
+  aspectRatio: string;
+  numImages: number;
+  model: ModelType;
+  resolution: ResolutionType;
+  referenceImages: File[];
+  styleImage: File | null;
+  structureImage: File | null;
+  selectedDnaId: string | null;
+  studioConfig: any;
+  useGrounding: boolean;
+  preciseReference: boolean;
+  autoEnhance: boolean;
+  timestamp: number;
+}
