@@ -5,10 +5,10 @@ import * as presetsService from './services/presetsService';
 import * as storyboardService from './services/storyboardService';
 import { StoryboardPrompt } from './services/storyboardService';
 import { useKeyboardShortcuts, APP_SHORTCUTS } from './hooks/useKeyboardShortcuts';
-import { SunIcon, MoonIcon, UploadIcon, DownloadIcon, SparklesIcon, CopyIcon, SettingsIcon, XIcon, CheckIcon, LanguageIcon, BrushIcon, DiceIcon, TrashIcon, ReloadIcon, StarIcon, CornerUpLeftIcon, ChevronLeftIcon, ChevronRightIcon, ChevronDownIcon, ChevronUpIcon } from './components/icons';
+import { SunIcon, MoonIcon, UploadIcon, DownloadIcon, SparklesIcon, CopyIcon, SettingsIcon, XIcon, CheckIcon, LanguageIcon, BrushIcon, DiceIcon, TrashIcon, ReloadIcon, StarIcon, CornerUpLeftIcon, ChevronDownIcon, ChevronUpIcon } from './components/icons';
 import { indexedDBService, DnaCharacter } from './services/indexedDB';
 import FloatingActionBar from './components/FloatingActionBar';
-import ZoomableImage from './components/ZoomableImage';
+import ImageLightbox from './components/ImageLightbox';
 import StoryboardGrid from './components/StoryboardGrid';
 import QueuePanel from './components/QueuePanel';
 
@@ -2781,9 +2781,26 @@ export default function App() {
 
             // Task 1: Prompt Enhancement Master Brain
             if (currentAutoEnhance && currentPrompt) {
+                // v1.9.6: Bundling full application context for "God-Mode" awareness
+                const fullContext = {
+                    studioConfig: currentStudioCfg,
+                    classicPresets: {
+                        style: selectedStylePreset,
+                        lighting: selectedLighting,
+                        camera: selectedCamera,
+                        focus: selectedFocus
+                    },
+                    technical: {
+                        aspectRatio: currentAspect,
+                        resolution: currentRes,
+                        negativePrompt: currentNeg,
+                        model: currentModel
+                    }
+                };
+
                 setIsEnhancing(true);
                 tasks.push(
-                    geminiService.enhancePrompt(currentPrompt, currentRefImages, currentStyleImage, currentStructureImage, userApiKey, language, activeDnaText, currentStudioCfg)
+                    geminiService.enhancePrompt(currentPrompt, currentRefImages, currentStyleImage, currentStructureImage, userApiKey, language, activeDnaText, fullContext)
                         .then(result => {
                             if (result.method !== 'fallback') {
                                 setActiveDisplayPrompt(result.enhancedPrompt);
@@ -2853,6 +2870,35 @@ export default function App() {
                             console.error("Failed to convert DNA thumbnail to file", e);
                         }
                     }
+                }
+            }
+
+            // v1.9.6: Style & Physics Presets Injection - ONLY if NOT auto-enhancing
+            if (!currentAutoEnhance) {
+                const presetSnippets: string[] = [];
+
+                if (selectedStylePreset) {
+                    const preset = STYLE_PRESETS.find(p => p.id === selectedStylePreset);
+                    if (preset) presetSnippets.push(preset.promptSuffix);
+                }
+
+                if (selectedLighting) {
+                    const lighting = PHYSICS_PRESETS.lighting.find(l => l.id === selectedLighting);
+                    if (lighting) presetSnippets.push(lighting.prompt);
+                }
+
+                if (selectedCamera) {
+                    const camera = PHYSICS_PRESETS.camera.find(c => c.id === selectedCamera);
+                    if (camera) presetSnippets.push(camera.prompt);
+                }
+
+                if (selectedFocus) {
+                    const focus = PHYSICS_PRESETS.focus.find(f => f.id === selectedFocus);
+                    if (focus) presetSnippets.push(focus.prompt);
+                }
+
+                if (presetSnippets.length > 0) {
+                    cleanedPrompt = `${cleanedPrompt}, ${presetSnippets.join(', ')}`;
                 }
             }
 
@@ -3914,6 +3960,8 @@ export default function App() {
                     onModelChange={setSelectedModel}
                     selectedResolution={selectedResolution}
                     onResolutionChange={setSelectedResolution}
+                    isEnhancing={isEnhancing}
+                    referenceCount={referenceImages.length + (styleReferenceImage ? 1 : 0) + (structureImage ? 1 : 0)}
                 />
 
                 <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} onSave={handleSaveApiKey} currentApiKey={userApiKey} />
@@ -3958,112 +4006,24 @@ export default function App() {
                 )}
 
                 {zoomedImage && (() => {
-                    const nav = getImageNavigation();
-                    const showNavigation = nav.total > 1;
+                    const allImages = [...currentImages, ...history];
+                    const currentIndex = allImages.findIndex(img => img.id === zoomedImage.id);
+
+                    if (currentIndex === -1) return null;
 
                     return (
-                        <div
-                            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[100] flex items-center justify-center p-4 cursor-zoom-out"
-                            onClick={() => setZoomedImage(null)}
-                            role="dialog"
-                            aria-modal="true"
-                            aria-label="Zoomed image view"
-                        >
-                            <div
-                                className="relative select-none"
-                                onClick={e => e.stopPropagation()}
-                                onTouchStart={(e) => {
-                                    const touch = e.touches[0];
-                                    (e.currentTarget as any).touchStartX = touch.clientX;
-                                }}
-                                onTouchEnd={(e) => {
-                                    const touch = e.changedTouches[0];
-                                    const startX = (e.currentTarget as any).touchStartX;
-                                    const diff = touch.clientX - startX;
-
-                                    // Swipe threshold: 50px
-                                    if (Math.abs(diff) > 50) {
-                                        if (diff > 0) {
-                                            // Swipe right = previous
-                                            navigateImage('prev');
-                                        } else {
-                                            // Swipe left = next
-                                            navigateImage('next');
-                                        }
-                                    }
-                                }}
-                            >
-                                <ZoomableImage
-                                    src={zoomedImage.imageDataUrl || zoomedImage.thumbnailDataUrl!}
-                                    alt={zoomedImage.prompt}
-                                />
-
-                                {/* Top bar with counter, download and close */}
-                                <div className="absolute -top-12 left-0 right-0 flex items-center justify-between">
-                                    {/* Counter */}
-                                    {showNavigation && (
-                                        <div className="px-3 py-1.5 rounded-full bg-black/60 text-white text-sm font-medium">
-                                            {nav.current} / {nav.total}
-                                        </div>
-                                    )}
-                                    <div className={`flex gap-2 ${!showNavigation ? 'ml-auto' : ''}`}>
-                                        <button
-                                            onClick={(e) => { e.stopPropagation(); handleSaveImageAsDna(zoomedImage); }}
-                                            className="p-2 rounded-full bg-black/60 text-white hover:bg-brand-purple transition-colors"
-                                            title="🧬 Save as DNA Character"
-                                        >
-                                            <span className="text-xl">🧬</span>
-                                        </button>
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                const file = dataURLtoFile(zoomedImage.imageDataUrl || zoomedImage.thumbnailDataUrl!, `storyboard-${zoomedImage.id}.png`);
-                                                handleGenerateStoryboard(file);
-                                            }}
-                                            className="p-2 rounded-full bg-black/60 text-white hover:bg-brand-pink transition-colors"
-                                            title="🎬 Generate Cinematic Storyboard"
-                                        >
-                                            <span className="text-xl">🎬</span>
-                                        </button>
-                                        <button onClick={() => handleDownload(zoomedImage)} className="p-2 rounded-full bg-black/60 text-white hover:bg-black/80 transition-colors" aria-label="Download image">
-                                            <DownloadIcon className="w-6 h-6" />
-                                        </button>
-                                        <button onClick={() => setZoomedImage(null)} className="p-2 rounded-full bg-black/60 text-white hover:bg-black/80 transition-colors" aria-label="Close zoom view">
-                                            <XIcon className="w-6 h-6" />
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {/* Navigation arrows (only show if there are multiple images) */}
-                                {showNavigation && (
-                                    <>
-                                        {/* Previous button */}
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                navigateImage('prev');
-                                            }}
-                                            className="absolute left-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/60 text-white hover:bg-black/80 transition-all hover:scale-110 active:scale-95"
-                                            aria-label="Previous image"
-                                        >
-                                            <ChevronLeftIcon className="w-8 h-8" />
-                                        </button>
-
-                                        {/* Next button */}
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                navigateImage('next');
-                                            }}
-                                            className="absolute right-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/60 text-white hover:bg-black/80 transition-all hover:scale-110 active:scale-95"
-                                            aria-label="Next image"
-                                        >
-                                            <ChevronRightIcon className="w-8 h-8" />
-                                        </button>
-                                    </>
-                                )}
-                            </div>
-                        </div>
+                        <ImageLightbox
+                            images={allImages}
+                            index={currentIndex}
+                            onClose={() => setZoomedImage(null)}
+                            onNavigate={(newIndex) => setZoomedImage(allImages[newIndex])}
+                            onSaveAsDna={handleSaveImageAsDna}
+                            onStoryboard={(img) => {
+                                const file = dataURLtoFile(img.imageDataUrl || img.thumbnailDataUrl!, `storyboard-${img.id}.png`);
+                                handleGenerateStoryboard(file);
+                            }}
+                            t={t}
+                        />
                     );
                 })()}
 

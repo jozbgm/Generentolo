@@ -45,11 +45,13 @@ interface FloatingActionBarProps {
     onGenerateTools: () => void;
     isToolsLoading: boolean;
 
-    // v1.0: PRO features
     selectedModel: ModelType;
     onModelChange: (model: ModelType) => void;
     selectedResolution: ResolutionType;
     onResolutionChange: (resolution: ResolutionType) => void;
+    // v1.9.6: Extra status
+    isEnhancing?: boolean;
+    referenceCount: number;
 }
 
 const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
@@ -78,11 +80,12 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
     dynamicTools,
     onGenerateTools,
     isToolsLoading,
-    // v1.0: PRO features
     selectedModel,
     onModelChange,
     selectedResolution,
     onResolutionChange,
+    isEnhancing,
+    referenceCount
 }) => {
     const { t, language } = useLocalization();
     const [isExpanded, setIsExpanded] = useState(false);
@@ -206,12 +209,22 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                 {/* Compact Mode */}
                 {!isExpanded && (
                     <div className="flex flex-wrap items-center gap-2 lg:gap-3 px-3 lg:px-4 py-2 lg:py-2.5 animate-fadeIn">
+                        {/* Reference Badge (v1.9.6) */}
+                        {referenceCount > 0 && (
+                            <div className="flex items-center gap-1.5 px-2 py-1 bg-brand-yellow/20 text-brand-yellow rounded-lg border border-brand-yellow/20 animate-pulse">
+                                <span className="text-xs">📸</span>
+                                <span className="text-[10px] font-bold">{referenceCount}</span>
+                            </div>
+                        )}
+
                         {/* Prompt Preview (clickable to expand) */}
                         <button
                             onClick={handleExpandClick}
-                            className="flex-1 min-w-[120px] text-left px-3 lg:px-4 py-2 lg:py-2.5 bg-transparent text-xs lg:text-sm text-light-text-muted dark:text-dark-text-muted truncate hover:text-light-text dark:hover:text-dark-text transition-all duration-150"
+                            className={`flex-1 min-w-[120px] text-left px-3 lg:px-4 py-2 lg:py-2.5 bg-transparent text-xs lg:text-sm transition-all duration-150 truncate ${isEnhancing ? 'text-brand-purple animate-pulse italic' : 'text-light-text-muted dark:text-dark-text-muted hover:text-light-text dark:hover:text-dark-text'}`}
                         >
-                            {prompt || t.promptPlaceholder || "Describe what you want to generate..."}
+                            {isEnhancing
+                                ? (language === 'it' ? 'L\'Art Director sta perfezionando...' : 'Art Director is perfecting...')
+                                : (prompt || t.promptPlaceholder || "Describe what you want to generate...")}
                         </button>
 
                         {/* Quick Pills - Compact Style */}
@@ -497,14 +510,15 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                 {isExpanded && (
                     <div className="px-3 lg:px-4 py-2.5 lg:py-3 space-y-2 lg:space-y-3 animate-fadeIn">
                         {/* Prompt Textarea with Paste/Clear buttons */}
-                        <div className="relative">
+                        <div className={`relative rounded-xl overflow-hidden transition-all duration-500 ${isEnhancing ? 'ring-2 ring-brand-purple ring-offset-2 dark:ring-offset-black animate-pulse' : ''}`}>
                             <textarea
                                 ref={promptTextareaRef}
                                 value={prompt}
                                 onChange={(e) => onPromptChange(e.target.value)}
                                 rows={3}
-                                placeholder={t.promptPlaceholder || "Describe what you want to generate..."}
-                                className="w-full px-3 lg:px-4 py-2 lg:py-2.5 pr-16 lg:pr-20 bg-transparent text-sm lg:text-base text-light-text dark:text-dark-text resize-y min-h-[72px] max-h-[400px] focus:ring-2 focus:ring-brand-purple/50 rounded-xl outline-none"
+                                placeholder={isEnhancing ? (language === 'it' ? 'L\'Art Director sta perfezionando la tua idea...' : 'Art Director is perfecting your idea...') : (t.promptPlaceholder || "Describe what you want to generate...")}
+                                className={`w-full px-3 lg:px-4 py-2 lg:py-2.5 pr-16 lg:pr-20 bg-transparent text-sm lg:text-base text-light-text dark:text-dark-text resize-y min-h-[72px] max-h-[400px] outline-none ${isEnhancing ? 'opacity-50 cursor-wait' : 'focus:ring-2 focus:ring-brand-purple/50'}`}
+                                disabled={isLoading || isEnhancing}
                             />
                             <div className="absolute top-2 right-2 flex gap-1">
                                 <button
@@ -899,6 +913,30 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                                     {!hasReferences
                                         ? (language === 'it' ? 'Carica un\'immagine di riferimento per attivare.' : 'Upload a reference image to activate.')
                                         : t.preciseReferenceTooltip}
+                                </div>
+                            </div>
+
+                            {/* v1.5.1: Google Search Grounding Toggle (Expanded Mode) */}
+                            <div className="relative group/tooltip flex items-center gap-2 lg:gap-2.5 px-2 lg:px-3 py-1.5 bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-lg">
+                                <span className="text-base lg:text-lg" title={t.groundingTooltip}>
+                                    🌐
+                                </span>
+                                <button
+                                    onClick={() => onGroundingChange(!useGrounding)}
+                                    className={`relative inline-flex h-5 lg:h-6 w-9 lg:w-11 items-center rounded-full transition-all duration-300 ${useGrounding
+                                        ? 'bg-purple-500 shadow-[0_0_10px_rgba(168,85,247,0.5)]'
+                                        : 'bg-gray-300 dark:bg-gray-600'
+                                        }`}
+                                    disabled={isLoading}
+                                >
+                                    <span
+                                        className={`inline-block h-4 lg:h-5 w-4 lg:w-5 transform rounded-full bg-white shadow-lg transition-transform duration-300 ${useGrounding ? 'translate-x-5 lg:translate-x-6' : 'translate-x-0.5'
+                                            }`}
+                                    />
+                                </button>
+                                {/* Tooltip */}
+                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-2 bg-black/90 text-white text-xs rounded-lg opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 pointer-events-none z-50">
+                                    {t.groundingTooltip}
                                 </div>
                             </div>
 
