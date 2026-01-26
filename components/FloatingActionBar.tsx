@@ -193,14 +193,19 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
             )}
 
             {/* Main Floating Bar */}
-            <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 lg:left-[calc(50%-20px)] lg:-translate-x-1/2 w-[95%] lg:w-fit lg:min-w-[720px] max-w-5xl bg-light-surface/85 dark:bg-dark-surface/65 backdrop-blur-[40px] border border-white/20 dark:border-white/10 rounded-[32px] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.4)] z-[70] transition-all duration-500 overflow-visible`}>
-                {isLoading && (
-                    <div className="absolute top-[2px] left-[2px] right-[2px] h-1.5 bg-brand-purple/5 overflow-hidden rounded-t-[30px] z-0">
-                        <div className="h-full bg-gradient-to-r from-brand-purple via-brand-magenta to-brand-yellow bg-[length:200%_100%] animate-shimmer" />
-                    </div>
-                )}
+            <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 lg:left-[calc(50%-20px)] lg:-translate-x-1/2 w-[95%] lg:w-fit lg:min-w-[720px] max-w-5xl z-[70] transition-all duration-500`}>
 
-                <div className="p-2.5 flex flex-col gap-2.5">
+                {/* Visual Body - Handles Background, Border, Shadow and CLIPPING of the loading bar */}
+                <div className="absolute inset-0 bg-light-surface/85 dark:bg-dark-surface/65 backdrop-blur-[40px] border border-white/20 dark:border-white/10 rounded-[32px] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.4)] overflow-hidden">
+                    {isLoading && (
+                        <div className="absolute top-0 left-0 right-0 h-1.5 bg-brand-purple/5">
+                            <div className="h-full bg-gradient-to-r from-brand-purple via-brand-magenta to-brand-yellow bg-[length:200%_100%] animate-shimmer" />
+                        </div>
+                    )}
+                </div>
+
+                {/* Interactive Content */}
+                <div className="relative z-10 p-2.5 flex flex-col gap-2.5">
                     {/* Top Row: Prompt Only */}
                     <div className="flex items-center gap-3">
                         <div className={`flex-1 relative bg-black/5 dark:bg-white/5 rounded-[22px] border border-black/5 dark:border-white/5 transition-all duration-300 ${isEnhancing ? 'ring-2 ring-brand-purple/50 ring-offset-4 dark:ring-offset-black animate-pulse bg-brand-purple/5' : 'hover:bg-black/[0.07] dark:hover:bg-white/[0.07]'}`}>
@@ -210,7 +215,7 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                                 onChange={(e) => onPromptChange(e.target.value)}
                                 rows={1}
                                 placeholder={isEnhancing ? (language === 'it' ? 'L\'Art Director sta perfezionando...' : 'Art Director is perfecting...') : (t.promptPlaceholder || "Describe what you want to generate...")}
-                                className="w-full px-5 py-3.5 pr-20 bg-transparent text-sm lg:text-[15px] text-light-text dark:text-dark-text outline-none resize-none max-h-[120px] custom-scrollbar placeholder:opacity-40 leading-relaxed font-medium"
+                                className="w-full px-5 py-3.5 pr-20 bg-transparent text-sm lg:text-[15px] text-light-text dark:text-dark-text outline-none resize-none max-h-[120px] custom-scrollbar placeholder:opacity-40 leading-relaxed font-medium floating-prompt-textarea"
                                 disabled={isEnhancing}
                             />
 

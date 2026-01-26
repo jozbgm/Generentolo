@@ -197,16 +197,9 @@ const ImageLightbox: React.FC<ImageLightboxProps> = ({
             {/* Header Controls */}
             <div className="flex items-center justify-between p-4 md:p-6 z-[110] bg-gradient-to-b from-black/50 to-transparent">
                 <div className="flex items-center gap-4">
-                    <button
-                        onClick={onClose}
-                        className="p-2.5 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all backdrop-blur-md border border-white/10"
-                        title={t.close}
-                    >
-                        <XIcon className="w-6 h-6" />
-                    </button>
-                    <div className="text-white/80 hidden md:block">
+                    <div className="text-white/80">
                         <p className="text-xs font-bold uppercase tracking-widest opacity-50 mb-0.5">{t.generationResult}</p>
-                        <p className="text-sm font-medium truncate max-w-[400px]">{currentImage.prompt}</p>
+                        <p className="text-sm font-medium truncate max-w-[200px] md:max-w-[400px]">{currentImage.prompt}</p>
                     </div>
                 </div>
 
@@ -237,6 +230,16 @@ const ImageLightbox: React.FC<ImageLightboxProps> = ({
                         title={t.download}
                     >
                         <DownloadIcon className="w-6 h-6" />
+                    </button>
+
+                    <div className="w-[1px] h-8 bg-white/10 mx-1"></div>
+
+                    <button
+                        onClick={onClose}
+                        className="p-2.5 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-red-400 hover:text-red-200 transition-all backdrop-blur-md border border-red-500/30 group"
+                        title={t.close}
+                    >
+                        <XIcon className="w-6 h-6 group-hover:scale-110 transition-transform" />
                     </button>
                 </div>
             </div>
