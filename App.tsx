@@ -1258,7 +1258,7 @@ const ImageDisplay: React.FC<ImageDisplayProps> = ({ images, isLoading, onDownlo
     const [showUpscaleMenu, setShowUpscaleMenu] = useState<string | null>(null);
 
     return (
-        <div className="relative w-full h-full flex items-center justify-center bg-light-surface/50 dark:bg-dark-surface/30 rounded-2xl p-4">
+        <div className="relative w-full h-full flex items-center justify-center bg-transparent rounded-[32px] overflow-hidden">
             {isLoading && (
                 <div className="flex flex-col items-center text-center max-w-md px-6 text-light-text-muted dark:text-dark-text-muted">
                     <div className="w-16 h-16 border-4 border-brand-yellow border-t-transparent rounded-full animate-spin mb-6"></div>
@@ -1271,13 +1271,13 @@ const ImageDisplay: React.FC<ImageDisplayProps> = ({ images, isLoading, onDownlo
                 </div>
             )}
             {!isLoading && images.length > 0 && (
-                <div className="w-full h-full flex flex-col items-center justify-center">
-                    <div className={`w-full flex-1 min-h-0 grid ${images.length > 1 ? 'grid-cols-2' : 'grid-cols-1'} gap-4 p-4`}>
+                <div className="w-full h-full flex flex-col items-center justify-center p-0">
+                    <div className={`w-full flex-1 min-h-0 grid ${images.length > 1 ? 'grid-cols-2' : 'grid-cols-1'} gap-0`}>
                         {images.map(image => {
                             const isUpscaling = upscalingImageId === image.id;
                             return (
-                                <div key={image.id} className="relative group flex items-center justify-center min-h-0">
-                                    <img src={image.imageDataUrl || image.thumbnailDataUrl} alt={image.prompt} className="max-w-full max-h-full object-contain rounded-md cursor-zoom-in" onClick={() => onZoom(image)} />
+                                <div key={image.id} className="relative group flex items-center justify-center min-h-0 w-full h-full">
+                                    <img src={image.imageDataUrl || image.thumbnailDataUrl} alt={image.prompt} className="max-w-full max-h-full object-contain cursor-zoom-in transition-all duration-700 hover:scale-[1.02]" onClick={() => onZoom(image)} />
 
                                     {/* Upscaling overlay */}
                                     {isUpscaling && (
@@ -1451,7 +1451,7 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
     const visibleHistory = filteredHistory.slice(0, displayCount);
 
     return (
-        <div className="h-full flex flex-col bg-light-surface/50 dark:bg-dark-surface/30 backdrop-blur-xl rounded-3xl p-4">
+        <div className="flex flex-col bg-light-surface/50 dark:bg-dark-surface/30 backdrop-blur-xl rounded-3xl p-4">
             <div className="flex justify-between items-center mb-3">
                 <h2 className="font-semibold text-light-text dark:text-dark-text">{t.historyTitle} {history.length > 0 && <span className="text-sm text-light-text-muted dark:text-dark-text-muted">({history.length})</span>}</h2>
                 {history.length > 0 && (
@@ -1502,7 +1502,7 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
                 </div>
             )}
 
-            <div ref={scrollContainerRef} className="flex-1 overflow-y-auto pr-2 -mr-2">
+            <div ref={scrollContainerRef} className="pr-2 -mr-2">
                 {filteredHistory.length > 0 ? (
                     <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-2 gap-3">
                         {visibleHistory.map(item => {
@@ -1630,7 +1630,7 @@ const PresetsPanel: React.FC<PresetsPanelProps> = ({
     };
 
     return (
-        <div className="h-full flex flex-col bg-light-surface/50 dark:bg-dark-surface/30 backdrop-blur-xl rounded-3xl p-4">
+        <div className="flex flex-col bg-light-surface/50 dark:bg-dark-surface/30 backdrop-blur-xl rounded-3xl p-4">
             <div className="flex justify-between items-center mb-4">
                 <h2 className="font-semibold text-light-text dark:text-dark-text flex items-center gap-2">
                     <StarIcon className="w-5 h-5 text-brand-yellow" filled />
@@ -2412,7 +2412,7 @@ export default function App() {
     const [dynamicTools, setDynamicTools] = useState<DynamicTool[]>([]);
     const [aspectRatio, setAspectRatio] = useState<string>('1:1');
     // v1.0: New PRO features states
-    const [selectedModel, setSelectedModel] = useState<ModelType>('gemini-2.5-flash-image');
+    const [selectedModel, setSelectedModel] = useState<ModelType>('gemini-3-pro-image-preview');
     const [selectedResolution, setSelectedResolution] = useState<ResolutionType>('2k');
     const [currentImages, setCurrentImages] = useState<GeneratedImage[]>([]);
     const [history, setHistory] = useState<GeneratedImage[]>([]);
@@ -2704,7 +2704,7 @@ export default function App() {
                 timestamp: Date.now(),
             };
             setQueue(prev => [...prev, newTask]);
-            showToast(language === 'it' ? 'Richiesta aggiunta alla coda' : 'Request added to queue', 'success');
+
             return;
         }
 
@@ -3746,7 +3746,7 @@ export default function App() {
 
                     {/* --- Main Content --- */}
                     <div className="flex-1 flex flex-col gap-2 lg:gap-6 min-w-0 h-full">
-                        <div className="flex-1 min-h-0 bg-light-surface/50 dark:bg-dark-surface/30 rounded-3xl overflow-hidden">
+                        <div className="flex-1 min-h-0 overflow-hidden">
                             <ImageDisplay
                                 images={currentImages}
                                 isLoading={isLoading}
@@ -3820,7 +3820,7 @@ export default function App() {
                     </div>
 
                     {/* --- Right Column (Buttons + History) --- */}
-                    <div className="w-full lg:w-[320px] flex-shrink-0 flex flex-col gap-4">
+                    <div className="w-full lg:w-[320px] flex-shrink-0 flex flex-col gap-4 overflow-y-auto custom-scrollbar h-full lg:pr-1">
                         <div className="space-y-3 p-4 bg-light-surface/50 dark:bg-dark-surface/30 backdrop-blur-xl rounded-3xl">
                             <button
                                 onClick={() => isLoading ? handleAbortGeneration() : handleGenerate()}
@@ -3859,7 +3859,7 @@ export default function App() {
                             </div>
                         </div>
 
-                        <aside className="flex-1 min-h-0 flex flex-col gap-3">
+                        <aside className="flex-shrink-0 flex flex-col gap-3">
                             {/* Queue Panel (if queue has items) */}
                             {queue.length > 0 && (
                                 <QueuePanel
@@ -3893,7 +3893,7 @@ export default function App() {
                             </div>
 
                             {/* Content */}
-                            <div className="flex-1 min-h-0">
+                            <div>
                                 {sidebarTab === 'history' ? (
                                     <HistoryPanel
                                         history={history}

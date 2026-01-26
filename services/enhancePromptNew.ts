@@ -1,8 +1,8 @@
 /**
- * 🚀 REVOLUTIONARY PROMPT ENHANCEMENT SYSTEM v2.5 "Full-Awareness"
+ * 🚀 REVOLUTIONARY PROMPT ENHANCEMENT SYSTEM v2.7 "God-Mode Awareness"
  * 
  * MASTER BRAIN: High-speed, vision-aware, advertising-focused Art Direction.
- * v2.5: Deep integration with Studio Config, Production Kits, and Image DNA.
+ * v2.7: Absolute integration with EVERY user selection (Presets, Studio, Technicals, Negative).
  */
 
 import { getAiClient, fileToGenerativePart } from './geminiService';
@@ -15,20 +15,32 @@ export interface EnhancementResult {
 
 /**
  * MASTER BRAIN ENHANCEMENT
- * Single-pass combined Vision Analysis & Prompt Enhancement with Studio Context
+ * Single-pass combined Vision Analysis & Prompt Enhancement with Full Application State
  */
 export async function enhancePromptV2(
     currentPrompt: string,
     imageFiles: File[],
     styleFile: File | null,
     structureFile: File | null,
-    userApiKey?: string | null,
-    language: 'en' | 'it' = 'en',
-    characterDna?: string, // v1.9.5: Support for Character Consistency
-    studioConfig?: any // v1.9.6: Full Studio Integration
+    userApiKey: string | null | undefined,
+    language: 'en' | 'it',
+    characterDna: string | undefined,
+    studioConfig: any,
+    classicPresets: {
+        style?: string | null;
+        lighting?: string | null;
+        camera?: string | null;
+        focus?: string | null;
+    },
+    technical: {
+        aspectRatio: string;
+        resolution: string;
+        negativePrompt: string;
+        model: string;
+    }
 ): Promise<EnhancementResult> {
     try {
-        const ai = getAiClient(userApiKey);
+        const ai = getAiClient(userApiKey || undefined);
 
         const allImages: File[] = [];
         if (imageFiles.length > 0) allImages.push(...imageFiles);
@@ -40,61 +52,79 @@ export async function enhancePromptV2(
             visionParts.push(await fileToGenerativePart(file));
         }
 
-        // v1.9.6: Build Studio Context for AI
-        let studioContext = "";
-        if (studioConfig) {
-            if (studioConfig.kit) studioContext += `- PRODUCTION KIT: ${studioConfig.kit} (This is the primary stylistic framework)\n`;
-            if (studioConfig.camera) studioContext += `- CAMERA: ${studioConfig.camera}\n`;
-            if (studioConfig.lens) studioContext += `- LENS: ${studioConfig.lens}\n`;
-            if (studioConfig.focal) studioContext += `- FOCAL: ${studioConfig.focal}\n`;
-            if (studioConfig.lightDir) studioContext += `- LIGHT DIRECTION: ${studioConfig.lightDir}\n`;
-            if (studioConfig.lightQuality) studioContext += `- LIGHT QUALITY: ${studioConfig.lightQuality}\n`;
-            if (studioConfig.lightColor) studioContext += `- LIGHT COLOR: ${studioConfig.lightColor}\n`;
-            if (studioConfig.shot) studioContext += `- SHOT TYPE: ${studioConfig.shot}\n`;
-            if (studioConfig.wardrobeSet) studioContext += `- WARDROBE: ${studioConfig.wardrobeSet}\n`;
+        // Build THE TOTAL CONTEXT (God-Mode)
+        let contextParts: string[] = [];
+
+        // 1. Production Framework
+        if (studioConfig?.kit) contextParts.push(`PRODUCTION KIT: ${studioConfig.kit} (Core Aesthetic)`);
+        if (classicPresets?.style) contextParts.push(`VISUAL STYLE: ${classicPresets.style}`);
+
+        // 2. Camera & Composition (Aware of Aspect Ratio)
+        const isVertical = technical.aspectRatio.includes('9:16') || technical.aspectRatio.includes('3:4');
+        const isWide = technical.aspectRatio.includes('21:9') || technical.aspectRatio.includes('16:9');
+        contextParts.push(`ASPECT RATIO: ${technical.aspectRatio} (${isVertical ? 'Vertical Portrait' : isWide ? 'Cinematic Wide' : 'Standard Square'})`);
+
+        if (studioConfig?.camera || classicPresets?.camera) contextParts.push(`CAMERA BODY: ${studioConfig?.camera || classicPresets?.camera}`);
+        if (studioConfig?.lens) contextParts.push(`LENS: ${studioConfig.lens}`);
+        if (studioConfig?.focal) contextParts.push(`FOCAL LENGTH: ${studioConfig.focal}`);
+        if (classicPresets?.focus) contextParts.push(`OPTICAL DEPTH: ${classicPresets.focus}`);
+        if (studioConfig?.shot) contextParts.push(`SHOT ANGLE/TYPE: ${studioConfig.shot}`);
+
+        // 3. Lighting & Environment
+        if (studioConfig?.lightQuality || classicPresets?.lighting) contextParts.push(`LIGHTING QUALITY: ${studioConfig?.lightQuality || classicPresets?.lighting}`);
+        if (studioConfig?.lightColor) contextParts.push(`LIGHT COLOR: ${studioConfig.lightColor}`);
+        if (studioConfig?.lightDir) contextParts.push(`LIGHT DIRECTION: ${studioConfig.lightDir}`);
+        if (studioConfig?.wardrobeSet) contextParts.push(`WARDROBE/STYLING: ${studioConfig.wardrobeSet}`);
+
+        // 4. Technical Constraints
+        contextParts.push(`TARGET RESOLUTION: ${technical.resolution.toUpperCase()}`);
+        if (technical.negativePrompt && technical.negativePrompt.trim().length > 2) {
+            contextParts.push(`STRICTLY AVOID (Negative Prompt): ${technical.negativePrompt}`);
         }
+
+        const fullStudioContext = contextParts.map(p => `- ${p}`).join('\n');
 
         const systemInstruction = language === 'it'
             ? `# RUOLO
-Sei l'Art Director Supremo di Generentolo. Hai un occhio infallibile per la bellezza naturale e l'armonia fotografica high-end.
+Sei l'Art Director Supremo di Generentolo. Hai un occhio infallibile per la bellezza naturale e la perfezione tecnica.
 
 # VISIONE ESTETICA (CRITICA)
-- **NO over-processing**: Evita contrasti estremi, sharpening artificiale o look "finto AI".
-- **Sì Naturalezza**: Punta su "soft diffused light", "organic textures", "natural skin tones", "dreamy bokeh".
-- **Analisi Visiva**: Analizza attentamente le immagini fornite (Image 1, Image 2, ecc.) per catturare soggetti, colori e stili. Se è presente un DNA, rispettalo rigorosamente.
-- **Integrazione Studio**: RISPETTA MANDATORIAMENTE le impostazioni dello Studio fornite (Camera, Luci, Kit). Se un Kit è selezionato, deve essere l'anima della composizione.
+- **NO over-processing**: Evita look "AI finta", contrasti bruciati o sharpening eccessivo.
+- **Sì Naturalezza**: Punta su "soft light", "organic textures", "natural skin", "cinematic depth".
+- **Coerenza**: Analizza le reference images e integra i tratti del DNA se presenti.
+- **Rispetto Totale**: DEVI integrare ogni singola scelta tecnica dell'utente (Kit, Camera, Luci, Formato, Negativo). Il prompt deve essere il risultato armonico di TUTTI questi settaggi.
 
-# CONTESTO STUDIO SELEZIONATO
-${studioContext || "Nessuna impostazione specifica."}
+# STATO TOTALE DELL'APPLICAZIONE (CONTESTO)
+${fullStudioContext}
 
-# PERSONAGGIO DNA
-${characterDna ? `RIFERIMENTO DNA PERSONAGGIO: ${characterDna}. Il soggetto deve avere queste caratteristiche.` : "Nessun riferimento DNA."}
+# DNA PERSONAGGIO
+${characterDna ? `RIFERIMENTO DNA: ${characterDna}.` : "Nessun DNA specifico."}
 
 # OBIETTIVO (JSON Output)
-1. **enhancedPrompt**: Descrizione iper-dettagliata (80-120 parole) in INGLESE. Usa un linguaggio sensoriale e tecnico. Integra il contesto dello Studio e del Kit in modo fluido, non come una lista.
-2. **artDirectorPlan**: Commento creativo in ITALIANO (max 2 frasi) che descriva l'atmosfera e la luce scelta in base alle impostazioni studio.
+1. **enhancedPrompt**: Descrizione magistrale (90-130 parole) in INGLESE. Non elencare i settaggi, ma USALI per descrivere la scena (es. se la lente è 85mm, descrivi la compressione dello sfondo).
+2. **artDirectorPlan**: Commento in ITALIANO (max 2 frasi) che spiega come hai fuso i desideri dell'utente in questa visione.
 
 # REGOLE
 - Se ci sono reference images, integrali con "from Image 1", etc.
 - Restituisci SOLO il JSON.`
             : `# ROLE
-You are the Supreme Art Director of Generentolo. You have an infallible eye for natural beauty and high-end photographic harmony.
+You are the Supreme Art Director of Generentolo. You have an infallible eye for natural beauty and technical perfection.
 
 # AESTHETIC VISION (CRITICAL)
-- **NO over-processing**: Avoid extreme contrast, artificial sharpening, or that "fake AI" look.
-- **YES Natural**: Focus on "soft diffused light", "organic textures", "natural skin tones", "dreamy bokeh".
-- **Visual Analysis**: Carefully analyze all provided images (Image 1, Image 2, etc.) to capture subjects, colors, and styles. If DNA is present, respect it rigorously.
-- **Studio Integration**: MANDATORILY RESPECT the provided Studio settings (Camera, Lights, Kit). If a Kit is selected, it must be the core of the composition.
+- **NO over-processing**: Avoid that "fake AI" look, blown-out contrast, or excessive sharpening.
+- **YES Natural**: Focus on "soft light", "organic textures", "natural skin", "cinematic depth".
+- **Consistency**: Analyze reference images and respect DNA traits if present.
+- **Total Respect**: You MUST integrate every single technical choice made by the user (Kit, Camera, Lights, Aspect Ratio, Negative). The prompt must be the harmonic result of ALL these settings.
 
-# SELECTED STUDIO CONTEXT
-${studioContext || "No specific settings."}
+# TOTAL APPLICATION STATE (CONTEXT)
+${fullStudioContext}
 
 # CHARACTER DNA
-${characterDna ? `CHARACTER DNA REFERENCE: ${characterDna}. The subject must have these traits.` : "No DNA reference."}
+${characterDna ? `CHARACTER DNA REFERENCE: ${characterDna}.` : "No DNA reference."}
 
 # OBJECTIVE (JSON Output)
-1. **enhancedPrompt**: Hyper-detailed description (80-120 words) in ENGLISH. Use sensory and technical language. Integrate Studio and Kit context seamlessly, not as a list.
-2. **artDirectorPlan**: Creative commentary in ENGLISH (max 2 sentences) describing the atmosphere and light you've chosen based on studio settings.
+1. **enhancedPrompt**: Masterful description (90-130 words) in ENGLISH. Do not list settings; USE them to describe the scene (e.g., if the lens is 85mm, describe the background compression).
+2. **artDirectorPlan**: Creative commentary in ENGLISH (max 2 sentences) explaining how you merged all user choices into this vision.
 
 # RULES
 - Use "from Image 1", etc. if references are present.
@@ -105,7 +135,7 @@ ${characterDna ? `CHARACTER DNA REFERENCE: ${characterDna}. The subject must hav
             contents: {
                 parts: [
                     ...visionParts,
-                    { text: `Enhance this prompt incorporating the Studio settings and making it a photographic masterpiece: "${currentPrompt}"` }
+                    { text: `Enhance this prompt by masterfully merging the original idea with ALL current technical settings: "${currentPrompt}"` }
                 ]
             },
             config: {

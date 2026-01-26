@@ -1,27 +1,18 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocalization } from '../App';
 import { ModelType, ResolutionType } from '../types';
-import { XIcon } from './icons';
+import { XIcon, CopyIcon } from './icons';
 
 interface FloatingActionBarProps {
-    // Prompt
     prompt: string;
     onPromptChange: (value: string) => void;
     promptTextareaRef: React.RefObject<HTMLTextAreaElement | null>;
-
-    // Actions
     onGenerate: () => void;
-    onAbortGeneration: () => void; // v1.3
-
-    // v1.9 Pro: Auto Enhance
+    onAbortGeneration: () => void;
     autoEnhance: boolean;
     onAutoEnhanceChange: (enabled: boolean) => void;
-
-    // State
     isLoading: boolean;
     hasReferences: boolean;
-
-    // Controls
     aspectRatio: string;
     onAspectRatioChange: (ratio: string) => void;
     numImages: number;
@@ -31,25 +22,17 @@ interface FloatingActionBarProps {
     onRandomizeSeed: () => void;
     negativePrompt: string;
     onNegativePromptChange: (value: string) => void;
-
-    // v0.7: Precise Reference
     preciseReference: boolean;
     onPreciseReferenceChange: (enabled: boolean) => void;
-
-    // v1.5.1: Google Search Grounding
     useGrounding: boolean;
     onGroundingChange: (enabled: boolean) => void;
-
-    // Dynamic Tools
     dynamicTools: any[];
     onGenerateTools: () => void;
     isToolsLoading: boolean;
-
     selectedModel: ModelType;
     onModelChange: (model: ModelType) => void;
     selectedResolution: ResolutionType;
     onResolutionChange: (resolution: ResolutionType) => void;
-    // v1.9.6: Extra status
     isEnhancing?: boolean;
     referenceCount: number;
 }
@@ -77,29 +60,25 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
     onPreciseReferenceChange,
     useGrounding,
     onGroundingChange,
-    dynamicTools,
-    onGenerateTools,
-    isToolsLoading,
     selectedModel,
     onModelChange,
     selectedResolution,
     onResolutionChange,
     isEnhancing,
-    referenceCount
 }) => {
     const { t, language } = useLocalization();
-    const [isExpanded, setIsExpanded] = useState(false);
     const [showAspectMenu, setShowAspectMenu] = useState(false);
     const [showNumImagesMenu, setShowNumImagesMenu] = useState(false);
     const [showAdvancedPanel, setShowAdvancedPanel] = useState(false);
-    // v1.0: Model/Resolution dropdowns
     const [showModelMenu, setShowModelMenu] = useState(false);
     const [showResolutionMenu, setShowResolutionMenu] = useState(false);
+
+    // UI state for copy feedback
+    const [justCopied, setJustCopied] = useState(false);
 
     const aspectRatios = ["Auto", "1:1", "4:3", "3:4", "16:9", "9:16", "3:2", "2:3", "4:5", "5:4", "21:9"];
     const numImagesOptions = [1, 2];
 
-    // Visual icon for aspect ratios
     const getAspectRatioIcon = (ratio: string) => {
         if (ratio === 'Auto') return '🔄';
         const [w, h] = ratio.split(':').map(Number);
@@ -108,870 +87,375 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
         return '⬜';
     };
 
-    const handleExpandClick = useCallback(() => {
-        setIsExpanded(true);
-        setShowAdvancedPanel(false);
-        setShowAspectMenu(false);
-        setShowNumImagesMenu(false);
-        setTimeout(() => promptTextareaRef.current?.focus(), 100);
-    }, [promptTextareaRef]);
+    // Inject custom styles for this component
+    useEffect(() => {
+        const style = document.createElement('style');
+        style.innerHTML = `
+            .floating-prompt-textarea::-webkit-scrollbar {
+                width: 6px;
+            }
+            .floating-prompt-textarea::-webkit-scrollbar-track {
+                background: transparent;
+            }
+            .floating-prompt-textarea::-webkit-scrollbar-thumb {
+                background-color: rgba(156, 163, 175, 0.3); /* Gray-400 with opacity */
+                border-radius: 10px;
+            }
+            .floating-prompt-textarea::-webkit-scrollbar-thumb:hover {
+                background-color: rgba(156, 163, 175, 0.5);
+            }
+        `;
+        document.head.appendChild(style);
+        return () => {
+            document.head.removeChild(style);
+        };
+    }, []);
+
+    // Handle paste
+    const handlePaste = async () => {
+        try {
+            const text = await navigator.clipboard.readText();
+            onPromptChange(text);
+            // Focus textarea after paste
+            promptTextareaRef.current?.focus();
+        } catch (err) {
+            console.error('Failed to read clipboard:', err);
+        }
+    };
+
+    // Handle copy
+    const handleCopy = async () => {
+        try {
+            await navigator.clipboard.writeText(prompt);
+            setJustCopied(true);
+            setTimeout(() => setJustCopied(false), 2000);
+        } catch (err) {
+            console.error('Failed to copy to clipboard:', err);
+        }
+    };
 
     return (
         <>
-            {/* Backdrop for Advanced Panel */}
-            {showAdvancedPanel && (
+            {/* Backdrop for Popovers/Advanced Panel */}
+            {(showAdvancedPanel || showAspectMenu || showNumImagesMenu || showModelMenu || showResolutionMenu) && (
                 <div
-                    className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 animate-fadeIn"
-                    onClick={() => setShowAdvancedPanel(false)}
+                    className="fixed inset-0 bg-black/5 backdrop-blur-[2px] z-[65] animate-fadeIn"
+                    onClick={() => {
+                        setShowAdvancedPanel(false);
+                        setShowAspectMenu(false);
+                        setShowNumImagesMenu(false);
+                        setShowModelMenu(false);
+                        setShowResolutionMenu(false);
+                    }}
                 />
             )}
 
-            {/* Advanced Panel Overlay (slide up from bottom) */}
+            {/* Advanced Settings Popover */}
             {showAdvancedPanel && (
-                <div className={`fixed ${isExpanded ? 'bottom-[200px]' : 'bottom-[88px]'} left-1/2 -translate-x-1/2 lg:left-[calc(50%-20px)] lg:-translate-x-1/2 w-[95%] lg:w-[calc(100%-360px)] max-w-5xl bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border rounded-2xl shadow-2xl z-50 p-4 md:p-6 max-h-[50vh] md:max-h-[40vh] overflow-y-auto transition-all duration-300 ease-out`}>
-                    <div className="flex items-center justify-between mb-4">
-                        <h3 className="font-semibold text-light-text dark:text-dark-text">{t.advancedSettings || 'Advanced Settings'}</h3>
-                        <button
-                            onClick={() => setShowAdvancedPanel(false)}
-                            className="text-light-text-muted dark:text-dark-text-muted hover:text-light-text dark:hover:text-dark-text hover:scale-110 active:scale-95 transition-all duration-150"
-                        >
-                            ✕
-                        </button>
+                <div className="fixed bottom-[110px] left-1/2 -translate-x-1/2 lg:left-[calc(50%-20px)] lg:-translate-x-1/2 w-[90%] lg:w-[400px] bg-light-surface/90 dark:bg-dark-surface/90 backdrop-blur-2xl border border-white/20 dark:border-white/10 rounded-2xl shadow-2xl z-[80] p-4 animate-slideUp">
+                    <div className="flex items-center justify-between mb-3 border-b border-light-border/10 dark:border-white/10 pb-2">
+                        <h3 className="text-[10px] font-bold uppercase tracking-widest text-brand-purple">{t.advancedSettings || 'Advanced Settings'}</h3>
+                        <button onClick={() => setShowAdvancedPanel(false)} className="p-1 hover:bg-white/10 rounded-lg transition-colors text-xs opacity-50 hover:opacity-100">✕</button>
                     </div>
-
-                    {/* Negative Prompt */}
-                    <div className="mb-4">
-                        <label className="text-sm text-light-text-muted dark:text-dark-text-muted mb-2 block">{t.negativePrompt || 'Negative Prompt'}</label>
-                        <input
-                            type="text"
-                            value={negativePrompt}
-                            onChange={(e) => onNegativePromptChange(e.target.value)}
-                            placeholder={t.negativePromptPlaceholder || "What to avoid..."}
-                            className="w-full px-4 py-2 bg-light-surface-accent dark:bg-dark-surface-accent rounded-lg text-light-text dark:text-dark-text focus:ring-2 focus:ring-brand-purple outline-none"
-                        />
-                    </div>
-
-                    {/* Seed */}
-                    <div className="mb-4">
-                        <label className="text-sm text-light-text-muted dark:text-dark-text-muted mb-2 block">{t.seed || 'Seed'}</label>
-                        <div className="flex gap-2">
-                            <input
-                                type="text"
-                                value={seed}
-                                onChange={(e) => onSeedChange(e.target.value)}
-                                placeholder={t.randomSeed || "Random"}
-                                className="flex-1 px-4 py-2 bg-light-surface-accent dark:bg-dark-surface-accent rounded-lg text-light-text dark:text-dark-text focus:ring-2 focus:ring-brand-purple outline-none"
-                            />
-                            <button
-                                onClick={onRandomizeSeed}
-                                className="px-4 py-2 bg-light-surface-accent dark:bg-dark-surface-accent rounded-lg hover:bg-light-border dark:hover:bg-dark-border hover:scale-105 active:scale-95 transition-all duration-150"
-                            >
-                                🎲
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Professional Tools */}
-                    {hasReferences && (
+                    <div className="space-y-4">
                         <div>
-                            <div className="flex items-center justify-between mb-2">
-                                <label className="text-sm text-light-text-muted dark:text-dark-text-muted">{t.professionalTools || 'Professional Tools'}</label>
-                                <button
-                                    onClick={onGenerateTools}
-                                    disabled={isToolsLoading}
-                                    className="text-sm text-brand-purple hover:text-brand-pink hover:scale-105 active:scale-95 transition-all duration-150 disabled:opacity-50 disabled:hover:scale-100"
-                                >
-                                    {isToolsLoading ? <span className="inline-block animate-pulse">⏳</span> : '🔄'} {t.generate || 'Generate'}
-                                </button>
-                            </div>
-                            {dynamicTools.length > 0 ? (
-                                <div className="text-sm text-light-text-muted dark:text-dark-text-muted">
-                                    {dynamicTools.length} {t.toolsAvailable || 'tools available'}
-                                </div>
-                            ) : (
-                                <div className="text-sm text-light-text-muted dark:text-dark-text-muted italic">
-                                    {t.noToolsYet || 'Click generate to create professional tools'}
-                                </div>
-                            )}
+                            <label className="text-[9px] font-bold uppercase tracking-wider text-light-text-muted dark:text-dark-text-muted mb-1.5 block">{t.negativePrompt || 'Negative Prompt'}</label>
+                            <textarea
+                                value={negativePrompt}
+                                onChange={(e) => onNegativePromptChange(e.target.value)}
+                                placeholder="Avoid (e.g. text, watermark, low quality)..."
+                                className="w-full px-3 py-2 bg-black/5 dark:bg-white/5 rounded-xl text-xs outline-none focus:ring-1 focus:ring-brand-purple/50 resize-none h-20 transition-all placeholder:opacity-30"
+                            />
                         </div>
-                    )}
+                        <div className="flex gap-4">
+                            <div className="flex-1">
+                                <label className="text-[9px] font-bold uppercase tracking-wider text-light-text-muted dark:text-dark-text-muted mb-1.5 block">{t.seed || 'Seed'}</label>
+                                <div className="flex gap-2">
+                                    <input
+                                        type="text"
+                                        value={seed}
+                                        onChange={(e) => onSeedChange(e.target.value)}
+                                        placeholder="Random"
+                                        className="w-full px-3 py-2 bg-black/5 dark:bg-white/5 rounded-xl text-xs outline-none focus:ring-1 focus:ring-brand-purple/50"
+                                    />
+                                    <button
+                                        onClick={onRandomizeSeed}
+                                        className="px-3 py-2 bg-black/5 dark:bg-white/5 rounded-xl hover:bg-white/10 transition-all border border-black/5 dark:border-white/5"
+                                        title="Randomize"
+                                    >
+                                        🎲
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             )}
 
             {/* Main Floating Bar */}
-            <div className="fixed bottom-4 left-1/2 -translate-x-1/2 lg:left-[calc(50%-20px)] lg:-translate-x-1/2 w-[95%] lg:w-[calc(100%-360px)] max-w-5xl bg-light-surface/98 dark:bg-dark-surface/98 backdrop-blur-xl border border-light-border dark:border-dark-border rounded-2xl shadow-2xl z-[60] transition-all duration-300 ease-out">
-                {/* Progress Bar */}
+            <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 lg:left-[calc(50%-20px)] lg:-translate-x-1/2 w-[95%] lg:w-fit lg:min-w-[720px] max-w-5xl bg-light-surface/85 dark:bg-dark-surface/65 backdrop-blur-[40px] border border-white/20 dark:border-white/10 rounded-[32px] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.4)] z-[70] transition-all duration-500 overflow-visible`}>
                 {isLoading && (
-                    <div className="absolute top-0 left-0 right-0 h-1 bg-light-surface-accent/30 dark:bg-dark-surface-accent/30 overflow-hidden rounded-t-2xl">
-                        <div className="h-full bg-gradient-to-r from-brand-purple via-brand-pink to-brand-purple bg-[length:200%_100%] animate-shimmer" />
-                    </div>
-                )}
-                {/* Compact Mode */}
-                {!isExpanded && (
-                    <div className="flex flex-wrap items-center gap-2 lg:gap-3 px-3 lg:px-4 py-2 lg:py-2.5 animate-fadeIn">
-                        {/* Reference Badge (v1.9.6) */}
-                        {referenceCount > 0 && (
-                            <div className="flex items-center gap-1.5 px-2 py-1 bg-brand-yellow/20 text-brand-yellow rounded-lg border border-brand-yellow/20 animate-pulse">
-                                <span className="text-xs">📸</span>
-                                <span className="text-[10px] font-bold">{referenceCount}</span>
-                            </div>
-                        )}
-
-                        {/* Prompt Preview (clickable to expand) */}
-                        <button
-                            onClick={handleExpandClick}
-                            className={`flex-1 min-w-[120px] text-left px-3 lg:px-4 py-2 lg:py-2.5 bg-transparent text-xs lg:text-sm transition-all duration-150 truncate ${isEnhancing ? 'text-brand-purple animate-pulse italic' : 'text-light-text-muted dark:text-dark-text-muted hover:text-light-text dark:hover:text-dark-text'}`}
-                        >
-                            {isEnhancing
-                                ? (language === 'it' ? 'L\'Art Director sta perfezionando...' : 'Art Director is perfecting...')
-                                : (prompt || t.promptPlaceholder || "Describe what you want to generate...")}
-                        </button>
-
-                        {/* Quick Pills - Compact Style */}
-                        <div className="relative z-[70]">
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    setShowAspectMenu(!showAspectMenu);
-                                    setShowNumImagesMenu(false);
-                                }}
-                                className="flex items-center gap-1 lg:gap-1.5 px-3 lg:px-3 py-2.5 lg:py-2 bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-lg text-xs text-light-text dark:text-dark-text hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 active:scale-95 transition-all duration-150 whitespace-nowrap min-h-[44px]"
-                            >
-                                <span className="hidden sm:inline">📐</span>
-                                <span>{aspectRatio}</span>
-                            </button>
-                            {showAspectMenu && (
-                                <>
-                                    <div className="fixed inset-0 z-[65]" onClick={() => setShowAspectMenu(false)} />
-                                    <div className="absolute bottom-full mb-2 right-0 bg-light-surface dark:bg-dark-surface rounded-xl shadow-2xl p-2 min-w-[120px] border border-light-border dark:border-dark-border z-[70] animate-slideDown">
-                                        {aspectRatios.map(ratio => (
-                                            <button
-                                                key={ratio}
-                                                onClick={() => {
-                                                    onAspectRatioChange(ratio);
-                                                    setShowAspectMenu(false);
-                                                }}
-                                                className={`w-full px-3 py-2.5 text-left text-sm rounded-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 transition-all duration-150 flex items-center gap-2 min-h-[44px] ${ratio === aspectRatio ? 'bg-brand-purple/20 text-brand-purple font-medium' : 'text-light-text dark:text-dark-text'}`}
-                                            >
-                                                <span className="text-base">{getAspectRatioIcon(ratio)}</span>
-                                                <span>{ratio}</span>
-                                            </button>
-                                        ))}
-                                    </div>
-                                </>
-                            )}
-                        </div>
-
-                        <div className="relative z-[70]">
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    setShowNumImagesMenu(!showNumImagesMenu);
-                                    setShowAspectMenu(false);
-                                }}
-                                className="flex items-center gap-1 lg:gap-1.5 px-3 lg:px-3 py-2.5 lg:py-2 bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-lg text-xs text-light-text dark:text-dark-text hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 active:scale-95 transition-all duration-150 whitespace-nowrap min-h-[44px]"
-                            >
-                                <span className="hidden sm:inline">🖼️</span>
-                                <span>{numImages}x</span>
-                            </button>
-                            {showNumImagesMenu && (
-                                <>
-                                    <div className="fixed inset-0 z-[65]" onClick={() => setShowNumImagesMenu(false)} />
-                                    <div className="absolute bottom-full mb-2 right-0 bg-light-surface dark:bg-dark-surface rounded-xl shadow-2xl p-2 min-w-[100px] border border-light-border dark:border-dark-border z-[70] animate-slideDown">
-                                        {numImagesOptions.map(num => (
-                                            <button
-                                                key={num}
-                                                onClick={() => {
-                                                    onNumImagesChange(num);
-                                                    setShowNumImagesMenu(false);
-                                                }}
-                                                className={`w-full px-3 py-2.5 text-left text-sm rounded-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 transition-all duration-150 min-h-[44px] ${num === numImages ? 'bg-brand-purple/20 text-brand-purple' : 'text-light-text dark:text-dark-text'}`}
-                                            >
-                                                {num}x
-                                            </button>
-                                        ))}
-                                    </div>
-                                </>
-                            )}
-                        </div>
-
-                        <button
-                            onClick={() => {
-                                setShowAdvancedPanel(!showAdvancedPanel);
-                                setShowAspectMenu(false);
-                                setShowNumImagesMenu(false);
-                                setIsExpanded(false);
-                            }}
-                            className="flex items-center gap-1 lg:gap-1.5 px-2 lg:px-3 py-1.5 lg:py-2 bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-lg text-xs text-light-text dark:text-dark-text hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 active:scale-95 transition-all duration-150"
-                        >
-                            <span>⚙️</span>
-                        </button>
-
-                        {/* v1.0: Model Selector Dropdown */}
-                        <div className="relative z-[70]">
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    setShowModelMenu(!showModelMenu);
-                                    setShowAspectMenu(false);
-                                    setShowNumImagesMenu(false);
-                                    setShowResolutionMenu(false);
-                                }}
-                                className="flex items-center gap-1 lg:gap-1.5 px-3 lg:px-3 py-2.5 lg:py-2 bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-lg text-xs text-light-text dark:text-dark-text hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 active:scale-95 transition-all duration-150 whitespace-nowrap min-h-[44px]"
-                            >
-                                <span>{selectedModel === 'gemini-2.5-flash-image' ? '⚡' : '⭐'}</span>
-                                <span className="hidden sm:inline">{selectedModel === 'gemini-2.5-flash-image' ? 'Flash' : 'PRO'}</span>
-                            </button>
-                            {showModelMenu && (
-                                <>
-                                    <div className="fixed inset-0 z-[65]" onClick={() => setShowModelMenu(false)} />
-                                    <div className="absolute bottom-full mb-2 right-0 bg-light-surface dark:bg-dark-surface rounded-xl shadow-2xl p-2 min-w-[140px] border border-light-border dark:border-dark-border z-[70] animate-slideDown">
-                                        <button
-                                            onClick={() => {
-                                                onModelChange('gemini-2.5-flash-image');
-                                                setShowModelMenu(false);
-                                            }}
-                                            className={`w-full px-3 py-2.5 text-left text-sm rounded-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 transition-all duration-150 flex items-center gap-2 min-h-[44px] ${selectedModel === 'gemini-2.5-flash-image' ? 'bg-brand-purple/20 text-brand-purple' : 'text-light-text dark:text-dark-text'}`}
-                                        >
-                                            <span>⚡</span>
-                                            <span>{t.modelFlash}</span>
-                                        </button>
-                                        <button
-                                            onClick={() => {
-                                                onModelChange('gemini-3-pro-image-preview');
-                                                setShowModelMenu(false);
-                                            }}
-                                            className={`w-full px-3 py-2.5 text-left text-sm rounded-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 transition-all duration-150 flex items-center gap-2 min-h-[44px] ${selectedModel === 'gemini-3-pro-image-preview' ? 'bg-brand-purple/20 text-brand-purple' : 'text-light-text dark:text-dark-text'}`}
-                                        >
-                                            <span>⭐</span>
-                                            <span>{t.modelPro}</span>
-                                        </button>
-                                    </div>
-                                </>
-                            )}
-                        </div>
-
-                        {/* v1.0: Resolution Selector Dropdown (only for PRO model) */}
-                        {selectedModel === 'gemini-3-pro-image-preview' && (
-                            <div className="relative z-[70]">
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        setShowResolutionMenu(!showResolutionMenu);
-                                        setShowAspectMenu(false);
-                                        setShowNumImagesMenu(false);
-                                        setShowModelMenu(false);
-                                    }}
-                                    className="flex items-center gap-1 lg:gap-1.5 px-3 lg:px-3 py-2.5 lg:py-2 bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-lg text-xs text-light-text dark:text-dark-text hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 active:scale-95 transition-all duration-150 whitespace-nowrap min-h-[44px]"
-                                >
-                                    <span className="hidden sm:inline">📏</span>
-                                    <span>{selectedResolution.toUpperCase()}</span>
-                                </button>
-                                {showResolutionMenu && (
-                                    <>
-                                        <div className="fixed inset-0 z-[65]" onClick={() => setShowResolutionMenu(false)} />
-                                        <div className="absolute bottom-full mb-2 right-0 bg-light-surface dark:bg-dark-surface rounded-xl shadow-2xl p-2 min-w-[100px] border border-light-border dark:border-dark-border z-[70] animate-slideDown">
-                                            <button
-                                                onClick={() => {
-                                                    onResolutionChange('1k');
-                                                    setShowResolutionMenu(false);
-                                                }}
-                                                className={`w-full px-3 py-2.5 text-left text-sm rounded-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 transition-all duration-150 min-h-[44px] ${selectedResolution === '1k' ? 'bg-brand-purple/20 text-brand-purple' : 'text-light-text dark:text-dark-text'}`}
-                                            >
-                                                {t.resolution1k}
-                                            </button>
-                                            <button
-                                                onClick={() => {
-                                                    onResolutionChange('2k');
-                                                    setShowResolutionMenu(false);
-                                                }}
-                                                className={`w-full px-3 py-2.5 text-left text-sm rounded-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 transition-all duration-150 min-h-[44px] ${selectedResolution === '2k' ? 'bg-brand-purple/20 text-brand-purple' : 'text-light-text dark:text-dark-text'}`}
-                                            >
-                                                {t.resolution2k}
-                                            </button>
-                                            <button
-                                                onClick={() => {
-                                                    onResolutionChange('4k');
-                                                    setShowResolutionMenu(false);
-                                                }}
-                                                className={`w-full px-3 py-2.5 text-left text-sm rounded-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 transition-all duration-150 min-h-[44px] ${selectedResolution === '4k' ? 'bg-brand-purple/20 text-brand-purple' : 'text-light-text dark:text-dark-text'}`}
-                                            >
-                                                {t.resolution4k}
-                                            </button>
-                                        </div>
-                                    </>
-                                )}
-                            </div>
-                        )}
-
-                        {/* v1.9: Auto Enhance Toggle Switch (Always visible) */}
-                        <div className="relative group/tooltip flex items-center gap-2 lg:gap-2.5 px-2 lg:px-3 py-1.5 lg:py-2 bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-lg">
-                            <span className="text-base lg:text-lg" title={t.autoEnhanceTooltip || "Auto Enhance Prompt"}>
-                                ✨
-                            </span>
-                            <button
-                                onClick={() => onAutoEnhanceChange(!autoEnhance)}
-                                className={`relative inline-flex h-5 lg:h-6 w-9 lg:w-11 items-center rounded-full transition-all duration-300 ${autoEnhance
-                                    ? 'bg-brand-purple shadow-[0_0_10px_rgba(139,69,255,0.5)]'
-                                    : 'bg-gray-300 dark:bg-gray-600'
-                                    }`}
-                                disabled={isLoading}
-                                title={t.autoEnhance || "Auto Enhance"}
-                            >
-                                <span
-                                    className={`inline-block h-4 lg:h-5 w-4 lg:w-5 transform rounded-full bg-white shadow-lg transition-transform duration-300 ${autoEnhance ? 'translate-x-5 lg:translate-x-6' : 'translate-x-0.5'
-                                        }`}
-                                />
-                            </button>
-                            {/* Tooltip */}
-                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-2 bg-black/90 text-white text-xs rounded-lg opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 pointer-events-none z-50">
-                                {t.autoEnhanceTooltip || "Automatically optimizes your prompt using AI before generating. May increase waiting time."}
-                            </div>
-                        </div>
-
-                        {/* v0.7: Precise Reference Toggle Switch (Always visible in v1.9) */}
-                        <div className={`relative group/tooltip flex items-center gap-2 lg:gap-2.5 px-2 lg:px-3 py-1.5 lg:py-2 bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-lg ${!hasReferences ? 'opacity-50 grayscale' : ''}`}>
-                            <span className="text-base lg:text-lg" title={t.preciseReferenceTooltip}>
-                                👨
-                            </span>
-                            <button
-                                onClick={() => hasReferences && onPreciseReferenceChange(!preciseReference)}
-                                className={`relative inline-flex h-5 lg:h-6 w-9 lg:w-11 items-center rounded-full transition-all duration-300 ${preciseReference
-                                    ? 'bg-yellow-400 shadow-[0_0_10px_rgba(250,204,21,0.5)]'
-                                    : 'bg-gray-300 dark:bg-gray-600'
-                                    }`}
-                                disabled={isLoading || !hasReferences}
-                            >
-                                <span
-                                    className={`inline-block h-4 lg:h-5 w-4 lg:w-5 transform rounded-full bg-white shadow-lg transition-transform duration-300 ${preciseReference ? 'translate-x-5 lg:translate-x-6' : 'translate-x-0.5'
-                                        }`}
-                                />
-                            </button>
-                            {/* Tooltip */}
-                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-2 bg-black/90 text-white text-xs rounded-lg opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 pointer-events-none z-50">
-                                {!hasReferences
-                                    ? (language === 'it' ? 'Carica un\'immagine di riferimento per attivare.' : 'Upload a reference image to activate.')
-                                    : t.preciseReferenceTooltip}
-                            </div>
-                        </div>
-
-                        {/* v1.5.1: Google Search Grounding Toggle */}
-                        <div className="relative group/tooltip flex items-center gap-2 lg:gap-2.5 px-2 lg:px-3 py-1.5 lg:py-2 bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-lg">
-                            <span className="text-base lg:text-lg" title={t.groundingTooltip}>
-                                🌐
-                            </span>
-                            <button
-                                onClick={() => onGroundingChange(!useGrounding)}
-                                className={`relative inline-flex h-5 lg:h-6 w-9 lg:w-11 items-center rounded-full transition-all duration-300 ${useGrounding
-                                    ? 'bg-purple-500 shadow-[0_0_10px_rgba(168,85,247,0.5)]'
-                                    : 'bg-gray-300 dark:bg-gray-600'
-                                    }`}
-                                disabled={isLoading}
-                            >
-                                <span
-                                    className={`inline-block h-4 lg:h-5 w-4 lg:w-5 transform rounded-full bg-white shadow-lg transition-transform duration-300 ${useGrounding ? 'translate-x-5 lg:translate-x-6' : 'translate-x-0.5'
-                                        }`}
-                                />
-                            </button>
-                            {/* Tooltip */}
-                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-2 bg-black/90 text-white text-xs rounded-lg opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 pointer-events-none z-50">
-                                {t.groundingTooltip}
-                            </div>
-                        </div>
-
-                        {/* Primary Action - HERO BUTTON */}
-                        <div className="flex flex-col gap-1.5 min-w-[120px]">
-                            {/* Primary Control (Generate/Abort) */}
-                            <button
-                                onClick={() => (isLoading ? onAbortGeneration() : onGenerate())}
-                                className={`relative px-4 lg:px-6 py-2 lg:py-2.5 ${isLoading
-                                    ? 'bg-red-500/10 text-red-500 border border-red-500/30'
-                                    : 'bg-gradient-to-r from-brand-yellow via-brand-magenta to-brand-yellow bg-[length:200%_100%] hover:bg-[position:100%_0] shadow-[0_0_15px_rgba(255,217,61,0.4)] text-white'
-                                    } hover:scale-105 active:scale-95 rounded-xl font-bold text-xs lg:text-sm transition-all duration-300 whitespace-nowrap flex items-center justify-center gap-2`}
-                            >
-                                {isLoading ? <XIcon className="w-3.5 h-3.5" /> : "⚡"}
-                                <span>{isLoading ? t.stopGeneration : (t.generateButton || "Generate")}</span>
-                            </button>
-
-                            {/* Secondary Queue Control (Only when loading) */}
-                            {isLoading && (
-                                <button
-                                    onClick={onGenerate}
-                                    className="px-4 py-1.5 bg-brand-purple/20 text-brand-purple border border-brand-purple/20 hover:bg-brand-purple/30 rounded-lg text-[9px] font-black uppercase tracking-tighter transition-all flex items-center justify-center gap-1.5"
-                                >
-                                    <span>➕</span> {t.putInQueue}
-                                </button>
-                            )}
-                        </div>
+                    <div className="absolute top-[2px] left-[2px] right-[2px] h-1.5 bg-brand-purple/5 overflow-hidden rounded-t-[30px] z-0">
+                        <div className="h-full bg-gradient-to-r from-brand-purple via-brand-magenta to-brand-yellow bg-[length:200%_100%] animate-shimmer" />
                     </div>
                 )}
 
-                {/* Expanded Mode */}
-                {isExpanded && (
-                    <div className="px-3 lg:px-4 py-2.5 lg:py-3 space-y-2 lg:space-y-3 animate-fadeIn">
-                        {/* Prompt Textarea with Paste/Clear buttons */}
-                        <div className={`relative rounded-xl overflow-hidden transition-all duration-500 ${isEnhancing ? 'ring-2 ring-brand-purple ring-offset-2 dark:ring-offset-black animate-pulse' : ''}`}>
+                <div className="p-2.5 flex flex-col gap-2.5">
+                    {/* Top Row: Prompt Only */}
+                    <div className="flex items-center gap-3">
+                        <div className={`flex-1 relative bg-black/5 dark:bg-white/5 rounded-[22px] border border-black/5 dark:border-white/5 transition-all duration-300 ${isEnhancing ? 'ring-2 ring-brand-purple/50 ring-offset-4 dark:ring-offset-black animate-pulse bg-brand-purple/5' : 'hover:bg-black/[0.07] dark:hover:bg-white/[0.07]'}`}>
                             <textarea
                                 ref={promptTextareaRef}
                                 value={prompt}
                                 onChange={(e) => onPromptChange(e.target.value)}
-                                rows={3}
-                                placeholder={isEnhancing ? (language === 'it' ? 'L\'Art Director sta perfezionando la tua idea...' : 'Art Director is perfecting your idea...') : (t.promptPlaceholder || "Describe what you want to generate...")}
-                                className={`w-full px-3 lg:px-4 py-2 lg:py-2.5 pr-16 lg:pr-20 bg-transparent text-sm lg:text-base text-light-text dark:text-dark-text resize-y min-h-[72px] max-h-[400px] outline-none ${isEnhancing ? 'opacity-50 cursor-wait' : 'focus:ring-2 focus:ring-brand-purple/50'}`}
-                                disabled={isLoading || isEnhancing}
+                                rows={1}
+                                placeholder={isEnhancing ? (language === 'it' ? 'L\'Art Director sta perfezionando...' : 'Art Director is perfecting...') : (t.promptPlaceholder || "Describe what you want to generate...")}
+                                className="w-full px-5 py-3.5 pr-20 bg-transparent text-sm lg:text-[15px] text-light-text dark:text-dark-text outline-none resize-none max-h-[120px] custom-scrollbar placeholder:opacity-40 leading-relaxed font-medium"
+                                disabled={isEnhancing}
                             />
-                            <div className="absolute top-2 right-2 flex gap-1">
-                                <button
-                                    onClick={async () => {
-                                        try {
-                                            const text = await navigator.clipboard.readText();
-                                            onPromptChange(text);
-                                        } catch (err) {
-                                            console.error('Failed to read clipboard:', err);
-                                        }
-                                    }}
-                                    disabled={isLoading}
-                                    className="p-1.5 rounded-lg bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-all hover:scale-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-                                    aria-label="Paste from clipboard"
-                                    title="Paste"
-                                >
-                                    <svg className="w-4 h-4 text-light-text-muted dark:text-dark-text-muted" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                                    </svg>
-                                </button>
-                                {prompt && (
+
+                            {/* Top Right Actions inside Textarea */}
+                            <div className="absolute top-3 right-3 flex gap-1 bg-light-surface/50 dark:bg-dark-surface/50 rounded-lg p-0.5 backdrop-blur-sm border border-black/5 dark:border-white/5">
+                                {!prompt && (
                                     <button
-                                        onClick={() => {
-                                            onPromptChange('');
-                                            promptTextareaRef.current?.focus();
-                                        }}
-                                        disabled={isLoading}
-                                        className="p-1.5 rounded-lg bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border hover:bg-red-500/10 dark:hover:bg-red-500/20 transition-all hover:scale-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-                                        aria-label="Clear prompt"
-                                        title="Clear"
+                                        onClick={handlePaste}
+                                        className="p-1.5 rounded-md text-light-text-muted dark:text-dark-text-muted hover:bg-black/5 dark:hover:bg-white/10 transition-all opacity-60 hover:opacity-100"
+                                        title="Paste from clipboard"
                                     >
-                                        <svg className="w-4 h-4 text-red-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                            <line x1="18" y1="6" x2="6" y2="18"></line>
-                                            <line x1="6" y1="6" x2="18" y2="18"></line>
-                                        </svg>
+                                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
                                     </button>
                                 )}
-                            </div>
-                        </div>
-
-                        {/* v0.9: Smart Contextual Hints (CLICKABLE!) */}
-                        {prompt && (() => {
-                            const tips: Array<{ text: string; example: string; icon: string }> = [];
-                            const promptLower = prompt.toLowerCase();
-                            const wordCount = prompt.trim().split(/\s+/).length;
-                            const isItalian = language === 'it';
-
-                            // CONTEXTUAL HINTS: Analyze what user is writing and suggest relevant additions
-
-                            // People/Person detected
-                            if (promptLower.match(/\b(woman|man|girl|boy|person|model|donna|uomo|ragazza|ragazzo|persona|modella)\b/)) {
-                                if (!promptLower.match(/\b(pose|posing|standing|sitting|looking|smiling|posa|in piedi|seduto|guardando|sorridendo)\b/)) {
-                                    tips.push({
-                                        icon: '🧍',
-                                        text: t.hintPose,
-                                        example: isItalian ? "posa sicura, sguardo verso camera, sorriso naturale" : "confident pose, looking at camera, natural smile"
-                                    });
-                                }
-                                if (!promptLower.match(/\b(outfit|dress|wearing|abbigliamento|vestito|indossa)\b/)) {
-                                    tips.push({
-                                        icon: '👗',
-                                        text: t.hintOutfit,
-                                        example: isItalian ? "elegante outfit business casual, vestito moderno" : "elegant business casual outfit, modern dress"
-                                    });
-                                }
-                            }
-
-                            // Animals detected
-                            if (promptLower.match(/\b(cat|dog|bird|animal|kitten|puppy|gatto|cane|uccello|animale|gattino|cucciolo)\b/)) {
-                                if (!promptLower.match(/\b(playing|sleeping|running|jumping|eating|giocando|dormendo|correndo|saltando|mangiando)\b/)) {
-                                    tips.push({
-                                        icon: '🐾',
-                                        text: t.hintAction,
-                                        example: isItalian ? "giocando con filo di lana, stiracchiandosi al sole" : "playing with yarn, texture detailed fur"
-                                    });
-                                }
-                            }
-
-                            // Product detected
-                            if (promptLower.match(/\b(bottle|product|package|box|container|cosmetic|bottiglia|prodotto|confezione|scatola|cosmetico)\b/)) {
-                                if (!promptLower.match(/\b(surface|background|table|marble|wood|superficie|sfondo|tavolo|marmo|legno)\b/)) {
-                                    tips.push({
-                                        icon: '📦',
-                                        text: t.hintSurface,
-                                        example: isItalian ? "su piano di marmo bianco, sfondo minimalista neutro" : "on white marble surface, minimal neutral background"
-                                    });
-                                }
-                                if (!promptLower.match(/\b(droplet|water|ice|reflection|goccia|acqua|ghiaccio|riflesso)\b/)) {
-                                    tips.push({
-                                        icon: '💧',
-                                        text: t.hintDetails,
-                                        example: isItalian ? "con gocce d'acqua, riflessi lucidi sulla superficie" : "with water droplets, glossy surface reflections"
-                                    });
-                                }
-                            }
-
-                            // Food detected
-                            if (promptLower.match(/\b(food|meal|dish|pizza|burger|pasta|dessert|cibo|piatto|dolce)\b/)) {
-                                if (!promptLower.match(/\b(fresh|hot|steam|garnish|fresco|caldo|vapore|guarnizione)\b/)) {
-                                    tips.push({
-                                        icon: '🍽️',
-                                        text: t.hintPresentation,
-                                        example: isItalian ? "appena sfornato, vapore visibile, guarnizione fresca" : "freshly cooked, visible steam, fresh garnish"
-                                    });
-                                }
-                            }
-
-                            // Landscape/Scene detected
-                            if (promptLower.match(/\b(landscape|mountain|beach|forest|city|street|paesaggio|montagna|spiaggia|foresta|città|strada)\b/)) {
-                                if (!promptLower.match(/\b(sunset|sunrise|dawn|dusk|golden hour|tramonto|alba|crepuscolo)\b/)) {
-                                    tips.push({
-                                        icon: '🌅',
-                                        text: t.hintTime,
-                                        example: isItalian ? "al tramonto dorato, luce calda del crepuscolo" : "at golden sunset, warm twilight light"
-                                    });
-                                }
-                            }
-
-                            // Technical photography terms
-                            if (!promptLower.match(/\b(shot|angle|lens|camera|8k|photography|professional|inquadratura|angolo|obiettivo|fotografia|professionale)\b/) && wordCount >= 3) {
-                                tips.push({
-                                    icon: '📸',
-                                    text: t.hintCamera,
-                                    example: isItalian ? "foto professionale, obiettivo 85mm, inquadratura bilanciata" : "professional photography, 85mm lens, balanced composition"
-                                });
-                            }
-
-                            if (!promptLower.match(/\b(light|lighting|glow|bright|dark|shadow|golden hour|studio|luce|illuminazione|bagliore|ombra|dorato)\b/) && wordCount >= 3) {
-                                tips.push({
-                                    icon: '💡',
-                                    text: t.hintLighting,
-                                    example: isItalian ? "luce naturale dorata, illuminazione da studio professionale" : "golden natural light, professional studio lighting"
-                                });
-                            }
-
-                            if (!promptLower.match(/\b(cinematic|dramatic|serene|moody|vibrant|hyperrealistic|8k|cinematico|drammatico|sereno|vivace|iper-realistico)\b/) && wordCount >= 4) {
-                                tips.push({
-                                    icon: '✨',
-                                    text: t.hintQuality,
-                                    example: isItalian ? "iper-realistico, 8K ultra HD, mood cinematografico" : "hyper-realistic, 8K ultra HD, cinematic mood"
-                                });
-                            }
-
-                            const displayTips = tips.slice(0, 3);
-
-                            return displayTips.length > 0 ? (
-                                <div className="flex flex-wrap gap-1.5 text-xs animate-fade-in">
-                                    {displayTips.map((tip, idx) => (
+                                {prompt && !isEnhancing && (
+                                    <>
                                         <button
-                                            key={idx}
-                                            onClick={() => {
-                                                const newPrompt = prompt.trim() + (prompt.trim().endsWith(',') ? ' ' : ', ') + tip.example;
-                                                onPromptChange(newPrompt);
-                                                setTimeout(() => promptTextareaRef.current?.focus(), 100);
-                                            }}
-                                            className="px-2 py-1 rounded-md transition-all duration-150 bg-brand-yellow/20 dark:bg-brand-yellow/10 text-brand-yellow dark:text-brand-yellow hover:bg-brand-yellow/30 dark:hover:bg-brand-yellow/20 hover:scale-105 active:scale-95 cursor-pointer"
-                                            title={`${t.hintClickAdd} ${tip.example}`}
+                                            onClick={handleCopy}
+                                            className="p-1.5 rounded-md text-light-text-muted dark:text-dark-text-muted hover:bg-black/5 dark:hover:bg-white/10 transition-all opacity-60 hover:opacity-100"
+                                            title="Copy prompt"
                                         >
-                                            {tip.icon} {tip.text}
+                                            {justCopied ? (
+                                                <span className="text-green-500 font-bold text-xs">✓</span>
+                                            ) : (
+                                                <CopyIcon className="w-3.5 h-3.5" />
+                                            )}
                                         </button>
-                                    ))}
-                                </div>
-                            ) : null;
-                        })()}
-
-                        {/* All Controls Row */}
-                        <div className="flex items-center gap-1.5 lg:gap-2 flex-wrap">
-                            {/* v1.9: Manual enhance/3-prompts buttons removed */}
-
-                            {/* Divider */}
-                            <div className="h-6 w-px bg-light-border dark:bg-dark-border hidden sm:block"></div>
-
-                            {/* Settings Pills */}
-                            <div className="relative z-[70]">
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        setShowAspectMenu(!showAspectMenu);
-                                        setShowNumImagesMenu(false);
-                                    }}
-                                    className="flex items-center gap-1 lg:gap-1.5 px-2 lg:px-3 py-1.5 bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-lg text-xs text-light-text dark:text-dark-text hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 active:scale-95 transition-all duration-150 whitespace-nowrap"
-                                >
-                                    <span>{aspectRatio}</span>
-                                </button>
-                                {showAspectMenu && (
-                                    <>
-                                        <div className="fixed inset-0 z-[65]" onClick={() => setShowAspectMenu(false)} />
-                                        <div className="absolute bottom-full mb-2 left-0 bg-light-surface dark:bg-dark-surface rounded-xl shadow-2xl p-2 min-w-[120px] border border-light-border dark:border-dark-border z-[70] animate-slideDown">
-                                            {aspectRatios.map(ratio => (
-                                                <button
-                                                    key={ratio}
-                                                    onClick={() => {
-                                                        onAspectRatioChange(ratio);
-                                                        setShowAspectMenu(false);
-                                                    }}
-                                                    className={`w-full px-3 py-2.5 text-left text-sm rounded-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 transition-all duration-150 flex items-center gap-2 min-h-[44px] ${ratio === aspectRatio ? 'bg-brand-purple/20 text-brand-purple font-medium' : 'text-light-text dark:text-dark-text'}`}
-                                                >
-                                                    <span className="text-base">{getAspectRatioIcon(ratio)}</span>
-                                                    <span>{ratio}</span>
-                                                </button>
-                                            ))}
-                                        </div>
+                                        <div className="w-[1px] bg-black/10 dark:bg-white/10 my-1 mx-0.5"></div>
+                                        <button
+                                            onClick={() => onPromptChange('')}
+                                            className="p-1.5 hover:bg-red-500/10 rounded-md transition-all group opacity-60 hover:opacity-100"
+                                            title="Clear"
+                                        >
+                                            <XIcon className="w-3.5 h-3.5 text-red-500/80 group-hover:text-red-500 transition-colors" />
+                                        </button>
                                     </>
-                                )}
-                            </div>
-
-                            <div className="relative z-[70]">
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        setShowNumImagesMenu(!showNumImagesMenu);
-                                        setShowAspectMenu(false);
-                                    }}
-                                    className="flex items-center gap-1 lg:gap-1.5 px-2 lg:px-3 py-1.5 bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-lg text-xs text-light-text dark:text-dark-text hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 active:scale-95 transition-all duration-150 whitespace-nowrap"
-                                >
-                                    <span>{numImages}x</span>
-                                </button>
-                                {showNumImagesMenu && (
-                                    <>
-                                        <div className="fixed inset-0 z-[65]" onClick={() => setShowNumImagesMenu(false)} />
-                                        <div className="absolute bottom-full mb-2 left-0 bg-light-surface dark:bg-dark-surface rounded-xl shadow-2xl p-2 min-w-[100px] border border-light-border dark:border-dark-border z-[70] animate-slideDown">
-                                            {numImagesOptions.map(num => (
-                                                <button
-                                                    key={num}
-                                                    onClick={() => {
-                                                        onNumImagesChange(num);
-                                                        setShowNumImagesMenu(false);
-                                                    }}
-                                                    className={`w-full px-3 py-2.5 text-left text-sm rounded-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 transition-all duration-150 min-h-[44px] ${num === numImages ? 'bg-brand-purple/20 text-brand-purple' : 'text-light-text dark:text-dark-text'}`}
-                                                >
-                                                    {num}x
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </>
-                                )}
-                            </div>
-
-                            <button
-                                onClick={() => {
-                                    setShowAdvancedPanel(!showAdvancedPanel);
-                                    setShowAspectMenu(false);
-                                    setShowNumImagesMenu(false);
-                                }}
-                                className="flex items-center gap-1 lg:gap-1.5 px-2 lg:px-3 py-1.5 bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-lg text-xs text-light-text dark:text-dark-text hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 active:scale-95 transition-all duration-150"
-                            >
-                                <span>⚙️</span>
-                            </button>
-
-                            {/* v1.0: Model Selector (Expanded Mode) */}
-                            <div className="relative z-[70]">
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        setShowModelMenu(!showModelMenu);
-                                        setShowAspectMenu(false);
-                                        setShowNumImagesMenu(false);
-                                        setShowResolutionMenu(false);
-                                    }}
-                                    className="flex items-center gap-1 lg:gap-1.5 px-2 lg:px-3 py-1.5 bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-lg text-xs text-light-text dark:text-dark-text hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 active:scale-95 transition-all duration-150 whitespace-nowrap"
-                                >
-                                    <span>{selectedModel === 'gemini-2.5-flash-image' ? '⚡' : '⭐'}</span>
-                                    <span className="hidden sm:inline">{selectedModel === 'gemini-2.5-flash-image' ? 'Flash' : 'PRO'}</span>
-                                </button>
-                                {showModelMenu && (
-                                    <>
-                                        <div className="fixed inset-0 z-[65]" onClick={() => setShowModelMenu(false)} />
-                                        <div className="absolute bottom-full mb-2 left-0 bg-light-surface dark:bg-dark-surface rounded-xl shadow-2xl p-2 min-w-[140px] border border-light-border dark:border-dark-border z-[70] animate-slideDown">
-                                            <button
-                                                onClick={() => {
-                                                    onModelChange('gemini-2.5-flash-image');
-                                                    setShowModelMenu(false);
-                                                }}
-                                                className={`w-full px-3 py-2.5 text-left text-sm rounded-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 transition-all duration-150 flex items-center gap-2 min-h-[44px] ${selectedModel === 'gemini-2.5-flash-image' ? 'bg-brand-purple/20 text-brand-purple' : 'text-light-text dark:text-dark-text'}`}
-                                            >
-                                                <span>⚡</span>
-                                                <span>{t.modelFlash}</span>
-                                            </button>
-                                            <button
-                                                onClick={() => {
-                                                    onModelChange('gemini-3-pro-image-preview');
-                                                    setShowModelMenu(false);
-                                                }}
-                                                className={`w-full px-3 py-2.5 text-left text-sm rounded-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 transition-all duration-150 flex items-center gap-2 min-h-[44px] ${selectedModel === 'gemini-3-pro-image-preview' ? 'bg-brand-purple/20 text-brand-purple' : 'text-light-text dark:text-dark-text'}`}
-                                            >
-                                                <span>⭐</span>
-                                                <span>{t.modelPro}</span>
-                                            </button>
-                                        </div>
-                                    </>
-                                )}
-                            </div>
-
-                            {/* v1.0: Resolution Selector (Expanded Mode - only for PRO) */}
-                            {selectedModel === 'gemini-3-pro-image-preview' && (
-                                <div className="relative z-[70]">
-                                    <button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            setShowResolutionMenu(!showResolutionMenu);
-                                            setShowAspectMenu(false);
-                                            setShowNumImagesMenu(false);
-                                            setShowModelMenu(false);
-                                        }}
-                                        className="flex items-center gap-1 lg:gap-1.5 px-2 lg:px-3 py-1.5 bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-lg text-xs text-light-text dark:text-dark-text hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 active:scale-95 transition-all duration-150 whitespace-nowrap"
-                                    >
-                                        <span>{selectedResolution.toUpperCase()}</span>
-                                    </button>
-                                    {showResolutionMenu && (
-                                        <>
-                                            <div className="fixed inset-0 z-[65]" onClick={() => setShowResolutionMenu(false)} />
-                                            <div className="absolute bottom-full mb-2 left-0 bg-light-surface dark:bg-dark-surface rounded-xl shadow-2xl p-2 min-w-[100px] border border-light-border dark:border-dark-border z-[70] animate-slideDown">
-                                                <button
-                                                    onClick={() => {
-                                                        onResolutionChange('1k');
-                                                        setShowResolutionMenu(false);
-                                                    }}
-                                                    className={`w-full px-3 py-2.5 text-left text-sm rounded-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 transition-all duration-150 min-h-[44px] ${selectedResolution === '1k' ? 'bg-brand-purple/20 text-brand-purple' : 'text-light-text dark:text-dark-text'}`}
-                                                >
-                                                    {t.resolution1k}
-                                                </button>
-                                                <button
-                                                    onClick={() => {
-                                                        onResolutionChange('2k');
-                                                        setShowResolutionMenu(false);
-                                                    }}
-                                                    className={`w-full px-3 py-2.5 text-left text-sm rounded-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 transition-all duration-150 min-h-[44px] ${selectedResolution === '2k' ? 'bg-brand-purple/20 text-brand-purple' : 'text-light-text dark:text-dark-text'}`}
-                                                >
-                                                    {t.resolution2k}
-                                                </button>
-                                                <button
-                                                    onClick={() => {
-                                                        onResolutionChange('4k');
-                                                        setShowResolutionMenu(false);
-                                                    }}
-                                                    className={`w-full px-3 py-2.5 text-left text-sm rounded-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:scale-105 transition-all duration-150 min-h-[44px] ${selectedResolution === '4k' ? 'bg-brand-purple/20 text-brand-purple' : 'text-light-text dark:text-dark-text'}`}
-                                                >
-                                                    {t.resolution4k}
-                                                </button>
-                                            </div>
-                                        </>
-                                    )}
-                                </div>
-                            )}
-
-                            {/* v1.9: Auto Enhance Toggle Switch (Expanded Mode) */}
-                            <div className="relative group/tooltip flex items-center gap-2 lg:gap-2.5 px-2 lg:px-3 py-1.5 bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-lg">
-                                <span className="text-base lg:text-lg" title={t.autoEnhanceTooltip || "Auto Enhance Prompt"}>
-                                    ✨
-                                </span>
-                                <button
-                                    onClick={() => onAutoEnhanceChange(!autoEnhance)}
-                                    className={`relative inline-flex h-5 lg:h-6 w-9 lg:w-11 items-center rounded-full transition-all duration-300 ${autoEnhance
-                                        ? 'bg-brand-purple shadow-[0_0_10px_rgba(139,69,255,0.5)]'
-                                        : 'bg-gray-300 dark:bg-gray-600'
-                                        }`}
-                                    disabled={isLoading}
-                                    title={t.autoEnhance || "Auto Enhance"}
-                                >
-                                    <span
-                                        className={`inline-block h-4 lg:h-5 w-4 lg:w-5 transform rounded-full bg-white shadow-lg transition-transform duration-300 ${autoEnhance ? 'translate-x-5 lg:translate-x-6' : 'translate-x-0.5'
-                                            }`}
-                                    />
-                                </button>
-                                {/* Tooltip */}
-                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-2 bg-black/90 text-white text-xs rounded-lg opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 pointer-events-none z-50">
-                                    {t.autoEnhanceTooltip || "Automatically optimizes your prompt using AI before generating. May increase waiting time."}
-                                </div>
-                            </div>
-
-                            {/* v0.7: Precise Reference Toggle Switch (Always visible in v1.9) */}
-                            <div className={`relative group/tooltip flex items-center gap-2 lg:gap-2.5 px-2 lg:px-3 py-1.5 bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-lg ${!hasReferences ? 'opacity-50 grayscale' : ''}`}>
-                                <span className="text-base lg:text-lg" title={t.preciseReferenceTooltip}>
-                                    👨
-                                </span>
-                                <button
-                                    onClick={() => hasReferences && onPreciseReferenceChange(!preciseReference)}
-                                    className={`relative inline-flex h-5 lg:h-6 w-9 lg:w-11 items-center rounded-full transition-all duration-300 ${preciseReference
-                                        ? 'bg-yellow-400 shadow-[0_0_10px_rgba(250,204,21,0.5)]'
-                                        : 'bg-gray-300 dark:bg-gray-600'
-                                        }`}
-                                    disabled={isLoading || !hasReferences}
-                                >
-                                    <span
-                                        className={`inline-block h-4 lg:h-5 w-4 lg:w-5 transform rounded-full bg-white shadow-lg transition-transform duration-300 ${preciseReference ? 'translate-x-5 lg:translate-x-6' : 'translate-x-0.5'
-                                            }`}
-                                    />
-                                </button>
-                                {/* Tooltip */}
-                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-2 bg-black/90 text-white text-xs rounded-lg opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 pointer-events-none z-50">
-                                    {!hasReferences
-                                        ? (language === 'it' ? 'Carica un\'immagine di riferimento per attivare.' : 'Upload a reference image to activate.')
-                                        : t.preciseReferenceTooltip}
-                                </div>
-                            </div>
-
-                            {/* v1.5.1: Google Search Grounding Toggle (Expanded Mode) */}
-                            <div className="relative group/tooltip flex items-center gap-2 lg:gap-2.5 px-2 lg:px-3 py-1.5 bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-lg">
-                                <span className="text-base lg:text-lg" title={t.groundingTooltip}>
-                                    🌐
-                                </span>
-                                <button
-                                    onClick={() => onGroundingChange(!useGrounding)}
-                                    className={`relative inline-flex h-5 lg:h-6 w-9 lg:w-11 items-center rounded-full transition-all duration-300 ${useGrounding
-                                        ? 'bg-purple-500 shadow-[0_0_10px_rgba(168,85,247,0.5)]'
-                                        : 'bg-gray-300 dark:bg-gray-600'
-                                        }`}
-                                    disabled={isLoading}
-                                >
-                                    <span
-                                        className={`inline-block h-4 lg:h-5 w-4 lg:w-5 transform rounded-full bg-white shadow-lg transition-transform duration-300 ${useGrounding ? 'translate-x-5 lg:translate-x-6' : 'translate-x-0.5'
-                                            }`}
-                                    />
-                                </button>
-                                {/* Tooltip */}
-                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-2 bg-black/90 text-white text-xs rounded-lg opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 pointer-events-none z-50">
-                                    {t.groundingTooltip}
-                                </div>
-                            </div>
-
-                            <div className="flex-1" />
-
-                            {/* Collapse */}
-                            <button
-                                onClick={() => setIsExpanded(false)}
-                                className="px-2 lg:px-3 py-1.5 text-light-text-muted dark:text-dark-text-muted hover:text-light-text dark:hover:text-dark-text hover:scale-110 active:scale-95 transition-all duration-150 text-xs"
-                            >
-                                ▼
-                            </button>
-
-                            <div className="flex flex-col gap-2 min-w-[140px]">
-                                <button
-                                    onClick={() => (isLoading ? onAbortGeneration() : onGenerate())}
-                                    className={`relative px-6 lg:px-8 py-3 lg:py-4 ${isLoading
-                                        ? 'bg-red-500/10 text-red-500 border border-red-500/30'
-                                        : 'bg-gradient-to-r from-brand-yellow via-brand-magenta to-brand-yellow bg-[length:200%_100%] hover:bg-[position:100%_0] shadow-[0_0_25px_rgba(255,217,61,0.6)] text-white'
-                                        } hover:scale-105 active:scale-95 rounded-2xl font-black text-sm lg:text-base uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-3`}
-                                >
-                                    {isLoading ? <XIcon className="w-5 h-5" /> : "⚡"}
-                                    {isLoading ? t.stopGeneration : (t.generateButton || "Generate")}
-                                </button>
-
-                                {isLoading && (
-                                    <button
-                                        onClick={onGenerate}
-                                        className="w-full py-2 bg-brand-purple/20 text-brand-purple border border-brand-purple/20 hover:bg-brand-purple/30 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2"
-                                    >
-                                        <span>➕</span> {t.putInQueue}
-                                    </button>
                                 )}
                             </div>
                         </div>
+                    </div>
+
+                    {/* Bottom Row: Controls + Action Buttons */}
+                    <div className="flex items-center gap-2 flex-wrap pb-1 px-1.5">
+
+                        {/* 1. Pill Settings Group */}
+                        <div className="flex items-center bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 rounded-xl p-0.5 gap-0.5 h-10">
+                            <button
+                                onClick={(e) => { e.stopPropagation(); setShowAspectMenu(!showAspectMenu); setShowNumImagesMenu(false); setShowModelMenu(false); setShowResolutionMenu(false); }}
+                                className={`h-full px-3 rounded-[10px] text-[10px] font-bold transition-all flex items-center gap-1.5 whitespace-nowrap ${showAspectMenu ? 'bg-light-surface dark:bg-dark-surface text-brand-purple shadow-sm ring-1 ring-black/5 dark:ring-white/10' : 'hover:bg-white/5 text-light-text/60 dark:text-dark-text/60'}`}
+                            >
+                                <span className="text-sm">{getAspectRatioIcon(aspectRatio)}</span>
+                                {aspectRatio}
+                            </button>
+                            <div className="w-[1px] h-4 bg-black/10 dark:bg-white/10 mx-0.5" />
+                            <button
+                                onClick={(e) => { e.stopPropagation(); setShowNumImagesMenu(!showNumImagesMenu); setShowAspectMenu(false); setShowModelMenu(false); setShowResolutionMenu(false); }}
+                                className={`h-full px-3 rounded-[10px] text-[10px] font-bold transition-all whitespace-nowrap ${showNumImagesMenu ? 'bg-light-surface dark:bg-dark-surface text-brand-purple shadow-sm ring-1 ring-black/5 dark:ring-white/10' : 'hover:bg-white/5 text-light-text/60 dark:text-dark-text/60'}`}
+                            >
+                                {numImages}x
+                            </button>
+                        </div>
+
+                        {/* 2. Model Group */}
+                        <div className="flex items-center bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 rounded-xl p-0.5 gap-0.5 h-10">
+                            <button
+                                onClick={(e) => { e.stopPropagation(); setShowModelMenu(!showModelMenu); setShowAspectMenu(false); setShowNumImagesMenu(false); setShowResolutionMenu(false); }}
+                                className={`h-full px-3 rounded-[10px] text-[10px] font-bold transition-all flex items-center gap-1.5 whitespace-nowrap ${showModelMenu ? 'bg-light-surface dark:bg-dark-surface text-brand-purple shadow-sm ring-1 ring-black/5 dark:ring-white/10' : 'hover:bg-white/5 text-light-text/60 dark:text-dark-text/60'}`}
+                            >
+                                <span className={`text-[10px] ${selectedModel === 'gemini-3-pro-image-preview' ? 'text-yellow-500' : 'text-blue-400 opacity-70'}`}>★</span>
+                                {selectedModel === 'gemini-3-pro-image-preview' ? (t.modelPro || 'PRO') : (t.modelFlash || 'FLASH')}
+                            </button>
+                            {selectedModel === 'gemini-3-pro-image-preview' && (
+                                <>
+                                    <div className="w-[1px] h-4 bg-black/10 dark:bg-white/10 mx-0.5" />
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); setShowResolutionMenu(!showResolutionMenu); setShowAspectMenu(false); setShowNumImagesMenu(false); setShowModelMenu(false); }}
+                                        className={`h-full px-3 rounded-[10px] text-[10px] font-bold transition-all whitespace-nowrap ${showResolutionMenu ? 'bg-light-surface dark:bg-dark-surface text-brand-purple shadow-sm ring-1 ring-black/5 dark:ring-white/10' : 'hover:bg-white/5 text-light-text/60 dark:text-dark-text/60'}`}
+                                    >
+                                        {selectedResolution.toUpperCase()}
+                                    </button>
+                                </>
+                            )}
+                        </div>
+
+                        {/* 3. Toggles */}
+                        <div className="flex items-center gap-1.5 h-10">
+                            {/* Auto Enhance Switch */}
+                            <div className="flex items-center bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 rounded-xl px-3 gap-2.5 h-10 transition-colors hover:bg-black/10 dark:hover:bg-white/10" title={t.autoEnhance}>
+                                <span className={`text-sm transition-opacity ${autoEnhance ? 'opacity-100' : 'opacity-50'}`}>✨</span>
+                                <div
+                                    onClick={() => onAutoEnhanceChange(!autoEnhance)}
+                                    className={`relative w-9 h-5 rounded-full cursor-pointer transition-colors duration-300 ease-in-out border border-transparent ${autoEnhance ? 'bg-black/80 dark:bg-white/20' : 'bg-black/20 dark:bg-white/10'}`}
+                                >
+                                    <div
+                                        className={`absolute top-0.5 w-4 h-4 rounded-full shadow-sm transition-all duration-300 cubic-bezier(0.4, 0.0, 0.2, 1) ${autoEnhance
+                                            ? 'translate-x-[18px] bg-[#FFD60A] shadow-[0_0_8px_rgba(255,214,10,0.6)]'
+                                            : 'translate-x-0.5 bg-white/40 dark:bg-white/60'
+                                            }`}
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Precise Profile Pill */}
+                            <button
+                                onClick={() => hasReferences && onPreciseReferenceChange(!preciseReference)}
+                                className={`h-full group relative flex items-center justify-center w-10 rounded-xl transition-all border ${preciseReference ? 'bg-yellow-400/15 border-yellow-400/30 text-yellow-600 dark:text-yellow-400' : 'bg-black/5 dark:bg-white/5 border-transparent text-light-text/40 dark:text-dark-text/40 hover:bg-white/5'} ${!hasReferences ? 'opacity-30 grayscale cursor-not-allowed' : ''}`}
+                                disabled={!hasReferences}
+                                title={t.preciseReference}
+                            >
+                                <span className="text-base leading-none">👨</span>
+                            </button>
+
+                            {/* Google Grounding Pill */}
+                            <button
+                                onClick={() => onGroundingChange(!useGrounding)}
+                                className={`h-full group relative flex items-center justify-center w-10 rounded-xl transition-all border ${useGrounding ? 'bg-blue-500/15 border-blue-500/30 text-blue-600 dark:text-blue-400' : 'bg-black/5 dark:bg-white/5 border-transparent text-light-text/40 dark:text-dark-text/40 hover:bg-white/5'}`}
+                                title={t.groundingLabel || 'Google Grounding'}
+                            >
+                                <span className="text-base leading-none transition-transform group-hover:scale-110">🌐</span>
+                            </button>
+
+                            {/* Advanced Settings Cog */}
+                            <button
+                                onClick={(e) => { e.stopPropagation(); setShowAdvancedPanel(!showAdvancedPanel); setShowAspectMenu(false); setShowNumImagesMenu(false); setShowModelMenu(false); setShowResolutionMenu(false); }}
+                                className={`h-full w-10 flex items-center justify-center rounded-xl transition-all hover:scale-105 active:scale-90 border border-transparent ${showAdvancedPanel ? 'bg-brand-purple/20 text-brand-purple border-brand-purple/20 ring-2 ring-brand-purple/10' : 'bg-black/5 dark:bg-white/5 text-light-text/40 dark:text-dark-text/40 hover:bg-white/10 hover:text-light-text/70 hover:rotate-90'}`}
+                                title={t.advancedSettings}
+                            >
+                                <span className="text-base leading-none">⚙️</span>
+                            </button>
+                        </div>
+
+                        {/* Spacer to push generate buttons to right */}
+                        <div className="flex-1 min-w-[20px]" />
+
+                        {/* 4. Action Buttons (Generate, Stop, Queue) */}
+                        <div className="flex items-center gap-2 h-10">
+                            {/* Generate / Stop Button */}
+                            <button
+                                onClick={() => (isLoading ? onAbortGeneration() : onGenerate())}
+                                className={`h-full px-5 rounded-[14px] font-bold text-[10px] uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2 shadow-lg hover:scale-[1.03] active:scale-95 whitespace-nowrap ${isLoading
+                                    ? 'bg-red-500/10 text-red-500 border border-red-500/20 hover:bg-red-500/20 ring-1 ring-red-500/10 min-w-[40px] px-0 w-[40px]'
+                                    : 'bg-gradient-to-r from-brand-yellow via-brand-magenta to-brand-yellow bg-[length:200%_100%] hover:bg-[position:100%_0] text-white shadow-brand-yellow/20 min-w-[120px]'
+                                    }`}
+                                title={isLoading ? t.stopGeneration : t.generateButton}
+                            >
+                                {isLoading ? (
+                                    <span className="text-xl font-bold">✕</span>
+                                ) : (
+                                    <>
+                                        <span className="text-sm">⚡</span>
+                                        <span>{t.generateButton || "GENERATE"}</span>
+                                    </>
+                                )}
+                            </button>
+
+                            {/* Queue Button (Only appearing when loading) */}
+                            {isLoading && (
+                                <button
+                                    onClick={onGenerate}
+                                    className="h-full w-[40px] bg-brand-purple/10 text-brand-purple border border-brand-purple/20 hover:bg-brand-purple/20 rounded-[14px] font-bold text-xs uppercase tracking-widest transition-all flex items-center justify-center shadow-md hover:scale-[1.03] active:scale-95 ring-1 ring-brand-purple/10"
+                                    title={t.putInQueue || "Queue"}
+                                >
+                                    <span className="text-sm">➕</span>
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                {/* --- Popover Menus --- */}
+                {/* Aspect Ratio Menu */}
+                {showAspectMenu && (
+                    <div className="absolute bottom-full mb-4 left-6 bg-light-surface/95 dark:bg-dark-surface/95 backdrop-blur-[50px] border border-white/20 dark:border-white/10 rounded-2xl shadow-2xl p-2.5 grid grid-cols-4 gap-1.5 animate-slideUp min-w-[320px] z-[80]">
+                        <div className="col-span-4 px-2 py-1 mb-1 border-b border-white/5">
+                            <span className="text-[9px] font-black uppercase tracking-widest text-brand-purple opacity-70">Aspect Ratio</span>
+                        </div>
+                        {aspectRatios.map(ratio => (
+                            <button
+                                key={ratio}
+                                onClick={() => { onAspectRatioChange(ratio); setShowAspectMenu(false); }}
+                                className={`px-2 py-2.5 rounded-xl text-[11px] font-bold transition-all flex flex-col items-center gap-1.5 border ${ratio === aspectRatio ? 'bg-brand-purple text-white border-brand-purple shadow-lg shadow-brand-purple/20' : 'hover:bg-white/10 text-light-text/70 dark:text-dark-text/70 border-transparent hover:border-white/10'}`}
+                            >
+                                <span className="text-xl leading-none">{getAspectRatioIcon(ratio)}</span>
+                                <span>{ratio}</span>
+                            </button>
+                        ))}
+                    </div>
+                )}
+
+                {/* Number of Images Menu */}
+                {showNumImagesMenu && (
+                    <div className="absolute bottom-full mb-4 left-24 bg-light-surface/95 dark:bg-dark-surface/95 backdrop-blur-[50px] border border-white/20 dark:border-white/10 rounded-2xl shadow-2xl p-2 flex gap-1.5 animate-slideUp z-[80]">
+                        {numImagesOptions.map(num => (
+                            <button
+                                key={num}
+                                onClick={() => { onNumImagesChange(num); setShowNumImagesMenu(false); }}
+                                className={`px-5 py-2.5 rounded-[14px] text-[11px] font-extrabold transition-all border ${num === numImages ? 'bg-brand-purple text-white border-brand-purple shadow-lg shadow-brand-purple/20' : 'hover:bg-white/10 text-light-text/70 dark:text-dark-text/70 border-transparent'}`}
+                            >
+                                {num} IMAGE{num > 1 ? 'S' : ''}
+                            </button>
+                        ))}
+                    </div>
+                )}
+
+                {/* Model Selector Menu */}
+                {showModelMenu && (
+                    <div className="absolute bottom-full mb-4 left-44 bg-light-surface/95 dark:bg-dark-surface/95 backdrop-blur-[50px] border border-white/20 dark:border-white/10 rounded-2xl shadow-2xl p-2 flex flex-col gap-1 anime-slideUp min-w-[210px] z-[80]">
+                        <div className="px-3 py-1.5 mb-1 border-b border-light-border/10 dark:border-white/5">
+                            <span className="text-[9px] font-black uppercase tracking-widest text-brand-purple opacity-70">Select Model</span>
+                        </div>
+                        <button
+                            onClick={() => { onModelChange('gemini-3-pro-image-preview'); setShowModelMenu(false); }}
+                            className={`px-4 py-3 rounded-[14px] text-[11px] font-bold transition-all text-left flex items-center justify-between border ${selectedModel === 'gemini-3-pro-image-preview' ? 'bg-brand-purple text-white border-brand-purple' : 'hover:bg-white/10 text-light-text/70 dark:text-dark-text/70 border-transparent'}`}
+                        >
+                            <span className="flex items-center gap-2.5">
+                                <span className="text-yellow-500">★</span>
+                                <span>Nano Banana PRO</span>
+                            </span>
+                            {selectedModel === 'gemini-3-pro-image-preview' && <span className="text-xs">✓</span>}
+                        </button>
+                        <button
+                            onClick={() => { onModelChange('gemini-2.5-flash-image'); setShowModelMenu(false); }}
+                            className={`px-4 py-3 rounded-[14px] text-[11px] font-bold transition-all text-left flex items-center justify-between border ${selectedModel === 'gemini-2.5-flash-image' ? 'bg-brand-purple text-white border-brand-purple' : 'hover:bg-white/10 text-light-text/70 dark:text-dark-text/70 border-transparent'}`}
+                        >
+                            <span className="flex items-center gap-2.5 opacity-80">
+                                <span className="text-blue-400">⚡</span>
+                                <span>Nano Banana FLASH</span>
+                            </span>
+                            {selectedModel === 'gemini-2.5-flash-image' && <span className="text-xs">✓</span>}
+                        </button>
+                    </div>
+                )}
+
+                {/* Resolution Menu */}
+                {showResolutionMenu && (
+                    <div className="absolute bottom-full mb-4 left-64 bg-light-surface/95 dark:bg-dark-surface/95 backdrop-blur-[50px] border border-white/20 dark:border-white/10 rounded-2xl shadow-2xl p-2 flex gap-1.5 animate-slideUp z-[80]">
+                        {['1k', '2k', '4k'].map(res => (
+                            <button
+                                key={res}
+                                onClick={() => { onResolutionChange(res as ResolutionType); setShowResolutionMenu(false); }}
+                                className={`px-5 py-2.5 rounded-[14px] text-[11px] font-extrabold transition-all border ${selectedResolution === res ? 'bg-brand-purple text-white border-brand-purple shadow-lg shadow-brand-purple/20' : 'hover:bg-white/10 text-light-text/70 dark:text-dark-text/70 border-transparent'}`}
+                            >
+                                {res.toUpperCase()}
+                            </button>
+                        ))}
                     </div>
                 )}
             </div>
