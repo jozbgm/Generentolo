@@ -10,6 +10,7 @@ import { indexedDBService, DnaCharacter } from './services/indexedDB';
 import FloatingActionBar from './components/FloatingActionBar';
 import ZoomableImage from './components/ZoomableImage';
 import StoryboardGrid from './components/StoryboardGrid';
+import QueuePanel from './components/QueuePanel';
 
 import { STYLE_PRESETS, PHYSICS_PRESETS } from './data/stylePresets'; // v1.4
 import { fetchInvisibleReferences, removeBracketsFromPrompt } from './services/googleSearchService'; // v1.5.1
@@ -92,7 +93,7 @@ const translations = {
         fontModern: 'Modern',
         fontVintage: 'Vintage',
         generateButton: 'Generate',
-        abort: 'Abort',
+        stopGeneration: 'Stop',
         generatingButton: 'Generating...',
         generatingStatus: 'Generentolo is generating...',
         generatingSubtext: 'This can take a moment.',
@@ -298,7 +299,7 @@ const translations = {
         presetsImportFailed: 'Failed to import presets. Invalid file format.',
     },
     it: {
-        headerTitle: 'Generentolo PRO v1.9.5',
+        headerTitle: 'Generentolo PRO v1.9.6',
         headerSubtitle: 'Let me do it for you!',
         refImagesTitle: 'Immagini di Riferimento e Stile',
         styleRefTitle: 'Riferimento Stile',
@@ -360,7 +361,7 @@ const translations = {
         fontModern: 'Moderno',
         fontVintage: 'Vintage',
         generateButton: 'Genera',
-        abort: 'Annulla',
+        stopGeneration: 'Stop',
         generatingButton: 'In generazione...',
         generatingStatus: 'Generentolo sta generando...',
         generatingSubtext: 'Potrebbe volerci un momento.',
@@ -794,8 +795,6 @@ const ReferencePanel: React.FC<{
     setEditedPrompt: (value: string | ((prev: string) => string)) => void;
     preciseReference: boolean;
     setPreciseReference: (value: boolean) => void;
-    useGrounding: boolean;
-    setUseGrounding: (value: boolean) => void;
     dnaCharacters: DnaCharacter[];
     selectedDnaId: string | null;
     onSelectDna: (id: string | null) => void;
@@ -807,7 +806,7 @@ const ReferencePanel: React.FC<{
     setStudioConfig: (config: any) => void;
     onGenerateStoryboard: () => void;
     isStoryboardLoading: boolean;
-}> = ({ onAddImages, onRemoveImage, referenceImages, onAddStyleImage, onRemoveStyleImage, styleImage, onAddStructureImage, onRemoveStructureImage, structureImage, selectedStylePreset, setSelectedStylePreset, selectedLighting, setSelectedLighting, selectedCamera, setSelectedCamera, selectedFocus, setSelectedFocus, setEditedPrompt, preciseReference, setPreciseReference, useGrounding, setUseGrounding, dnaCharacters, selectedDnaId, onSelectDna, onManageDna, appMode, setAppMode, studioConfig, setStudioConfig, onGenerateStoryboard, isStoryboardLoading }) => {
+}> = ({ onAddImages, onRemoveImage, referenceImages, onAddStyleImage, onRemoveStyleImage, styleImage, onAddStructureImage, onRemoveStructureImage, structureImage, selectedStylePreset, setSelectedStylePreset, selectedLighting, setSelectedLighting, selectedCamera, setSelectedCamera, selectedFocus, setSelectedFocus, setEditedPrompt, preciseReference, setPreciseReference, dnaCharacters, selectedDnaId, onSelectDna, onManageDna, appMode, setAppMode, studioConfig, setStudioConfig, onGenerateStoryboard, isStoryboardLoading }) => {
     const { t, language } = useLocalization();
     const [isDraggingRef, setIsDraggingRef] = useState(false);
     const [isDraggingStyle, setIsDraggingStyle] = useState(false);
@@ -1062,25 +1061,6 @@ const ReferencePanel: React.FC<{
                             </div>
                             <div className="text-xs text-light-text-muted dark:text-dark-text-muted mt-0.5">
                                 {t.preciseReferenceTooltip}
-                            </div>
-                        </label>
-                    </div>
-
-                    {/* Google Search Grounding - v1.5.1: Now available for all models */}
-                    <div className="flex items-start gap-3">
-                        <input
-                            type="checkbox"
-                            id="grounding-toggle"
-                            checked={useGrounding}
-                            onChange={(e) => setUseGrounding(e.target.checked)}
-                            className="mt-0.5 w-4 h-4 rounded border-light-border dark:border-dark-border bg-light-surface dark:bg-dark-surface text-brand-yellow focus:ring-2 focus:ring-brand-yellow focus:ring-offset-0"
-                        />
-                        <label htmlFor="grounding-toggle" className="flex-1 cursor-pointer">
-                            <div className="text-sm font-medium text-light-text dark:text-dark-text">
-                                🌐 {t.groundingLabel}
-                            </div>
-                            <div className="text-xs text-light-text-muted dark:text-dark-text-muted mt-0.5">
-                                {t.groundingTooltip}
                             </div>
                         </label>
                     </div>
@@ -2679,10 +2659,14 @@ export default function App() {
 
     const handleAddImages = (newFiles: File[]) => {
         setReferenceImages(prev => [...prev, ...newFiles].slice(0, MAX_USER_IMAGES));
+        // Clear storyboard prompts when reference changes
+        setStoryboardPrompts([]);
     };
 
     const handleRemoveImage = (indexToRemove: number) => {
         setReferenceImages(prev => prev.filter((_, index) => index !== indexToRemove));
+        // Clear storyboard prompts when reference changes
+        setStoryboardPrompts([]);
     };
 
     const handleAddStyleImage = (file: File) => {
@@ -2799,7 +2783,7 @@ export default function App() {
             if (currentAutoEnhance && currentPrompt) {
                 setIsEnhancing(true);
                 tasks.push(
-                    geminiService.enhancePrompt(currentPrompt, currentRefImages, currentStyleImage, currentStructureImage, userApiKey, language, activeDnaText)
+                    geminiService.enhancePrompt(currentPrompt, currentRefImages, currentStyleImage, currentStructureImage, userApiKey, language, activeDnaText, currentStudioCfg)
                         .then(result => {
                             if (result.method !== 'fallback') {
                                 setActiveDisplayPrompt(result.enhancedPrompt);
@@ -2872,8 +2856,9 @@ export default function App() {
                 }
             }
 
-            // v1.8: Studio Mode Prompt Injection
-            if (appMode === 'studio') {
+            // v1.8: Studio Mode Prompt Injection - ONLY if NOT auto-enhancing
+            // (because auto-enhance already integrates studio config into the main prompt)
+            if (appMode === 'studio' && !currentAutoEnhance) {
                 const studioSnippets: string[] = [];
 
                 if (currentStudioCfg.camera) {
@@ -3075,7 +3060,29 @@ export default function App() {
             setIsLoading(false);
             abortControllerRef.current = null; // v1.3: Clear abort controller
         }
-    }, [referenceImages, styleReferenceImage, structureImage, preciseReference, userApiKey, aspectRatio, showToast, t.generationFailed, language, editedPrompt, negativePrompt, seed, numImagesToGenerate, selectedModel, selectedResolution, useGrounding]);
+    }, [
+        referenceImages,
+        styleReferenceImage,
+        structureImage,
+        preciseReference,
+        userApiKey,
+        aspectRatio,
+        showToast,
+        t.generationFailed,
+        language,
+        editedPrompt,
+        negativePrompt,
+        seed,
+        numImagesToGenerate,
+        selectedModel,
+        selectedResolution,
+        useGrounding,
+        autoEnhance,
+        studioConfig,
+        dnaCharacters,
+        selectedDnaId,
+        appMode
+    ]);
 
     // v1.9.5: Generation Queue Processor
     useEffect(() => {
@@ -3093,11 +3100,14 @@ export default function App() {
         if (abortControllerRef.current) {
             abortControllerRef.current.abort();
             abortControllerRef.current = null;
-            setIsLoading(false);
 
-            // v1.9.5: Also clear the queue when aborting
+            // v1.9.6 FIX: Clear queue BEFORE setting isLoading to false
+            // Otherwise the queue processor will immediately pick up the next task
             const queueCleared = queue.length > 0;
             setQueue([]);
+
+            // Now it's safe to set isLoading to false
+            setIsLoading(false);
 
             showToast(
                 queueCleared
@@ -3411,7 +3421,13 @@ export default function App() {
     }, [userApiKey, language, showToast, t.upscaleSuccess, t.upscaleFailed]);
 
     // v1.9.5: Storyboard Handlers
-    const handleGenerateStoryboard = useCallback(async (customImage?: File) => {
+    const handleGenerateStoryboard = useCallback(async (customImage?: File, forceRegenerate: boolean = false) => {
+        // If we already have prompts and not forcing regeneration, just open the modal
+        if (storyboardPrompts.length > 0 && !forceRegenerate) {
+            setIsStoryboardOpen(true);
+            return;
+        }
+
         // Validation: ensure we have a valid File/Blob
         const imageToAnalyze = customImage || (referenceImages.length > 0 ? referenceImages[0] : null);
 
@@ -3432,7 +3448,7 @@ export default function App() {
         } finally {
             setIsStoryboardLoading(false);
         }
-    }, [referenceImages, userApiKey, language, showToast]);
+    }, [storyboardPrompts.length, referenceImages, userApiKey, language, showToast, t.validImageForStoryboard, t.storyboardFailed]);
 
     const handleStoryboardGenerateAll = useCallback(() => {
         if (storyboardPrompts.length === 0) return;
@@ -3669,8 +3685,6 @@ export default function App() {
                             setEditedPrompt={setEditedPrompt}
                             preciseReference={preciseReference}
                             setPreciseReference={setPreciseReference}
-                            useGrounding={useGrounding}
-                            setUseGrounding={setUseGrounding}
                             dnaCharacters={dnaCharacters}
                             selectedDnaId={selectedDnaId}
                             onSelectDna={handleSelectDna}
@@ -3766,12 +3780,12 @@ export default function App() {
                                 onClick={() => isLoading ? handleAbortGeneration() : handleGenerate()}
                                 disabled={isEnhancing}
                                 className={`w-full flex justify-center items-center gap-2 font-semibold py-3 rounded-xl transition-all duration-300 disabled:opacity-50 ${isLoading
-                                    ? 'bg-red-500/20 text-red-500 border border-red-500/30 hover:bg-red-500/30'
+                                    ? 'bg-red-500/10 text-red-500 border border-red-500/30 hover:bg-red-500/20'
                                     : 'bg-gradient-to-r from-brand-yellow to-brand-magenta text-white hover:shadow-[0_0_20px_rgba(255,217,61,0.5)]'
                                     }`}
                             >
-                                {isLoading ? <XIcon className="w-5 h-5" /> : <SparklesIcon className="w-5 h-5" />}
-                                <span>{isLoading ? t.abort : t.generateButton}</span>
+                                {isLoading ? <span className="text-base">⏹</span> : <SparklesIcon className="w-5 h-5" />}
+                                <span className={isLoading ? "text-sm" : ""}>{isLoading ? t.stopGeneration : t.generateButton}</span>
                             </button>
 
                             {/* Secondary Queue button in sidebar */}
@@ -3800,6 +3814,15 @@ export default function App() {
                         </div>
 
                         <aside className="flex-1 min-h-0 flex flex-col gap-3">
+                            {/* Queue Panel (if queue has items) */}
+                            {queue.length > 0 && (
+                                <QueuePanel
+                                    queue={queue}
+                                    onRemoveFromQueue={handleRemoveFromQueue}
+                                    t={t}
+                                />
+                            )}
+
                             {/* Tabs */}
                             <div className="flex gap-2 bg-light-surface/50 dark:bg-dark-surface/30 backdrop-blur-xl rounded-2xl p-1">
                                 <button
@@ -3882,6 +3905,8 @@ export default function App() {
                     onNegativePromptChange={setNegativePrompt}
                     preciseReference={preciseReference}
                     onPreciseReferenceChange={setPreciseReference}
+                    useGrounding={useGrounding}
+                    onGroundingChange={setUseGrounding}
                     dynamicTools={dynamicTools}
                     onGenerateTools={handleGenerateDynamicTools}
                     isToolsLoading={isToolsLoading}
@@ -3889,8 +3914,6 @@ export default function App() {
                     onModelChange={setSelectedModel}
                     selectedResolution={selectedResolution}
                     onResolutionChange={setSelectedResolution}
-                    queue={queue}
-                    onRemoveFromQueue={handleRemoveFromQueue}
                 />
 
                 <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} onSave={handleSaveApiKey} currentApiKey={userApiKey} />
@@ -3928,6 +3951,7 @@ export default function App() {
                         onUsePrompt={(p: string) => { setEditedPrompt(p); setIsStoryboardOpen(false); }}
                         onGenerateAll={handleStoryboardGenerateAll}
                         onGenerateOne={handleStoryboardGenerateOne}
+                        onRegenerate={() => handleGenerateStoryboard(undefined, true)}
                         isLoading={isStoryboardLoading}
                         language={language}
                     />

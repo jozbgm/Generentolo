@@ -15,7 +15,14 @@ const StudioPanel: React.FC<StudioPanelProps> = ({ t, studioConfig, setStudioCon
     const [openSection, setOpenSection] = useState<string | null>('cinema');
 
     const updateConfig = (key: string, value: any) => {
-        setStudioConfig({ ...studioConfig, [key]: value });
+        if (value === null || value === undefined || value === '') {
+            // Remove the key from config when value is null/undefined/empty
+            const newConfig = { ...studioConfig };
+            delete newConfig[key];
+            setStudioConfig(newConfig);
+        } else {
+            setStudioConfig({ ...studioConfig, [key]: value });
+        }
     };
 
     const toggleSection = (section: string) => {
@@ -186,7 +193,11 @@ const StudioPanel: React.FC<StudioPanelProps> = ({ t, studioConfig, setStudioCon
                     {PRODUCTION_KITS.map(kit => (
                         <button
                             key={kit.id}
-                            onClick={() => updateConfig('kit', studioConfig.kit === kit.id ? null : kit.id)}
+                            onClick={() => {
+                                // If clicking the same kit, deselect it. Otherwise, select the new kit.
+                                const newKitValue = studioConfig.kit === kit.id ? null : kit.id;
+                                updateConfig('kit', newKitValue);
+                            }}
                             className={`flex flex-col items-start p-2.5 rounded-xl border-2 transition-all ${studioConfig.kit === kit.id ? 'border-brand-magenta bg-brand-magenta/5 shadow-[0_4px_20px_rgba(255,0,110,0.15)]' : 'border-light-border dark:border-dark-border/50 bg-transparent opacity-70 hover:opacity-100'}`}
                         >
                             <span className="text-xs font-bold">{kit.name}</span>

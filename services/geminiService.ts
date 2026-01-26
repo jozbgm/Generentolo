@@ -352,10 +352,10 @@ export const generateSinglePromptFromImage = async (imageFiles: File[], styleFil
 
 import { enhancePromptV2, EnhancementResult } from './enhancePromptNew';
 
-export const enhancePrompt = async (currentPrompt: string, imageFiles: File[], styleFile: File | null, structureFile: File | null, userApiKey?: string | null, language: 'en' | 'it' = 'en', characterDna?: string): Promise<EnhancementResult> => {
+export const enhancePrompt = async (currentPrompt: string, imageFiles: File[], styleFile: File | null, structureFile: File | null, userApiKey?: string | null, language: 'en' | 'it' = 'en', characterDna?: string, studioConfig?: any): Promise<EnhancementResult> => {
     try {
-        // Use new revolutionary v2.2 system
-        return await enhancePromptV2(currentPrompt, imageFiles, styleFile, structureFile, userApiKey, language, characterDna);
+        // Use new revolutionary v2.5 system
+        return await enhancePromptV2(currentPrompt, imageFiles, styleFile, structureFile, userApiKey, language, characterDna, studioConfig);
     } catch (error) {
         console.error('❌ Enhancement failed, returning original:', error);
         return {

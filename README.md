@@ -1,4 +1,4 @@
-# 🎨 Generentolo PRO v1.9.5 Directorate
+# 🎨 Generentolo PRO v1.9.6 DIRECTORATE
 
 **Professional AI-Powered Image Generation & Storyboarding Suite**
 

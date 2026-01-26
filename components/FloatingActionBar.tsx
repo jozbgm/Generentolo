@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { useLocalization } from '../App';
-import { ModelType, ResolutionType, GenerationTask } from '../types';
+import { ModelType, ResolutionType } from '../types';
 import { XIcon } from './icons';
 
 interface FloatingActionBarProps {
@@ -36,6 +36,10 @@ interface FloatingActionBarProps {
     preciseReference: boolean;
     onPreciseReferenceChange: (enabled: boolean) => void;
 
+    // v1.5.1: Google Search Grounding
+    useGrounding: boolean;
+    onGroundingChange: (enabled: boolean) => void;
+
     // Dynamic Tools
     dynamicTools: any[];
     onGenerateTools: () => void;
@@ -46,10 +50,6 @@ interface FloatingActionBarProps {
     onModelChange: (model: ModelType) => void;
     selectedResolution: ResolutionType;
     onResolutionChange: (resolution: ResolutionType) => void;
-
-    // v1.9.5: Generation Queue
-    queue: GenerationTask[];
-    onRemoveFromQueue: (id: string) => void;
 }
 
 const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
@@ -73,6 +73,8 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
     onNegativePromptChange,
     preciseReference,
     onPreciseReferenceChange,
+    useGrounding,
+    onGroundingChange,
     dynamicTools,
     onGenerateTools,
     isToolsLoading,
@@ -81,8 +83,6 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
     onModelChange,
     selectedResolution,
     onResolutionChange,
-    queue,
-    onRemoveFromQueue,
 }) => {
     const { t, language } = useLocalization();
     const [isExpanded, setIsExpanded] = useState(false);
@@ -194,56 +194,6 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                     )}
                 </div>
             )}
-
-            {/* v1.9.5: Generation Queue Dashboard */}
-            {queue.length > 0 && (
-                <div className={`fixed ${isExpanded ? 'bottom-[216px]' : 'bottom-[104px]'} left-1/2 -translate-x-1/2 w-[90%] max-w-lg bg-light-surface/95 dark:bg-dark-surface/95 backdrop-blur-md border border-light-border dark:border-dark-border rounded-2xl shadow-xl z-[65] overflow-hidden animate-slideUp`}>
-                    <div className="px-4 py-2 bg-brand-purple/10 border-b border-light-border dark:border-dark-border flex items-center justify-between">
-                        <span className="text-xs font-bold uppercase tracking-wider text-brand-purple flex items-center gap-2">
-                            <span className="animate-pulse">⏳</span> {t.generationQueue} ({queue.length})
-                        </span>
-                        <div className="flex gap-1">
-                            <div className="w-1.5 h-1.5 rounded-full bg-brand-purple animate-bounce" style={{ animationDelay: '0ms' }} />
-                            <div className="w-1.5 h-1.5 rounded-full bg-brand-purple animate-bounce" style={{ animationDelay: '150ms' }} />
-                            <div className="w-1.5 h-1.5 rounded-full bg-brand-purple animate-bounce" style={{ animationDelay: '300ms' }} />
-                        </div>
-                    </div>
-                    <div className="max-h-[160px] overflow-y-auto">
-                        {queue.map((task, idx) => (
-                            <div key={task.id} className="group px-4 py-3 flex items-center justify-between hover:bg-light-surface-accent/30 dark:hover:bg-dark-surface-accent/30 transition-colors border-b border-light-border/50 dark:border-dark-border/50 last:border-0">
-                                <div className="flex items-center gap-3 overflow-hidden">
-                                    <div className="relative flex-shrink-0 w-8 h-8 rounded-lg bg-brand-purple/20 flex items-center justify-center text-xs font-bold text-brand-purple border border-brand-purple/30">
-                                        {idx + 1}
-                                    </div>
-                                    <div className="overflow-hidden">
-                                        <p className="text-sm text-light-text dark:text-dark-text font-medium truncate">
-                                            {task.prompt || t.untitledTask}
-                                        </p>
-                                        <div className="flex items-center gap-2 mt-0.5">
-                                            <span className="text-[10px] px-1.5 py-0.5 bg-light-surface-accent dark:bg-dark-surface-accent rounded text-light-text-muted dark:text-dark-text-muted">
-                                                {task.model === 'gemini-3-pro-image-preview' ? 'PRO' : 'Flash'}
-                                            </span>
-                                            <span className="text-[10px] px-1.5 py-0.5 bg-light-surface-accent dark:bg-dark-surface-accent rounded text-light-text-muted dark:text-dark-text-muted">
-                                                {task.numImages}x
-                                            </span>
-                                            {task.selectedDnaId && <span className="text-[10px]">🧬</span>}
-                                            {task.referenceImages.length > 0 && <span className="text-[10px]">🖼️ {task.referenceImages.length}</span>}
-                                        </div>
-                                    </div>
-                                </div>
-                                <button
-                                    onClick={() => onRemoveFromQueue(task.id)}
-                                    className="p-2 text-red-400 hover:text-red-500 hover:bg-red-500/10 rounded-full transition-all group-hover:opacity-100 opacity-0 md:opacity-100"
-                                    title={t.removeFromQueue}
-                                >
-                                    ✕
-                                </button>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )
-            }
 
             {/* Main Floating Bar */}
             <div className="fixed bottom-4 left-1/2 -translate-x-1/2 lg:left-[calc(50%-20px)] lg:-translate-x-1/2 w-[95%] lg:w-[calc(100%-360px)] max-w-5xl bg-light-surface/98 dark:bg-dark-surface/98 backdrop-blur-xl border border-light-border dark:border-dark-border rounded-2xl shadow-2xl z-[60] transition-all duration-300 ease-out">
@@ -492,6 +442,30 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                             </div>
                         </div>
 
+                        {/* v1.5.1: Google Search Grounding Toggle */}
+                        <div className="relative group/tooltip flex items-center gap-2 lg:gap-2.5 px-2 lg:px-3 py-1.5 lg:py-2 bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-lg">
+                            <span className="text-base lg:text-lg" title={t.groundingTooltip}>
+                                🌐
+                            </span>
+                            <button
+                                onClick={() => onGroundingChange(!useGrounding)}
+                                className={`relative inline-flex h-5 lg:h-6 w-9 lg:w-11 items-center rounded-full transition-all duration-300 ${useGrounding
+                                    ? 'bg-purple-500 shadow-[0_0_10px_rgba(168,85,247,0.5)]'
+                                    : 'bg-gray-300 dark:bg-gray-600'
+                                    }`}
+                                disabled={isLoading}
+                            >
+                                <span
+                                    className={`inline-block h-4 lg:h-5 w-4 lg:w-5 transform rounded-full bg-white shadow-lg transition-transform duration-300 ${useGrounding ? 'translate-x-5 lg:translate-x-6' : 'translate-x-0.5'
+                                        }`}
+                                />
+                            </button>
+                            {/* Tooltip */}
+                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-2 bg-black/90 text-white text-xs rounded-lg opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 pointer-events-none z-50">
+                                {t.groundingTooltip}
+                            </div>
+                        </div>
+
                         {/* Primary Action - HERO BUTTON */}
                         <div className="flex flex-col gap-1.5 min-w-[120px]">
                             {/* Primary Control (Generate/Abort) */}
@@ -503,7 +477,7 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                                     } hover:scale-105 active:scale-95 rounded-xl font-bold text-xs lg:text-sm transition-all duration-300 whitespace-nowrap flex items-center justify-center gap-2`}
                             >
                                 {isLoading ? <XIcon className="w-3.5 h-3.5" /> : "⚡"}
-                                <span>{isLoading ? t.abort : (t.generateButton || "Generate")}</span>
+                                <span>{isLoading ? t.stopGeneration : (t.generateButton || "Generate")}</span>
                             </button>
 
                             {/* Secondary Queue Control (Only when loading) */}
@@ -947,7 +921,7 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                                         } hover:scale-105 active:scale-95 rounded-2xl font-black text-sm lg:text-base uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-3`}
                                 >
                                     {isLoading ? <XIcon className="w-5 h-5" /> : "⚡"}
-                                    {isLoading ? t.abort : (t.generateButton || "Generate")}
+                                    {isLoading ? t.stopGeneration : (t.generateButton || "Generate")}
                                 </button>
 
                                 {isLoading && (

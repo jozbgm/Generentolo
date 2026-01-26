@@ -8,6 +8,7 @@ interface StoryboardGridProps {
     onUsePrompt: (prompt: string) => void;
     onGenerateAll: () => void;
     onGenerateOne: (prompt: string) => void;
+    onRegenerate: () => void;
     isLoading?: boolean;
     language: 'en' | 'it';
 }
@@ -18,6 +19,7 @@ const StoryboardGrid: React.FC<StoryboardGridProps> = ({
     onUsePrompt,
     onGenerateAll,
     onGenerateOne,
+    onRegenerate,
     isLoading,
     language
 }) => {
@@ -53,7 +55,16 @@ const StoryboardGrid: React.FC<StoryboardGridProps> = ({
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={onRegenerate}
+                            disabled={isLoading}
+                            className="hidden md:flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-orange-500 to-yellow-500 text-white rounded-xl font-bold hover:scale-105 active:scale-95 transition-all shadow-lg shadow-orange-500/25 disabled:opacity-50"
+                            title={language === 'it' ? 'Rigenera 9 nuovi prompt per questa immagine' : 'Regenerate 9 new prompts for this image'}
+                        >
+                            <span className="text-base">🔄</span>
+                            {language === 'it' ? 'Rigenera' : 'Regenerate'}
+                        </button>
                         <button
                             onClick={onGenerateAll}
                             disabled={isLoading}
