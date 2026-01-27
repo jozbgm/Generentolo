@@ -1,87 +1,107 @@
+import { getAiClient, fileToGenerativePart } from './geminiService';
+
 /**
- * Maps rotation degrees to technical photographic Azimuth descriptions (0-360)
+ * Maps rotation degrees to technical photographic Azimuth descriptions (0-360) for fallback/metadata
  */
 export function getRotationDescription(degrees: number): string {
     const normalized = ((degrees % 360) + 360) % 360;
-
-    // Using technical azimuth terminology for Gemini 3 Pro reasoning
-    if (normalized >= 0 && normalized < 22.5) {
-        return "Camera Azimuth: 0° (Frontal Canonical View)";
-    }
-    if (normalized >= 22.5 && normalized < 67.5) {
-        return "Camera Azimuth: 45° (Three-Quarter Right Orbit)";
-    }
-    if (normalized >= 67.5 && normalized < 112.5) {
-        return "Camera Azimuth: 90° (Right Profile Orbit)";
-    }
-    if (normalized >= 112.5 && normalized < 157.5) {
-        return "Camera Azimuth: 135° (Rear Three-Quarter Right Orbit)";
-    }
-    if (normalized >= 157.5 && normalized < 202.5) {
-        return "Camera Azimuth: 180° (Posterior/Back View Orbit)";
-    }
-    if (normalized >= 202.5 && normalized < 247.5) {
-        return "Camera Azimuth: 225° (Rear Three-Quarter Left Orbit)";
-    }
-    if (normalized >= 247.5 && normalized < 292.5) {
-        return "Camera Azimuth: 270° (Left Profile Orbit)";
-    }
-    if (normalized >= 292.5 && normalized < 337.5) {
-        return "Camera Azimuth: 315° (Three-Quarter Left Orbit)";
-    }
-    return `Camera Azimuth: ${normalized}° Orbit`;
+    if (normalized >= 337.5 || normalized < 22.5) return "Frontal View (0°)";
+    if (normalized >= 22.5 && normalized < 67.5) return "Front-Right Three-Quarter (45°)";
+    if (normalized >= 67.5 && normalized < 112.5) return "Right Profile Side View (90°)";
+    if (normalized >= 112.5 && normalized < 157.5) return "Rear-Right Three-Quarter (135°)";
+    if (normalized >= 157.5 && normalized < 202.5) return "Direct Back View / Rear View (180°)";
+    if (normalized >= 202.5 && normalized < 247.5) return "Rear-Left Three-Quarter (225°)";
+    if (normalized >= 247.5 && normalized < 292.5) return "Left Profile Side View (270°)";
+    if (normalized >= 292.5 && normalized < 337.5) return "Front-Left Three-Quarter (315°)";
+    return `${normalized}° Orbit`;
 }
 
 /**
  * Maps tilt degrees to technical Polar Angle descriptions
  */
 export function getTiltDescription(degrees: number): string {
-    if (degrees > 60) {
-        return "Camera Elevation: 75° (Zenith/Bird's-Eye Perspective)";
-    }
-    if (degrees > 30) {
-        return "Camera Elevation: 45° (High-Angle Plunge)";
-    }
-    if (degrees > 10) {
-        return "Camera Elevation: 20° (Slight Elevated Pitch)";
-    }
-    if (degrees > -10) {
-        return "Camera Elevation: 0° (Eye-Level Horizon)";
-    }
-    if (degrees > -30) {
-        return "Camera Elevation: -20° (Slight Under-Pitch View)";
-    }
-    if (normalizedTilt(degrees) > -60) {
-        return "Camera Elevation: -45° (Low-Angle Hero Shot)";
-    }
-    return "Camera Elevation: -75° (Worm's-Eye Extreme Base Perspective)";
-}
-
-function normalizedTilt(d: number) { return d; }
-
-/**
- * Maps zoom value to Dolly/Focal length descriptions
- */
-export function getZoomDescription(zoom: number): string {
-    if (zoom > 30) {
-        return "Lens: Macro/Tele-Compression (Extreme Close-up Dolly-In)";
-    }
-    if (zoom > 10) {
-        return "Lens: Portrait 85mm Prime (Tight Framing/Dolly-In)";
-    }
-    if (zoom > -10) {
-        return "Lens: Standard 50mm Prime (Neutral Canonical Zoom)";
-    }
-    if (zoom > -30) {
-        return "Lens: Wide-Angle 24mm (Environmental Pull-Back)";
-    }
-    return "Lens: Ultra-Wide 14mm / Fisheye (Extreme Dolly-Out Wide Shot)";
+    if (degrees > 45) return "High-Angle Bird's Eye View (looking down steep)";
+    if (degrees > 15) return "Slightly Elevated / High-Angle Shot";
+    if (degrees > -15) return "Eye-Level / Neutral Horizon";
+    if (degrees > -45) return "Low-Angle Hero Shot (looking up)";
+    return "Extreme Low-Angle / Worm's Eye View";
 }
 
 /**
- * Generates a comprehensive prompt for angle-based image generation optimized for Nano Banana Pro (Gemini 3 Pro)
+ * COGNITIVE ANGLE SYNTHESIS v2.8
+ * Uses Nano Banana Pro 3.0 to REASON about the image and describe the new view.
  */
-export function generateAnglePrompt(
+export async function generateCognitiveAnglePrompt(
+    referenceImage: File,
+    originalPrompt: string,
+    rotation: number,
+    tilt: number,
+    zoom: number,
+    userApiKey?: string | null,
+    language: 'en' | 'it' = 'en'
+): Promise<string> {
+    try {
+        const ai = getAiClient(userApiKey);
+        const imagePart = await fileToGenerativePart(referenceImage);
+
+        const rotDesc = getRotationDescription(rotation);
+        const tiltDesc = getTiltDescription(tilt);
+        const zoomLevel = zoom > 5 ? "Close-up/Macro Details" : zoom < -5 ? "Wide Angle Context" : "Standard Portrait Framing";
+
+        // Costruiamo un prompt di ragionamento spaziale per il modello
+        const systemInstruction = `You are an expert 3D Artist and Director of Photography using a revolutionary "Neural View Synthesis" engine.
+Your goal is to write a generative prompt that describes EXACTLY how the subject in the reference image would look if the camera moved to a new position.
+
+CRITICAL RULES:
+1. PRESERVE IDENTITY: The subject (face, clothes, body type) must be identical to the reference.
+2. ROTATE THE MIND'S EYE: Imagine walking around the subject to the specified angle. What new details become visible? What is occluded?
+3. CONSISTENT LIGHTING: Describe how the light falls on the subject from this new angle.
+4. If the view is BACK or PROFILE, describe the hair/back of outfit logically based on the front view.
+
+TARGET CAMERA COORDINATES:
+- Azimuth/Rotation: ${rotDesc}
+- Elevation/Tilt: ${tiltDesc}
+- Zoom/Framing: ${zoomLevel}
+`;
+
+        const userMessage = `Analyze this reference image.
+Original Subject Description: "${originalPrompt}"
+
+TASK: Write a highly detailed, vivid prompt to generate this EXACT subject from the new TARGET CAMERA COORDINATES.
+Describe facial angle, visible side of the body, and lighting changes.
+If generating a side/back view, explicitely describe the side/back hair and outfit details inferred from the front.
+
+Return ONLY the prompt string, no markdown headers.`;
+
+        const result = await ai.models.generateContent({
+            model: 'gemini-3-pro-preview', // USING PRO MODEL FOR REASONING
+            contents: {
+                parts: [imagePart, { text: userMessage }]
+            },
+            config: {
+                systemInstruction: systemInstruction,
+                temperature: 0.7 // A bit of creativity for the "hallucination" of unseen angles
+            }
+        });
+
+        const generatedPrompt = result.text?.trim();
+
+        if (!generatedPrompt) throw new Error("Empty response from Cognitive Angle Engine");
+
+        return generatedPrompt;
+
+    } catch (error) {
+        console.warn("Cognitive Angle Generation failed, falling back to algorithmic prompt", error);
+        // Fallback to the old algorithmic method if AI fails
+        return generateAnglePromptFallback(originalPrompt, rotation, tilt, zoom);
+    }
+}
+
+
+/**
+ * Legacy Algorithmic Fallback (Original Logic)
+ */
+export function generateAnglePromptFallback(
     originalPrompt: string,
     rotation: number,
     tilt: number,
@@ -89,35 +109,15 @@ export function generateAnglePrompt(
 ): string {
     const rotationDesc = getRotationDescription(rotation);
     const tiltDesc = getTiltDescription(tilt);
-    const zoomDesc = getZoomDescription(zoom);
+    const zoomDesc = zoom > 0 ? "Telephoto Lens Compression" : "Wide Angle Distortion";
 
-    return `<context>
-Rendering a photorealistic view of the same subject identity and scene captured in the reference image, but executing a structural viewpoint transformation.
-</context>
-
-<viewpoint_transformation>
-Perform a 3D latent rotation of the entire scene content to match the following camera coordinates:
-- ${rotationDesc}
-- ${tiltDesc}
-- ${zoomDesc}
-</viewpoint_transformation>
-
-<core_directives>
-1. IDENTITY ANCHORING: Preserve the exact facial geometry, hair texture, clothing patterns, and unique physical identifiers of the subject from the reference image.
-2. SPATIAL CONSISTENCY: The subject must appear naturally rotated in 3D space. Calculate correct occultation and perspective changes corresponding to the orbit.
-3. COHERENT ENVIRONMENT: Maintain the precise lighting vector, background elements, and depth of field parameters.
-4. NATIVE PHOTOREALISM: Output a cinematic, high-fidelity render that avoids artifacting during the viewpoint shift.
-</core_directives>
-
-<reference_specification>
-Subject/Scene Description: ${originalPrompt || 'The subject in the reference image'}
-</reference_specification>
-
-Generate the transformed view based on these high-fidelity camera parameters.`;
+    return `Framing: ${rotationDesc}, ${tiltDesc}, ${zoomDesc}.
+Subject: ${originalPrompt}.
+Requirement: Maintain exact character identity and lighting while strictly adhering to the requested camera angle. Synthesize a photorealistic view from this perspective.`;
 }
 
 /**
- * Best angles for comprehensive 360° coverage
+ * Best angles for comprehensive 360° coverage (Metadata only)
  */
 export const BEST_ANGLES = [
     { rotation: 0, tilt: 0, name: "Front View" },
@@ -134,20 +134,4 @@ export const BEST_ANGLES = [
     { rotation: 270, tilt: 30, name: "Top-Left" },
 ];
 
-/**
- * Generates prompts for all best angles
- */
-export function generateBestAnglesPrompts(originalPrompt: string): Array<{
-    prompt: string;
-    angleName: string;
-    rotation: number;
-    tilt: number;
-}> {
-    return BEST_ANGLES.map(angle => ({
-        prompt: generateAnglePrompt(originalPrompt, angle.rotation, angle.tilt, 0),
-        angleName: angle.name,
-        rotation: angle.rotation,
-        tilt: angle.tilt
-    }));
-}
 

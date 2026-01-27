@@ -3167,13 +3167,21 @@ export default function App() {
                     'success'
                 );
             } else {
-                // Generate single angle
-                const anglePrompt = anglePromptService.generateAnglePrompt(
+                // v1.9.8: COGNITIVE ANGLE GENERATION
+                setLoadingMessage(language === 'it' ? '🧠 Simulazione 3D del soggetto...' : '🧠 Simulating 3D subject physics...');
+
+                // 1. Generate the cognitive prompt first (Reasoning Phase)
+                const cognitivePrompt = await anglePromptService.generateCognitiveAnglePrompt(
+                    referenceFile,
                     editedPrompt || 'The subject in the reference image',
                     params.rotation,
                     params.tilt,
-                    params.zoom
+                    params.zoom,
+                    userApiKey,
+                    language
                 );
+
+                setLoadingMessage(FUNNY_MESSAGES[Math.floor(Math.random() * FUNNY_MESSAGES.length)]);
 
                 showToast(
                     language === 'it'
@@ -3183,7 +3191,7 @@ export default function App() {
                 );
 
                 const imageDataUrl = await geminiService.generateImage(
-                    anglePrompt,
+                    cognitivePrompt,
                     currentAspect,
                     [referenceFile],
                     null,
@@ -3206,7 +3214,7 @@ export default function App() {
                     id: crypto.randomUUID(),
                     imageDataUrl,
                     thumbnailDataUrl,
-                    prompt: `Rotation: ${Math.round(params.rotation)}°, Tilt: ${Math.round(params.tilt)}° - ${editedPrompt}`,
+                    prompt: cognitivePrompt,
                     aspectRatio: currentAspect,
                     negativePrompt,
                     seed,
