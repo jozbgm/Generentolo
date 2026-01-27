@@ -1,84 +1,85 @@
-import { AngleGenerationParams } from '../components/GenerAngles';
-
 /**
- * Maps rotation degrees to precise photographic descriptions
+ * Maps rotation degrees to technical photographic Azimuth descriptions (0-360)
  */
 export function getRotationDescription(degrees: number): string {
     const normalized = ((degrees % 360) + 360) % 360;
 
+    // Using technical azimuth terminology for Gemini 3 Pro reasoning
     if (normalized >= 0 && normalized < 22.5) {
-        return "front view, subject facing camera directly, 0-degree angle";
+        return "Camera Azimuth: 0° (Frontal Canonical View)";
     }
     if (normalized >= 22.5 && normalized < 67.5) {
-        return "three-quarter front-right view, subject rotated 45 degrees to the right";
+        return "Camera Azimuth: 45° (Three-Quarter Right Orbit)";
     }
     if (normalized >= 67.5 && normalized < 112.5) {
-        return "right side profile view, subject at 90-degree angle showing right side";
+        return "Camera Azimuth: 90° (Right Profile Orbit)";
     }
     if (normalized >= 112.5 && normalized < 157.5) {
-        return "three-quarter back-right view, subject rotated 135 degrees, partial back visible";
+        return "Camera Azimuth: 135° (Rear Three-Quarter Right Orbit)";
     }
     if (normalized >= 157.5 && normalized < 202.5) {
-        return "back view, subject facing away from camera, 180-degree angle";
+        return "Camera Azimuth: 180° (Posterior/Back View Orbit)";
     }
     if (normalized >= 202.5 && normalized < 247.5) {
-        return "three-quarter back-left view, subject rotated 225 degrees, left back visible";
+        return "Camera Azimuth: 225° (Rear Three-Quarter Left Orbit)";
     }
     if (normalized >= 247.5 && normalized < 292.5) {
-        return "left side profile view, subject at 270-degree angle showing left side";
+        return "Camera Azimuth: 270° (Left Profile Orbit)";
     }
     if (normalized >= 292.5 && normalized < 337.5) {
-        return "three-quarter front-left view, subject rotated 315 degrees to the left";
+        return "Camera Azimuth: 315° (Three-Quarter Left Orbit)";
     }
-    return "front view, subject facing camera directly, 0-degree angle";
+    return `Camera Azimuth: ${normalized}° Orbit`;
 }
 
 /**
- * Maps tilt degrees to camera angle descriptions
+ * Maps tilt degrees to technical Polar Angle descriptions
  */
 export function getTiltDescription(degrees: number): string {
     if (degrees > 60) {
-        return "extreme high-angle shot, bird's-eye view looking straight down from above";
+        return "Camera Elevation: 75° (Zenith/Bird's-Eye Perspective)";
     }
     if (degrees > 30) {
-        return "high-angle shot, camera elevated 45 degrees above subject looking down";
+        return "Camera Elevation: 45° (High-Angle Plunge)";
     }
     if (degrees > 10) {
-        return "slightly elevated camera angle, looking down gently at the subject";
+        return "Camera Elevation: 20° (Slight Elevated Pitch)";
     }
     if (degrees > -10) {
-        return "eye-level shot, camera at horizontal position aligned with subject";
+        return "Camera Elevation: 0° (Eye-Level Horizon)";
     }
     if (degrees > -30) {
-        return "slightly low-angle shot, camera positioned below eye level looking up";
+        return "Camera Elevation: -20° (Slight Under-Pitch View)";
     }
-    if (degrees > -60) {
-        return "low-angle shot, camera 45 degrees below subject looking upward";
+    if (normalizedTilt(degrees) > -60) {
+        return "Camera Elevation: -45° (Low-Angle Hero Shot)";
     }
-    return "extreme low-angle shot, worm's-eye view looking straight up from ground level";
+    return "Camera Elevation: -75° (Worm's-Eye Extreme Base Perspective)";
 }
 
+function normalizedTilt(d: number) { return d; }
+
 /**
- * Maps zoom value to distance description
+ * Maps zoom value to Dolly/Focal length descriptions
  */
 export function getZoomDescription(zoom: number): string {
     if (zoom > 30) {
-        return "much closer to subject, zoomed in significantly, tight framing";
+        return "Lens: Macro/Tele-Compression (Extreme Close-up Dolly-In)";
     }
     if (zoom > 10) {
-        return "closer to subject, slightly zoomed in, tighter composition";
+        return "Lens: Portrait 85mm Prime (Tight Framing/Dolly-In)";
     }
     if (zoom > -10) {
-        return "same distance from subject, standard framing";
+        return "Lens: Standard 50mm Prime (Neutral Canonical Zoom)";
     }
     if (zoom > -30) {
-        return "farther from subject, slightly zoomed out, wider composition";
+        return "Lens: Wide-Angle 24mm (Environmental Pull-Back)";
     }
-    return "much farther from subject, zoomed out significantly, wide framing";
+    return "Lens: Ultra-Wide 14mm / Fisheye (Extreme Dolly-Out Wide Shot)";
 }
 
 /**
- * Generates a comprehensive prompt for angle-based image generation
+ * Generates a comprehensive prompt for angle-based image generation optimized for Nano Banana Pro (Gemini 3 Pro)
  */
 export function generateAnglePrompt(
     originalPrompt: string,
@@ -90,24 +91,29 @@ export function generateAnglePrompt(
     const tiltDesc = getTiltDescription(tilt);
     const zoomDesc = getZoomDescription(zoom);
 
-    return `Photorealistic image of the same subject from a different camera angle.
+    return `<context>
+Rendering a photorealistic view of the same subject identity and scene captured in the reference image, but executing a structural viewpoint transformation.
+</context>
 
-CAMERA POSITION:
-- Horizontal rotation: ${rotationDesc}
-- Vertical angle: ${tiltDesc}
-- Camera distance: ${zoomDesc}
+<viewpoint_transformation>
+Perform a 3D latent rotation of the entire scene content to match the following camera coordinates:
+- ${rotationDesc}
+- ${tiltDesc}
+- ${zoomDesc}
+</viewpoint_transformation>
 
-CRITICAL REQUIREMENTS:
-- Maintain EXACT same subject identity, appearance, clothing, features, and all visual characteristics
-- Keep SAME lighting conditions, environment, and background
-- Preserve photographic style, quality, and color grading
-- Ensure 3D spatial consistency - the subject should appear naturally rotated to match the specified angle
-- The camera viewpoint should change, NOT the subject's pose or position
-- Maintain all details, textures, and materials from the original
+<core_directives>
+1. IDENTITY ANCHORING: Preserve the exact facial geometry, hair texture, clothing patterns, and unique physical identifiers of the subject from the reference image.
+2. SPATIAL CONSISTENCY: The subject must appear naturally rotated in 3D space. Calculate correct occultation and perspective changes corresponding to the orbit.
+3. COHERENT ENVIRONMENT: Maintain the precise lighting vector, background elements, and depth of field parameters.
+4. NATIVE PHOTOREALISM: Output a cinematic, high-fidelity render that avoids artifacting during the viewpoint shift.
+</core_directives>
 
-REFERENCE SCENE: ${originalPrompt}
+<reference_specification>
+Subject/Scene Description: ${originalPrompt || 'The subject in the reference image'}
+</reference_specification>
 
-Generate a single, cohesive image that shows the same scene from the new camera perspective described above.`;
+Generate the transformed view based on these high-fidelity camera parameters.`;
 }
 
 /**
@@ -144,3 +150,4 @@ export function generateBestAnglesPrompts(originalPrompt: string): Array<{
         tilt: angle.tilt
     }));
 }
+

@@ -1,5 +1,13 @@
 # 📋 Changelog - Generentolo PRO
 
+## [1.9.8] - 2026-01-27
+### Added
+- **Perspective Studio (Angles v2)**: Completely overhauled the Angles feature with a cinematic 3D viewport, CSS-based 3D gizmo, and high-fidelity controls.
+- **Batch Generation**: Added "12 Precision Shots" mode to automatically generate a comprehensive set of cinematic angles.
+- **Visual Feedback**: Implemented dynamic zoom scaling and a "laser" depth connector in the 3D viewport.
+- **Premium UI**: Integrated a sleek, dark glassmorphism aesthetic for the Perspective Studio controls.
+- **Aspect Ratio Detection**, **Optimized Prompts**, and **Synchronized Loading States**.
+
 ## [1.9.7] - 2026-01-27 🎨
 ### Added
 - **📋 Smart Prompt Actions**: Integrated Copy, Paste, and Clear buttons directly inside the prompt box.

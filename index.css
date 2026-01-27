@@ -117,3 +117,26 @@ textarea::-webkit-scrollbar-thumb:hover {
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background-color: rgba(155, 155, 155, 0.3);
 }
+/* 3D Transform Utilities for Perspective Studio */
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+
+.perspective-800 {
+  perspective: 800px;
+}
+
+/* Specific rotation helper for the wireframe sphere */
+.rotate-y-15 { transform: rotateY(15deg); }
+.rotate-y-30 { transform: rotateY(30deg); }
+.rotate-y-45 { transform: rotateY(45deg); }
+.rotate-y-60 { transform: rotateY(60deg); }
+.rotate-y-75 { transform: rotateY(75deg); }
+.rotate-y-90 { transform: rotateY(90deg); }
+.rotate-y-105 { transform: rotateY(105deg); }
+.rotate-y-120 { transform: rotateY(120deg); }
+.rotate-y-135 { transform: rotateY(135deg); }
+.rotate-y-150 { transform: rotateY(150deg); }
+.rotate-y-165 { transform: rotateY(165deg); }
+
+.rotate-x-90 { transform: rotateX(90deg); }

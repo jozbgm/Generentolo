@@ -1,5 +1,8 @@
 import React, { useState, useMemo } from 'react';
 
+// v1.9.8: Premium Angles Studio overhaul inspired by high-end 3D perspective editors
+// Implements a full CSS 3D viewport, cinematic gizmo, and batch multi-angle generation.
+
 interface GenerAnglesProps {
     onGenerate: (params: AngleGenerationParams) => void;
     isGenerating: boolean;
@@ -11,6 +14,7 @@ export interface AngleGenerationParams {
     rotation: number;
     tilt: number;
     zoom: number;
+    generateBestAngles?: boolean;
 }
 
 const GenerAngles: React.FC<GenerAnglesProps> = ({
@@ -19,8 +23,9 @@ const GenerAngles: React.FC<GenerAnglesProps> = ({
     referenceImages
 }) => {
     const [rotation, setRotation] = useState(45);
-    const [tilt, setTilt] = useState(-30);
+    const [tilt, setTilt] = useState(30);
     const [zoom, setZoom] = useState(0);
+    const [generateBestAngles, setGenerateBestAngles] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
     const [dragStart, setDragStart] = useState({ x: 0, y: 0, rotation: 0, tilt: 0 });
 
@@ -47,10 +52,11 @@ const GenerAngles: React.FC<GenerAnglesProps> = ({
         const deltaX = e.clientX - dragStart.x;
         const deltaY = e.clientY - dragStart.y;
 
+        // Map movement to steps to feel more "mechanical" like the source
         // Horizontal drag = rotation
         const newRotation = dragStart.rotation + deltaX * 1.5;
         // Vertical drag = tilt
-        const newTilt = Math.max(-90, Math.min(90, dragStart.tilt - deltaY * 1.0));
+        const newTilt = Math.max(-30, Math.min(60, dragStart.tilt - deltaY * 1.0));
 
         setRotation(((newRotation % 360) + 360) % 360);
         setTilt(newTilt);
@@ -67,218 +73,267 @@ const GenerAngles: React.FC<GenerAnglesProps> = ({
             referenceImage: activeReferenceUrl,
             rotation,
             tilt,
-            zoom
+            zoom,
+            generateBestAngles
         });
     };
 
-    // Calculate camera position on a sphere for the visualization
-    const getCameraPosition = () => {
-        const radius = 90; // Slightly smaller for better fit
-        const rotRad = (rotation * Math.PI) / 180;
-        const tiltRad = (tilt * Math.PI) / 180;
-
-        // Sphere projection to 2D
-        const x = Math.sin(rotRad) * Math.cos(tiltRad) * radius;
-        const y = -Math.sin(tiltRad) * radius;
-
-        // Scale factor based on Z (depth) to simulate size/perspective
-        const z = Math.cos(rotRad) * Math.cos(tiltRad) * radius;
-        const scale = 0.8 + (z + radius) / (radius * 2) * 0.4;
-        const opacity = 0.5 + (z + radius) / (radius * 2) * 0.5;
-
-        return { x, y, scale, opacity, z };
-    };
-
-    const cameraPos = getCameraPosition();
-
     return (
-        <div className="flex flex-col gap-5 py-2 select-none">
-            {/* Header - Minimal & Consistent */}
+        <div className="flex flex-col gap-4 py-2 select-none">
+            {/* Header - Minimal & Technical */}
             <div className="flex items-center justify-between px-1">
-                <div className="flex items-center gap-2">
-                    <span className="text-xl">📐</span>
+                <div className="flex items-center gap-2.5">
+                    <div className="relative">
+                        <div className="absolute -inset-1 bg-brand-blue/30 blur-sm rounded-full animate-pulse capitalize" />
+                        <svg className="relative size-5 text-brand-blue" aria-hidden="true" width="24px" height="24px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M4 5C3.44772 5 3 4.55228 3 4C3 3.44772 3.44772 3 4 3C4.55228 3 5 3.44772 5 4C5 4.55228 4.55228 5 4 5Z" fill="currentColor"></path>
+                            <path d="M20 5C19.4477 5 19 4.55228 19 4C19 3.44772 19.4477 3 20 3C20.5523 3 21 3.44772 21 4C21 4.55228 20.5523 5 20 5Z" fill="currentColor"></path>
+                            <path d="M20 21C19.4477 21 19 20.5523 19 20C19 19.4477 19.4477 19 20 19C20.5523 19 21 19.4477 21 20C21 20.5523 20.5523 21 20 21Z" fill="currentColor"></path>
+                            <path d="M4 21C3.44772 21 3 20.5523 3 20C3 19.4477 3.44772 19 4 19C4.55228 19 5 19.4477 5 20C5 20.5523 4.55228 21 4 21Z" fill="currentColor"></path>
+                            <path d="M12.8682 5.63231C12.3302 5.32488 11.6698 5.32487 11.1318 5.63231L6.88176 8.06088C6.83858 8.08555 6.7967 8.11191 6.7562 8.13984L11.9998 11.1362L17.2436 8.13972C17.2032 8.11184 17.1614 8.08552 17.1182 8.06088L12.8682 5.63231Z" fill="currentColor"></path>
+                            <path d="M6 9.58031C6 9.53277 6.00193 9.48551 6.00573 9.43863L11.2498 12.4352V18.4293C11.1292 18.4103 11.1705 18.3898 11.1318 18.3677L6.88176 15.9391C6.3365 15.6275 6 15.0477 6 14.4197V9.58031Z" fill="currentColor"></path>
+                            <path d="M12.8682 18.3677C12.8294 18.3899 12.7899 18.4105 12.7498 18.4295V12.4352L17.9943 9.43841C17.9981 9.48537 18 9.5327 18 9.58031V14.4197C18 15.0477 17.6635 15.6275 17.1182 15.9391L12.8682 18.3677Z" fill="currentColor"></path>
+                        </svg>
+                    </div>
                     <div>
-                        <h2 className="text-[11px] font-black uppercase tracking-[0.2em] text-brand-blue leading-none">Angles Studio</h2>
-                        <p className="text-[9px] text-light-text-muted dark:text-dark-text-muted font-medium mt-1">Virtual Camera Controller</p>
+                        <h2 className="text-[12px] font-black uppercase tracking-[0.2em] text-white leading-none">Perspective Studio</h2>
+                        <p className="text-[9px] text-light-text-muted dark:text-dark-text-muted font-bold mt-1 uppercase opacity-60">Kinematic Controller v2</p>
                     </div>
                 </div>
             </div>
 
-            {/* Viewport Box - Glassmorphic high-end style */}
-            <div
-                className="relative aspect-square w-full rounded-[2.5rem] bg-gradient-to-b from-dark-surface/40 to-black/60 shadow-2xl overflow-hidden border border-white/10 cursor-grab active:cursor-grabbing group backdrop-blur-sm"
-                onMouseDown={handleMouseDown}
-                onMouseMove={handleMouseMove}
-                onMouseUp={handleMouseUp}
-                onMouseLeave={handleMouseUp}
-            >
-                {/* Background Grid / Glow */}
-                <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_center,_#5e8bff_0%,_transparent_70%)]" />
+            {/* Main Interactive Viewport - Deep Dark Cinema Style */}
+            <div className="relative w-full aspect-square md:aspect-auto md:min-h-[380px] rounded-[1.5rem] bg-[#0c0d0e] border border-white/5 overflow-hidden shadow-2xl flex flex-col">
 
-                {/* Instruction - Styled like FloatingAction */}
-                <div className="absolute top-6 left-0 right-0 text-center pointer-events-none z-10 transition-opacity duration-300 group-hover:opacity-0">
-                    <span className="bg-white/5 border border-white/10 backdrop-blur-md px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-[0.1em] text-white/40">
-                        Drag to adjust angle
-                    </span>
-                </div>
+                {/* 3D Scene Layer */}
+                <div
+                    className="flex-1 relative cursor-grab active:cursor-grabbing group overflow-hidden"
+                    onMouseDown={handleMouseDown}
+                    onMouseMove={handleMouseMove}
+                    onMouseUp={handleMouseUp}
+                    onMouseLeave={handleMouseUp}
+                >
+                    {/* Top Instruction */}
+                    <div className="absolute top-4 left-0 right-0 z-10 text-center pointer-events-none transition-opacity duration-300 group-hover:opacity-0">
+                        <p className="text-[10px] uppercase font-black tracking-widest text-white/30">Hold and drag to orbit</p>
+                    </div>
 
-                {/* Wireframe Sphere SVG - More subtle and artistic */}
-                <div className="absolute inset-0 flex items-center justify-center opacity-[0.05]">
-                    <svg width="100%" height="100%" viewBox="0 0 100 100" className="text-white">
-                        <circle cx="50" cy="50" r="48" fill="none" stroke="currentColor" strokeWidth="0.1" />
-                        {[15, 32, 50, 68, 85].map(v => (
-                            <ellipse key={`h-${v}`} cx="50" cy="50" rx="48" ry={Math.abs(50 - v)} fill="none" stroke="currentColor" strokeWidth="0.1" />
-                        ))}
-                        {[15, 32, 50, 68, 85].map(v => (
-                            <ellipse key={`v-${v}`} cx="50" cy="50" rx={Math.abs(50 - v)} ry="48" fill="none" stroke="currentColor" strokeWidth="0.1" />
-                        ))}
-                    </svg>
-                </div>
+                    {/* Central Subject Ghosting Effect */}
+                    <div
+                        className="absolute top-1/2 left-1/2 select-none pointer-events-none duration-300 ease-out"
+                        style={{
+                            zIndex: 1,
+                            opacity: 1,
+                            transform: `translate(-50%, -50%) scale(${1 + (zoom / 50)})`,
+                            filter: isDragging ? 'brightness(1.5) blur(1px)' : 'none'
+                        }}
+                    >
+                        {activeReferenceUrl ? (
+                            <img
+                                className="w-16 h-16 object-cover rounded-xl bg-black/40 ring-1 ring-white/10 shadow-2xl"
+                                src={activeReferenceUrl}
+                                alt="Anchor"
+                            />
+                        ) : (
+                            <div className="w-16 h-16 rounded-xl bg-white/5 border border-dashed border-white/10 flex items-center justify-center">
+                                <span className="text-[8px] font-black text-white/20">EMPTY</span>
+                            </div>
+                        )}
+                    </div>
 
-                {/* Reference Image Container (Subject in the Center) */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 perspective-[1000px]">
-                    {activeReferenceUrl ? (
-                        <div className="relative group/ref">
-                            <div className="absolute -inset-4 bg-brand-blue/20 blur-2xl opacity-0 group-hover/ref:opacity-100 transition-opacity" />
-                            <div className="w-20 h-28 rounded-2xl p-0.5 bg-white/10 border border-white/20 shadow-2xl backdrop-blur-md overflow-hidden transform transition-all duration-500 hover:scale-105">
-                                <img src={activeReferenceUrl} alt="Subject" className="w-full h-full object-cover rounded-xl opacity-90" />
+                    {/* 3D Wireframe Sphere (CSS Preserve-3D) */}
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20">
+                        <div className="relative w-52 h-52 rounded-full border border-white/5" style={{ perspective: '800px' }}>
+                            <div
+                                className="relative size-full transition-transform duration-200 ease-out"
+                                style={{
+                                    transformStyle: 'preserve-3d',
+                                    transform: `rotateX(${tilt}deg) rotateY(${rotation}deg)`
+                                }}
+                            >
+                                {/* Horizontal Rings (Latitudes) */}
+                                <div className="absolute inset-0 rounded-full border border-white/10" />
+                                <div className="absolute inset-0 rounded-full border border-white/10" style={{ transform: 'rotateX(90deg)' }} />
+
+                                {/* Vertical Rings (Longitudes) */}
+                                {[15, 30, 45, 60, 75, 90, 105, 120, 135, 150, 165].map(deg => (
+                                    <div
+                                        key={deg}
+                                        className="absolute inset-0 rounded-full border border-white/5"
+                                        style={{ transform: `rotateY(${deg}deg)` }}
+                                    />
+                                ))}
+
+                                {/* The Floating Camera Gizmo */}
+                                <div
+                                    className="absolute left-1/2 top-1/2"
+                                    style={{
+                                        transformStyle: 'preserve-3d',
+                                        transform: 'translate(-50%, -50%) translateZ(110px)'
+                                    }}
+                                >
+                                    {/* 3D Camera Body Clone */}
+                                    <div className="relative flex items-center justify-center" style={{ transformStyle: 'preserve-3d' }}>
+                                        {/* Main Lens Barrel */}
+                                        <div className="absolute w-6 h-6 rounded-full bg-[#1a1a1a] border border-white/40 shadow-[0_0_15px_rgba(255,255,255,0.2)]" style={{ transform: 'translateZ(-4px)' }}>
+                                            <div className="absolute inset-1 rounded-full bg-gradient-to-tr from-black to-[#333]" />
+                                            <div className="absolute inset-2 rounded-full bg-brand-blue/30 blur-[2px]" />
+                                        </div>
+
+                                        {/* Camera Body Block */}
+                                        <div className="w-8 h-6 bg-[#222] border border-white/20 rounded shadow-2xl" style={{ transform: 'translateZ(-10px)' }}>
+                                            <div className="absolute -top-1 right-1 w-2 h-1 bg-red-500 rounded-full shadow-[0_0_5px_red]" />
+                                        </div>
+
+                                        {/* Laser Pointer (Focal Path) */}
+                                        <div
+                                            className="absolute w-0.5 h-[110px] bg-gradient-to-t from-brand-blue to-transparent opacity-40"
+                                            style={{
+                                                transformOrigin: 'bottom center',
+                                                transform: 'rotateX(90deg) translateY(0px) translateZ(0px)',
+                                                bottom: '0px'
+                                            }}
+                                        />
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    ) : (
-                        <div className="w-20 h-28 rounded-2xl bg-white/5 border border-dashed border-white/10 flex flex-col items-center justify-center text-white/10">
-                            <span className="text-[10px] uppercase font-bold tracking-widest leading-none">NO REF</span>
-                        </div>
-                    )}
-                </div>
-
-                {/* Depth Connector - Laser style */}
-                <svg className="absolute inset-0 w-full h-full pointer-events-none z-30">
-                    <defs>
-                        <linearGradient id="laser" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stopColor="#5e8bff" stopOpacity="0" />
-                            <stop offset="100%" stopColor="#5e8bff" stopOpacity="1" />
-                        </linearGradient>
-                    </defs>
-                    <line
-                        x1="50%"
-                        y1="50%"
-                        x2={`calc(50% + ${cameraPos.x}px)`}
-                        y2={`calc(50% + ${cameraPos.y}px)`}
-                        stroke="url(#laser)"
-                        strokeWidth="1"
-                        strokeDasharray="2 4"
-                        className="animate-[dash_2s_linear_infinite]"
-                    />
-                </svg>
-
-                {/* Advanced Camera Object */}
-                <div
-                    className="absolute top-1/2 left-1/2 z-40 pointer-events-none transition-all duration-75"
-                    style={{
-                        transform: `translate(calc(-50% + ${cameraPos.x}px), calc(-50% + ${cameraPos.y}px)) scale(${cameraPos.scale})`,
-                        opacity: cameraPos.opacity
-                    }}
-                >
-                    <div className="relative w-12 h-10 flex items-center justify-center">
-                        {/* 3D Camera Body */}
-                        <div className="w-10 h-8 bg-gradient-to-br from-[#444] to-[#111] border border-white/20 rounded-lg shadow-2xl flex items-center justify-center relative">
-                            {/* Lens Ring */}
-                            <div className="absolute -right-1 w-3 h-5 bg-gradient-to-r from-[#222] to-[#444] border border-white/10 rounded shadow-lg" />
-                            {/* Blue Recording Light */}
-                            <div className="absolute top-1.5 left-1.5 w-1.5 h-1.5 rounded-full bg-brand-blue shadow-[0_0_8px_#5e8bff] animate-pulse" />
-                            {/* Viewfinder Detail */}
-                            <div className="w-5 h-4 bg-black/40 border border-white/5 rounded-sm" />
-                        </div>
                     </div>
-                </div>
-            </div>
 
-            {/* Premium Parameter Sliders */}
-            <div className="grid grid-cols-1 gap-3 px-1">
-                {[
-                    { label: 'Rotation', value: rotation, min: 0, max: 360, unit: '°', setter: setRotation, color: '#7209b7' },
-                    { label: 'Tilt', value: tilt, min: -90, max: 90, unit: '°', setter: setTilt, color: '#4361ee' },
-                    { label: 'Zoom', value: zoom, min: -20, max: 20, unit: '', setter: setZoom, color: '#f72585' }
-                ].map((p) => (
-                    <div key={p.label} className="group/s relative bg-light-surface-accent dark:bg-dark-surface-accent/30 rounded-2xl p-3 border border-light-border dark:border-dark-border/30 transition-all hover:border-brand-blue/30">
-                        <div className="flex justify-between items-center mb-1">
-                            <span className="text-[10px] font-black uppercase tracking-widest text-light-text-muted dark:text-dark-text-muted group-hover/s:text-white transition-colors">{p.label}</span>
-                            <span className="text-[10px] font-black text-white bg-dark-surface px-2 py-0.5 rounded-md border border-white/5">{Math.round(p.value)}{p.unit}</span>
-                        </div>
-                        <div className="relative h-4 flex items-center">
+                    {/* Orbit Controls (HUD style) */}
+                    <button
+                        type="button"
+                        onClick={() => setTilt(prev => Math.min(60, prev + 15))}
+                        className="absolute left-1/2 top-8 -translate-x-1/2 text-white/40 hover:text-white transition-colors"
+                    >
+                        <svg className="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 15l-6-6-6 6" /></svg>
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setTilt(prev => Math.max(-30, prev - 15))}
+                        className="absolute left-1/2 bottom-12 -translate-x-1/2 text-white/40 hover:text-white transition-colors"
+                    >
+                        <svg className="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9l6 6 6-6" /></svg>
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setRotation(prev => (prev - 15) % 360)}
+                        className="absolute left-8 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors"
+                    >
+                        <svg className="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6" /></svg>
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setRotation(prev => (prev + 15) % 360)}
+                        className="absolute right-8 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors"
+                    >
+                        <svg className="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6" /></svg>
+                    </button>
+
+                    {/* Best Angles Toggle Block */}
+                    <div className="absolute bottom-4 left-0 right-0 flex justify-center z-20">
+                        <label className="flex items-center gap-2 px-4 py-2 bg-black/60 backdrop-blur-md rounded-full border border-white/10 cursor-pointer hover:bg-black/80 transition-all pointer-events-auto">
                             <input
-                                type="range"
-                                min={p.min}
-                                max={p.max}
-                                value={p.value}
-                                onChange={(e) => p.setter(Number(e.target.value))}
-                                className={`w-full h-1 rounded-full appearance-none cursor-pointer bg-black/40`}
-                                style={{ accentColor: p.color }}
+                                type="checkbox"
+                                checked={generateBestAngles}
+                                onChange={(e) => setGenerateBestAngles(e.target.checked)}
+                                className="w-3.5 h-3.5 rounded-sm bg-transparent border-white/20 text-brand-blue focus:ring-brand-blue"
                             />
-                        </div>
+                            <span className="text-[10px] uppercase font-black tracking-widest text-white/70">12 Precision Shots</span>
+                        </label>
                     </div>
-                ))}
+                </div>
+
+                {/* Bottom Control Bar (Hidden Selectors/Sliders) */}
+                <div className="p-4 bg-white/[0.02] border-t border-white/5 space-y-3">
+                    {/* Rotation Horizontal Progress */}
+                    <div className="relative overflow-hidden flex items-center rounded-xl bg-black/40 border border-white/5 h-11 px-4">
+                        <div
+                            className="absolute inset-0 pointer-events-none transition-all duration-300"
+                            style={{
+                                background: `linear-gradient(to right, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.05) ${(rotation / 360) * 100}%, transparent ${(rotation / 360) * 100}%)`
+                            }}
+                        />
+                        <div className="relative z-1 flex items-center justify-between w-full pointer-events-none">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-white/40">Orbit Rotation</span>
+                            <span className="text-xs font-mono font-bold text-white">{Math.round(rotation)}°</span>
+                        </div>
+                        <input
+                            min="0" max="360" step="5"
+                            className="absolute inset-0 size-full opacity-0 cursor-pointer"
+                            type="range"
+                            value={rotation}
+                            onChange={(e) => setRotation(Number(e.target.value))}
+                        />
+                    </div>
+
+                    {/* Tilt Vertical Progress */}
+                    <div className="relative overflow-hidden flex items-center rounded-xl bg-black/40 border border-white/5 h-11 px-4">
+                        <div
+                            className="absolute inset-0 pointer-events-none transition-all duration-300"
+                            style={{
+                                background: `linear-gradient(to right, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.05) ${((tilt + 30) / 90) * 100}%, transparent ${((tilt + 30) / 90) * 100}%)`
+                            }}
+                        />
+                        <div className="relative z-1 flex items-center justify-between w-full pointer-events-none">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-white/40">Pitch/Tilt</span>
+                            <span className="text-xs font-mono font-bold text-white">{Math.round(tilt)}°</span>
+                        </div>
+                        <input
+                            min="-30" max="60" step="15"
+                            className="absolute inset-0 size-full opacity-0 cursor-pointer"
+                            type="range"
+                            value={tilt}
+                            onChange={(e) => setTilt(Number(e.target.value))}
+                        />
+                    </div>
+
+                    {/* Zoom / Distance Progress */}
+                    <div className="relative overflow-hidden flex items-center rounded-xl bg-black/40 border border-white/5 h-11 px-4">
+                        <div
+                            className="absolute inset-0 pointer-events-none transition-all duration-300"
+                            style={{
+                                background: `linear-gradient(to right, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.05) ${(zoom / 10) * 100}%, transparent ${(zoom / 10) * 100}%)`
+                            }}
+                        />
+                        <div className="relative z-1 flex items-center justify-between w-full pointer-events-none">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-white/40">Dolly Zoom</span>
+                            <span className="text-xs font-mono font-bold text-white">X{zoom === 0 ? '1.0' : (1 + zoom / 10).toFixed(1)}</span>
+                        </div>
+                        <input
+                            min="0" max="10" step="1"
+                            className="absolute inset-0 size-full opacity-0 cursor-pointer"
+                            type="range"
+                            value={zoom}
+                            onChange={(e) => setZoom(Number(e.target.value))}
+                        />
+                    </div>
+                </div>
             </div>
 
-            {/* Premium Generation Button */}
-            <div className="mt-2 px-1">
+            {/* Action Footer */}
+            <div className="mt-2">
                 <button
                     onClick={handleGenerate}
                     disabled={isGenerating || !activeReferenceUrl}
-                    className="w-full group relative overflow-hidden flex items-center justify-center gap-3 py-4 bg-gradient-to-r from-brand-purple to-brand-blue rounded-2xl transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-30 disabled:grayscale disabled:hover:scale-100"
+                    className="w-full relative group h-14 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-2xl transition-all active:scale-[0.98] disabled:opacity-20 flex items-center justify-center gap-3"
                 >
-                    <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-
-                    {isGenerating ? (
-                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    ) : (
-                        <span className="text-xl">⚡</span>
-                    )}
-
-                    <div className="text-left leading-none">
-                        <span className="block text-[11px] font-black uppercase tracking-[0.2em] text-white">
-                            {isGenerating ? "Processing..." : "Start Generation"}
-                        </span>
-                        {!isGenerating && (
-                            <span className="block text-[8px] text-white/60 font-medium uppercase tracking-widest mt-1">
-                                Cinematic Render Engine
-                            </span>
-                        )}
+                    <div className="flex flex-col items-center">
+                        <span className="text-[12px] font-black uppercase tracking-[0.25em] text-white">Generate View</span>
+                        <div className="flex gap-1 mt-1 opacity-40">
+                            {[1, 2, 3].map(i => <div key={i} className="w-1 h-1 bg-white rounded-full" />)}
+                        </div>
                     </div>
+                    {isGenerating ? (
+                        <div className="w-4 h-4 border-2 border-white/60 border-t-white rounded-full animate-spin" />
+                    ) : (
+                        <svg className="size-5 text-brand-blue" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14l-5-4.87 6.91-1.01L12 2z" /></svg>
+                    )}
                 </button>
-
-                {!activeReferenceUrl && !isGenerating && (
-                    <p className="text-[9px] text-center text-brand-pink font-bold uppercase tracking-widest mt-3 animate-pulse">
-                        ⚠️ Please add a reference image first
-                    </p>
-                )}
             </div>
 
             <style>{`
-                @keyframes dash {
-                    to { stroke-dashoffset: -12; }
-                }
-                .no-scrollbar::-webkit-scrollbar { display: none; }
-                .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-                input[type='range'] {
-                    -webkit-appearance: none;
-                }
-                input[type='range']::-webkit-slider-thumb {
-                    -webkit-appearance: none;
-                    height: 14px;
-                    width: 14px;
-                    border-radius: 50%;
-                    background: white;
-                    cursor: pointer;
-                    box-shadow: 0 0 10px rgba(94, 139, 255, 0.5);
-                    border: 2px solid currentColor;
-                    transition: transform 0.2s;
-                }
-                input[type='range']:hover::-webkit-slider-thumb {
-                    transform: scale(1.2);
-                }
+                .rounded-t { border-top-left-radius: 4px; border-top-right-radius: 4px; }
             `}</style>
         </div>
     );

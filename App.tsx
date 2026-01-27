@@ -33,7 +33,7 @@ if (!crypto.randomUUID) {
 // --- Localization ---
 const translations = {
     en: {
-        headerTitle: 'Generentolo PRO v1.9.7',
+        headerTitle: 'Generentolo PRO v1.9.8',
         headerSubtitle: 'Let me do it for you!',
         refImagesTitle: 'Reference & Style Images',
         styleRefTitle: 'Style Reference',
@@ -301,7 +301,7 @@ const translations = {
         presetsImportFailed: 'Failed to import presets. Invalid file format.',
     },
     it: {
-        headerTitle: 'Generentolo PRO v1.9.7',
+        headerTitle: 'Generentolo PRO v1.9.8',
         headerSubtitle: 'Let me do it for you!',
         refImagesTitle: 'Immagini di Riferimento e Stile',
         styleRefTitle: 'Riferimento Stile',
@@ -2296,6 +2296,52 @@ const DnaCharacterModal: React.FC<DnaCharacterModalProps> = ({ isOpen, onClose, 
 // --- Main App Component ---
 const MAX_HISTORY_ITEMS = 200; // Increased from 12 to support infinite scroll
 
+// --- Constants & Helpers ---
+const FUNNY_MESSAGES = [
+    "Generentolo is generentoling...",
+    "Generentolo is rantoling...",
+    "Generentolo is skibidibopping...",
+    "Generentolo is scoatting...",
+    "Generentolo is swagging...",
+    "Generentolo is Jozzoling...",
+    "Generentolo is smarmellating...",
+    "Generentolo is sboccing...",
+    "Generentolo is gnegneing your prompt...",
+    "Generentolo is gigachadding the image...",
+    "Generentolo is trying to remember how to draw...",
+    "Generentolo is vibetrolling...",
+    "Generentolo is fighting the GPU...",
+    "Generentolo is Throat-punching the latency...",
+    "Generentolo is Oh-mio-deoing the canvas...",
+    "Generentolo is Main-character-ing the whole app...",
+    "Generentolo is Alpha-dogging the progress bar...",
+    "Generentolo is establishing dominance over the GPU...",
+    "Generentolo is sbrodoling...",
+    "Generentolo is alpha-maleing...",
+    "Generentolo is meow meowing...",
+    "Generentolo is sbarlafusing...",
+    "Generentolo is casoncelling...",
+    "Generentolo is architettoling..."
+];
+
+const detectImageAspectRatio = (file: File): Promise<string> => {
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+            const ratio = img.width / img.height;
+            URL.revokeObjectURL(img.src);
+            if (ratio > 1.8) resolve('21:9');
+            else if (ratio > 1.4) resolve('16:9');
+            else if (ratio > 1.2) resolve('4:3');
+            else if (ratio > 0.8) resolve('1:1');
+            else if (ratio > 0.6) resolve('3:4');
+            else resolve('9:16');
+        };
+        img.onerror = () => resolve('1:1');
+        img.src = URL.createObjectURL(file);
+    });
+};
+
 export default function App() {
     const [theme, setTheme] = useState<'dark' | 'light'>(getInitialTheme());
     const [language, setLanguage] = useState<Language>(getInitialLanguage());
@@ -2629,34 +2675,7 @@ export default function App() {
 
 
 
-        // v1.9.2: Funny loading messages
-        const funnyMessages = [
-            "Generentolo is generentoling...",
-            "Generentolo is rantoling...",
-            "Generentolo is skibidibopping...",
-            "Generentolo is scoatting...",
-            "Generentolo is swagging...",
-            "Generentolo is Jozzoling...",
-            "Generentolo is smarmellating...",
-            "Generentolo is sboccing...",
-            "Generentolo is gnegneing your prompt...",
-            "Generentolo is gigachadding the image...",
-            "Generentolo is trying to remember how to draw...",
-            "Generentolo is vibetrolling...",
-            "Generentolo is fighting the GPU...",
-            "Generentolo is Throat-punching the latency...",
-            "Generentolo is Oh-mio-deoing the canvas...",
-            "Generentolo is Main-character-ing the whole app...",
-            "Generentolo is Alpha-dogging the progress bar...",
-            "Generentolo is establishing dominance over the GPU...",
-            "Generentolo is sbrodoling...",
-            "Generentolo is alpha-maleing...",
-            "Generentolo is meow meowing...",
-            "Generentolo is sbarlafusing...",
-            "Generentolo is casoncelling...",
-            "Generentolo is architettoling..."
-        ];
-        setLoadingMessage(funnyMessages[Math.floor(Math.random() * funnyMessages.length)]);
+        setLoadingMessage(FUNNY_MESSAGES[Math.floor(Math.random() * FUNNY_MESSAGES.length)]);
 
         // v1.3: Create new AbortController for this generation
         const controller = new AbortController();
@@ -3069,6 +3088,8 @@ export default function App() {
         if (isLoading || isGeneratingAngles) return;
 
         setIsGeneratingAngles(true);
+        setLoadingMessage(FUNNY_MESSAGES[Math.floor(Math.random() * FUNNY_MESSAGES.length)]);
+        setIsLoading(true);
 
         try {
             // Convert base64 reference image to File
@@ -3077,6 +3098,12 @@ export default function App() {
                 const blob = await response.blob();
                 return new File([blob], 'reference.png', { type: 'image/png' });
             })();
+
+            // v1.9.7: Aspect Ratio Detection
+            let currentAspect = aspectRatio;
+            if (aspectRatio === 'Auto') {
+                currentAspect = await detectImageAspectRatio(referenceFile);
+            }
 
             if (params.generateBestAngles) {
                 // Generate from 12 best angles
@@ -3095,7 +3122,7 @@ export default function App() {
                     try {
                         const imageDataUrl = await geminiService.generateImage(
                             angleData.prompt,
-                            aspectRatio,
+                            currentAspect,
                             [referenceFile],
                             null,
                             null,
@@ -3118,7 +3145,7 @@ export default function App() {
                             imageDataUrl,
                             thumbnailDataUrl,
                             prompt: `${angleData.angleName} - ${editedPrompt}`,
-                            aspectRatio,
+                            aspectRatio: currentAspect, // v1.9.7: Dynamic aspect ratio
                             negativePrompt,
                             seed,
                             timestamp: Date.now(),
@@ -3157,7 +3184,7 @@ export default function App() {
 
                 const imageDataUrl = await geminiService.generateImage(
                     anglePrompt,
-                    aspectRatio,
+                    currentAspect,
                     [referenceFile],
                     null,
                     null,
@@ -3180,7 +3207,7 @@ export default function App() {
                     imageDataUrl,
                     thumbnailDataUrl,
                     prompt: `Rotation: ${Math.round(params.rotation)}°, Tilt: ${Math.round(params.tilt)}° - ${editedPrompt}`,
-                    aspectRatio,
+                    aspectRatio: currentAspect,
                     negativePrompt,
                     seed,
                     timestamp: Date.now(),
@@ -3203,6 +3230,7 @@ export default function App() {
             showToast(error.message || (language === 'it' ? 'Generazione fallita' : 'Generation failed'), 'error');
         } finally {
             setIsGeneratingAngles(false);
+            setIsLoading(false);
         }
     }, [isLoading, isGeneratingAngles, editedPrompt, aspectRatio, userApiKey, negativePrompt, seed, language, selectedModel, selectedResolution, showToast]);
 

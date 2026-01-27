@@ -1,8 +1,8 @@
-# 🎨 Generentolo PRO v1.9.7 DIRECTORATE
+# 🎨 Generentolo PRO v1.9.8 DIRECTORATE
 
 **Professional AI-Powered Image Generation & Storyboarding Suite**
 
-A sophisticated web application for generating ultra-high-quality images using Google's Gemini models (Flash & **Gemini 3 Flash**) with **Advanced Native 2K/4K Generation**, **Cinematic Storyboarding**, **Generation Queue**, **DNA Character Consistency**, **advanced Google Search Grounding**, and professional production controls.
+A sophisticated web application for generating ultra-high-quality images using Google's Gemini models (Flash & **Gemini 3 Flash**) with **Advanced Native 2K/4K Generation**, **Perspective Studio (Angles v2)**, **Cinematic Storyboarding**, **Generation Queue**, **DNA Character Consistency**, **advanced Google Search Grounding**, and professional production controls.
 
 [![Live Demo](https://img.shields.io/badge/Live-Demo-blue?style=for-the-badge)](https://www.dugongo.it/generentolo/)
 [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
@@ -10,6 +10,12 @@ A sophisticated web application for generating ultra-high-quality images using G
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
 
 ---
+
+## 🎯 **NEW v1.9.8: Perspective Studio (Angles v2)**
+- **📐 3D Perspective Gizmo** - Full cinematic control with a true 3D camera interface, live wireframe sphere, and "laser" depth visualization.
+- **🎬 Batch Angle Generation** - "12 Precision Shots" mode to automatically generate a complete character turnaround in one click.
+- **✨ Premium Glassmorphism UI** - A sleek, dark-mode interface inspired by high-end 3D software.
+- **🖼️ Auto Aspect Ratio** - Intelligent detection of reference image dimensions for perfect framing.
 
 ## 🎯 **NEW v1.9.5: DIRECTORATE EDITION - Storyboard & Queue**
 - **🎬 Cinematic Storyboard System** - Transform ONE reference image into a technical 9-frame storyboard with perfect continuity.
