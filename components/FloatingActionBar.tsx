@@ -111,6 +111,18 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
         };
     }, []);
 
+    // Auto-resize textarea based on content
+    useEffect(() => {
+        const textarea = promptTextareaRef.current;
+        if (textarea) {
+            // Reset height to auto to get the correct scrollHeight
+            textarea.style.height = 'auto';
+            // Set height to scrollHeight, but cap at max-height (120px as defined in className)
+            const newHeight = Math.min(textarea.scrollHeight, 120);
+            textarea.style.height = `${newHeight}px`;
+        }
+    }, [prompt, promptTextareaRef]);
+
     // Handle paste
     const handlePaste = async () => {
         try {

@@ -4,6 +4,7 @@ import * as geminiService from './services/geminiService';
 import * as presetsService from './services/presetsService';
 import * as storyboardService from './services/storyboardService';
 import { StoryboardPrompt } from './services/storyboardService';
+import * as anglePromptService from './services/anglePromptService';
 import { useKeyboardShortcuts, APP_SHORTCUTS } from './hooks/useKeyboardShortcuts';
 import { SunIcon, MoonIcon, UploadIcon, DownloadIcon, SparklesIcon, CopyIcon, SettingsIcon, XIcon, CheckIcon, LanguageIcon, BrushIcon, DiceIcon, TrashIcon, ReloadIcon, StarIcon, CornerUpLeftIcon, ChevronDownIcon, ChevronUpIcon } from './components/icons';
 import { indexedDBService, DnaCharacter } from './services/indexedDB';
@@ -11,6 +12,7 @@ import FloatingActionBar from './components/FloatingActionBar';
 import ImageLightbox from './components/ImageLightbox';
 import StoryboardGrid from './components/StoryboardGrid';
 import QueuePanel from './components/QueuePanel';
+import GenerAngles, { AngleGenerationParams } from './components/GenerAngles';
 
 import { STYLE_PRESETS, PHYSICS_PRESETS } from './data/stylePresets'; // v1.4
 import { fetchInvisibleReferences, removeBracketsFromPrompt } from './services/googleSearchService'; // v1.5.1
@@ -800,13 +802,16 @@ const ReferencePanel: React.FC<{
     onSelectDna: (id: string | null) => void;
     onManageDna: () => void;
     // v1.8: Studio Mode
-    appMode: 'classic' | 'studio';
-    setAppMode: (mode: 'classic' | 'studio') => void;
+    appMode: 'classic' | 'studio' | 'angles';
+    setAppMode: (mode: 'classic' | 'studio' | 'angles') => void;
     studioConfig: any;
     setStudioConfig: (config: any) => void;
     onGenerateStoryboard: () => void;
     isStoryboardLoading: boolean;
-}> = ({ onAddImages, onRemoveImage, referenceImages, onAddStyleImage, onRemoveStyleImage, styleImage, onAddStructureImage, onRemoveStructureImage, structureImage, selectedStylePreset, setSelectedStylePreset, selectedLighting, setSelectedLighting, selectedCamera, setSelectedCamera, selectedFocus, setSelectedFocus, setEditedPrompt, preciseReference, setPreciseReference, dnaCharacters, selectedDnaId, onSelectDna, onManageDna, appMode, setAppMode, studioConfig, setStudioConfig, onGenerateStoryboard, isStoryboardLoading }) => {
+    // GenerAngles
+    onGenerateFromAngle: (params: AngleGenerationParams) => void;
+    isGeneratingAngles: boolean;
+}> = ({ onAddImages, onRemoveImage, referenceImages, onAddStyleImage, onRemoveStyleImage, styleImage, onAddStructureImage, onRemoveStructureImage, structureImage, selectedStylePreset, setSelectedStylePreset, selectedLighting, setSelectedLighting, selectedCamera, setSelectedCamera, selectedFocus, setSelectedFocus, selectedModel, setEditedPrompt, preciseReference, setPreciseReference, dnaCharacters, selectedDnaId, onSelectDna, onManageDna, appMode, setAppMode, studioConfig, setStudioConfig, onGenerateStoryboard, isStoryboardLoading, onGenerateFromAngle, isGeneratingAngles }) => {
     const { t, language } = useLocalization();
     const [isDraggingRef, setIsDraggingRef] = useState(false);
     const [isDraggingStyle, setIsDraggingStyle] = useState(false);
@@ -876,6 +881,13 @@ const ReferencePanel: React.FC<{
                     >
                         <SparklesIcon className="w-3.5 h-3.5" />
                         {t.studioModeToggleStudio}
+                    </button>
+                    <button
+                        onClick={() => setAppMode('angles')}
+                        className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${appMode === 'angles' ? 'bg-gradient-to-r from-brand-purple to-brand-blue text-white shadow-sm' : 'text-light-text-muted dark:text-dark-text-muted hover:text-light-text dark:hover:text-dark-text'}`}
+                    >
+                        <span className="text-sm">📐</span>
+                        Angles
                     </button>
                 </div>
 
@@ -1227,8 +1239,14 @@ const ReferencePanel: React.FC<{
                             )}
                         </div>
                     </>
-                ) : (
+                ) : appMode === 'studio' ? (
                     <StudioPanel t={t} studioConfig={studioConfig} setStudioConfig={setStudioConfig} />
+                ) : (
+                    <GenerAngles
+                        onGenerate={onGenerateFromAngle}
+                        isGenerating={isGeneratingAngles}
+                        selectedModel={selectedModel}
+                    />
                 )}
             </div>
         </div>
@@ -2436,7 +2454,8 @@ export default function App() {
     const [selectedHistoryIds, setSelectedHistoryIds] = useState<Set<string>>(new Set());
     const [upscalingImageId, setUpscalingImageId] = useState<string | null>(null);
     const [presets, setPresets] = useState<PromptPreset[]>([]);
-    const [sidebarTab, setSidebarTab] = useState<'history' | 'presets'>('history');
+    const [sidebarTab, setSidebarTab] = useState<'history' | 'presets' | 'angles'>('history');
+    const [isGeneratingAngles, setIsGeneratingAngles] = useState(false);
     const [variationsLoadingId, setVariationsLoadingId] = useState<string | null>(null); // v1.3: For variations
 
     // v1.7: DNA Character Consistency
@@ -2448,7 +2467,7 @@ export default function App() {
     const [activeDisplayPrompt, setActiveDisplayPrompt] = useState<string>(''); // v1.9.3: Ephemeral prompt for UI display
 
     // v1.8: Studio Mode
-    const [appMode, setAppMode] = useState<'classic' | 'studio'>('classic');
+    const [appMode, setAppMode] = useState<'classic' | 'studio' | 'angles'>('classic');
     const [studioConfig, setStudioConfig] = useState<{
         camera?: string;
         lens?: string;
@@ -3164,6 +3183,148 @@ export default function App() {
         }
     }, [queue.length, language, showToast, t.generationCancelled]);
 
+    // GenerAngles: Generate images from different camera angles
+    const handleGenerateFromAngle = useCallback(async (params: AngleGenerationParams) => {
+        if (isLoading || isGeneratingAngles) return;
+
+        setIsGeneratingAngles(true);
+
+        try {
+            // Convert base64 reference image to File
+            const referenceFile = await (async () => {
+                const response = await fetch(params.referenceImage);
+                const blob = await response.blob();
+                return new File([blob], 'reference.png', { type: 'image/png' });
+            })();
+
+            if (params.generateBestAngles) {
+                // Generate from 12 best angles
+                const anglePrompts = anglePromptService.generateBestAnglesPrompts(editedPrompt || 'The subject in the reference image');
+
+                showToast(
+                    language === 'it'
+                        ? `🎬 Generazione di ${anglePrompts.length} angolazioni...`
+                        : `🎬 Generating ${anglePrompts.length} angles...`,
+                    'success'
+                );
+
+                const generatedImages: GeneratedImage[] = [];
+
+                for (const angleData of anglePrompts) {
+                    try {
+                        const imageDataUrl = await geminiService.generateImage(
+                            angleData.prompt,
+                            aspectRatio,
+                            [referenceFile],
+                            null,
+                            null,
+                            userApiKey,
+                            negativePrompt,
+                            seed,
+                            language,
+                            true, // Use precise reference for consistency
+                            selectedModel,
+                            selectedResolution,
+                            undefined,
+                            undefined,
+                            false
+                        );
+
+                        const thumbnailDataUrl = await createThumbnailDataUrl(imageDataUrl);
+
+                        generatedImages.push({
+                            id: crypto.randomUUID(),
+                            imageDataUrl,
+                            thumbnailDataUrl,
+                            prompt: `${angleData.angleName} - ${editedPrompt}`,
+                            aspectRatio,
+                            negativePrompt,
+                            seed,
+                            timestamp: Date.now(),
+                            model: selectedModel,
+                            resolution: selectedResolution,
+                        });
+                    } catch (error) {
+                        console.error(`Failed to generate angle: ${angleData.angleName}`, error);
+                    }
+                }
+
+                setCurrentImages(generatedImages);
+                setHistory(prev => [...generatedImages, ...prev].slice(0, MAX_HISTORY_ITEMS));
+
+                showToast(
+                    language === 'it'
+                        ? `✅ ${generatedImages.length} angolazioni generate!`
+                        : `✅ ${generatedImages.length} angles generated!`,
+                    'success'
+                );
+            } else {
+                // Generate single angle
+                const anglePrompt = anglePromptService.generateAnglePrompt(
+                    editedPrompt || 'The subject in the reference image',
+                    params.rotation,
+                    params.tilt,
+                    params.zoom
+                );
+
+                showToast(
+                    language === 'it'
+                        ? '🎬 Generazione nuova angolazione...'
+                        : '🎬 Generating new angle...',
+                    'success'
+                );
+
+                const imageDataUrl = await geminiService.generateImage(
+                    anglePrompt,
+                    aspectRatio,
+                    [referenceFile],
+                    null,
+                    null,
+                    userApiKey,
+                    negativePrompt,
+                    seed,
+                    language,
+                    true, // Use precise reference for consistency
+                    selectedModel,
+                    selectedResolution,
+                    undefined,
+                    undefined,
+                    false
+                );
+
+                const thumbnailDataUrl = await createThumbnailDataUrl(imageDataUrl);
+
+                const newImage: GeneratedImage = {
+                    id: crypto.randomUUID(),
+                    imageDataUrl,
+                    thumbnailDataUrl,
+                    prompt: `Rotation: ${Math.round(params.rotation)}°, Tilt: ${Math.round(params.tilt)}° - ${editedPrompt}`,
+                    aspectRatio,
+                    negativePrompt,
+                    seed,
+                    timestamp: Date.now(),
+                    model: selectedModel,
+                    resolution: selectedResolution,
+                };
+
+                setCurrentImages([newImage]);
+                setHistory(prev => [newImage, ...prev].slice(0, MAX_HISTORY_ITEMS));
+
+                showToast(
+                    language === 'it'
+                        ? '✅ Nuova angolazione generata!'
+                        : '✅ New angle generated!',
+                    'success'
+                );
+            }
+        } catch (error: any) {
+            console.error('Angle generation failed', error);
+            showToast(error.message || (language === 'it' ? 'Generazione fallita' : 'Generation failed'), 'error');
+        } finally {
+            setIsGeneratingAngles(false);
+        }
+    }, [isLoading, isGeneratingAngles, editedPrompt, aspectRatio, userApiKey, negativePrompt, seed, language, selectedModel, selectedResolution, showToast]);
+
     // v1.3: Generate 4 variations of an image
     const handleGenerateVariations = useCallback(async (sourceImage: GeneratedImage) => {
         if (isLoading || variationsLoadingId) return;
@@ -3741,6 +3902,8 @@ export default function App() {
                             setStudioConfig={setStudioConfig}
                             onGenerateStoryboard={handleGenerateStoryboard}
                             isStoryboardLoading={isStoryboardLoading}
+                            onGenerateFromAngle={handleGenerateFromAngle}
+                            isGeneratingAngles={isGeneratingAngles}
                         />
                     </aside>
 
