@@ -33,7 +33,7 @@ if (!crypto.randomUUID) {
 // --- Localization ---
 const translations = {
     en: {
-        headerTitle: 'Generentolo PRO v1.9.6',
+        headerTitle: 'Generentolo PRO v1.9.7',
         headerSubtitle: 'Let me do it for you!',
         refImagesTitle: 'Reference & Style Images',
         styleRefTitle: 'Style Reference',
@@ -301,7 +301,7 @@ const translations = {
         presetsImportFailed: 'Failed to import presets. Invalid file format.',
     },
     it: {
-        headerTitle: 'Generentolo PRO v1.9.6',
+        headerTitle: 'Generentolo PRO v1.9.7',
         headerSubtitle: 'Let me do it for you!',
         refImagesTitle: 'Immagini di Riferimento e Stile',
         styleRefTitle: 'Riferimento Stile',
@@ -865,9 +865,7 @@ const ReferencePanel: React.FC<{
 
     return (
         <div className="flex flex-col h-full overflow-hidden">
-            {/* Scrollable Content */}
             <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-4">
-                {/* v1.8: Mode Toggle */}
                 <div className="flex p-0.5 rounded-xl bg-light-surface-accent dark:bg-dark-surface-accent border border-light-border dark:border-dark-border/50 mb-2">
                     <button
                         onClick={() => setAppMode('classic')}
@@ -901,7 +899,7 @@ const ReferencePanel: React.FC<{
                             <ImagePreview key={`${file.name}-${file.lastModified}-${index}`} file={file} index={index} onRemove={onRemoveImage} />
                         ))}
 
-                        {referenceImages.length < MAX_USER_IMAGES && (
+                        {referenceImages.length < 5 && (
                             <div onClick={() => fileInputRef.current?.click()} className="relative group aspect-square rounded-xl shadow-[0_0_12px_3px_rgba(94,139,255,0.5)] bg-light-surface/50 dark:bg-dark-surface/30 flex items-center justify-center cursor-pointer">
                                 <div className="text-light-text-muted dark:text-dark-text-muted text-center">
                                     <UploadIcon className="w-6 h-6 mx-auto" />
@@ -915,337 +913,220 @@ const ReferencePanel: React.FC<{
 
                 <div className="border-t border-light-border dark:border-dark-border/50"></div>
 
-                {/* v1.9.5: Cinematic Storyboard Shortcut */}
-                <div className="py-2">
-                    <button
-                        onClick={() => onGenerateStoryboard()}
-                        disabled={referenceImages.length === 0 || isStoryboardLoading}
-                        className={`w-full group relative overflow-hidden flex items-center justify-center gap-3 py-3 bg-gradient-to-br from-brand-purple/20 to-brand-pink/10 border border-brand-purple/30 rounded-2xl transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:hover:scale-100 ${isStoryboardLoading ? 'animate-pulse' : ''}`}
-                    >
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-                        <span className="text-xl">🎬</span>
-                        <div className="text-left">
-                            <span className="block text-[10px] font-black uppercase tracking-widest text-brand-purple">
-                                {t.cinematicStoryboardTitle}
-                            </span>
-                            <span className="block text-[9px] text-light-text-muted dark:text-dark-text-muted font-medium">
-                                {isStoryboardLoading
-                                    ? t.storyboardAnalyzing
-                                    : t.storyboardSubtext}
-                            </span>
-                        </div>
-                        {isStoryboardLoading && (
-                            <div className="ml-auto mr-2 w-3 h-3 border-2 border-brand-purple border-t-transparent rounded-full animate-spin" />
-                        )}
-                    </button>
-                    {referenceImages.length === 0 && (
-                        <p className="mt-1 text-[8px] text-center text-light-text-muted dark:text-dark-text-muted italic">
-                            {t.uploadForStoryboard}
-                        </p>
-                    )}
-                </div>
-
-                <div className="border-t border-light-border dark:border-dark-border/50"></div>
-
-                <div
-                    onDragEnter={handleStyleDragEnter} onDragLeave={handleStyleDragLeave} onDragOver={handleDragOver} onDrop={handleStyleDrop}
-                    className={`rounded-xl transition-all relative ${isDraggingStyle ? 'border-2 border-dashed border-brand-pink bg-brand-pink/10 p-1' : 'border-2 border-transparent'}`}
-                >
-                    <div className="relative group shadow-[0_0_8px_2px_rgba(255,217,61,0.5)] rounded-xl">
-                        <div className="absolute top-2 left-2 px-2 py-1 bg-brand-yellow/90 text-black text-xs rounded-full font-semibold backdrop-blur-sm z-10">STYLE</div>
-                        {styleImage ? (
-                            <StyleImagePreview file={styleImage} onRemove={onRemoveStyleImage} />
-                        ) : (
-                            <label htmlFor="style-file-upload" className="cursor-pointer w-full bg-light-surface dark:bg-dark-surface/50 border-2 border-dashed border-light-border dark:border-dark-border rounded-xl flex flex-col justify-center items-center text-light-text-muted dark:text-dark-text-muted hover:border-brand-yellow transition-colors p-6 text-center">
-                                <UploadIcon className="w-8 h-8 mb-2" />
-                                <span className="text-sm font-medium">{t.addStyleImage}</span>
-                                <span className="text-xs mt-1">{t.styleRefTitle} ({t.optional})</span>
-                            </label>
-                        )}
-                        <input id="style-file-upload" type="file" className="hidden" accept="image/*" onChange={handleStyleFileChange} />
-                    </div>
-                </div>
-
-                <div className="border-t border-light-border dark:border-dark-border/50"></div>
-
-                <div
-                    onDragEnter={handleStructureDragEnter} onDragLeave={handleStructureDragLeave} onDragOver={handleDragOver} onDrop={handleStructureDrop}
-                    className={`rounded-xl transition-all relative ${isDraggingStructure ? 'border-2 border-dashed border-brand-blue bg-brand-blue/10 p-1' : 'border-2 border-transparent'}`}
-                >
-                    <div className="relative group shadow-[0_0_8px_2px_rgba(255,0,110,0.5)] rounded-xl">
-                        <div className="absolute top-2 left-2 px-2 py-1 bg-brand-magenta/90 text-white text-xs rounded-full font-semibold backdrop-blur-sm z-10">
-                            STRUCTURE
-                        </div>
-                        {structureImage ? (
-                            <StyleImagePreview file={structureImage} onRemove={onRemoveStructureImage} />
-                        ) : (
-                            <label htmlFor="structure-file-upload" className="cursor-pointer w-full bg-light-surface dark:bg-dark-surface/50 border-2 border-dashed border-light-border dark:border-dark-border rounded-xl flex flex-col justify-center items-center text-light-text-muted dark:text-dark-text-muted hover:border-brand-magenta transition-colors p-6 text-center">
-                                <UploadIcon className="w-8 h-8 mb-2" />
-                                <span className="text-sm font-medium">{t.addStructureImage}</span>
-                                <span className="text-xs mt-1">{t.structureRefTitle} ({t.optional})</span>
-                            </label>
-                        )}
-                        <input id="structure-file-upload" type="file" className="hidden" accept="image/*" onChange={handleStructureFileChange} />
-                    </div>
-                </div>
-
-                {/* v1.7: DNA Character Section */}
-                <div className="border-t border-light-border dark:border-dark-border/50 pt-4"></div>
-                <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                        <h3 className="font-semibold text-light-text dark:text-dark-text flex items-center gap-2">
-                            <span>🧬</span>
-                            <span>{t.dnaCharacterTitle}</span>
-                        </h3>
+                {appMode !== 'angles' && (
+                    <div className="pt-1">
                         <button
-                            onClick={onManageDna}
-                            className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded bg-brand-purple/10 text-brand-purple hover:bg-brand-purple/20 transition-colors"
+                            onClick={() => onGenerateStoryboard()}
+                            disabled={referenceImages.length === 0 || isStoryboardLoading}
+                            className={`w-full group relative overflow-hidden flex items-center justify-center gap-3 py-3 bg-gradient-to-br from-brand-purple/20 to-brand-pink/10 border border-brand-purple/30 rounded-2xl transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:hover:scale-100 ${isStoryboardLoading ? 'animate-pulse' : ''}`}
                         >
-                            {t.select}
-                        </button>
-                    </div>
-
-                    {dnaCharacters.length === 0 ? (
-                        <div className="p-3 rounded-xl border border-dashed border-light-border dark:border-dark-border text-center">
-                            <p className="text-xs text-light-text-muted dark:text-dark-text-muted italic">{t.dnaCharacterNone}</p>
-                        </div>
-                    ) : (
-                        <div className="flex gap-2 p-1 overflow-x-auto no-scrollbar">
-                            {dnaCharacters.slice(0, 5).map(char => (
-                                <button
-                                    key={char.id}
-                                    onClick={() => onSelectDna(char.id)}
-                                    title={char.name}
-                                    className={`flex-shrink-0 w-12 h-12 rounded-full border-2 transition-all relative group ${selectedDnaId === char.id ? 'border-brand-purple shadow-[0_0_10px_rgba(114,9,183,0.5)] scale-110' : 'border-transparent grayscale opacity-70 hover:grayscale-0 hover:opacity-100'}`}
-                                >
-                                    {char.thumbnailData ? (
-                                        <img src={char.thumbnailData} alt={char.name} className="w-full h-full object-cover rounded-full" />
-                                    ) : (
-                                        <div className="w-full h-full bg-light-surface-accent dark:bg-dark-surface-accent rounded-full flex items-center justify-center text-xs font-bold">
-                                            {char.name.charAt(0).toUpperCase()}
-                                        </div>
-                                    )}
-                                    {selectedDnaId === char.id && (
-                                        <div className="absolute -top-1 -right-1 bg-brand-purple text-white rounded-full w-4 h-4 flex items-center justify-center">
-                                            <CheckIcon className="w-2.5 h-2.5" />
-                                        </div>
-                                    )}
-                                </button>
-                            ))}
-                            {dnaCharacters.length > 5 && (
-                                <button
-                                    onClick={onManageDna}
-                                    className="flex-shrink-0 w-12 h-12 rounded-full bg-light-surface-accent dark:bg-dark-surface-accent flex items-center justify-center text-sm font-bold opacity-70 hover:opacity-100 transition-opacity"
-                                >
-                                    +{dnaCharacters.length - 5}
-                                </button>
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                            <span className="text-xl">🎬</span>
+                            <div className="text-left">
+                                <span className="block text-[10px] font-black uppercase tracking-widest text-brand-purple">
+                                    {t.cinematicStoryboardTitle}
+                                </span>
+                                <span className="block text-[9px] text-light-text-muted dark:text-dark-text-muted font-medium">
+                                    {isStoryboardLoading ? t.storyboardAnalyzing : t.storyboardSubtext}
+                                </span>
+                            </div>
+                            {isStoryboardLoading && (
+                                <div className="ml-auto mr-2 w-3 h-3 border-2 border-brand-purple border-t-transparent rounded-full animate-spin" />
                             )}
-                        </div>
-                    )}
-
-                    {selectedDnaId && (
-                        <div className="px-3 py-1.5 rounded-lg bg-brand-purple/10 border border-brand-purple/20 flex items-center justify-between">
-                            <span className="text-xs font-semibold text-brand-purple truncate max-w-[150px]">
-                                {dnaCharacters.find(c => c.id === selectedDnaId)?.name}
-                            </span>
-                            <button onClick={() => onSelectDna(null)} className="text-brand-purple hover:opacity-70">
-                                <XIcon className="w-3.5 h-3.5" />
-                            </button>
-                        </div>
-                    )}
-                </div>
-
-                {/* Control Checkboxes Section */}
-                <div className="border-t border-light-border dark:border-dark-border/50 pt-4"></div>
-                <div className="space-y-3">
-                    {/* Precise Reference Mode */}
-                    <div className="flex items-start gap-3">
-                        <input
-                            type="checkbox"
-                            id="precise-reference-toggle"
-                            checked={preciseReference}
-                            onChange={(e) => setPreciseReference(e.target.checked)}
-                            className="mt-0.5 w-4 h-4 rounded border-light-border dark:border-dark-border bg-light-surface dark:bg-dark-surface text-brand-purple focus:ring-2 focus:ring-brand-purple focus:ring-offset-0"
-                        />
-                        <label htmlFor="precise-reference-toggle" className="flex-1 cursor-pointer">
-                            <div className="text-sm font-medium text-light-text dark:text-dark-text">
-                                👤 {t.preciseReference}
-                            </div>
-                            <div className="text-xs text-light-text-muted dark:text-dark-text-muted mt-0.5">
-                                {t.preciseReferenceTooltip}
-                            </div>
-                        </label>
+                        </button>
+                        {referenceImages.length === 0 && (
+                            <p className="mt-1 text-[8px] text-center text-light-text-muted dark:text-dark-text-muted italic">
+                                {t.uploadForStoryboard}
+                            </p>
+                        )}
                     </div>
-                </div>
+                )}
+
+                <div className="border-t border-light-border dark:border-dark-border/50"></div>
 
                 {appMode === 'classic' ? (
-                    <>
-                        {/* v1.4: Style Presets Section - Collapsible v1.7.1 */}
-                        <div className="border-t border-light-border dark:border-dark-border/50 pt-3">
-                            <button
-                                onClick={() => setShowPresets(!showPresets)}
-                                className="w-full flex items-center justify-between font-semibold text-light-text dark:text-dark-text group hover:text-brand-yellow transition-colors"
+                    <div className="space-y-4 pt-2">
+                        <div className="grid grid-cols-2 gap-3">
+                            <div
+                                onDragEnter={handleStyleDragEnter} onDragLeave={handleStyleDragLeave} onDragOver={handleDragOver} onDrop={handleStyleDrop}
+                                className={`rounded-2xl transition-all relative ${isDraggingStyle ? 'scale-105 z-10' : ''}`}
                             >
-                                <div className="flex items-center gap-2 text-sm">
-                                    <span>🎨</span>
-                                    <span>{t.stylePresetsTitle}</span>
-                                </div>
-                                {showPresets ? <ChevronUpIcon className="w-4 h-4 opacity-50 group-hover:opacity-100" /> : <ChevronDownIcon className="w-4 h-4 opacity-50 group-hover:opacity-100" />}
-                            </button>
-
-                            {showPresets && (
-                                <div className="mt-2 space-y-2 animate-in fade-in slide-in-from-top-1 duration-200">
-                                    <select
-                                        value={selectedStylePreset || ''}
-                                        onChange={(e) => {
-                                            const presetId = e.target.value || null;
-                                            setSelectedStylePreset(presetId);
-                                            if (presetId) {
-                                                const preset = STYLE_PRESETS.find(p => p.id === presetId);
-                                                if (preset) {
-                                                    setEditedPrompt(prev => {
-                                                        const cleanPrompt = prev.replace(/,\s*(oil painting style|watercolor style|anime style|pixel art style|vector illustration|professional product photography|professional portrait photography|cinematic film style|street photography|macro photography|isometric view|UI\/UX design mockup|infographic design|social media post design|typography art)[^,]*/gi, '');
-                                                        return cleanPrompt + preset.promptSuffix;
-                                                    });
-                                                }
-                                            }
-                                        }}
-                                        className="w-full px-3 py-1.5 rounded-lg bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border text-light-text dark:text-dark-text text-xs focus:outline-none focus:ring-2 focus:ring-brand-yellow/50"
-                                    >
-                                        <option value="">{language === 'it' ? 'Nessuno' : 'None'}</option>
-                                        {STYLE_PRESETS.map(preset => (
-                                            <option key={preset.id} value={preset.id}>
-                                                {preset.icon} {language === 'it' ? preset.nameIt : preset.name}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    {selectedStylePreset && (
-                                        <p className="text-[10px] text-light-text-muted dark:text-dark-text-muted leading-tight">
-                                            {STYLE_PRESETS.find(p => p.id === selectedStylePreset)?.[language === 'it' ? 'descriptionIt' : 'description']}
-                                        </p>
+                                <div className={`relative group shadow-[0_8px_30px_rgb(0,0,0,0.12)] rounded-2xl overflow-hidden aspect-[4/5] bg-white/5 dark:bg-black/10 backdrop-blur-3xl border ${isDraggingStyle ? 'border-brand-pink ring-2 ring-brand-pink/20' : 'border-white/10 dark:border-white/5'} transition-all`}>
+                                    <div className="absolute top-2 left-2 px-2.5 py-1 bg-brand-pink/90 text-white text-[7px] rounded-full font-black tracking-[.2em] z-10 shadow-lg backdrop-blur-md">STYLE</div>
+                                    {styleImage ? (
+                                        <StyleImagePreview file={styleImage} onRemove={onRemoveStyleImage} />
+                                    ) : (
+                                        <label htmlFor="style-file-upload" className="cursor-pointer w-full h-full flex flex-col justify-center items-center text-light-text-muted dark:text-dark-text-muted hover:bg-brand-pink/10 transition-all p-2 text-center group">
+                                            <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center mb-2 group-hover:scale-110 group-hover:bg-brand-pink/20 transition-all">
+                                                <UploadIcon className="w-5 h-5 opacity-40 group-hover:opacity-100 group-hover:text-brand-pink transition-all" />
+                                            </div>
+                                            <span className="text-[9px] font-black uppercase tracking-widest opacity-40 group-hover:opacity-100 group-hover:text-brand-pink">{t.refImagesTitle}</span>
+                                        </label>
                                     )}
+                                    <input id="style-file-upload" type="file" className="hidden" accept="image/*" onChange={handleStyleFileChange} />
                                 </div>
-                            )}
-                        </div>
+                            </div>
 
-                        {/* Physics Controls Section - Collapsible v1.7.1 */}
-                        <div className="border-t border-light-border dark:border-dark-border/50 pt-3">
-                            <button
-                                onClick={() => setShowPhysics(!showPhysics)}
-                                className="w-full flex items-center justify-between font-semibold text-light-text dark:text-dark-text group hover:text-brand-magenta transition-colors"
+                            <div
+                                onDragEnter={handleStructureDragEnter} onDragLeave={handleStructureDragLeave} onDragOver={handleDragOver} onDrop={handleStructureDrop}
+                                className={`rounded-2xl transition-all relative ${isDraggingStructure ? 'scale-105 z-10' : ''}`}
                             >
-                                <div className="flex items-center gap-2 text-sm">
-                                    <span>⚙️</span>
-                                    <span>{t.physicsControlTitle}</span>
+                                <div className={`relative group shadow-[0_8px_30px_rgb(0,0,0,0.12)] rounded-2xl overflow-hidden aspect-[4/5] bg-white/5 dark:bg-black/10 backdrop-blur-3xl border ${isDraggingStructure ? 'border-brand-blue ring-2 ring-brand-blue/20' : 'border-white/10 dark:border-white/5'} transition-all`}>
+                                    <div className="absolute top-2 left-2 px-2.5 py-1 bg-brand-blue/90 text-white text-[7px] rounded-full font-black tracking-[.2em] z-10 shadow-lg backdrop-blur-md">STRUCTURE</div>
+                                    {structureImage ? (
+                                        <StyleImagePreview file={structureImage} onRemove={onRemoveStructureImage} />
+                                    ) : (
+                                        <label htmlFor="structure-file-upload" className="cursor-pointer w-full h-full flex flex-col justify-center items-center text-light-text-muted dark:text-dark-text-muted hover:bg-brand-blue/10 transition-all p-2 text-center group">
+                                            <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center mb-2 group-hover:scale-110 group-hover:bg-brand-blue/20 transition-all">
+                                                <UploadIcon className="w-5 h-5 opacity-40 group-hover:opacity-100 group-hover:text-brand-blue transition-all" />
+                                            </div>
+                                            <span className="text-[9px] font-black uppercase tracking-widest opacity-40 group-hover:opacity-100 group-hover:text-brand-blue">{t.structureRefTitle}</span>
+                                        </label>
+                                    )}
+                                    <input id="structure-file-upload" type="file" className="hidden" accept="image/*" onChange={handleStructureFileChange} />
                                 </div>
-                                {showPhysics ? <ChevronUpIcon className="w-4 h-4 opacity-50 group-hover:opacity-100" /> : <ChevronDownIcon className="w-4 h-4 opacity-50 group-hover:opacity-100" />}
-                            </button>
+                            </div>
+                        </div>
 
-                            {showPhysics && (
-                                <div className="mt-3 space-y-3 animate-in fade-in slide-in-from-top-1 duration-200">
-                                    {/* Lighting Control */}
-                                    <div className="space-y-1">
-                                        <label className="text-[10px] font-bold uppercase tracking-wider text-light-text-muted dark:text-dark-text-muted">
-                                            {language === 'it' ? 'Illuminazione' : 'Lighting'}
-                                        </label>
-                                        <select
-                                            value={selectedLighting || ''}
-                                            onChange={(e) => {
-                                                const lightingId = e.target.value || null;
-                                                setSelectedLighting(lightingId);
-                                                if (lightingId) {
-                                                    const preset = PHYSICS_PRESETS.lighting.find(p => p.id === lightingId);
-                                                    if (preset) {
-                                                        setEditedPrompt(prev => {
-                                                            const cleanPrompt = prev.replace(/,\s*(soft studio lighting|golden hour lighting|dramatic lighting|neon lighting|natural daylight)[^,]*/gi, '');
-                                                            return cleanPrompt + ', ' + preset.prompt;
-                                                        });
-                                                    }
-                                                }
-                                            }}
-                                            className="w-full px-3 py-1.5 rounded-lg bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border text-light-text dark:text-dark-text text-xs focus:outline-none focus:ring-2 focus:ring-brand-yellow/50"
-                                        >
-                                            <option value="">{t.noneOption}</option>
-                                            {PHYSICS_PRESETS.lighting.map(preset => (
-                                                <option key={preset.id} value={preset.id}>
-                                                    {language === 'it' ? preset.nameIt : preset.name}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </div>
+                        <div className="group bg-gradient-to-br from-brand-purple/10 via-transparent to-brand-pink/5 dark:from-brand-purple/20 dark:to-transparent rounded-[2rem] p-4 border border-white/10 dark:border-white/5 backdrop-blur-2xl shadow-xl transition-all hover:border-brand-purple/30">
+                            <div className="flex items-center justify-between mb-3">
+                                <h3 className="text-[10px] font-black uppercase tracking-wider text-brand-purple flex items-center gap-2">
+                                    <span className="text-sm">🧬</span>
+                                    <span>{t.dnaCharacterTitle}</span>
+                                </h3>
+                                <button onClick={onManageDna} className="px-2 py-1 rounded-full bg-brand-purple/10 text-[9px] font-black uppercase tracking-widest text-brand-purple hover:bg-brand-purple hover:text-white transition-all">{t.select}</button>
+                            </div>
 
-                                    {/* Camera Control */}
-                                    <div className="space-y-1">
-                                        <label className="text-[10px] font-bold uppercase tracking-wider text-light-text-muted dark:text-dark-text-muted">
-                                            {t.cameraLabel}
-                                        </label>
-                                        <select
-                                            value={selectedCamera || ''}
-                                            onChange={(e) => {
-                                                const cameraId = e.target.value || null;
-                                                setSelectedCamera(cameraId);
-                                                if (cameraId) {
-                                                    const preset = PHYSICS_PRESETS.camera.find(p => p.id === cameraId);
-                                                    if (preset) {
-                                                        setEditedPrompt(prev => {
-                                                            const cleanPrompt = prev.replace(/,\s*(wide angle lens|portrait lens|macro lens|telephoto lens|fisheye lens)[^,]*/gi, '');
-                                                            return cleanPrompt + ', ' + preset.prompt;
-                                                        });
-                                                    }
-                                                }
-                                            }}
-                                            className="w-full px-3 py-1.5 rounded-lg bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border text-light-text dark:text-dark-text text-xs focus:outline-none focus:ring-2 focus:ring-brand-yellow/50"
+                            {dnaCharacters.length === 0 ? (
+                                <div className="py-2 px-3 rounded-xl bg-black/5 border border-dashed border-white/5">
+                                    <p className="text-[9px] text-light-text-muted dark:text-dark-text-muted italic text-center">{t.dnaCharacterNone}</p>
+                                </div>
+                            ) : (
+                                <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1 px-1">
+                                    {dnaCharacters.map(char => (
+                                        <button
+                                            key={char.id}
+                                            onClick={() => onSelectDna(char.id)}
+                                            className="flex-shrink-0 relative group/char"
                                         >
-                                            <option value="">{t.noneOption}</option>
-                                            {PHYSICS_PRESETS.camera.map(preset => (
-                                                <option key={preset.id} value={preset.id}>
-                                                    {language === 'it' ? preset.nameIt : preset.name}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </div>
-
-                                    {/* Focus Control */}
-                                    <div className="space-y-1">
-                                        <label className="text-[10px] font-bold uppercase tracking-wider text-light-text-muted dark:text-dark-text-muted">
-                                            {t.focusLabel}
-                                        </label>
-                                        <select
-                                            value={selectedFocus || ''}
-                                            onChange={(e) => {
-                                                const focusId = e.target.value || null;
-                                                setSelectedFocus(focusId);
-                                                if (focusId) {
-                                                    const preset = PHYSICS_PRESETS.focus.find(p => p.id === focusId);
-                                                    if (preset) {
-                                                        setEditedPrompt(prev => {
-                                                            const cleanPrompt = prev.replace(/,\s*(shallow depth of field|tack sharp|cinematic depth of field|tilt-shift effect|soft focus)[^,]*/gi, '');
-                                                            return cleanPrompt + ', ' + preset.prompt;
-                                                        });
-                                                    }
-                                                }
-                                            }}
-                                            className="w-full px-3 py-1.5 rounded-lg bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border text-light-text dark:text-dark-text text-xs focus:outline-none focus:ring-2 focus:ring-brand-yellow/50"
-                                        >
-                                            <option value="">{t.noneOption}</option>
-                                            {PHYSICS_PRESETS.focus.map(preset => (
-                                                <option key={preset.id} value={preset.id}>
-                                                    {language === 'it' ? preset.nameIt : preset.name}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </div>
+                                            <div className={`w-11 h-11 rounded-full p-0.5 border-2 transition-all duration-500 scale-95 group-hover/char:scale-105 ${selectedDnaId === char.id ? 'border-brand-purple shadow-[0_0_15px_rgba(114,9,183,0.4)] rotate-3 scale-110' : 'border-white/10 opacity-60 hover:opacity-100 hover:rotate-2'}`}>
+                                                {char.thumbnailData ? (
+                                                    <img src={char.thumbnailData} alt={char.name} className="w-full h-full object-cover rounded-full" />
+                                                ) : (
+                                                    <div className="w-full h-full bg-gradient-to-br from-brand-purple/40 to-brand-pink/40 rounded-full flex items-center justify-center text-[11px] font-black text-white">{char.name.charAt(0)}</div>
+                                                )}
+                                            </div>
+                                            {selectedDnaId === char.id && (
+                                                <div className="absolute -top-1 -right-1 w-4 h-4 bg-brand-purple rounded-full border-2 border-dark-surface flex items-center justify-center shadow-lg">
+                                                    <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
+                                                </div>
+                                            )}
+                                        </button>
+                                    ))}
                                 </div>
                             )}
                         </div>
-                    </>
+
+                        <div className="space-y-4 px-1 pb-2">
+                            <div className="group/item">
+                                <button
+                                    onClick={() => setShowPresets(!showPresets)}
+                                    className="w-full flex items-center justify-between py-1 px-1 rounded-lg transition-all hover:bg-white/5"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-6 h-6 rounded-md bg-brand-yellow/10 flex items-center justify-center text-xs">🎨</div>
+                                        <span className="text-[10px] font-black uppercase tracking-[0.15em] text-light-text/60 dark:text-dark-text/50 group-hover/item:text-brand-yellow transition-colors">{t.stylePresetsTitle}</span>
+                                    </div>
+                                    <div className={`transition-transform duration-300 ${showPresets ? 'rotate-180' : ''}`}>
+                                        <ChevronDownIcon className="w-3 h-3 opacity-30" />
+                                    </div>
+                                </button>
+                                {showPresets && (
+                                    <div className="mt-3 px-1 animate-in fade-in slide-in-from-top-1 duration-300">
+                                        <select
+                                            value={selectedStylePreset || ''}
+                                            onChange={(e) => {
+                                                const presetId = e.target.value || null;
+                                                setSelectedStylePreset(presetId);
+                                                if (presetId) {
+                                                    const preset = STYLE_PRESETS.find(p => p.id === presetId);
+                                                    if (preset) {
+                                                        setEditedPrompt(prev => {
+                                                            const cleanPrompt = prev.replace(/,\s*(oil painting style|watercolor style|anime style|pixel art style|vector illustration|professional product photography|professional portrait photography|cinematic film style|street photography|macro photography|isometric view|UI\/UX design mockup|infographic design|social media post design|typography art)[^,]*/gi, '');
+                                                            return cleanPrompt + preset.promptSuffix;
+                                                        });
+                                                    }
+                                                }
+                                            }}
+                                            className="w-full px-4 py-2 rounded-xl bg-white/5 dark:bg-black/20 border border-white/10 dark:border-white/5 text-light-text dark:text-dark-text text-[11px] font-bold focus:outline-none focus:ring-2 focus:ring-brand-yellow/30 appearance-none bg-no-repeat bg-[right_12px_center]"
+                                        >
+                                            <option value="">{language === 'it' ? '--- Scegli uno stile ---' : '--- Choose a style ---'}</option>
+                                            {STYLE_PRESETS.map(preset => (
+                                                <option key={preset.id} value={preset.id}>
+                                                    {preset.icon} {language === 'it' ? preset.nameIt : preset.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="group/item">
+                                <button
+                                    onClick={() => setShowPhysics(!showPhysics)}
+                                    className="w-full flex items-center justify-between py-1 px-1 rounded-lg transition-all hover:bg-white/5"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-6 h-6 rounded-md bg-brand-magenta/10 flex items-center justify-center text-xs">⚙️</div>
+                                        <span className="text-[10px] font-black uppercase tracking-[0.15em] text-light-text/60 dark:text-dark-text/50 group-hover/item:text-brand-magenta transition-colors">{t.physicsControlTitle}</span>
+                                    </div>
+                                    <div className={`transition-transform duration-300 ${showPhysics ? 'rotate-180' : ''}`}>
+                                        <ChevronDownIcon className="w-3 h-3 opacity-30" />
+                                    </div>
+                                </button>
+                                {showPhysics && (
+                                    <div className="mt-4 space-y-4 px-1 animate-in fade-in slide-in-from-top-1 duration-300">
+                                        <div className="space-y-2">
+                                            <label className="text-[9px] font-black uppercase tracking-[0.2em] text-light-text-muted/60 dark:text-dark-text-muted/60 ml-1">
+                                                {t.cameraLabel}
+                                            </label>
+                                            <select
+                                                value={selectedCamera || ''}
+                                                onChange={(e) => {
+                                                    const cameraId = e.target.value || null;
+                                                    setSelectedCamera(cameraId);
+                                                    if (cameraId) {
+                                                        const preset = PHYSICS_PRESETS.camera.find(p => p.id === cameraId);
+                                                        if (preset) {
+                                                            setEditedPrompt(prev => {
+                                                                const cleanPrompt = prev.replace(/,\s*(wide angle lens|portrait lens|macro lens|telephoto lens|fisheye lens)[^,]*/gi, '');
+                                                                return cleanPrompt + ', ' + preset.prompt;
+                                                            });
+                                                        }
+                                                    }
+                                                }}
+                                                className="w-full px-4 py-2 rounded-xl bg-brand-magenta/5 border border-brand-magenta/20 text-light-text dark:text-dark-text text-[11px] font-bold focus:outline-none focus:ring-2 focus:ring-brand-magenta/30 appearance-none bg-no-repeat bg-[right_12px_center]"
+                                            >
+                                                <option value="">Default View</option>
+                                                {PHYSICS_PRESETS.camera.map(preset => (
+                                                    <option key={preset.id} value={preset.id}>
+                                                        {language === 'it' ? preset.nameIt : preset.name}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
                 ) : appMode === 'studio' ? (
                     <StudioPanel t={t} studioConfig={studioConfig} setStudioConfig={setStudioConfig} />
                 ) : (
                     <GenerAngles
                         onGenerate={onGenerateFromAngle}
                         isGenerating={isGeneratingAngles}
-                        selectedModel={selectedModel}
+                        referenceImages={referenceImages}
                     />
                 )}
             </div>

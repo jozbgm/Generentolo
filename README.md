@@ -383,18 +383,25 @@ A sophisticated web application for generating ultra-high-quality images using G
 
 ## 📋 Changelog
 
-### v1.9.0 (January 2026) 🪄
-**🎉 AUTO-ENHANCE PRO - Intelligent Workflow Upgrade:**
+### v1.9.7 (January 2026) 🎨
+**🎉 SMART PROMPT & ACTION ENHANCEMENTS:**
 
-**✨ NEW: Automatic Prompt Optimization**
-- **AI-Powered Pre-processing**: Option to automatically enhance prompts before generation, ensuring maximum creative quality.
-- **Contextual Awareness**: Enhancement takes into account all reference, style, and structure images.
-- **State Preservation**: The original prompt is updated with the enhanced version for user review.
+**✨ NEW: Smart Prompt Actions**
+- **Integrated Controls**: Quick Copy, Paste, and Clear buttons directly inside the prompt box.
+- **Apple-Style Auto-Enhance**: New high-fidelity toggle with signature yellow indicator.
 
-**🔧 UI/UX Streamlining**
-- **Clean Sidebar**: Removal of legacy creative prompt and manual enhance buttons.
-- **Quick-Access Toolbar**: Precise Reference is now permanently available in the floating action bar.
-- **Smart Tooltips**: Enhanced guidance for all new controls in both EN/IT.
+**🔧 UI/UX Overhaul**
+- **Refined Floating Bar**: Major redesign of the main control center for better ergonomics.
+- **Always Expanded Access**: Removed collapsed state for zero-click interaction.
+- **Compact Icon States**: Smart context-aware buttons during generation.
+- **Vibrant Loading Restored**: Perfected gradient progress visualization.
+
+### v1.9.6 (January 2026) 🚀
+**🎉 STUDIO INTEGRATION & QUEUE OPTIMIZATION:**
+
+**✨ NEW: Full Studio aware Auto-Enhance**
+- **Art Director Intelligence**: AI now considers Camera, Lighting, and Production Kits.
+- **Intelligent Morphing**: Keywords are woven into the creative narrative.
 
 ### v1.8.0 (December 2025) 🎞️
 **🎉 VIRTUAL STUDIO & CINEMA MODE:**

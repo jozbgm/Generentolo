@@ -1,6 +1,6 @@
 # 📋 Changelog - Generentolo PRO
 
-## [1.9.7] - 2026-01-26 🎨
+## [1.9.7] - 2026-01-27 🎨
 ### Added
 - **📋 Smart Prompt Actions**: Integrated Copy, Paste, and Clear buttons directly inside the prompt box.
 - **🍏 Apple-Style Switch**: New high-fidelity toggle with yellow indicator for Auto-Enhance.
@@ -16,6 +16,8 @@
 
 ### Fixed
 - **📝 Live Prompt Editing**: You can now edit the prompt while a generation is running (text input is no longer disabled).
+- **🛠️ Application Stabilization**: Fixed critical JSX syntax errors in `App.tsx` that were breaking the sidebar and mode switching (Classic/Studio/Angles).
+- **📐 GenerAngles Restoration**: Restored the missing `GenerAngles` component and fixed its integration in the sidebar.
 
 ## [1.9.6] - 2026-01-26 🚀
 ### Added
