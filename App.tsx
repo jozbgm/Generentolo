@@ -3940,14 +3940,12 @@ export default function App() {
                         </div>
 
                         <aside className="flex-shrink-0 flex flex-col gap-3">
-                            {/* Queue Panel (if queue has items) */}
-                            {queue.length > 0 && (
-                                <QueuePanel
-                                    queue={queue}
-                                    onRemoveFromQueue={handleRemoveFromQueue}
-                                    t={t}
-                                />
-                            )}
+                            {/* Queue Panel (Always visible for stability) */}
+                            <QueuePanel
+                                queue={queue}
+                                onRemoveFromQueue={handleRemoveFromQueue}
+                                t={t}
+                            />
 
                             {/* Tabs */}
                             <div className="flex gap-2 bg-light-surface/50 dark:bg-dark-surface/30 backdrop-blur-xl rounded-2xl p-1">

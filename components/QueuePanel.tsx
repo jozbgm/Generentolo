@@ -8,7 +8,18 @@ interface QueuePanelProps {
 }
 
 const QueuePanel: React.FC<QueuePanelProps> = ({ queue, onRemoveFromQueue, t }) => {
-    if (queue.length === 0) return null;
+    // Always render, even if empty, to maintain UI stability
+    if (queue.length === 0) {
+        return (
+            <div className="bg-light-surface/50 dark:bg-dark-surface/30 backdrop-blur-xl rounded-2xl overflow-hidden opacity-60">
+                <div className="px-4 py-3 bg-transparent border-b border-light-border dark:border-dark-border flex items-center justify-between">
+                    <span className="text-xs font-bold uppercase tracking-wider text-light-text-muted dark:text-dark-text-muted flex items-center gap-2">
+                        <span>⏳</span> {t.generationQueue} (0)
+                    </span>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="bg-light-surface/50 dark:bg-dark-surface/30 backdrop-blur-xl rounded-2xl overflow-hidden">
