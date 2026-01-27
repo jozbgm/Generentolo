@@ -8,20 +8,8 @@ interface QueuePanelProps {
 }
 
 const QueuePanel: React.FC<QueuePanelProps> = ({ queue, onRemoveFromQueue, t }) => {
-    // Always render, even if empty, to maintain UI stability
-    if (queue.length === 0) {
-        return (
-            <div className="bg-light-surface/30 dark:bg-dark-surface/20 border border-dashed border-light-border dark:border-dark-border rounded-2xl p-4 flex flex-col items-center justify-center text-center gap-2 transition-all">
-                <span className="text-2xl opacity-30">⏳</span>
-                <p className="text-xs font-medium text-light-text-muted dark:text-dark-text-muted">
-                    {t.queueEmpty || "Queue is empty"}
-                </p>
-                <p className="text-[10px] text-light-text-muted/70 dark:text-dark-text-muted/70">
-                    {t.queueHint || "Start a generation to enable queuing new tasks."}
-                </p>
-            </div>
-        );
-    }
+    console.log('🔍 QueuePanel render - queue length:', queue.length, 'items:', queue);
+    if (queue.length === 0) return null;
 
     return (
         <div className="bg-light-surface/50 dark:bg-dark-surface/30 backdrop-blur-xl rounded-2xl overflow-hidden">

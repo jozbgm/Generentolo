@@ -2628,6 +2628,7 @@ export default function App() {
     };
 
     const handleGenerate = useCallback(async (task?: GenerationTask) => {
+        console.log('🎯 handleGenerate called - isLoading:', isLoading, 'task:', task);
         if (isLoading && !task) {
             // v1.9.5: Add to queue if already generating
             const newTask: GenerationTask = {
@@ -2649,8 +2650,13 @@ export default function App() {
                 autoEnhance: autoEnhance,
                 timestamp: Date.now(),
             };
-            setQueue(prev => [...prev, newTask]);
-
+            console.log('➕ Adding to queue:', newTask);
+            setQueue(prev => {
+                const newQueue = [...prev, newTask];
+                console.log('📋 Queue updated - length:', newQueue.length);
+                return newQueue;
+            });
+            showToast(t.addedToQueue, 'success');
             return;
         }
 
@@ -3940,12 +3946,14 @@ export default function App() {
                         </div>
 
                         <aside className="flex-shrink-0 flex flex-col gap-3">
-                            {/* Queue Panel (Always visible for stability) */}
-                            <QueuePanel
-                                queue={queue}
-                                onRemoveFromQueue={handleRemoveFromQueue}
-                                t={t}
-                            />
+                            {/* Queue Panel */}
+                            {queue.length > 0 && (
+                                <QueuePanel
+                                    queue={queue}
+                                    onRemoveFromQueue={handleRemoveFromQueue}
+                                    t={t}
+                                />
+                            )}
 
                             {/* Tabs */}
                             <div className="flex gap-2 bg-light-surface/50 dark:bg-dark-surface/30 backdrop-blur-xl rounded-2xl p-1">
