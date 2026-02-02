@@ -71,6 +71,10 @@ export default {
           '10%, 30%, 50%, 70%, 90%': { transform: 'translateX(-5px)' },
           '20%, 40%, 60%, 80%': { transform: 'translateX(5px)' },
         },
+        slideInRight: {
+          '0%': { transform: 'translateX(100%)', opacity: '0' },
+          '100%': { transform: 'translateX(0)', opacity: '1' },
+        },
       },
       animation: {
         fadeIn: 'fadeIn 0.2s ease-out',
@@ -81,6 +85,7 @@ export default {
         shimmer: 'shimmer 2s linear infinite',
         success: 'success 0.6s ease-out',
         shake: 'shake 0.5s ease-in-out',
+        'slide-in-right': 'slideInRight 0.3s ease-out',
       }
     }
   },

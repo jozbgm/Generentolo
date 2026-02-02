@@ -2145,7 +2145,7 @@ const Toast: React.FC<ToastProps> = ({ message, type, onClose }) => {
     const isSuccess = type === 'success';
 
     return (
-        <div className={`fixed top-5 right-5 z-50 flex items-center gap-3 p-3 rounded-lg shadow-2xl border animate-fade-in-down ${isSuccess ? 'bg-green-500/20 text-green-200 border-green-500/30' : 'bg-red-500/20 text-red-200 border-red-500/30'}`}>
+        <div className={`fixed bottom-28 right-5 z-[100] flex items-center gap-3 p-3 rounded-xl shadow-2xl border backdrop-blur-xl animate-slide-in-right ${isSuccess ? 'bg-green-500/20 text-green-200 border-green-500/30' : 'bg-red-500/20 text-red-200 border-red-500/30'}`}>
             {isSuccess ? <span>✅</span> : <span>⚠️</span>}
             <span className="text-sm font-medium">{message}</span>
             <button onClick={onClose} className="p-1 -mr-1 rounded-full hover:bg-white/10"><XIcon className="w-4 h-4" /></button>
