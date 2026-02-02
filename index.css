@@ -24,6 +24,22 @@ body {
   }
 }
 
+/* --- Select & Option Styling for readability --- */
+select option {
+  background-color: #1a1a1a;
+  color: #f0f0f0;
+  padding: 10px;
+}
+
+.dark select option {
+  background-color: #1a1a1a;
+  color: #f0f0f0;
+}
+
+select {
+  color-scheme: dark;
+}
+
 /* Custom textarea resize handle styling */
 textarea {
   scrollbar-width: thin;

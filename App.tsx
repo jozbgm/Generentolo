@@ -1089,7 +1089,7 @@ const ReferencePanel: React.FC<{
                                                 // NOTE: Prompt modification is handled in the generation logic
                                                 // to avoid duplication and ensure proper integration with Auto-Enhance
                                             }}
-                                            className="w-full px-4 py-2 rounded-xl bg-white/5 dark:bg-black/20 border border-white/10 dark:border-white/5 text-light-text dark:text-dark-text text-[11px] font-bold focus:outline-none focus:ring-2 focus:ring-brand-yellow/30 appearance-none bg-no-repeat bg-[right_12px_center]"
+                                            className="w-full px-4 py-2.5 rounded-xl bg-brand-yellow/10 border border-brand-yellow/30 text-light-text dark:text-dark-text text-[11px] font-bold focus:outline-none focus:ring-2 focus:ring-brand-yellow/50 appearance-none bg-no-repeat bg-[right_12px_center]"
                                         >
                                             <option value="">{language === 'it' ? '--- Scegli uno stile ---' : '--- Choose a style ---'}</option>
                                             {STYLE_PRESETS.map(preset => (
@@ -1129,7 +1129,7 @@ const ReferencePanel: React.FC<{
                                                     setSelectedLighting(lightingId);
                                                     // NOTE: Prompt modification is handled in the generation logic
                                                 }}
-                                                className="w-full px-4 py-2 rounded-xl bg-brand-yellow/5 border border-brand-yellow/20 text-light-text dark:text-dark-text text-[11px] font-bold focus:outline-none focus:ring-2 focus:ring-brand-yellow/30 appearance-none bg-no-repeat bg-[right_12px_center]"
+                                                className="w-full px-4 py-2.5 rounded-xl bg-brand-yellow/10 border border-brand-yellow/30 text-light-text dark:text-dark-text text-[11px] font-bold focus:outline-none focus:ring-2 focus:ring-brand-yellow/50 appearance-none bg-no-repeat bg-[right_12px_center]"
                                             >
                                                 <option value="">{language === 'it' ? 'Illuminazione predefinita' : 'Default Lighting'}</option>
                                                 {PHYSICS_PRESETS.lighting.map(preset => (
@@ -1152,7 +1152,7 @@ const ReferencePanel: React.FC<{
                                                     setSelectedCamera(cameraId);
                                                     // NOTE: Prompt modification is handled in the generation logic
                                                 }}
-                                                className="w-full px-4 py-2 rounded-xl bg-brand-magenta/5 border border-brand-magenta/20 text-light-text dark:text-dark-text text-[11px] font-bold focus:outline-none focus:ring-2 focus:ring-brand-magenta/30 appearance-none bg-no-repeat bg-[right_12px_center]"
+                                                className="w-full px-4 py-2.5 rounded-xl bg-brand-magenta/10 border border-brand-magenta/30 text-light-text dark:text-dark-text text-[11px] font-bold focus:outline-none focus:ring-2 focus:ring-brand-magenta/50 appearance-none bg-no-repeat bg-[right_12px_center]"
                                             >
                                                 <option value="">{language === 'it' ? 'Vista predefinita' : 'Default View'}</option>
                                                 {PHYSICS_PRESETS.camera.map(preset => (
@@ -1175,7 +1175,7 @@ const ReferencePanel: React.FC<{
                                                     setSelectedFocus(focusId);
                                                     // NOTE: Prompt modification is handled in the generation logic
                                                 }}
-                                                className="w-full px-4 py-2 rounded-xl bg-brand-blue/5 border border-brand-blue/20 text-light-text dark:text-dark-text text-[11px] font-bold focus:outline-none focus:ring-2 focus:ring-brand-blue/30 appearance-none bg-no-repeat bg-[right_12px_center]"
+                                                className="w-full px-4 py-2.5 rounded-xl bg-brand-blue/10 border border-brand-blue/30 text-light-text dark:text-dark-text text-[11px] font-bold focus:outline-none focus:ring-2 focus:ring-brand-blue/50 appearance-none bg-no-repeat bg-[right_12px_center]"
                                             >
                                                 <option value="">{language === 'it' ? 'Fuoco predefinito' : 'Default Focus'}</option>
                                                 {PHYSICS_PRESETS.focus.map(preset => (
