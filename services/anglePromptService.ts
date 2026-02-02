@@ -48,8 +48,23 @@ export async function generateCognitiveAnglePrompt(
         const tiltDesc = getTiltDescription(tilt);
         const zoomLevel = zoom > 5 ? "Close-up/Macro Details" : zoom < -5 ? "Wide Angle Context" : "Standard Portrait Framing";
 
-        // Costruiamo un prompt di ragionamento spaziale per il modello
-        const systemInstruction = `You are an expert 3D Artist and Director of Photography using a revolutionary "Neural View Synthesis" engine.
+        // Build localized system instruction based on language
+        const systemInstruction = language === 'it'
+            ? `Sei un esperto Artista 3D e Direttore della Fotografia che usa un rivoluzionario motore "Neural View Synthesis".
+Il tuo obiettivo è scrivere un prompt generativo che descriva ESATTAMENTE come apparirebbe il soggetto nell'immagine di riferimento se la camera si spostasse in una nuova posizione.
+
+REGOLE CRITICHE:
+1. PRESERVA IDENTITÀ: Il soggetto (viso, vestiti, corporatura) deve essere identico al riferimento.
+2. RUOTA L'OCCHIO MENTALE: Immagina di camminare attorno al soggetto fino all'angolo specificato. Quali nuovi dettagli diventano visibili? Cosa viene occluso?
+3. ILLUMINAZIONE COERENTE: Descrivi come la luce cade sul soggetto da questa nuova angolazione.
+4. Se la vista è POSTERIORE o di PROFILO, descrivi i capelli/retro dell'outfit logicamente basandoti sulla vista frontale.
+
+COORDINATE CAMERA OBIETTIVO:
+- Azimut/Rotazione: ${rotDesc}
+- Elevazione/Inclinazione: ${tiltDesc}
+- Zoom/Inquadratura: ${zoomLevel}
+`
+            : `You are an expert 3D Artist and Director of Photography using a revolutionary "Neural View Synthesis" engine.
 Your goal is to write a generative prompt that describes EXACTLY how the subject in the reference image would look if the camera moved to a new position.
 
 CRITICAL RULES:
@@ -64,7 +79,16 @@ TARGET CAMERA COORDINATES:
 - Zoom/Framing: ${zoomLevel}
 `;
 
-        const userMessage = `Analyze this reference image.
+        const userMessage = language === 'it'
+            ? `Analizza questa immagine di riferimento.
+Descrizione Originale del Soggetto: "${originalPrompt}"
+
+COMPITO: Scrivi un prompt altamente dettagliato e vivido per generare questo ESATTO soggetto dalle nuove COORDINATE CAMERA OBIETTIVO.
+Descrivi l'angolo del viso, il lato visibile del corpo, e i cambiamenti di illuminazione.
+Se generi una vista laterale/posteriore, descrivi esplicitamente i dettagli di capelli e outfit visti da quel lato, inferiti dalla vista frontale.
+
+Restituisci SOLO la stringa del prompt, senza intestazioni markdown.`
+            : `Analyze this reference image.
 Original Subject Description: "${originalPrompt}"
 
 TASK: Write a highly detailed, vivid prompt to generate this EXACT subject from the new TARGET CAMERA COORDINATES.
@@ -86,7 +110,7 @@ Return ONLY the prompt string, no markdown headers.`;
 
         const generatedPrompt = result.text?.trim();
 
-        if (!generatedPrompt) throw new Error("Empty response from Cognitive Angle Engine");
+        if (!generatedPrompt) throw new Error(language === 'it' ? "Risposta vuota dal Cognitive Angle Engine" : "Empty response from Cognitive Angle Engine");
 
         return generatedPrompt;
 
@@ -133,5 +157,25 @@ export const BEST_ANGLES = [
     { rotation: 90, tilt: 30, name: "Top-Right" },
     { rotation: 270, tilt: 30, name: "Top-Left" },
 ];
+
+/**
+ * Generate prompts for all 12 best angles covering comprehensive 360° views.
+ * Used for batch generation of multiple camera perspectives.
+ */
+export function generateBestAnglesPrompts(originalPrompt: string): { prompt: string; angleName: string }[] {
+    return BEST_ANGLES.map(angle => {
+        const rotationDesc = getRotationDescription(angle.rotation);
+        const tiltDesc = getTiltDescription(angle.tilt);
+
+        const prompt = `Framing: ${rotationDesc}, ${tiltDesc}, Standard Portrait Framing.
+Subject: ${originalPrompt}.
+Requirement: Maintain exact character identity and lighting while strictly adhering to the requested camera angle. Synthesize a photorealistic view from this perspective.`;
+
+        return {
+            prompt,
+            angleName: angle.name
+        };
+    });
+}
 
 

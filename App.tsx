@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useCallback, useMemo, createContext, useContext, useRef } from 'react';
-import { GeneratedImage, DynamicTool, PromptPreset, ModelType, ResolutionType, GenerationTask } from './types';
+import { GeneratedImage, PromptPreset, ModelType, ResolutionType, GenerationTask } from './types';
 import * as geminiService from './services/geminiService';
 import * as presetsService from './services/presetsService';
 import * as storyboardService from './services/storyboardService';
 import { StoryboardPrompt } from './services/storyboardService';
 import * as anglePromptService from './services/anglePromptService';
 import { useKeyboardShortcuts, APP_SHORTCUTS } from './hooks/useKeyboardShortcuts';
-import { SunIcon, MoonIcon, UploadIcon, DownloadIcon, SparklesIcon, CopyIcon, SettingsIcon, XIcon, CheckIcon, LanguageIcon, BrushIcon, DiceIcon, TrashIcon, ReloadIcon, StarIcon, CornerUpLeftIcon, ChevronDownIcon, ChevronUpIcon } from './components/icons';
+import { SunIcon, MoonIcon, UploadIcon, DownloadIcon, SparklesIcon, CopyIcon, SettingsIcon, XIcon, CheckIcon, LanguageIcon, BrushIcon, DiceIcon, TrashIcon, ReloadIcon, StarIcon, CornerUpLeftIcon, ChevronDownIcon } from './components/icons';
 import { indexedDBService, DnaCharacter } from './services/indexedDB';
 import FloatingActionBar from './components/FloatingActionBar';
 import ImageLightbox from './components/ImageLightbox';
@@ -249,6 +249,7 @@ const translations = {
         addToQueue: 'Add to Queue',
         putInQueue: 'Put in Queue',
         queueNext: 'Queue Next',
+        addedToQueue: '📋 Added to queue!',
         cinematicStoryboardTitle: 'Cinematic Storyboard',
         storyboardSubtext: '9 directorial variations',
         storyboardAnalyzing: 'Analyzing frame...',
@@ -299,6 +300,11 @@ const translations = {
         presetsExportFailed: 'Failed to export presets',
         presetsImported: 'Presets imported successfully!',
         presetsImportFailed: 'Failed to import presets. Invalid file format.',
+        // v2.0: Preset UX Improvements
+        resetAllPresets: 'Reset All',
+        activePresetsTitle: 'Active Presets',
+        noActivePresets: 'No presets active',
+        presetAppliedToPrompt: 'Will be applied to generation',
     },
     it: {
         headerTitle: 'Generentolo PRO v1.9.8',
@@ -517,6 +523,7 @@ const translations = {
         addToQueue: 'Aggiungi alla coda',
         putInQueue: 'Metti in coda',
         queueNext: 'Metti in coda',
+        addedToQueue: '📋 Aggiunto alla coda!',
         cinematicStoryboardTitle: 'Cinematic Storyboard',
         storyboardSubtext: '9 varianti registiche',
         storyboardAnalyzing: 'Analisi in corso...',
@@ -567,6 +574,11 @@ const translations = {
         presetsExportFailed: 'Impossibile esportare i preset',
         presetsImported: 'Preset importati con successo!',
         presetsImportFailed: 'Impossibile importare i preset. Formato file non valido.',
+        // v2.0: Preset UX Improvements
+        resetAllPresets: 'Resetta Tutto',
+        activePresetsTitle: 'Preset Attivi',
+        noActivePresets: 'Nessun preset attivo',
+        presetAppliedToPrompt: 'Verrà applicato alla generazione',
     }
 };
 
@@ -794,7 +806,6 @@ const ReferencePanel: React.FC<{
     selectedFocus: string | null;
     setSelectedFocus: (id: string | null) => void;
     selectedModel: ModelType;
-    setEditedPrompt: (value: string | ((prev: string) => string)) => void;
     preciseReference: boolean;
     setPreciseReference: (value: boolean) => void;
     dnaCharacters: DnaCharacter[];
@@ -811,7 +822,7 @@ const ReferencePanel: React.FC<{
     // GenerAngles
     onGenerateFromAngle: (params: AngleGenerationParams) => void;
     isGeneratingAngles: boolean;
-}> = ({ onAddImages, onRemoveImage, referenceImages, onAddStyleImage, onRemoveStyleImage, styleImage, onAddStructureImage, onRemoveStructureImage, structureImage, selectedStylePreset, setSelectedStylePreset, selectedLighting, setSelectedLighting, selectedCamera, setSelectedCamera, selectedFocus, setSelectedFocus, selectedModel, setEditedPrompt, preciseReference, setPreciseReference, dnaCharacters, selectedDnaId, onSelectDna, onManageDna, appMode, setAppMode, studioConfig, setStudioConfig, onGenerateStoryboard, isStoryboardLoading, onGenerateFromAngle, isGeneratingAngles }) => {
+}> = ({ onAddImages, onRemoveImage, referenceImages, onAddStyleImage, onRemoveStyleImage, styleImage, onAddStructureImage, onRemoveStructureImage, structureImage, selectedStylePreset, setSelectedStylePreset, selectedLighting, setSelectedLighting, selectedCamera, setSelectedCamera, selectedFocus, setSelectedFocus, selectedModel, preciseReference, setPreciseReference, dnaCharacters, selectedDnaId, onSelectDna, onManageDna, appMode, setAppMode, studioConfig, setStudioConfig, onGenerateStoryboard, isStoryboardLoading, onGenerateFromAngle, isGeneratingAngles }) => {
     const { t, language } = useLocalization();
     const [isDraggingRef, setIsDraggingRef] = useState(false);
     const [isDraggingStyle, setIsDraggingStyle] = useState(false);
@@ -910,6 +921,33 @@ const ReferencePanel: React.FC<{
                     </div>
                 </div>
                 <input ref={fileInputRef} id="file-upload" type="file" className="hidden" multiple accept="image/*" onChange={handleFileChange} />
+
+                {/* Precise Reference Toggle + Model Indicator */}
+                {referenceImages.length > 0 && (
+                    <div className="flex items-center justify-between gap-3 px-1">
+                        {/* Precise Reference Toggle */}
+                        <label className="flex items-center gap-2 cursor-pointer group" title={t.preciseReferenceTooltip}>
+                            <div className="relative">
+                                <input
+                                    type="checkbox"
+                                    checked={preciseReference}
+                                    onChange={(e) => setPreciseReference(e.target.checked)}
+                                    className="sr-only peer"
+                                />
+                                <div className="w-9 h-5 bg-gray-300 dark:bg-gray-600 peer-checked:bg-brand-purple rounded-full transition-all peer-focus:ring-2 peer-focus:ring-brand-purple/30"></div>
+                                <div className="absolute left-0.5 top-0.5 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-4 shadow-sm"></div>
+                            </div>
+                            <span className="text-[10px] font-bold text-light-text-muted dark:text-dark-text-muted group-hover:text-brand-purple transition-colors">
+                                🎯 {t.preciseReference}
+                            </span>
+                        </label>
+
+                        {/* Model Badge */}
+                        <div className={`px-2 py-1 rounded-full text-[9px] font-black uppercase tracking-wider ${selectedModel === 'gemini-3-pro-image-preview' ? 'bg-gradient-to-r from-brand-purple to-brand-magenta text-white' : 'bg-brand-yellow/20 text-brand-yellow'}`}>
+                            {selectedModel === 'gemini-3-pro-image-preview' ? 'PRO' : 'FLASH'}
+                        </div>
+                    </div>
+                )}
 
                 <div className="border-t border-light-border dark:border-dark-border/50"></div>
 
@@ -1048,15 +1086,8 @@ const ReferencePanel: React.FC<{
                                             onChange={(e) => {
                                                 const presetId = e.target.value || null;
                                                 setSelectedStylePreset(presetId);
-                                                if (presetId) {
-                                                    const preset = STYLE_PRESETS.find(p => p.id === presetId);
-                                                    if (preset) {
-                                                        setEditedPrompt(prev => {
-                                                            const cleanPrompt = prev.replace(/,\s*(oil painting style|watercolor style|anime style|pixel art style|vector illustration|professional product photography|professional portrait photography|cinematic film style|street photography|macro photography|isometric view|UI\/UX design mockup|infographic design|social media post design|typography art)[^,]*/gi, '');
-                                                            return cleanPrompt + preset.promptSuffix;
-                                                        });
-                                                    }
-                                                }
+                                                // NOTE: Prompt modification is handled in the generation logic
+                                                // to avoid duplication and ensure proper integration with Auto-Enhance
                                             }}
                                             className="w-full px-4 py-2 rounded-xl bg-white/5 dark:bg-black/20 border border-white/10 dark:border-white/5 text-light-text dark:text-dark-text text-[11px] font-bold focus:outline-none focus:ring-2 focus:ring-brand-yellow/30 appearance-none bg-no-repeat bg-[right_12px_center]"
                                         >
@@ -1086,6 +1117,30 @@ const ReferencePanel: React.FC<{
                                 </button>
                                 {showPhysics && (
                                     <div className="mt-4 space-y-4 px-1 animate-in fade-in slide-in-from-top-1 duration-300">
+                                        {/* Lighting Control */}
+                                        <div className="space-y-2">
+                                            <label className="text-[9px] font-black uppercase tracking-[0.2em] text-light-text-muted/60 dark:text-dark-text-muted/60 ml-1">
+                                                {t.lightingLabel}
+                                            </label>
+                                            <select
+                                                value={selectedLighting || ''}
+                                                onChange={(e) => {
+                                                    const lightingId = e.target.value || null;
+                                                    setSelectedLighting(lightingId);
+                                                    // NOTE: Prompt modification is handled in the generation logic
+                                                }}
+                                                className="w-full px-4 py-2 rounded-xl bg-brand-yellow/5 border border-brand-yellow/20 text-light-text dark:text-dark-text text-[11px] font-bold focus:outline-none focus:ring-2 focus:ring-brand-yellow/30 appearance-none bg-no-repeat bg-[right_12px_center]"
+                                            >
+                                                <option value="">{language === 'it' ? 'Illuminazione predefinita' : 'Default Lighting'}</option>
+                                                {PHYSICS_PRESETS.lighting.map(preset => (
+                                                    <option key={preset.id} value={preset.id}>
+                                                        {language === 'it' ? preset.nameIt : preset.name}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+
+                                        {/* Camera Control */}
                                         <div className="space-y-2">
                                             <label className="text-[9px] font-black uppercase tracking-[0.2em] text-light-text-muted/60 dark:text-dark-text-muted/60 ml-1">
                                                 {t.cameraLabel}
@@ -1095,20 +1150,35 @@ const ReferencePanel: React.FC<{
                                                 onChange={(e) => {
                                                     const cameraId = e.target.value || null;
                                                     setSelectedCamera(cameraId);
-                                                    if (cameraId) {
-                                                        const preset = PHYSICS_PRESETS.camera.find(p => p.id === cameraId);
-                                                        if (preset) {
-                                                            setEditedPrompt(prev => {
-                                                                const cleanPrompt = prev.replace(/,\s*(wide angle lens|portrait lens|macro lens|telephoto lens|fisheye lens)[^,]*/gi, '');
-                                                                return cleanPrompt + ', ' + preset.prompt;
-                                                            });
-                                                        }
-                                                    }
+                                                    // NOTE: Prompt modification is handled in the generation logic
                                                 }}
                                                 className="w-full px-4 py-2 rounded-xl bg-brand-magenta/5 border border-brand-magenta/20 text-light-text dark:text-dark-text text-[11px] font-bold focus:outline-none focus:ring-2 focus:ring-brand-magenta/30 appearance-none bg-no-repeat bg-[right_12px_center]"
                                             >
-                                                <option value="">Default View</option>
+                                                <option value="">{language === 'it' ? 'Vista predefinita' : 'Default View'}</option>
                                                 {PHYSICS_PRESETS.camera.map(preset => (
+                                                    <option key={preset.id} value={preset.id}>
+                                                        {language === 'it' ? preset.nameIt : preset.name}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+
+                                        {/* Focus Control */}
+                                        <div className="space-y-2">
+                                            <label className="text-[9px] font-black uppercase tracking-[0.2em] text-light-text-muted/60 dark:text-dark-text-muted/60 ml-1">
+                                                {t.focusLabel}
+                                            </label>
+                                            <select
+                                                value={selectedFocus || ''}
+                                                onChange={(e) => {
+                                                    const focusId = e.target.value || null;
+                                                    setSelectedFocus(focusId);
+                                                    // NOTE: Prompt modification is handled in the generation logic
+                                                }}
+                                                className="w-full px-4 py-2 rounded-xl bg-brand-blue/5 border border-brand-blue/20 text-light-text dark:text-dark-text text-[11px] font-bold focus:outline-none focus:ring-2 focus:ring-brand-blue/30 appearance-none bg-no-repeat bg-[right_12px_center]"
+                                            >
+                                                <option value="">{language === 'it' ? 'Fuoco predefinito' : 'Default Focus'}</option>
+                                                {PHYSICS_PRESETS.focus.map(preset => (
                                                     <option key={preset.id} value={preset.id}>
                                                         {language === 'it' ? preset.nameIt : preset.name}
                                                     </option>
@@ -1118,6 +1188,85 @@ const ReferencePanel: React.FC<{
                                     </div>
                                 )}
                             </div>
+
+                            {/* Active Presets Strip - Shows what will be applied */}
+                            {(selectedStylePreset || selectedLighting || selectedCamera || selectedFocus) && (
+                                <div className="mt-4 p-3 rounded-xl bg-gradient-to-r from-brand-purple/10 to-brand-yellow/10 border border-white/10">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <span className="text-[9px] font-black uppercase tracking-widest text-brand-purple/80">{t.activePresetsTitle}</span>
+                                        <button
+                                            onClick={() => {
+                                                setSelectedStylePreset(null);
+                                                setSelectedLighting(null);
+                                                setSelectedCamera(null);
+                                                setSelectedFocus(null);
+                                            }}
+                                            className="px-2 py-0.5 text-[8px] font-bold uppercase tracking-wider bg-red-500/10 text-red-400 rounded-full hover:bg-red-500/20 transition-all"
+                                        >
+                                            {t.resetAllPresets}
+                                        </button>
+                                    </div>
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {selectedStylePreset && (() => {
+                                            const preset = STYLE_PRESETS.find(p => p.id === selectedStylePreset);
+                                            return preset ? (
+                                                <div
+                                                    className="group relative px-2 py-1 bg-brand-yellow/20 text-brand-yellow rounded-full text-[9px] font-bold flex items-center gap-1 cursor-pointer hover:bg-brand-yellow/30 transition-all"
+                                                    onClick={() => setSelectedStylePreset(null)}
+                                                    title={preset.promptSuffix}
+                                                >
+                                                    <span>{preset.icon}</span>
+                                                    <span>{language === 'it' ? preset.nameIt : preset.name}</span>
+                                                    <span className="opacity-0 group-hover:opacity-100 ml-1 text-[10px]">✕</span>
+                                                </div>
+                                            ) : null;
+                                        })()}
+                                        {selectedLighting && (() => {
+                                            const preset = PHYSICS_PRESETS.lighting.find(p => p.id === selectedLighting);
+                                            return preset ? (
+                                                <div
+                                                    className="group relative px-2 py-1 bg-yellow-500/20 text-yellow-400 rounded-full text-[9px] font-bold flex items-center gap-1 cursor-pointer hover:bg-yellow-500/30 transition-all"
+                                                    onClick={() => setSelectedLighting(null)}
+                                                    title={preset.prompt}
+                                                >
+                                                    <span>💡</span>
+                                                    <span>{language === 'it' ? preset.nameIt : preset.name}</span>
+                                                    <span className="opacity-0 group-hover:opacity-100 ml-1 text-[10px]">✕</span>
+                                                </div>
+                                            ) : null;
+                                        })()}
+                                        {selectedCamera && (() => {
+                                            const preset = PHYSICS_PRESETS.camera.find(p => p.id === selectedCamera);
+                                            return preset ? (
+                                                <div
+                                                    className="group relative px-2 py-1 bg-brand-magenta/20 text-brand-magenta rounded-full text-[9px] font-bold flex items-center gap-1 cursor-pointer hover:bg-brand-magenta/30 transition-all"
+                                                    onClick={() => setSelectedCamera(null)}
+                                                    title={preset.prompt}
+                                                >
+                                                    <span>📷</span>
+                                                    <span>{language === 'it' ? preset.nameIt : preset.name}</span>
+                                                    <span className="opacity-0 group-hover:opacity-100 ml-1 text-[10px]">✕</span>
+                                                </div>
+                                            ) : null;
+                                        })()}
+                                        {selectedFocus && (() => {
+                                            const preset = PHYSICS_PRESETS.focus.find(p => p.id === selectedFocus);
+                                            return preset ? (
+                                                <div
+                                                    className="group relative px-2 py-1 bg-brand-blue/20 text-brand-blue rounded-full text-[9px] font-bold flex items-center gap-1 cursor-pointer hover:bg-brand-blue/30 transition-all"
+                                                    onClick={() => setSelectedFocus(null)}
+                                                    title={preset.prompt}
+                                                >
+                                                    <span>🎯</span>
+                                                    <span>{language === 'it' ? preset.nameIt : preset.name}</span>
+                                                    <span className="opacity-0 group-hover:opacity-100 ml-1 text-[10px]">✕</span>
+                                                </div>
+                                            ) : null;
+                                        })()}
+                                    </div>
+                                    <p className="text-[8px] text-light-text-muted/50 dark:text-dark-text-muted/50 mt-2 italic">{t.presetAppliedToPrompt}</p>
+                                </div>
+                            )}
                         </div>
                     </div>
                 ) : appMode === 'studio' ? (
@@ -2354,7 +2503,7 @@ export default function App() {
     const [editedPrompt, setEditedPrompt] = useState<string>('');
     const [negativePrompt, setNegativePrompt] = useState<string>('');
     const [seed, setSeed] = useState<string>('');
-    const [dynamicTools, setDynamicTools] = useState<DynamicTool[]>([]);
+
     const [aspectRatio, setAspectRatio] = useState<string>('1:1');
     // v1.0: New PRO features states
     const [selectedModel, setSelectedModel] = useState<ModelType>('gemini-3-pro-image-preview');
@@ -2363,7 +2512,7 @@ export default function App() {
     const [history, setHistory] = useState<GeneratedImage[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [reasoningText, setReasoningText] = useState<string>(''); // v1.7: Creative reasoning plan
-    const [isToolsLoading, setIsToolsLoading] = useState(false);
+
     const [isEnhancing, setIsEnhancing] = useState(false);
     const [numImagesToGenerate, setNumImagesToGenerate] = useState(1);
     const [autoEnhance, setAutoEnhance] = useState(false); // v1.9 Pro: Default OFF as requested
@@ -2505,7 +2654,7 @@ export default function App() {
         const hasImages = referenceImages.length > 0 || styleReferenceImage;
         if (!hasImages) {
             setPrompts([]);
-            setDynamicTools([]);
+
         }
     }, [referenceImages, styleReferenceImage]);
 
@@ -2527,22 +2676,6 @@ export default function App() {
             setIsPromptsLoading(false);
         }
     }, [referenceImages, styleReferenceImage, structureImage, userApiKey, language, showToast, editedPrompt]);
-
-    const handleGenerateDynamicTools = useCallback(async () => {
-        const hasImages = referenceImages.length > 0 || styleReferenceImage || structureImage;
-        if (!hasImages) return;
-
-        setIsToolsLoading(true);
-        try {
-            const newTools = await geminiService.generateDynamicToolsFromImage(referenceImages, styleReferenceImage, structureImage, userApiKey, language);
-            setDynamicTools(newTools);
-        } catch (error: any) {
-            console.error("Failed to generate dynamic tools", error);
-            showToast(error.message, 'error');
-        } finally {
-            setIsToolsLoading(false);
-        }
-    }, [referenceImages, styleReferenceImage, structureImage, userApiKey, language, showToast]);
 
     const handleSaveDna = async (imageFile: File, name: string) => {
         setIsDnaLoading(true);
@@ -3747,7 +3880,7 @@ export default function App() {
         setEditedPrompt('');
         setNegativePrompt('');
         setSeed('');
-        setDynamicTools([]);
+
         setAspectRatio('Auto');
         setCurrentImages([]);
         setNumImagesToGenerate(1);
@@ -3812,7 +3945,6 @@ export default function App() {
                             selectedFocus={selectedFocus}
                             setSelectedFocus={setSelectedFocus}
                             selectedModel={selectedModel}
-                            setEditedPrompt={setEditedPrompt}
                             preciseReference={preciseReference}
                             setPreciseReference={setPreciseReference}
                             dnaCharacters={dnaCharacters}
@@ -4039,15 +4171,11 @@ export default function App() {
                     onPreciseReferenceChange={setPreciseReference}
                     useGrounding={useGrounding}
                     onGroundingChange={setUseGrounding}
-                    dynamicTools={dynamicTools}
-                    onGenerateTools={handleGenerateDynamicTools}
-                    isToolsLoading={isToolsLoading}
                     selectedModel={selectedModel}
                     onModelChange={setSelectedModel}
                     selectedResolution={selectedResolution}
                     onResolutionChange={setSelectedResolution}
                     isEnhancing={isEnhancing}
-                    referenceCount={referenceImages.length + (styleReferenceImage ? 1 : 0) + (structureImage ? 1 : 0)}
                 />
 
                 <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} onSave={handleSaveApiKey} currentApiKey={userApiKey} />

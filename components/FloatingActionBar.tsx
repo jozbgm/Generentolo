@@ -26,15 +26,11 @@ interface FloatingActionBarProps {
     onPreciseReferenceChange: (enabled: boolean) => void;
     useGrounding: boolean;
     onGroundingChange: (enabled: boolean) => void;
-    dynamicTools: any[];
-    onGenerateTools: () => void;
-    isToolsLoading: boolean;
     selectedModel: ModelType;
     onModelChange: (model: ModelType) => void;
     selectedResolution: ResolutionType;
     onResolutionChange: (resolution: ResolutionType) => void;
     isEnhancing?: boolean;
-    referenceCount: number;
 }
 
 const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
