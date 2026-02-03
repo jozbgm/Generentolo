@@ -130,6 +130,7 @@ const GenerAngles: React.FC<GenerAnglesProps> = ({
                 window.removeEventListener('mouseup', handleGlobalUp);
             };
         }
+        return undefined;
     }, [isDragging, snapToGrid]);
 
     const handleGenerate = useCallback(() => {
