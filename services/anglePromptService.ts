@@ -109,9 +109,13 @@ export function generateSimpleAnglePrompt(
 }
 
 /**
- * COGNITIVE ANGLE SYNTHESIS v3.0
- * Uses Gemini Pro to analyze the reference and generate a view-aware prompt.
- * Now uses standardized camera terminology for better results.
+ * COGNITIVE ANGLE SYNTHESIS v4.0
+ * 
+ * Basato su ricerche specifiche per Gemini 3 Pro:
+ * - NON usare "rotate" o "transform" - Gemini copia l'immagine
+ * - DESCRIVERE cosa si VEDE dalla nuova angolazione
+ * - Usare terminologia cinematografica precisa
+ * - Trattare l'immagine di riferimento come GUIDA per l'identità, non come base da modificare
  */
 export async function generateCognitiveAnglePrompt(
     referenceImage: File,
@@ -126,82 +130,154 @@ export async function generateCognitiveAnglePrompt(
         const ai = getAiClient(userApiKey);
         const imagePart = await fileToGenerativePart(referenceImage);
 
-        // Get standardized camera terms
-        const azimuth = getAzimuthTerm(rotation);
-        const elevation = getElevationTerm(tilt);
-        const distance = getDistanceTerm(zoom);
-        const cameraPosition = `${azimuth} ${elevation} ${distance}`;
+        // Get standardized camera terms with cinematic vocabulary
+        const cameraAngle = getCinematicCameraDescription(rotation, tilt, zoom);
 
-        // Determine if this is a back/side view (requires more imagination)
-        const isBackView = rotation >= 135 && rotation <= 225;
-        const isSideView = (rotation >= 67.5 && rotation < 135) || (rotation >= 225 && rotation < 292.5);
+        // Determine what parts of the subject would be visible
+        const visibilityDescription = getVisibilityDescription(rotation, tilt);
 
-        const systemInstruction = language === 'it'
-            ? `Sei un esperto di Neural View Synthesis. Devi descrivere come apparirebbe il soggetto dell'immagine di riferimento dalla nuova posizione camera.
+        // STEP 1: Ask Gemini to analyze the subject and describe it from the new angle
+        const analysisPrompt = language === 'it'
+            ? `Analizza questa immagine e identifica il soggetto principale.
 
-POSIZIONE CAMERA TARGET: ${cameraPosition}
+Poi, descrivi ESATTAMENTE come apparirebbe questo stesso soggetto se fotografato da questa angolazione:
+📷 CAMERA: ${cameraAngle}
 
-REGOLE:
-1. Mantieni IDENTITÀ ESATTA del soggetto (viso, vestiti, corporatura)
-2. Descrivi cosa è VISIBILE da questa angolazione
-3. ${isBackView ? 'Per la vista posteriore: descrivi logicamente capelli/retro vestiti basandoti sulla vista frontale' : ''}
-4. ${isSideView ? 'Per la vista laterale: descrivi il profilo e i dettagli laterali' : ''}
-5. Usa terminologia fotografica concisa
-6. NON aggiungere elementi non presenti nell\'originale`
-            : `You are a Neural View Synthesis expert. Describe how the subject in the reference image would appear from the new camera position.
+La tua risposta deve essere un PROMPT per generare una NUOVA immagine che mostra:
+${visibilityDescription}
 
-TARGET CAMERA POSITION: ${cameraPosition}
+FORMATO OUTPUT (solo questo, niente altro):
+"[Tipo di shot] of [descrizione dettagliata del soggetto come appare da questa angolazione], [dettagli tecnici della camera]"
 
-RULES:
-1. Maintain EXACT IDENTITY of subject (face, clothes, body type)
-2. Describe what is VISIBLE from this angle
-3. ${isBackView ? 'For back view: logically describe hair/back of clothes based on front view' : ''}
-4. ${isSideView ? 'For side view: describe profile and lateral details' : ''}
-5. Use concise photographic terminology
-6. Do NOT add elements not present in the original`;
+Esempio: "Three-quarter back view of a young woman with long brown hair, showing the back of her blue dress and her profile looking slightly over her shoulder, eye-level shot, soft studio lighting"`
+            : `Analyze this image and identify the main subject.
 
-        const userMessage = language === 'it'
-            ? `Analizza l'immagine di riferimento.
-Descrizione originale: "${originalPrompt}"
+Then, describe EXACTLY how this same subject would appear if photographed from this angle:
+📷 CAMERA: ${cameraAngle}
 
-Genera un prompt CONCISO per rigenerare questo soggetto dalla posizione camera: ${cameraPosition}
+Your response must be a PROMPT to generate a NEW image showing:
+${visibilityDescription}
 
-Formato output: Una singola frase che descrive la vista. Inizia con la posizione camera, poi descrivi il soggetto.`
-            : `Analyze the reference image.
-Original description: "${originalPrompt}"
+OUTPUT FORMAT (only this, nothing else):
+"[Shot type] of [detailed description of subject as seen from this angle], [camera technical details]"
 
-Generate a CONCISE prompt to regenerate this subject from camera position: ${cameraPosition}
-
-Output format: A single sentence describing the view. Start with camera position, then describe the subject.`;
+Example: "Three-quarter back view of a young woman with long brown hair, showing the back of her blue dress and her profile looking slightly over her shoulder, eye-level shot, soft studio lighting"`;
 
         const result = await ai.models.generateContent({
-            model: 'gemini-3-flash-preview', // Using Flash for speed, Pro not needed here
+            model: 'gemini-2.0-flash',
             contents: {
-                parts: [imagePart, { text: userMessage }]
+                parts: [imagePart, { text: analysisPrompt }]
             },
             config: {
-                systemInstruction: systemInstruction,
-                temperature: 0.5 // Lower temperature for more consistent results
+                temperature: 0.4
             }
         });
 
-        const generatedPrompt = result.text?.trim();
+        let generatedPrompt = result.text?.trim() || '';
 
         if (!generatedPrompt) {
-            throw new Error("Empty response");
+            throw new Error("Empty response from analysis");
         }
 
-        // Ensure the camera position is at the start of the prompt
-        if (!generatedPrompt.toLowerCase().includes(azimuth.split(' ')[0])) {
-            return `${cameraPosition}, ${generatedPrompt}`;
-        }
+        // Clean up quotes if present
+        generatedPrompt = generatedPrompt.replace(/^["']|["']$/g, '').trim();
 
-        return generatedPrompt;
+        // CRITICAL: Add explicit instruction to NOT copy the reference but use it for identity only
+        const finalPrompt = `Generate a NEW photograph: ${generatedPrompt}. Use the reference image ONLY to understand the subject's identity (face, body, clothes). Create an entirely new view from the specified camera position.`;
+
+        return finalPrompt;
 
     } catch (error) {
-        console.warn("Cognitive Angle Generation failed, using simple prompt", error);
-        return generateSimpleAnglePromptWithSubject(originalPrompt, rotation, tilt, zoom);
+        console.warn("Cognitive Angle Generation failed, using enhanced fallback", error);
+        return generateEnhancedFallbackPrompt(originalPrompt, rotation, tilt, zoom);
     }
+}
+
+/**
+ * Generate cinematic camera description
+ */
+function getCinematicCameraDescription(rotation: number, tilt: number, zoom: number): string {
+    // Azimuth -> View direction
+    const azimuthDescriptions: Record<string, string> = {
+        'front': 'front view, facing the camera directly',
+        'front-right': 'three-quarter view from the front-right',
+        'right': 'profile view from the right side',
+        'back-right': 'three-quarter back view from the right',
+        'back': 'back view, showing from behind',
+        'back-left': 'three-quarter back view from the left',
+        'left': 'profile view from the left side',
+        'front-left': 'three-quarter view from the front-left'
+    };
+
+    const azimuthKey = getAzimuthTerm(rotation).split(' ')[0];
+    const azimuth = azimuthDescriptions[azimuthKey] || azimuthDescriptions['front'];
+
+    // Elevation -> Camera height
+    let elevation = 'eye-level shot';
+    if (tilt >= 45) elevation = 'high-angle shot looking down';
+    else if (tilt >= 20) elevation = 'slightly elevated angle';
+    else if (tilt <= -15) elevation = 'low-angle shot looking up';
+    else if (tilt <= -5) elevation = 'slightly low angle';
+
+    // Distance -> Shot type
+    let distance = 'medium shot';
+    if (zoom >= 7) distance = 'extreme close-up';
+    else if (zoom >= 4) distance = 'close-up shot';
+    else if (zoom <= 1) distance = 'full body shot';
+
+    return `${azimuth}, ${elevation}, ${distance}`;
+}
+
+/**
+ * Describe what would be visible from this angle
+ */
+function getVisibilityDescription(rotation: number, tilt: number): string {
+    const parts: string[] = [];
+
+    // Back view descriptions
+    if (rotation >= 135 && rotation <= 225) {
+        parts.push('- The BACK of the subject (hair from behind, back of clothing)');
+        parts.push('- Possibly a slight profile if the head is turned');
+        parts.push('- Any background elements that would be in front of them');
+    }
+    // Side view descriptions
+    else if ((rotation >= 67.5 && rotation < 135) || (rotation >= 225 && rotation < 292.5)) {
+        parts.push('- The PROFILE of the subject (side of face, ear visible)');
+        parts.push('- One arm/leg more prominent than the other');
+        parts.push('- Side details of clothing and accessories');
+    }
+    // Front/front-quarter view
+    else {
+        parts.push('- The FRONT of the subject (face clearly visible)');
+        if (rotation > 20 && rotation < 67.5) {
+            parts.push('- Slightly angled, showing more of the right side');
+        } else if (rotation > 292.5 && rotation < 340) {
+            parts.push('- Slightly angled, showing more of the left side');
+        }
+    }
+
+    // Tilt descriptions
+    if (tilt >= 30) {
+        parts.push('- Top of head/shoulders more visible (camera looking down)');
+    } else if (tilt <= -10) {
+        parts.push('- Chin/underside more visible (camera looking up)');
+    }
+
+    return parts.join('\n');
+}
+
+/**
+ * Enhanced fallback prompt when cognitive generation fails
+ */
+function generateEnhancedFallbackPrompt(
+    originalPrompt: string,
+    rotation: number,
+    tilt: number,
+    zoom: number
+): string {
+    const cameraAngle = getCinematicCameraDescription(rotation, tilt, zoom);
+
+    return `Generate a NEW photograph showing: ${originalPrompt}. Camera position: ${cameraAngle}. Use the reference image ONLY to understand the subject's appearance, then create an entirely new view from the specified angle.`;
 }
 
 /**

@@ -168,55 +168,47 @@ const GenerAngles: React.FC<GenerAnglesProps> = ({
     };
 
     return (
-        <div className="flex flex-col gap-4 py-2 select-none">
-            {/* Header - Minimal & Technical */}
-            <div className="flex items-center justify-between px-1">
-                <div className="flex items-center gap-2.5">
+        <div className="flex flex-col gap-3 py-2 select-none">
+            {/* Header */}
+            <div className="flex items-center justify-between px-2">
+                <div className="flex items-center gap-2">
                     <div className="relative">
-                        <div className="absolute -inset-1 bg-brand-blue/30 blur-sm rounded-full animate-pulse capitalize" />
-                        <svg className="relative size-5 text-brand-blue" aria-hidden="true" width="24px" height="24px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M4 5C3.44772 5 3 4.55228 3 4C3 3.44772 3.44772 3 4 3C4.55228 3 5 3.44772 5 4C5 4.55228 4.55228 5 4 5Z" fill="currentColor"></path>
-                            <path d="M20 5C19.4477 5 19 4.55228 19 4C19 3.44772 19.4477 3 20 3C20.5523 3 21 3.44772 21 4C21 4.55228 20.5523 5 20 5Z" fill="currentColor"></path>
-                            <path d="M20 21C19.4477 21 19 20.5523 19 20C19 19.4477 19.4477 19 20 19C20.5523 19 21 19.4477 21 20C21 20.5523 20.5523 21 20 21Z" fill="currentColor"></path>
-                            <path d="M4 21C3.44772 21 3 20.5523 3 20C3 19.4477 3.44772 19 4 19C4.55228 19 5 19.4477 5 20C5 20.5523 4.55228 21 4 21Z" fill="currentColor"></path>
-                            <path d="M12.8682 5.63231C12.3302 5.32488 11.6698 5.32487 11.1318 5.63231L6.88176 8.06088C6.83858 8.08555 6.7967 8.11191 6.7562 8.13984L11.9998 11.1362L17.2436 8.13972C17.2032 8.11184 17.1614 8.08552 17.1182 8.06088L12.8682 5.63231Z" fill="currentColor"></path>
-                            <path d="M6 9.58031C6 9.53277 6.00193 9.48551 6.00573 9.43863L11.2498 12.4352V18.4293C11.1292 18.4103 11.1705 18.3898 11.1318 18.3677L6.88176 15.9391C6.3365 15.6275 6 15.0477 6 14.4197V9.58031Z" fill="currentColor"></path>
-                            <path d="M12.8682 18.3677C12.8294 18.3899 12.7899 18.4105 12.7498 18.4295V12.4352L17.9943 9.43841C17.9981 9.48537 18 9.5327 18 9.58031V14.4197C18 15.0477 17.6635 15.6275 17.1182 15.9391L12.8682 18.3677Z" fill="currentColor"></path>
+                        <div className="absolute -inset-1 bg-brand-blue/30 blur-sm rounded-full" />
+                        <svg className="relative size-5 text-brand-blue" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12.8682 5.63231C12.3302 5.32488 11.6698 5.32487 11.1318 5.63231L6.88176 8.06088C6.83858 8.08555 6.7967 8.11191 6.7562 8.13984L11.9998 11.1362L17.2436 8.13972C17.2032 8.11184 17.1614 8.08552 17.1182 8.06088L12.8682 5.63231Z" />
+                            <path d="M6 9.58031C6 9.53277 6.00193 9.48551 6.00573 9.43863L11.2498 12.4352V18.4293C11.1292 18.4103 11.1705 18.3898 11.1318 18.3677L6.88176 15.9391C6.3365 15.6275 6 15.0477 6 14.4197V9.58031Z" />
+                            <path d="M12.8682 18.3677C12.8294 18.3899 12.7899 18.4105 12.7498 18.4295V12.4352L17.9943 9.43841C17.9981 9.48537 18 9.5327 18 9.58031V14.4197C18 15.0477 17.6635 15.6275 17.1182 15.9391L12.8682 18.3677Z" />
                         </svg>
                     </div>
-                    <div>
-                        <h2 className="text-[12px] font-black uppercase tracking-[0.2em] text-white leading-none">Perspective Studio</h2>
-                        <p className="text-[9px] text-light-text-muted dark:text-dark-text-muted font-bold mt-1 uppercase opacity-60">Multi-Angle Controller v3</p>
-                    </div>
+                    <span className="text-sm font-bold text-white">3D Angles</span>
                 </div>
                 {/* Live Position Badge */}
-                <div className={`px-3 py-1.5 rounded-lg border transition-all duration-150 ${isSnapped ? 'bg-brand-blue/20 border-brand-blue/50' : 'bg-white/5 border-white/10'}`}>
-                    <span className={`text-[10px] font-black uppercase tracking-widest transition-colors ${isSnapped ? 'text-brand-blue' : 'text-white/60'}`}>
-                        {getAngleLabel(rotation)} • {getTiltLabel(tilt)}
-                    </span>
+                <div className={`px-3 py-1 rounded-md text-xs font-mono font-bold transition-all ${isSnapped ? 'bg-brand-blue/20 text-brand-blue' : 'bg-white/5 text-white/50'}`}>
+                    {getAngleLabel(rotation)} • {getTiltLabel(tilt)}
                 </div>
             </div>
 
-            {/* Main Interactive Viewport - Deep Dark Cinema Style */}
-            <div className="relative w-full min-h-[300px] rounded-[1.5rem] bg-[#0c0d0e] border border-white/5 shadow-2xl flex flex-col">
+            {/* Main Viewport */}
+            <div className="relative w-full rounded-xl bg-[#0a0a0b] border border-white/10 shadow-xl flex flex-col" style={{ minHeight: '320px' }}>
 
                 {/* 3D Scene Layer */}
                 <div
                     ref={containerRef}
-                    className={`flex-1 relative overflow-hidden ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+                    className={`flex-1 relative ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+                    style={{ minHeight: '280px' }}
                     onMouseDown={handleMouseDown}
                     onMouseMove={handleMouseMove}
                     onMouseUp={handleMouseUp}
                     onMouseLeave={handleMouseUp}
                 >
-                    {/* Top Instruction */}
-                    <div className={`absolute top-4 left-0 right-0 z-10 text-center pointer-events-none transition-opacity duration-300 ${isDragging ? 'opacity-0' : 'opacity-100'}`}>
-                        <p className="text-[10px] uppercase font-black tracking-widest text-white/30">Drag to orbit • Snaps to 45° grid</p>
+                    {/* Instruction */}
+                    <div className={`absolute top-3 left-0 right-0 z-10 text-center pointer-events-none transition-opacity ${isDragging ? 'opacity-0' : 'opacity-100'}`}>
+                        <span className="text-[10px] text-white/40 font-medium">Drag to rotate • Snaps to 45°</span>
                     </div>
 
                     {/* 3D Wireframe Sphere with Orbiting Camera */}
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                        <div className="relative w-52 h-52" style={{ perspective: '800px' }}>
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ minHeight: '280px' }}>
+                        <div className="relative" style={{ width: '200px', height: '200px', perspective: '500px' }}>
                             <div
                                 className="relative size-full transition-transform duration-150 ease-out"
                                 style={{
@@ -224,72 +216,57 @@ const GenerAngles: React.FC<GenerAnglesProps> = ({
                                     transform: `rotateX(${-tilt}deg) rotateY(${-rotation}deg)`
                                 }}
                             >
-                                {/* Equator Ring */}
+                                {/* Equator Ring - MAIN, most visible */}
                                 <div
-                                    className={`absolute inset-0 rounded-full border-2 transition-colors duration-150 ${isSnapped ? 'border-brand-blue/40' : 'border-white/20'}`}
+                                    className={`absolute inset-0 rounded-full border-2 transition-colors duration-150 ${isSnapped ? 'border-brand-blue' : 'border-white/50'}`}
                                     style={{ transform: 'rotateX(90deg)' }}
                                 />
 
-                                {/* Vertical Ring (Meridian) */}
-                                <div className="absolute inset-0 rounded-full border border-white/10" />
+                                {/* Vertical Ring (Meridian) - also visible */}
+                                <div className={`absolute inset-0 rounded-full border-2 transition-colors ${isSnapped ? 'border-brand-blue/60' : 'border-white/40'}`} />
 
                                 {/* Additional Longitude Rings for depth */}
-                                {[30, 60, 120, 150].map(deg => (
+                                {[45, 90, 135].map(deg => (
                                     <div
                                         key={deg}
-                                        className="absolute inset-0 rounded-full border border-white/5"
+                                        className="absolute inset-0 rounded-full border border-white/20"
                                         style={{ transform: `rotateY(${deg}deg)` }}
                                     />
                                 ))}
 
-                                {/* Latitude Rings */}
-                                {[-30, 30, 60].map(deg => (
-                                    <div
-                                        key={deg}
-                                        className="absolute rounded-full border border-white/5"
-                                        style={{
-                                            transform: `rotateX(90deg) translateZ(${Math.sin(deg * Math.PI / 180) * 104}px)`,
-                                            width: `${Math.cos(deg * Math.PI / 180) * 100}%`,
-                                            height: `${Math.cos(deg * Math.PI / 180) * 100}%`,
-                                            left: `${(1 - Math.cos(deg * Math.PI / 180)) * 50}%`,
-                                            top: `${(1 - Math.cos(deg * Math.PI / 180)) * 50}%`
-                                        }}
-                                    />
-                                ))}
-
-                                {/* The Orbiting Camera (Fixed in world space, appears to orbit as sphere rotates) */}
+                                {/* The Orbiting Camera */}
                                 <div
                                     className="absolute left-1/2 top-1/2"
                                     style={{
                                         transformStyle: 'preserve-3d',
-                                        transform: 'translate(-50%, -50%) translateZ(115px)'
+                                        transform: 'translate(-50%, -50%) translateZ(105px)'
                                     }}
                                 >
-                                    {/* Camera Body */}
+                                    {/* Camera Icon */}
                                     <div className="relative flex items-center justify-center" style={{ transformStyle: 'preserve-3d' }}>
                                         {/* Main Lens */}
                                         <div
-                                            className={`absolute w-7 h-7 rounded-full border-2 shadow-lg transition-all duration-150 ${isSnapped ? 'bg-brand-blue/30 border-brand-blue shadow-brand-blue/50' : 'bg-[#1a1a1a] border-white/40 shadow-white/20'}`}
+                                            className={`absolute w-8 h-8 rounded-full border-2 shadow-lg transition-all duration-150 ${isSnapped ? 'bg-brand-blue/40 border-brand-blue shadow-brand-blue/60' : 'bg-[#222] border-white/60 shadow-white/30'}`}
                                             style={{ transform: 'translateZ(-4px)' }}
                                         >
-                                            <div className="absolute inset-1 rounded-full bg-gradient-to-tr from-black to-[#333]" />
-                                            <div className={`absolute inset-2 rounded-full blur-[2px] transition-colors ${isSnapped ? 'bg-brand-blue/50' : 'bg-brand-blue/30'}`} />
+                                            <div className="absolute inset-1.5 rounded-full bg-gradient-to-tr from-black to-[#444]" />
+                                            <div className={`absolute inset-2.5 rounded-full blur-[2px] ${isSnapped ? 'bg-brand-blue' : 'bg-brand-blue/50'}`} />
                                         </div>
 
-                                        {/* Camera Body Block */}
+                                        {/* Camera Body */}
                                         <div
-                                            className={`w-9 h-7 border rounded shadow-2xl transition-colors duration-150 ${isSnapped ? 'bg-brand-blue/20 border-brand-blue/50' : 'bg-[#222] border-white/20'}`}
+                                            className={`w-10 h-7 border-2 rounded shadow-2xl transition-colors duration-150 ${isSnapped ? 'bg-brand-blue/30 border-brand-blue' : 'bg-[#333] border-white/40'}`}
                                             style={{ transform: 'translateZ(-10px)' }}
                                         >
-                                            <div className={`absolute -top-1 right-1 w-2 h-1 rounded-full shadow-lg transition-colors ${isSnapped ? 'bg-brand-blue shadow-brand-blue' : 'bg-red-500 shadow-red-500'}`} />
+                                            <div className={`absolute -top-1.5 right-1 w-2.5 h-1.5 rounded-full shadow-lg ${isSnapped ? 'bg-brand-blue shadow-brand-blue' : 'bg-red-500 shadow-red-500'}`} />
                                         </div>
 
-                                        {/* Laser Pointer (Focal Path to center) */}
+                                        {/* Laser beam to center */}
                                         <div
-                                            className={`absolute w-0.5 h-[115px] bg-gradient-to-t to-transparent transition-colors duration-150 ${isSnapped ? 'from-brand-blue opacity-60' : 'from-white/40 opacity-30'}`}
+                                            className={`absolute w-1 h-[105px] bg-gradient-to-t to-transparent ${isSnapped ? 'from-brand-blue opacity-80' : 'from-white/60 opacity-50'}`}
                                             style={{
                                                 transformOrigin: 'bottom center',
-                                                transform: 'rotateX(90deg) translateY(0px)',
+                                                transform: 'rotateX(90deg)',
                                                 bottom: '0px'
                                             }}
                                         />
