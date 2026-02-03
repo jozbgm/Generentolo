@@ -1,7 +1,7 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 
-// v1.9.8: Premium Angles Studio overhaul inspired by high-end 3D perspective editors
-// Implements a full CSS 3D viewport, cinematic gizmo, and batch multi-angle generation.
+// v2.0: Professional Perspective Studio with improved mouse interaction
+// Features: Snap-to-grid, visual guides, smoother dragging, and tactile feedback
 
 interface GenerAnglesProps {
     onGenerate: (params: AngleGenerationParams) => void;
@@ -17,17 +17,27 @@ export interface AngleGenerationParams {
     generateBestAngles?: boolean;
 }
 
+// 8 key azimuth positions for snap-to-grid
+const SNAP_ANGLES = [0, 45, 90, 135, 180, 225, 270, 315];
+const SNAP_THRESHOLD = 8; // Degrees within which to snap
+
+// 4 key tilt positions
+const SNAP_TILTS = [-30, 0, 30, 60];
+const SNAP_TILT_THRESHOLD = 7;
+
 const GenerAngles: React.FC<GenerAnglesProps> = ({
     onGenerate,
     isGenerating,
     referenceImages
 }) => {
     const [rotation, setRotation] = useState(45);
-    const [tilt, setTilt] = useState(30);
+    const [tilt, setTilt] = useState(0);
     const [zoom, setZoom] = useState(0);
     const [generateBestAngles, setGenerateBestAngles] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
-    const [dragStart, setDragStart] = useState({ x: 0, y: 0, rotation: 0, tilt: 0 });
+    const [isSnapped, setIsSnapped] = useState(false);
+    const dragRef = useRef({ startX: 0, startY: 0, startRotation: 0, startTilt: 0 });
+    const containerRef = useRef<HTMLDivElement>(null);
 
     // Get the first reference image as the primary one for the viewport
     const activeReferenceUrl = useMemo(() => {
@@ -37,36 +47,92 @@ const GenerAngles: React.FC<GenerAnglesProps> = ({
         return null;
     }, [referenceImages]);
 
-    const handleMouseDown = (e: React.MouseEvent) => {
+    // Snap value to nearest key angle if within threshold
+    const snapToGrid = useCallback((value: number, snapPoints: number[], threshold: number): { value: number; snapped: boolean } => {
+        for (const snapPoint of snapPoints) {
+            const distance = Math.abs(value - snapPoint);
+            const wrappedDistance = Math.abs(value - (snapPoint + 360)) % 360;
+            if (distance <= threshold || wrappedDistance <= threshold) {
+                return { value: snapPoint, snapped: true };
+            }
+        }
+        return { value, snapped: false };
+    }, []);
+
+    const handleMouseDown = useCallback((e: React.MouseEvent) => {
+        e.preventDefault();
         setIsDragging(true);
-        setDragStart({
-            x: e.clientX,
-            y: e.clientY,
-            rotation: rotation,
-            tilt: tilt
-        });
-    };
+        dragRef.current = {
+            startX: e.clientX,
+            startY: e.clientY,
+            startRotation: rotation,
+            startTilt: tilt
+        };
+    }, [rotation, tilt]);
 
-    const handleMouseMove = (e: React.MouseEvent) => {
+    const handleMouseMove = useCallback((e: React.MouseEvent) => {
         if (!isDragging) return;
-        const deltaX = e.clientX - dragStart.x;
-        const deltaY = e.clientY - dragStart.y;
 
-        // Map movement to steps to feel more "mechanical" like the source
-        // Horizontal drag = rotation
-        const newRotation = dragStart.rotation + deltaX * 1.5;
-        // Vertical drag = tilt
-        const newTilt = Math.max(-30, Math.min(60, dragStart.tilt - deltaY * 1.0));
+        const deltaX = e.clientX - dragRef.current.startX;
+        const deltaY = e.clientY - dragRef.current.startY;
 
-        setRotation(((newRotation % 360) + 360) % 360);
-        setTilt(newTilt);
-    };
+        // Sensitivity: 0.8 degrees per pixel for smooth, professional feel
+        const rawRotation = dragRef.current.startRotation + deltaX * 0.8;
+        const rawTilt = Math.max(-30, Math.min(60, dragRef.current.startTilt - deltaY * 0.5));
 
-    const handleMouseUp = () => {
+        // Normalize rotation to 0-360
+        const normalizedRotation = ((rawRotation % 360) + 360) % 360;
+
+        // Check for snap
+        const snapResult = snapToGrid(normalizedRotation, SNAP_ANGLES, SNAP_THRESHOLD);
+        const tiltSnapResult = snapToGrid(rawTilt, SNAP_TILTS, SNAP_TILT_THRESHOLD);
+
+        setRotation(snapResult.value);
+        setTilt(tiltSnapResult.value);
+        setIsSnapped(snapResult.snapped || tiltSnapResult.snapped);
+    }, [isDragging, snapToGrid]);
+
+    const handleMouseUp = useCallback(() => {
         setIsDragging(false);
-    };
+        setIsSnapped(false);
+    }, []);
 
-    const handleGenerate = () => {
+    // Global mouse events for dragging outside the container
+    useEffect(() => {
+        if (isDragging) {
+            const handleGlobalMove = (e: MouseEvent) => {
+                const deltaX = e.clientX - dragRef.current.startX;
+                const deltaY = e.clientY - dragRef.current.startY;
+
+                const rawRotation = dragRef.current.startRotation + deltaX * 0.8;
+                const rawTilt = Math.max(-30, Math.min(60, dragRef.current.startTilt - deltaY * 0.5));
+
+                const normalizedRotation = ((rawRotation % 360) + 360) % 360;
+
+                const snapResult = snapToGrid(normalizedRotation, SNAP_ANGLES, SNAP_THRESHOLD);
+                const tiltSnapResult = snapToGrid(rawTilt, SNAP_TILTS, SNAP_TILT_THRESHOLD);
+
+                setRotation(snapResult.value);
+                setTilt(tiltSnapResult.value);
+                setIsSnapped(snapResult.snapped || tiltSnapResult.snapped);
+            };
+
+            const handleGlobalUp = () => {
+                setIsDragging(false);
+                setIsSnapped(false);
+            };
+
+            window.addEventListener('mousemove', handleGlobalMove);
+            window.addEventListener('mouseup', handleGlobalUp);
+
+            return () => {
+                window.removeEventListener('mousemove', handleGlobalMove);
+                window.removeEventListener('mouseup', handleGlobalUp);
+            };
+        }
+    }, [isDragging, snapToGrid]);
+
+    const handleGenerate = useCallback(() => {
         if (!activeReferenceUrl) return;
 
         onGenerate({
@@ -76,6 +142,28 @@ const GenerAngles: React.FC<GenerAnglesProps> = ({
             zoom,
             generateBestAngles
         });
+    }, [activeReferenceUrl, onGenerate, rotation, tilt, zoom, generateBestAngles]);
+
+    // Get current angle label for display
+    const getAngleLabel = (deg: number): string => {
+        const labels: Record<number, string> = {
+            0: 'FRONT',
+            45: 'FRONT-R',
+            90: 'RIGHT',
+            135: 'BACK-R',
+            180: 'BACK',
+            225: 'BACK-L',
+            270: 'LEFT',
+            315: 'FRONT-L'
+        };
+        return labels[deg] || `${Math.round(deg)}°`;
+    };
+
+    const getTiltLabel = (deg: number): string => {
+        if (deg <= -15) return 'LOW';
+        if (deg >= 45) return 'HIGH';
+        if (deg >= 15) return 'ELEVATED';
+        return 'EYE-LEVEL';
     };
 
     return (
@@ -97,8 +185,14 @@ const GenerAngles: React.FC<GenerAnglesProps> = ({
                     </div>
                     <div>
                         <h2 className="text-[12px] font-black uppercase tracking-[0.2em] text-white leading-none">Perspective Studio</h2>
-                        <p className="text-[9px] text-light-text-muted dark:text-dark-text-muted font-bold mt-1 uppercase opacity-60">Kinematic Controller v2</p>
+                        <p className="text-[9px] text-light-text-muted dark:text-dark-text-muted font-bold mt-1 uppercase opacity-60">Multi-Angle Controller v3</p>
                     </div>
+                </div>
+                {/* Live Position Badge */}
+                <div className={`px-3 py-1.5 rounded-lg border transition-all duration-150 ${isSnapped ? 'bg-brand-blue/20 border-brand-blue/50' : 'bg-white/5 border-white/10'}`}>
+                    <span className={`text-[10px] font-black uppercase tracking-widest transition-colors ${isSnapped ? 'text-brand-blue' : 'text-white/60'}`}>
+                        {getAngleLabel(rotation)} • {getTiltLabel(tilt)}
+                    </span>
                 </div>
             </div>
 
@@ -107,128 +201,114 @@ const GenerAngles: React.FC<GenerAnglesProps> = ({
 
                 {/* 3D Scene Layer */}
                 <div
-                    className="flex-1 relative cursor-grab active:cursor-grabbing group overflow-hidden"
+                    ref={containerRef}
+                    className={`flex-1 relative overflow-hidden ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
                     onMouseDown={handleMouseDown}
                     onMouseMove={handleMouseMove}
                     onMouseUp={handleMouseUp}
                     onMouseLeave={handleMouseUp}
                 >
                     {/* Top Instruction */}
-                    <div className="absolute top-4 left-0 right-0 z-10 text-center pointer-events-none transition-opacity duration-300 group-hover:opacity-0">
-                        <p className="text-[10px] uppercase font-black tracking-widest text-white/30">Hold and drag to orbit</p>
+                    <div className={`absolute top-4 left-0 right-0 z-10 text-center pointer-events-none transition-opacity duration-300 ${isDragging ? 'opacity-0' : 'opacity-100'}`}>
+                        <p className="text-[10px] uppercase font-black tracking-widest text-white/30">Drag to orbit • Snaps to 45° grid</p>
                     </div>
 
-                    {/* Central Subject Ghosting Effect */}
+                    {/* 8-Point Compass Guide */}
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <div className="relative w-56 h-56">
+                            {SNAP_ANGLES.map((angle, i) => {
+                                const isActive = Math.abs(rotation - angle) < SNAP_THRESHOLD || Math.abs(rotation - angle - 360) < SNAP_THRESHOLD || Math.abs(rotation - angle + 360) < SNAP_THRESHOLD;
+                                const labels = ['F', 'FR', 'R', 'BR', 'B', 'BL', 'L', 'FL'];
+                                const radian = (angle - 90) * (Math.PI / 180);
+                                const x = Math.cos(radian) * 100;
+                                const y = Math.sin(radian) * 100;
+
+                                return (
+                                    <div
+                                        key={angle}
+                                        className={`absolute transition-all duration-150 ${isActive ? 'scale-125' : 'scale-100'}`}
+                                        style={{
+                                            left: `calc(50% + ${x}px)`,
+                                            top: `calc(50% + ${y}px)`,
+                                            transform: 'translate(-50%, -50%)'
+                                        }}
+                                    >
+                                        <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[8px] font-black transition-all ${isActive ? 'bg-brand-blue text-white shadow-lg shadow-brand-blue/50' : 'bg-white/10 text-white/40'}`}>
+                                            {labels[i]}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+
+                            {/* Center line from center to current angle */}
+                            <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 224 224">
+                                <line
+                                    x1="112"
+                                    y1="112"
+                                    x2={112 + Math.cos((rotation - 90) * Math.PI / 180) * 80}
+                                    y2={112 + Math.sin((rotation - 90) * Math.PI / 180) * 80}
+                                    stroke={isSnapped ? '#6366f1' : 'rgba(255,255,255,0.3)'}
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    className="transition-all duration-100"
+                                />
+                                <circle
+                                    cx={112 + Math.cos((rotation - 90) * Math.PI / 180) * 80}
+                                    cy={112 + Math.sin((rotation - 90) * Math.PI / 180) * 80}
+                                    r="6"
+                                    fill={isSnapped ? '#6366f1' : 'rgba(255,255,255,0.5)'}
+                                    className="transition-all duration-100"
+                                />
+                            </svg>
+                        </div>
+                    </div>
+
+                    {/* Central Subject */}
                     <div
-                        className="absolute top-1/2 left-1/2 select-none pointer-events-none duration-300 ease-out"
+                        className="absolute top-1/2 left-1/2 select-none pointer-events-none duration-200 ease-out"
                         style={{
-                            zIndex: 1,
-                            opacity: 1,
-                            transform: `translate(-50%, -50%) scale(${1 + (zoom / 50)})`,
-                            filter: isDragging ? 'brightness(1.5) blur(1px)' : 'none'
+                            zIndex: 10,
+                            transform: `translate(-50%, -50%) scale(${1 + (zoom / 30)})`,
+                            filter: isDragging ? 'brightness(1.3)' : 'none'
                         }}
                     >
                         {activeReferenceUrl ? (
                             <img
-                                className="w-16 h-16 object-cover rounded-xl bg-black/40 ring-1 ring-white/10 shadow-2xl"
+                                className={`w-20 h-20 object-cover rounded-xl bg-black/40 shadow-2xl transition-all duration-150 ${isSnapped ? 'ring-2 ring-brand-blue ring-offset-2 ring-offset-[#0c0d0e]' : 'ring-1 ring-white/20'}`}
                                 src={activeReferenceUrl}
-                                alt="Anchor"
+                                alt="Reference"
                             />
                         ) : (
-                            <div className="w-16 h-16 rounded-xl bg-white/5 border border-dashed border-white/10 flex items-center justify-center">
-                                <span className="text-[8px] font-black text-white/20">EMPTY</span>
+                            <div className="w-20 h-20 rounded-xl bg-white/5 border border-dashed border-white/10 flex items-center justify-center">
+                                <span className="text-[9px] font-black text-white/20 uppercase">Add Image</span>
                             </div>
                         )}
                     </div>
 
-                    {/* 3D Wireframe Sphere (CSS Preserve-3D) */}
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20">
-                        <div className="relative w-52 h-52 rounded-full border border-white/5" style={{ perspective: '800px' }}>
+                    {/* Tilt Indicator (Vertical bar on left) */}
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2 flex flex-col items-center gap-1 pointer-events-none">
+                        <div className="text-[8px] font-black text-white/30 uppercase">TILT</div>
+                        <div className="relative w-1.5 h-24 bg-white/10 rounded-full overflow-hidden">
                             <div
-                                className="relative size-full transition-transform duration-200 ease-out"
-                                style={{
-                                    transformStyle: 'preserve-3d',
-                                    transform: `rotateX(${tilt}deg) rotateY(${rotation}deg)`
-                                }}
-                            >
-                                {/* Horizontal Rings (Latitudes) */}
-                                <div className="absolute inset-0 rounded-full border border-white/10" />
-                                <div className="absolute inset-0 rounded-full border border-white/10" style={{ transform: 'rotateX(90deg)' }} />
-
-                                {/* Vertical Rings (Longitudes) */}
-                                {[15, 30, 45, 60, 75, 90, 105, 120, 135, 150, 165].map(deg => (
-                                    <div
-                                        key={deg}
-                                        className="absolute inset-0 rounded-full border border-white/5"
-                                        style={{ transform: `rotateY(${deg}deg)` }}
-                                    />
-                                ))}
-
-                                {/* The Floating Camera Gizmo */}
-                                <div
-                                    className="absolute left-1/2 top-1/2"
-                                    style={{
-                                        transformStyle: 'preserve-3d',
-                                        transform: 'translate(-50%, -50%) translateZ(110px)'
-                                    }}
-                                >
-                                    {/* 3D Camera Body Clone */}
-                                    <div className="relative flex items-center justify-center" style={{ transformStyle: 'preserve-3d' }}>
-                                        {/* Main Lens Barrel */}
-                                        <div className="absolute w-6 h-6 rounded-full bg-[#1a1a1a] border border-white/40 shadow-[0_0_15px_rgba(255,255,255,0.2)]" style={{ transform: 'translateZ(-4px)' }}>
-                                            <div className="absolute inset-1 rounded-full bg-gradient-to-tr from-black to-[#333]" />
-                                            <div className="absolute inset-2 rounded-full bg-brand-blue/30 blur-[2px]" />
-                                        </div>
-
-                                        {/* Camera Body Block */}
-                                        <div className="w-8 h-6 bg-[#222] border border-white/20 rounded shadow-2xl" style={{ transform: 'translateZ(-10px)' }}>
-                                            <div className="absolute -top-1 right-1 w-2 h-1 bg-red-500 rounded-full shadow-[0_0_5px_red]" />
-                                        </div>
-
-                                        {/* Laser Pointer (Focal Path) */}
-                                        <div
-                                            className="absolute w-0.5 h-[110px] bg-gradient-to-t from-brand-blue to-transparent opacity-40"
-                                            style={{
-                                                transformOrigin: 'bottom center',
-                                                transform: 'rotateX(90deg) translateY(0px) translateZ(0px)',
-                                                bottom: '0px'
-                                            }}
-                                        />
-                                    </div>
-                                </div>
-                            </div>
+                                className={`absolute bottom-0 left-0 right-0 rounded-full transition-all duration-100 ${isSnapped ? 'bg-brand-blue' : 'bg-white/40'}`}
+                                style={{ height: `${((tilt + 30) / 90) * 100}%` }}
+                            />
                         </div>
+                        <div className={`text-[10px] font-mono font-bold transition-colors ${isSnapped ? 'text-brand-blue' : 'text-white/60'}`}>{Math.round(tilt)}°</div>
                     </div>
 
-                    {/* Orbit Controls (HUD style) */}
-                    <button
-                        type="button"
-                        onClick={() => setTilt(prev => Math.min(60, prev + 15))}
-                        className="absolute left-1/2 top-8 -translate-x-1/2 text-white/40 hover:text-white transition-colors"
-                    >
-                        <svg className="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 15l-6-6-6 6" /></svg>
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => setTilt(prev => Math.max(-30, prev - 15))}
-                        className="absolute left-1/2 bottom-12 -translate-x-1/2 text-white/40 hover:text-white transition-colors"
-                    >
-                        <svg className="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9l6 6 6-6" /></svg>
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => setRotation(prev => (prev - 15) % 360)}
-                        className="absolute left-8 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors"
-                    >
-                        <svg className="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6" /></svg>
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => setRotation(prev => (prev + 15) % 360)}
-                        className="absolute right-8 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors"
-                    >
-                        <svg className="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6" /></svg>
-                    </button>
+                    {/* Quick Angle Buttons (replacing old orbit controls) */}
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 flex flex-col gap-1.5">
+                        {[0, 90, 180, 270].map(angle => (
+                            <button
+                                key={angle}
+                                onClick={() => setRotation(angle)}
+                                className={`w-8 h-8 rounded-lg flex items-center justify-center text-[9px] font-black uppercase transition-all ${rotation === angle ? 'bg-brand-blue text-white' : 'bg-white/5 text-white/40 hover:bg-white/10 hover:text-white/70'}`}
+                            >
+                                {angle === 0 ? 'F' : angle === 90 ? 'R' : angle === 180 ? 'B' : 'L'}
+                            </button>
+                        ))}
+                    </div>
 
                     {/* Best Angles Toggle Block */}
                     <div className="absolute bottom-4 left-0 right-0 flex justify-center z-20">
@@ -244,19 +324,21 @@ const GenerAngles: React.FC<GenerAnglesProps> = ({
                     </div>
                 </div>
 
-                {/* Bottom Control Bar (Hidden Selectors/Sliders) */}
+                {/* Bottom Control Bar */}
                 <div className="p-4 bg-white/[0.02] border-t border-white/5 space-y-3">
-                    {/* Rotation Horizontal Progress */}
+                    {/* Rotation Slider */}
                     <div className="relative overflow-hidden flex items-center rounded-xl bg-black/40 border border-white/5 h-11 px-4">
                         <div
-                            className="absolute inset-0 pointer-events-none transition-all duration-300"
+                            className="absolute inset-0 pointer-events-none transition-all duration-150"
                             style={{
-                                background: `linear-gradient(to right, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.05) ${(rotation / 360) * 100}%, transparent ${(rotation / 360) * 100}%)`
+                                background: `linear-gradient(to right, ${isSnapped ? 'rgba(99,102,241,0.2)' : 'rgba(255,255,255,0.05)'} 0%, ${isSnapped ? 'rgba(99,102,241,0.2)' : 'rgba(255,255,255,0.05)'} ${(rotation / 360) * 100}%, transparent ${(rotation / 360) * 100}%)`
                             }}
                         />
                         <div className="relative z-1 flex items-center justify-between w-full pointer-events-none">
                             <span className="text-[10px] font-black uppercase tracking-widest text-white/40">Orbit Rotation</span>
-                            <span className="text-xs font-mono font-bold text-white">{Math.round(rotation)}°</span>
+                            <span className={`text-xs font-mono font-bold transition-colors ${SNAP_ANGLES.includes(rotation) ? 'text-brand-blue' : 'text-white'}`}>
+                                {Math.round(rotation)}° {SNAP_ANGLES.includes(rotation) && '•'}
+                            </span>
                         </div>
                         <input
                             min="0" max="360" step="5"
@@ -267,17 +349,19 @@ const GenerAngles: React.FC<GenerAnglesProps> = ({
                         />
                     </div>
 
-                    {/* Tilt Vertical Progress */}
+                    {/* Tilt Slider */}
                     <div className="relative overflow-hidden flex items-center rounded-xl bg-black/40 border border-white/5 h-11 px-4">
                         <div
-                            className="absolute inset-0 pointer-events-none transition-all duration-300"
+                            className="absolute inset-0 pointer-events-none transition-all duration-150"
                             style={{
-                                background: `linear-gradient(to right, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.05) ${((tilt + 30) / 90) * 100}%, transparent ${((tilt + 30) / 90) * 100}%)`
+                                background: `linear-gradient(to right, ${isSnapped ? 'rgba(99,102,241,0.2)' : 'rgba(255,255,255,0.05)'} 0%, ${isSnapped ? 'rgba(99,102,241,0.2)' : 'rgba(255,255,255,0.05)'} ${((tilt + 30) / 90) * 100}%, transparent ${((tilt + 30) / 90) * 100}%)`
                             }}
                         />
                         <div className="relative z-1 flex items-center justify-between w-full pointer-events-none">
                             <span className="text-[10px] font-black uppercase tracking-widest text-white/40">Pitch/Tilt</span>
-                            <span className="text-xs font-mono font-bold text-white">{Math.round(tilt)}°</span>
+                            <span className={`text-xs font-mono font-bold transition-colors ${SNAP_TILTS.includes(tilt) ? 'text-brand-blue' : 'text-white'}`}>
+                                {Math.round(tilt)}° {SNAP_TILTS.includes(tilt) && '•'}
+                            </span>
                         </div>
                         <input
                             min="-30" max="60" step="15"
@@ -288,7 +372,7 @@ const GenerAngles: React.FC<GenerAnglesProps> = ({
                         />
                     </div>
 
-                    {/* Zoom / Distance Progress */}
+                    {/* Zoom Slider */}
                     <div className="relative overflow-hidden flex items-center rounded-xl bg-black/40 border border-white/5 h-11 px-4">
                         <div
                             className="absolute inset-0 pointer-events-none transition-all duration-300"
@@ -331,10 +415,6 @@ const GenerAngles: React.FC<GenerAnglesProps> = ({
                     )}
                 </button>
             </div>
-
-            <style>{`
-                .rounded-t { border-top-left-radius: 4px; border-top-right-radius: 4px; }
-            `}</style>
         </div>
     );
 };
