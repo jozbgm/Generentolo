@@ -2301,6 +2301,7 @@ const DnaCharacterModal: React.FC<DnaCharacterModalProps> = ({ isOpen, onClose, 
     const { t, language } = useLocalization();
     const [newName, setNewName] = useState('');
     const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+    const [expandedCharId, setExpandedCharId] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     if (!isOpen) return null;
@@ -2416,9 +2417,43 @@ const DnaCharacterModal: React.FC<DnaCharacterModalProps> = ({ isOpen, onClose, 
                                             </div>
                                         )}
                                     </div>
-                                    <div className="text-center truncate font-medium text-sm">
+                                    <div
+                                        onClick={(e) => { e.stopPropagation(); setExpandedCharId(expandedCharId === char.id ? null : char.id); }}
+                                        className="text-center truncate font-bold text-xs mb-1 hover:text-brand-purple flex items-center justify-center gap-1"
+                                    >
                                         {char.name}
+                                        <SparklesIcon className="w-2.5 h-2.5 opacity-40" />
                                     </div>
+
+                                    {/* v2.0.1: Source images preview gallery */}
+                                    {char.sourceImages && char.sourceImages.length > 0 && (
+                                        <div
+                                            onClick={(e) => { e.stopPropagation(); setExpandedCharId(expandedCharId === char.id ? null : char.id); }}
+                                            className="flex flex-wrap justify-center gap-1 mt-1 opacity-60 group-hover:opacity-100 transition-opacity cursor-zoom-in"
+                                        >
+                                            {char.sourceImages.slice(0, 4).map((img, idx) => (
+                                                <div key={idx} className="w-4 h-4 rounded-sm overflow-hidden border border-white/20">
+                                                    <img src={img} alt={`Source ${idx}`} className="w-full h-full object-cover" />
+                                                </div>
+                                            ))}
+                                            {char.sourceImages.length > 4 && (
+                                                <div className="w-4 h-4 rounded-sm bg-black/40 flex items-center justify-center text-[7px] font-black text-white">
+                                                    +{char.sourceImages.length - 4}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {/* Expanded Source Gallery */}
+                                    {expandedCharId === char.id && char.sourceImages && (
+                                        <div className="mt-3 grid grid-cols-4 gap-1 p-2 bg-black/20 rounded-xl animate-fade-in">
+                                            {char.sourceImages.map((img, idx) => (
+                                                <div key={idx} className="aspect-square rounded-md overflow-hidden border border-white/10 hover:border-brand-purple transition-colors">
+                                                    <img src={img} alt={`Angle ${idx}`} className="w-full h-full object-cover" />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
 
                                     <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                         <button
@@ -2694,56 +2729,48 @@ export default function App() {
     const handleSaveDna = async (imageFiles: File[], name: string) => {
         setIsDnaLoading(true);
         try {
+            // v2.0.1: Aggressive optimization - resize all images before anything else
+            // DNA extraction doesn't need 4K images, 1024px is plenty and avoids API payload limits
+            const optimizedBlobs = await Promise.all(
+                imageFiles.map(file => geminiService.resizeImage(file, 1024, 1024))
+            );
+
+            // Convert blobs to Files for the service (or modify service to accept Blobs)
+            const optimizedFiles = optimizedBlobs.map((blob, i) =>
+                new File([blob], imageFiles[i].name, { type: imageFiles[i].type })
+            );
+
             let dna: string;
             let viewDescriptions: string[] = [];
 
-            if (imageFiles.length > 1) {
-                // v2.0: Multi-image DNA extraction
-                const result = await geminiService.extractMultiImageDna(imageFiles, userApiKey, language);
+            if (optimizedFiles.length > 1) {
+                // v2.0: Multi-image DNA extraction (service already uses optimized files internally if called)
+                const result = await geminiService.extractMultiImageDna(optimizedFiles, userApiKey, language);
                 dna = result.dna;
                 viewDescriptions = result.viewDescriptions;
             } else {
                 // Legacy single-image extraction
-                dna = await geminiService.extractCharacterDna(imageFiles[0], userApiKey, language);
+                dna = await geminiService.extractCharacterDna(optimizedFiles[0], userApiKey, language);
                 viewDescriptions = ["Frontal view"];
             }
 
             if (!dna) throw new Error("Could not extract DNA");
 
-            // Create thumbnail from the first image for the profile
-            const primaryImage = imageFiles[0];
-            let thumbnailData: string | undefined;
-            try {
-                const reader = new FileReader();
-                thumbnailData = await new Promise((resolve) => {
-                    reader.onloadend = () => resolve(reader.result as string);
-                    reader.readAsDataURL(primaryImage);
-                });
-            } catch (e) {
-                console.error("Failed to create DNA thumbnail", e);
-            }
-
-            // v2.0: Convert all source images to base64 for storage
-            const sourceImagesData: string[] = [];
-            for (const file of imageFiles) {
-                try {
+            // Convert optimized blobs to base64 for storage (more efficient than original high-res)
+            const sourceImagesData: string[] = await Promise.all(
+                optimizedBlobs.map(blob => new Promise<string>((resolve) => {
                     const reader = new FileReader();
-                    const b64 = await new Promise<string>((resolve) => {
-                        reader.onloadend = () => resolve(reader.result as string);
-                        reader.readAsDataURL(file);
-                    });
-                    sourceImagesData.push(b64);
-                } catch (e) {
-                    console.error("Failed to convert source image to base64", e);
-                }
-            }
+                    reader.onloadend = () => resolve(reader.result as string);
+                    reader.readAsDataURL(blob);
+                }))
+            );
 
             const newChar: DnaCharacter = {
                 id: crypto.randomUUID(),
                 name,
                 dna,
-                thumbnailData,
-                sourceImages: sourceImagesData, // v2.0
+                thumbnailData: sourceImagesData[0], // Use first optimized image as thumbnail
+                sourceImages: sourceImagesData, // v2.0: Optimized source images
                 viewDescriptions: viewDescriptions, // v2.0
                 timestamp: Date.now(),
             };

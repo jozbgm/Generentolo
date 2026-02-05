@@ -47,7 +47,7 @@ const QueuePanel: React.FC<QueuePanelProps> = ({ queue, onRemoveFromQueue, t }) 
                                     <span className="text-[9px] px-1.5 py-0.5 bg-light-surface-accent dark:bg-dark-surface-accent rounded text-light-text-muted dark:text-dark-text-muted">
                                         {task.numImages}x
                                     </span>
-                                    {task.selectedDnaId && <span className="text-[9px]">🧬</span>}
+                                    {task.selectedDnaIds && task.selectedDnaIds.length > 0 && <span className="text-[9px]">🧬</span>}
                                     {task.referenceImages.length > 0 && <span className="text-[9px]">🖼️ {task.referenceImages.length}</span>}
                                 </div>
                             </div>

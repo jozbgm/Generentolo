@@ -3,12 +3,16 @@
 ## [1.9.9] - 2026-02-05
 ### Added
 - **🧬 DNA Character v2.0**: Massive upgrade to character consistency.
-  - **Multi-Image DNA Extraction**: Support for analyzed a subject from up to 14 different angles to create a robust, 3D-aware DNA profile.
-  - **Multi-DNA Selection**: Ability to select multiple DNA characters simultaneously for complex scenes with multiple consistent subjects.
+  - **Multi-Image DNA Extraction**: Support for analyzed a subject from up to 14 different angles using **Gemini 3.0 Flash**.
+  - **Multi-DNA Selection**: Ability to select multiple DNA characters simultaneously.
+  - **Source Gallery**: Expanded view in DNA Manager to review all angles provided for a character.
+- **⚡ Stability & Performance**:
+  - **Auto-Resizing**: Intelligent image optimization (1024px) to prevent API payload errors and speed up extraction.
+  - **Optimized Storage**: Reduced IndexedDB footprint for saved characters.
 - **🖼️ Improved DNA UI**:
-  - **Batch Upload**: New interface in the DNA Manager to upload and manage multiple source images per character.
-  - **Multi-Toggle Selection**: Sidebar and Modal now support toggling multiple active subjects.
-- **🧠 Advanced Prompt Infiltration**: Concatention of multiple DNA profiles into a single artistic direction for Gemini 3 Pro.
+  - **Batch Upload**: New mobile-friendly interface for multiple angles.
+  - **Active State Indicators**: Visual feedback in sidebar and modal.
+- **🧠 Advanced Prompt Infiltration**: Seamless concatenation of multiple subject traits for G3 Pro.
 
 ## [1.9.8] - 2026-01-27
 ### Added

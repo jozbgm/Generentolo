@@ -101,7 +101,51 @@ const handleError = (error: any, language: 'en' | 'it'): Error => {
 }
 
 
-export const fileToGenerativePart = async (file: File) => {
+/**
+ * Helper to resize an image before sending to AI to avoid payload limits
+ * and improve processing speed for vision tasks.
+ */
+export const resizeImage = (file: File, maxWidth: number = 1024, maxHeight: number = 1024): Promise<Blob> => {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+
+                if (width > height) {
+                    if (width > maxWidth) {
+                        height *= maxWidth / width;
+                        width = maxWidth;
+                    }
+                } else {
+                    if (height > maxHeight) {
+                        width *= maxHeight / height;
+                        height = maxHeight;
+                    }
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx?.drawImage(img, 0, 0, width, height);
+
+                canvas.toBlob((blob) => {
+                    if (blob) resolve(blob);
+                    else reject(new Error("Canvas toBlob failed"));
+                }, file.type, 0.85);
+            };
+            img.onerror = reject;
+            img.src = e.target?.result as string;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+};
+
+export const fileToGenerativePart = async (file: File | Blob) => {
     const base64EncodedDataPromise = new Promise<string>((resolve) => {
         const reader = new FileReader();
         reader.onloadend = () => resolve((reader.result as string).split(',')[1]);
@@ -123,14 +167,17 @@ export const extractCharacterDna = async (
 ): Promise<string> => {
     try {
         const ai = getAiClient(userApiKey);
-        const imagePart = await fileToGenerativePart(imageFile);
+
+        // v2.0: Resize image to optimize API call
+        const resizedBlob = await resizeImage(imageFile, 1024, 1024);
+        const imagePart = await fileToGenerativePart(resizedBlob);
 
         const systemPrompt = language === 'it'
             ? "Analizza questa immagine e descrivi i tratti somatici e l'aspetto fisico del soggetto principale in modo estremamente dettagliato per scopi di 'character consistency'. Descrivi: forma del viso, colore e taglio dei capelli, forma e colore degli occhi, carnagione, segni particolari, espressione tipica e corporatura. Crea una descrizione semantica 'compatta' ma completa che possa essere usata come riferimento per generare lo stesso personaggio in altri contesti. Sii preciso e professionale."
             : "Analyze this image and describe the physical features and appearance of the main subject in extreme detail for 'character consistency' purposes. Describe: face shape, hair color and style, eye shape and color, skin tone, unique marks, typical expression, and body type. Create a 'compact' but complete semantic description that can be used as a reference to generate the same character in other contexts. Be precise and professional.";
 
         const result = await ai.models.generateContent({
-            model: "gemini-3-pro-preview",
+            model: "gemini-3-flash-preview", // v2.0: Restored Gemini 3.0 Flash as per user request
             contents: [{
                 role: "user",
                 parts: [
@@ -207,7 +254,7 @@ OUTPUT FORMAT (JSON):
 }`;
 
         const result = await ai.models.generateContent({
-            model: "gemini-3-pro-preview",
+            model: "gemini-3-flash-preview", // v2.0: Restored Gemini 3.0 Flash as per user request
             contents: [{
                 role: "user",
                 parts: [
