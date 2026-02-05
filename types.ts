@@ -49,7 +49,7 @@ export interface GenerationTask {
   referenceImages: File[];
   styleImage: File | null;
   structureImage: File | null;
-  selectedDnaId: string | null;
+  selectedDnaIds: string[]; // v2.0: Multi-DNA selection support
   studioConfig: any;
   useGrounding: boolean;
   preciseReference: boolean;

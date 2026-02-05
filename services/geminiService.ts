@@ -148,6 +148,104 @@ export const extractCharacterDna = async (
     }
 };
 
+/**
+ * v2.0: Extracts a UNIFIED DNA description from MULTIPLE images of the same subject.
+ * This allows for more complete DNA profiles when the subject is photographed from multiple angles.
+ * For example: a product photographed from front, back, and sides, or a person from different angles.
+ */
+export const extractMultiImageDna = async (
+    imageFiles: File[],
+    userApiKey?: string | null,
+    language: 'en' | 'it' = 'en'
+): Promise<{ dna: string; viewDescriptions: string[] }> => {
+    try {
+        const ai = getAiClient(userApiKey);
+
+        // Convert all images to parts
+        const imageParts = await Promise.all(
+            imageFiles.map(file => fileToGenerativePart(file))
+        );
+
+        const numImages = imageFiles.length;
+
+        const systemPrompt = language === 'it'
+            ? `Stai analizzando ${numImages} immagini dello STESSO soggetto da diverse angolazioni/viste.
+
+COMPITO: Crea una descrizione DNA UNIFICATA e COMPLETA che combini le informazioni di TUTTE le viste.
+
+Per ogni immagine, identifica prima che vista rappresenta (frontale, posteriore, laterale sinistra/destra, dall'alto, ecc.).
+
+Poi crea una DESCRIZIONE UNICA E COMPLETA che includa:
+1. IDENTIFICAZIONE: Che tipo di soggetto è (persona, prodotto, oggetto, animale, ecc.)
+2. CARATTERISTICHE PRINCIPALI: Le caratteristiche visive dominanti visibili da TUTTE le angolazioni
+3. DETTAGLI PER VISTA: Dettagli specifici visibili solo da certe angolazioni
+4. COLORI E MATERIALI: Palette colori completa e materiali/texture
+5. DIMENSIONI E PROPORZIONI: Forma generale e proporzioni
+
+FORMATO OUTPUT (JSON):
+{
+  "viewDescriptions": ["descrizione vista 1", "descrizione vista 2", ...],
+  "unifiedDna": "Descrizione DNA completa e unificata..."
+}`
+            : `You are analyzing ${numImages} images of the SAME subject from different angles/views.
+
+TASK: Create a UNIFIED and COMPLETE DNA description that combines information from ALL views.
+
+For each image, first identify what view it represents (front, back, left side, right side, top, etc.).
+
+Then create a SINGLE COMPLETE DESCRIPTION that includes:
+1. IDENTIFICATION: What type of subject this is (person, product, object, animal, etc.)
+2. KEY FEATURES: Dominant visual features visible from ALL angles
+3. VIEW-SPECIFIC DETAILS: Details only visible from certain angles
+4. COLORS AND MATERIALS: Complete color palette and materials/textures
+5. DIMENSIONS AND PROPORTIONS: Overall shape and proportions
+
+OUTPUT FORMAT (JSON):
+{
+  "viewDescriptions": ["view 1 description", "view 2 description", ...],
+  "unifiedDna": "Complete unified DNA description..."
+}`;
+
+        const result = await ai.models.generateContent({
+            model: "gemini-3-pro-preview",
+            contents: [{
+                role: "user",
+                parts: [
+                    ...imageParts,
+                    { text: systemPrompt }
+                ]
+            }]
+        });
+
+        const text = result.candidates?.[0]?.content?.parts?.[0]?.text || "";
+
+        // Try to parse JSON response
+        try {
+            // Extract JSON from potential markdown code blocks
+            const jsonMatch = text.match(/\{[\s\S]*\}/);
+            if (jsonMatch) {
+                const parsed = JSON.parse(jsonMatch[0]);
+                return {
+                    dna: parsed.unifiedDna || text,
+                    viewDescriptions: parsed.viewDescriptions || []
+                };
+            }
+        } catch (parseError) {
+            console.warn("Could not parse JSON response, using raw text as DNA", parseError);
+        }
+
+        // Fallback: use raw text as DNA
+        return {
+            dna: text.trim(),
+            viewDescriptions: imageFiles.map((_, i) => `View ${i + 1}`)
+        };
+
+    } catch (error) {
+        console.error("Multi-image DNA extraction error:", error);
+        throw error;
+    }
+};
+
 export const generatePromptsFromImage = async (imageFiles: File[], styleFile: File | null, structureFile: File | null, userApiKey?: string | null, language: 'en' | 'it' = 'en'): Promise<string[]> => {
     try {
         if (imageFiles.length === 0 && !styleFile && !structureFile) return [];

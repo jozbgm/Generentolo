@@ -9,7 +9,9 @@ export interface DnaCharacter {
     id: string;
     name: string;
     dna: string; // The textual "genetic code" description
-    thumbnailData?: string; // Optional portrait image
+    thumbnailData?: string; // Primary portrait image (first source image)
+    sourceImages?: string[]; // v2.0: Array of all source images (base64) for multi-view DNA
+    viewDescriptions?: string[]; // v2.0: Description of each view (e.g., "front", "back", "left side")
     timestamp: number;
 }
 

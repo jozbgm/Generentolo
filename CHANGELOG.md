@@ -1,5 +1,15 @@
 # 📋 Changelog - Generentolo PRO
 
+## [1.9.9] - 2026-02-05
+### Added
+- **🧬 DNA Character v2.0**: Massive upgrade to character consistency.
+  - **Multi-Image DNA Extraction**: Support for analyzed a subject from up to 14 different angles to create a robust, 3D-aware DNA profile.
+  - **Multi-DNA Selection**: Ability to select multiple DNA characters simultaneously for complex scenes with multiple consistent subjects.
+- **🖼️ Improved DNA UI**:
+  - **Batch Upload**: New interface in the DNA Manager to upload and manage multiple source images per character.
+  - **Multi-Toggle Selection**: Sidebar and Modal now support toggling multiple active subjects.
+- **🧠 Advanced Prompt Infiltration**: Concatention of multiple DNA profiles into a single artistic direction for Gemini 3 Pro.
+
 ## [1.9.8] - 2026-01-27
 ### Added
 - **Perspective Studio (Angles v2)**: Completely overhauled the Angles feature with a cinematic 3D viewport, CSS-based 3D gizmo, and high-fidelity controls.

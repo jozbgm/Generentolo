@@ -1,4 +1,4 @@
-# 🎨 Generentolo PRO v1.9.8 DIRECTORATE
+# 🎨 Generentolo PRO v1.9.9 DIRECTORATE
 
 **Professional AI-Powered Image Generation & Storyboarding Suite**
 
@@ -10,6 +10,11 @@ A sophisticated web application for generating ultra-high-quality images using G
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
 
 ---
+
+## 🎯 **NEW v1.9.9: DNA Character v2.0 (Multi-Subject)**
+- **🧬 Multi-Image DNA Extraction** - Analyze a subject from multiple angles (front, side, back) to create a unified, high-consistency character profile.
+- **👥 Multi-DNA Selection** - Select and combine multiple DNA characters in a single generation for complex multi-subject scenes.
+- **🖼️ Improved DNA Manager** - New "Upload one or more angles" interface with batch processing support.
 
 ## 🎯 **NEW v1.9.8: Perspective Studio (Angles v2)**
 - **📐 3D Perspective Gizmo** - Full cinematic control with a true 3D camera interface, live wireframe sphere, and "laser" depth visualization.
@@ -389,7 +394,22 @@ A sophisticated web application for generating ultra-high-quality images using G
 
 ## 📋 Changelog
 
-### v1.9.7 (January 2026) 🎨
+### v1.9.9 (February 2026) 🧬
+**🎉 DNA CHARACTER v2.0 - ADVANCED CONSISTENCY:**
+
+**✨ NEW: Multi-Image DNA Extraction**
+- **Unified Profiling**: Analyze up to 14 images of the same subject.
+- **3D Understanding**: Gemini 3 Pro reconstructs a complete description from different angles.
+
+**👥 NEW: Multi-DNA Selection**
+- **Symphony of Subjects**: Combine multiple characters/products in one scene.
+- **Active Selection UI**: New multi-toggle interface in the sidebar and modal.
+
+**🔧 UI/UX Improvements**
+- **DNA Batch Upload**: Select multiple files for profile creation.
+- **Active State Indicators**: Visual feedback for all active subjects.
+
+### v1.9.8 (January 2026) 🎨
 **🎉 SMART PROMPT & ACTION ENHANCEMENTS:**
 
 **✨ NEW: Smart Prompt Actions**

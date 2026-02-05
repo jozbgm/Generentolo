@@ -33,7 +33,7 @@ if (!crypto.randomUUID) {
 // --- Localization ---
 const translations = {
     en: {
-        headerTitle: 'Generentolo PRO v1.9.8',
+        headerTitle: 'Generentolo PRO v1.9.9',
         headerSubtitle: 'Let me do it for you!',
         refImagesTitle: 'Reference & Style Images',
         styleRefTitle: 'Style Reference',
@@ -307,7 +307,7 @@ const translations = {
         presetAppliedToPrompt: 'Will be applied to generation',
     },
     it: {
-        headerTitle: 'Generentolo PRO v1.9.8',
+        headerTitle: 'Generentolo PRO v1.9.9',
         headerSubtitle: 'Let me do it for you!',
         refImagesTitle: 'Immagini di Riferimento e Stile',
         styleRefTitle: 'Riferimento Stile',
@@ -809,7 +809,7 @@ const ReferencePanel: React.FC<{
     preciseReference: boolean;
     setPreciseReference: (value: boolean) => void;
     dnaCharacters: DnaCharacter[];
-    selectedDnaId: string | null;
+    selectedDnaIds: string[]; // v2.0: Multi-DNA
     onSelectDna: (id: string | null) => void;
     onManageDna: () => void;
     // v1.8: Studio Mode
@@ -822,7 +822,7 @@ const ReferencePanel: React.FC<{
     // GenerAngles
     onGenerateFromAngle: (params: AngleGenerationParams) => void;
     isGeneratingAngles: boolean;
-}> = ({ onAddImages, onRemoveImage, referenceImages, onAddStyleImage, onRemoveStyleImage, styleImage, onAddStructureImage, onRemoveStructureImage, structureImage, selectedStylePreset, setSelectedStylePreset, selectedLighting, setSelectedLighting, selectedCamera, setSelectedCamera, selectedFocus, setSelectedFocus, selectedModel, preciseReference, setPreciseReference, dnaCharacters, selectedDnaId, onSelectDna, onManageDna, appMode, setAppMode, studioConfig, setStudioConfig, onGenerateStoryboard, isStoryboardLoading, onGenerateFromAngle, isGeneratingAngles }) => {
+}> = ({ onAddImages, onRemoveImage, referenceImages, onAddStyleImage, onRemoveStyleImage, styleImage, onAddStructureImage, onRemoveStructureImage, structureImage, selectedStylePreset, setSelectedStylePreset, selectedLighting, setSelectedLighting, selectedCamera, setSelectedCamera, selectedFocus, setSelectedFocus, selectedModel, preciseReference, setPreciseReference, dnaCharacters, selectedDnaIds, onSelectDna, onManageDna, appMode, setAppMode, studioConfig, setStudioConfig, onGenerateStoryboard, isStoryboardLoading, onGenerateFromAngle, isGeneratingAngles }) => {
     const { t, language } = useLocalization();
     const [isDraggingRef, setIsDraggingRef] = useState(false);
     const [isDraggingStyle, setIsDraggingStyle] = useState(false);
@@ -1047,14 +1047,14 @@ const ReferencePanel: React.FC<{
                                             onClick={() => onSelectDna(char.id)}
                                             className="flex-shrink-0 relative group/char"
                                         >
-                                            <div className={`w-11 h-11 rounded-full p-0.5 border-2 transition-all duration-500 scale-95 group-hover/char:scale-105 ${selectedDnaId === char.id ? 'border-brand-purple shadow-[0_0_15px_rgba(114,9,183,0.4)] rotate-3 scale-110' : 'border-white/10 opacity-60 hover:opacity-100 hover:rotate-2'}`}>
+                                            <div className={`w-11 h-11 rounded-full p-0.5 border-2 transition-all duration-500 scale-95 group-hover/char:scale-105 ${selectedDnaIds.includes(char.id) ? 'border-brand-purple shadow-[0_0_15px_rgba(114,9,183,0.4)] rotate-3 scale-110' : 'border-white/10 opacity-60 hover:opacity-100 hover:rotate-2'}`}>
                                                 {char.thumbnailData ? (
                                                     <img src={char.thumbnailData} alt={char.name} className="w-full h-full object-cover rounded-full" />
                                                 ) : (
                                                     <div className="w-full h-full bg-gradient-to-br from-brand-purple/40 to-brand-pink/40 rounded-full flex items-center justify-center text-[11px] font-black text-white">{char.name.charAt(0)}</div>
                                                 )}
                                             </div>
-                                            {selectedDnaId === char.id && (
+                                            {selectedDnaIds.includes(char.id) && (
                                                 <div className="absolute -top-1 -right-1 w-4 h-4 bg-brand-purple rounded-full border-2 border-dark-surface flex items-center justify-center shadow-lg">
                                                     <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
                                                 </div>
@@ -2290,36 +2290,36 @@ interface DnaCharacterModalProps {
     isOpen: boolean;
     onClose: () => void;
     characters: DnaCharacter[];
-    selectedId: string | null;
+    selectedIds: string[]; // v2.0: Multi-DNA
     onSelect: (id: string | null) => void;
-    onSave: (image: File, name: string) => void;
+    onSave: (images: File[], name: string) => void;
     onDelete: (id: string) => void;
     isLoading: boolean;
 }
 
-const DnaCharacterModal: React.FC<DnaCharacterModalProps> = ({ isOpen, onClose, characters, selectedId, onSelect, onSave, onDelete, isLoading }) => {
+const DnaCharacterModal: React.FC<DnaCharacterModalProps> = ({ isOpen, onClose, characters, selectedIds, onSelect, onSave, onDelete, isLoading }) => {
     const { t, language } = useLocalization();
     const [newName, setNewName] = useState('');
-    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     if (!isOpen) return null;
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0]) {
-            const file = e.target.files[0];
-            setSelectedFile(file);
-            if (!newName) {
-                const fileName = file.name.split('.')[0];
+        if (e.target.files && e.target.files.length > 0) {
+            const files = Array.from(e.target.files);
+            setSelectedFiles(prev => [...prev, ...files]);
+            if (!newName && files.length > 0) {
+                const fileName = files[0].name.split('.')[0];
                 setNewName(fileName);
             }
         }
     };
 
     const handleSave = () => {
-        if (selectedFile && newName.trim()) {
-            onSave(selectedFile, newName.trim());
-            setSelectedFile(null);
+        if (selectedFiles.length > 0 && newName.trim()) {
+            onSave(selectedFiles, newName.trim());
+            setSelectedFiles([]);
             setNewName('');
         }
     };
@@ -2348,12 +2348,26 @@ const DnaCharacterModal: React.FC<DnaCharacterModalProps> = ({ isOpen, onClose, 
                                 onClick={() => fileInputRef.current?.click()}
                                 className="w-full sm:w-24 h-24 rounded-xl border-2 border-dashed border-light-border dark:border-dark-border flex items-center justify-center cursor-pointer hover:border-brand-purple transition-colors bg-black/5 overflow-hidden"
                             >
-                                {selectedFile ? (
-                                    <img src={URL.createObjectURL(selectedFile)} alt="Preview" className="w-full h-full object-cover" />
+                                {selectedFiles.length > 0 ? (
+                                    <div className="relative w-full h-full group/preview">
+                                        <img src={URL.createObjectURL(selectedFiles[0])} alt="Preview" className="w-full h-full object-cover" />
+                                        {selectedFiles.length > 1 && (
+                                            <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                                                <span className="text-white font-black text-xs">+{selectedFiles.length - 1}</span>
+                                            </div>
+                                        )}
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); setSelectedFiles([]); }}
+                                            className="absolute top-1 right-1 p-1 bg-red-500 rounded-lg text-white opacity-0 group-hover/preview:opacity-100 transition-opacity"
+                                            title="Clear all"
+                                        >
+                                            <TrashIcon className="w-3 h-3" />
+                                        </button>
+                                    </div>
                                 ) : (
-                                    <div className="text-center">
+                                    <div className="text-center px-2">
                                         <UploadIcon className="w-6 h-6 mx-auto opacity-50" />
-                                        <span className="text-[10px] mt-1 block opacity-50">{t.select}</span>
+                                        <span className="text-[9px] mt-1 block opacity-50 leading-tight">{language === 'it' ? 'Carica una o più angolazioni' : 'Upload one or more angles'}</span>
                                     </div>
                                 )}
                             </div>
@@ -2367,7 +2381,7 @@ const DnaCharacterModal: React.FC<DnaCharacterModalProps> = ({ isOpen, onClose, 
                                 />
                                 <button
                                     onClick={handleSave}
-                                    disabled={isLoading || !selectedFile || !newName.trim()}
+                                    disabled={isLoading || selectedFiles.length === 0 || !newName.trim()}
                                     className="w-full py-2.5 bg-brand-purple text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50"
                                 >
                                     {isLoading ? (
@@ -2378,7 +2392,7 @@ const DnaCharacterModal: React.FC<DnaCharacterModalProps> = ({ isOpen, onClose, 
                                 </button>
                             </div>
                         </div>
-                        <input ref={fileInputRef} type="file" className="hidden" accept="image/*" onChange={handleFileChange} />
+                        <input ref={fileInputRef} type="file" className="hidden" accept="image/*" multiple onChange={handleFileChange} />
                     </div>
 
                     {/* Existing DNA List */}
@@ -2390,7 +2404,7 @@ const DnaCharacterModal: React.FC<DnaCharacterModalProps> = ({ isOpen, onClose, 
                             {characters.map(char => (
                                 <div
                                     key={char.id}
-                                    className={`relative group rounded-2xl p-3 border-2 transition-all cursor-pointer ${selectedId === char.id ? 'border-brand-purple bg-brand-purple/5' : 'border-light-border dark:border-dark-border hover:border-light-text-muted dark:hover:border-dark-text-muted'}`}
+                                    className={`relative group rounded-2xl p-3 border-2 transition-all cursor-pointer ${selectedIds.includes(char.id) ? 'border-brand-purple bg-brand-purple/5' : 'border-light-border dark:border-dark-border hover:border-light-text-muted dark:hover:border-dark-text-muted'}`}
                                     onClick={() => onSelect(char.id)}
                                 >
                                     <div className="aspect-square rounded-xl bg-black/10 overflow-hidden mb-2">
@@ -2415,7 +2429,7 @@ const DnaCharacterModal: React.FC<DnaCharacterModalProps> = ({ isOpen, onClose, 
                                         </button>
                                     </div>
 
-                                    {selectedId === char.id && (
+                                    {selectedIds.includes(char.id) && (
                                         <div className="absolute -top-2 -right-2 bg-brand-purple text-white rounded-full p-1 shadow-lg">
                                             <CheckIcon className="w-3 h-3" />
                                         </div>
@@ -2536,7 +2550,7 @@ export default function App() {
 
     // v1.7: DNA Character Consistency
     const [dnaCharacters, setDnaCharacters] = useState<DnaCharacter[]>([]);
-    const [selectedDnaId, setSelectedDnaId] = useState<string | null>(null);
+    const [selectedDnaIds, setSelectedDnaIds] = useState<string[]>([]); // v2.0: Multi-DNA selection
     const [isDnaLoading, setIsDnaLoading] = useState(false);
     const [loadingMessage, setLoadingMessage] = useState<string>('');
     const [isPromptEnhancedInternal, setIsPromptEnhancedInternal] = useState(false); // v1.9.3: UI state for enhanced prompt
@@ -2677,22 +2691,51 @@ export default function App() {
         }
     }, [referenceImages, styleReferenceImage, structureImage, userApiKey, language, showToast, editedPrompt]);
 
-    const handleSaveDna = async (imageFile: File, name: string) => {
+    const handleSaveDna = async (imageFiles: File[], name: string) => {
         setIsDnaLoading(true);
         try {
-            const dna = await geminiService.extractCharacterDna(imageFile, userApiKey, language);
+            let dna: string;
+            let viewDescriptions: string[] = [];
+
+            if (imageFiles.length > 1) {
+                // v2.0: Multi-image DNA extraction
+                const result = await geminiService.extractMultiImageDna(imageFiles, userApiKey, language);
+                dna = result.dna;
+                viewDescriptions = result.viewDescriptions;
+            } else {
+                // Legacy single-image extraction
+                dna = await geminiService.extractCharacterDna(imageFiles[0], userApiKey, language);
+                viewDescriptions = ["Frontal view"];
+            }
+
             if (!dna) throw new Error("Could not extract DNA");
 
-            // Create thumbnail for the profile
+            // Create thumbnail from the first image for the profile
+            const primaryImage = imageFiles[0];
             let thumbnailData: string | undefined;
             try {
                 const reader = new FileReader();
                 thumbnailData = await new Promise((resolve) => {
                     reader.onloadend = () => resolve(reader.result as string);
-                    reader.readAsDataURL(imageFile);
+                    reader.readAsDataURL(primaryImage);
                 });
             } catch (e) {
                 console.error("Failed to create DNA thumbnail", e);
+            }
+
+            // v2.0: Convert all source images to base64 for storage
+            const sourceImagesData: string[] = [];
+            for (const file of imageFiles) {
+                try {
+                    const reader = new FileReader();
+                    const b64 = await new Promise<string>((resolve) => {
+                        reader.onloadend = () => resolve(reader.result as string);
+                        reader.readAsDataURL(file);
+                    });
+                    sourceImagesData.push(b64);
+                } catch (e) {
+                    console.error("Failed to convert source image to base64", e);
+                }
             }
 
             const newChar: DnaCharacter = {
@@ -2700,7 +2743,9 @@ export default function App() {
                 name,
                 dna,
                 thumbnailData,
-                timestamp: Date.now()
+                sourceImages: sourceImagesData, // v2.0
+                viewDescriptions: viewDescriptions, // v2.0
+                timestamp: Date.now(),
             };
 
             await indexedDBService.saveDnaCharacter(newChar);
@@ -2722,17 +2767,26 @@ export default function App() {
         if (!imageUrl) return;
 
         const file = dataURLtoFile(imageUrl, `dna-${image.id}.png`);
-        await handleSaveDna(file, name);
+        await handleSaveDna([file], name);
     }, [language, handleSaveDna]);
 
     const handleDeleteDna = async (id: string) => {
         await indexedDBService.deleteDnaCharacter(id);
         setDnaCharacters(prev => prev.filter(c => c.id !== id));
-        if (selectedDnaId === id) setSelectedDnaId(null);
+        setSelectedDnaIds(prev => prev.filter(dnaId => dnaId !== id)); // v2.0: Remove from selection array
     };
 
+    // v2.0: Multi-DNA selection - toggle selection
     const handleSelectDna = (id: string | null) => {
-        setSelectedDnaId(prev => prev === id ? null : id);
+        if (id === null) {
+            setSelectedDnaIds([]); // Clear all selections
+        } else {
+            setSelectedDnaIds(prev =>
+                prev.includes(id)
+                    ? prev.filter(dnaId => dnaId !== id) // Deselect
+                    : [...prev, id] // Add to selection
+            );
+        }
     };
 
 
@@ -2776,7 +2830,7 @@ export default function App() {
                 referenceImages: [...referenceImages],
                 styleImage: styleReferenceImage,
                 structureImage: structureImage,
-                selectedDnaId: selectedDnaId,
+                selectedDnaIds: [...selectedDnaIds], // v2.0: Multi-DNA
                 studioConfig: { ...studioConfig },
                 useGrounding: useGrounding,
                 preciseReference: preciseReference,
@@ -2804,7 +2858,7 @@ export default function App() {
         const currentNeg = isTask ? task.negativePrompt : negativePrompt;
         const currentSeed = isTask ? task.seed : seed;
         const currentNumImages = isTask ? task.numImages : Math.min(numImagesToGenerate, 2);
-        const currentDnaId = isTask ? task.selectedDnaId : selectedDnaId;
+        const currentDnaIds = isTask ? task.selectedDnaIds : selectedDnaIds; // v2.0: Multi-DNAsupport
         const currentStudioCfg = isTask ? task.studioConfig : studioConfig;
         const currentGrounding = isTask ? task.useGrounding : useGrounding;
         const currentPrecise = isTask ? task.preciseReference : preciseReference;
@@ -2831,8 +2885,10 @@ export default function App() {
         setIsPromptEnhancedInternal(false); // Reset UI state
         setActiveDisplayPrompt(currentPrompt); // Initialize with user's prompt
 
-        // v1.9.5: Get active DNA for enhancement context
-        const activeDnaText = currentDnaId ? dnaCharacters.find(c => c.id === currentDnaId)?.dna : undefined;
+        // v1.9.5: Get active DNA for enhancement context (Multi-DNA support v2.0)
+        const activeDnaText = currentDnaIds && currentDnaIds.length > 0
+            ? dnaCharacters.filter(c => currentDnaIds.includes(c.id)).map(c => c.dna).join(' | ')
+            : undefined;
 
         try {
             const tasks: Promise<any>[] = [];
@@ -2901,6 +2957,9 @@ export default function App() {
         }
 
         try {
+            // v1.9.3: Clear ephemeral prompt and UI states
+            setIsPromptEnhancedInternal(false);
+            setActiveDisplayPrompt('');
 
             // v1.5.1: Remove square brackets from prompt to avoid ambiguous keywords (e.g., "Coin" = money vs brand)
             if (currentGrounding) {
@@ -2908,24 +2967,29 @@ export default function App() {
                 displayPrompt = removeBracketsFromPrompt(displayPrompt);
             }
 
-            // v1.7: Inject DNA Character description and IMAGE reference if selected
-            let dnaReferenceFile: File | null = null;
-            if (currentDnaId) {
-                const selectedDna = dnaCharacters.find(c => c.id === currentDnaId);
-                if (selectedDna) {
+            // v1.7 & v2.0: Multi-DNA Injection
+            const dnaReferenceFiles: File[] = [];
+            if (currentDnaIds && currentDnaIds.length > 0) {
+                const activeDnas = dnaCharacters.filter(c => currentDnaIds.includes(c.id));
 
-                    // 1. Textual Injection
+                if (activeDnas.length > 0) {
+                    // 1. Textual Injection (Combined)
+                    const combinedDnaText = activeDnas.map((d, idx) => `DNA ${idx + 1}: ${d.dna}`).join('\n');
                     const dnaHeader = language === 'it'
-                        ? `🧬 RIFERIMENTO DNA PERSONAGGIO (MANDATORIO): ${selectedDna.dna}. Il soggetto dell'immagine DEVE avere esattamente questo aspetto fisico e questi tratti somatici. Prompt Utente: `
-                        : `🧬 CHARACTER DNA REFERENCE (MANDATORY): ${selectedDna.dna}. The subject of the image MUST have this exact physical appearance and facial features. User Prompt: `;
+                        ? `🧬 RIFERIMENTO DNA (MULTIPLO): \n${combinedDnaText}\nI soggetti nell'immagine DEVONO rispettare queste identità. Prompt Utente: `
+                        : `🧬 DNA REFERENCES (MULTIPLE): \n${combinedDnaText}\nThe subjects in the image MUST respect these identities. User Prompt: `;
+
                     cleanedPrompt = `${dnaHeader}${cleanedPrompt}`;
 
-                    // 2. Visual Reference Injection (if thumbnail exists)
-                    if (selectedDna.thumbnailData) {
-                        try {
-                            dnaReferenceFile = dataURLtoFile(selectedDna.thumbnailData, `dna-ref-${selectedDnaId}.png`);
-                        } catch (e) {
-                            console.error("Failed to convert DNA thumbnail to file", e);
+                    // 2. Visual Reference Injection (All thumbnails)
+                    for (const dna of activeDnas) {
+                        if (dna.thumbnailData) {
+                            try {
+                                const file = dataURLtoFile(dna.thumbnailData, `dna-ref-${dna.id}.png`);
+                                dnaReferenceFiles.push(file);
+                            } catch (e) {
+                                console.error("Failed to convert DNA thumbnail to file", e);
+                            }
                         }
                     }
                 }
@@ -3018,10 +3082,7 @@ export default function App() {
             }
 
             // Merge user's visible references with invisible Google references and DNA references
-            const allReferenceFiles = [...currentRefImages, ...invisibleReferences];
-            if (dnaReferenceFile) {
-                allReferenceFiles.unshift(dnaReferenceFile); // Add DNA first to give it high priority
-            }
+            const allReferenceFiles = [...dnaReferenceFiles, ...currentRefImages, ...invisibleReferences]; // Add DNA first for priority
 
             console.log(currentGrounding && currentPrompt !== cleanedPrompt
                 ? `🧹 Cleaned prompt for Gemini: "${cleanedPrompt}" (removed brackets)`
@@ -3184,7 +3245,7 @@ export default function App() {
         autoEnhance,
         studioConfig,
         dnaCharacters,
-        selectedDnaId,
+        selectedDnaIds,
         appMode
     ]);
 
@@ -3306,7 +3367,7 @@ export default function App() {
                     'success'
                 );
             } else {
-                // v1.9.8: COGNITIVE ANGLE GENERATION
+                // v1.9.9: COGNITIVE ANGLE GENERATION
                 setLoadingMessage(language === 'it' ? '🧠 Simulazione 3D del soggetto...' : '🧠 Simulating 3D subject physics...');
 
                 // 1. Generate the cognitive prompt first (Reasoning Phase)
@@ -3731,7 +3792,7 @@ export default function App() {
             referenceImages: masterRef ? [masterRef] : [],
             styleImage: styleReferenceImage,
             structureImage: structureImage,
-            selectedDnaId: selectedDnaId,
+            selectedDnaIds: [...selectedDnaIds], // v2.0: Multi-DNA selection
             studioConfig: { ...studioConfig },
             useGrounding: useGrounding,
             preciseReference: preciseReference,
@@ -3744,7 +3805,7 @@ export default function App() {
         showToast(`${newTasks.length} ${t.shotsAddedToQueue}`, 'success');
 
         // If not already generating, the effect will pick up the queue
-    }, [storyboardPrompts, referenceImages, negativePrompt, seed, aspectRatio, selectedModel, selectedResolution, styleReferenceImage, structureImage, selectedDnaId, studioConfig, useGrounding, preciseReference, language, showToast]);
+    }, [storyboardPrompts, referenceImages, negativePrompt, seed, aspectRatio, selectedModel, selectedResolution, styleReferenceImage, structureImage, selectedDnaIds, studioConfig, useGrounding, preciseReference, language, showToast, t.shotsAddedToQueue]);
 
     const handleStoryboardGenerateOne = useCallback((prompt: string) => {
         setEditedPrompt(prompt);
@@ -3948,7 +4009,7 @@ export default function App() {
                             preciseReference={preciseReference}
                             setPreciseReference={setPreciseReference}
                             dnaCharacters={dnaCharacters}
-                            selectedDnaId={selectedDnaId}
+                            selectedDnaIds={selectedDnaIds}
                             onSelectDna={handleSelectDna}
                             onManageDna={() => setIsDnaModalOpen(true)}
                             appMode={appMode}
@@ -4186,7 +4247,7 @@ export default function App() {
                     isOpen={isDnaModalOpen}
                     onClose={() => setIsDnaModalOpen(false)}
                     characters={dnaCharacters}
-                    selectedId={selectedDnaId}
+                    selectedIds={selectedDnaIds}
                     onSelect={handleSelectDna}
                     onSave={handleSaveDna}
                     onDelete={handleDeleteDna}
