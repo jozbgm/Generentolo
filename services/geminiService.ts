@@ -1085,7 +1085,8 @@ export const generateImage = async (
         if (isAdvancedModel(model) && resolution) {
             const resolutionKeyword = resolution === '4k' ? 'extreme 4K Ultra HD resolution, 4096px, hyper-detailed textures, macro sharpness' :
                 resolution === '2k' ? '2K HD resolution, 2048px, very sharp details' :
-                    '1K standard resolution, 1024px';
+                    resolution === '0.5k' ? '0.5K compact resolution, 512px, fast thumbnail' :
+                        '1K standard resolution, 1024px';
             instructionParts.push(language === 'it' ? `Risoluzione: ${resolutionKeyword}.` : `Resolution: ${resolutionKeyword}.`);
         }
 
@@ -1245,7 +1246,7 @@ export const generateImage = async (
 
         // v1.0: Native Resolution for advanced models (Pro & NB2)
         if (isAdvancedModel(model) && resolution) {
-            imageConfig.imageSize = resolution.toUpperCase(); // "1K", "2K", or "4K"
+            imageConfig.imageSize = resolution === '0.5k' ? '0.5K' : resolution.toUpperCase(); // "0.5K", "1K", "2K", or "4K"
         }
 
         if (Object.keys(imageConfig).length > 0) {
@@ -1260,7 +1261,17 @@ export const generateImage = async (
         // Note: Invisible reference images from Google are added in App.tsx before calling this function
         if (useGrounding) {
             // For advanced models (PRO & NB2), enable textual grounding for real-time data
-            if (isAdvancedModel(model)) {
+            if (model === 'gemini-3.1-flash-image-preview') {
+                // NB2: Enhanced Image Search Grounding (text + images from web)
+                config.tools = [{
+                    googleSearch: {
+                        dynamicRetrievalConfig: {
+                            dynamicThreshold: 0.3
+                        }
+                    }
+                }];
+            } else if (model === 'gemini-3-pro-image-preview') {
+                // PRO: Standard text-only grounding (unchanged)
                 config.tools = [{
                     googleSearch: {}
                 }];

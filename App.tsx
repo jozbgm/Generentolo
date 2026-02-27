@@ -2557,6 +2557,29 @@ export default function App() {
     // v1.0: New PRO features states
     const [selectedModel, setSelectedModel] = useState<ModelType>('gemini-3-pro-image-preview');
     const [selectedResolution, setSelectedResolution] = useState<ResolutionType>('2k');
+
+    // v2.0: Auto-reset resolution and aspect ratio when switching models
+    const nb2ExclusiveRatios = ['1:4', '4:1', '1:8', '8:1'];
+    const handleModelChange = (newModel: ModelType) => {
+        const oldModel = selectedModel;
+        setSelectedModel(newModel);
+
+        // Leaving NB2: reset 0.5k resolution to 1k
+        if (oldModel === 'gemini-3.1-flash-image-preview' && newModel !== 'gemini-3.1-flash-image-preview') {
+            if (selectedResolution === '0.5k') {
+                setSelectedResolution('1k');
+            }
+            // Reset NB2-exclusive aspect ratios
+            if (nb2ExclusiveRatios.includes(aspectRatio)) {
+                setAspectRatio('1:1');
+            }
+        }
+
+        // Switching to Flash: no resolution selector, keep defaults
+        if (newModel === 'gemini-2.5-flash-image') {
+            setSelectedResolution('2k');
+        }
+    };
     const [currentImages, setCurrentImages] = useState<GeneratedImage[]>([]);
     const [history, setHistory] = useState<GeneratedImage[]>([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -4260,7 +4283,7 @@ export default function App() {
                     useGrounding={useGrounding}
                     onGroundingChange={setUseGrounding}
                     selectedModel={selectedModel}
-                    onModelChange={setSelectedModel}
+                    onModelChange={handleModelChange}
                     selectedResolution={selectedResolution}
                     onResolutionChange={setSelectedResolution}
                     isEnhancing={isEnhancing}

@@ -72,11 +72,23 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
     // UI state for copy feedback
     const [justCopied, setJustCopied] = useState(false);
 
-    const aspectRatios = ["Auto", "1:1", "4:3", "3:4", "16:9", "9:16", "3:2", "2:3", "4:5", "5:4", "21:9"];
+    const baseAspectRatios = ["Auto", "1:1", "4:3", "3:4", "16:9", "9:16", "3:2", "2:3", "4:5", "5:4", "21:9"];
+    const nb2ExtraRatios = ["1:4", "4:1", "1:8", "8:1"];
+    const aspectRatios = selectedModel === 'gemini-3.1-flash-image-preview'
+        ? [...baseAspectRatios, ...nb2ExtraRatios]
+        : baseAspectRatios;
     const numImagesOptions = [1, 2];
+
+    // Dynamic resolution options based on model
+    const resolutionOptions = selectedModel === 'gemini-3.1-flash-image-preview'
+        ? ['0.5k', '1k', '2k', '4k']
+        : ['1k', '2k', '4k'];
 
     const getAspectRatioIcon = (ratio: string) => {
         if (ratio === 'Auto') return '🔄';
+        // NB2-exclusive extreme ratios get special icons
+        if (ratio === '1:8' || ratio === '8:1') return '🎬';
+        if (ratio === '1:4' || ratio === '4:1') return '🏢';
         const [w, h] = ratio.split(':').map(Number);
         if (w > h) return '🌅';
         if (h > w) return '📱';
@@ -340,9 +352,12 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                             <button
                                 onClick={() => onGroundingChange(!useGrounding)}
                                 className={`h-full group relative flex items-center justify-center w-10 rounded-xl transition-all border ${useGrounding ? 'bg-blue-500/15 border-blue-500/30 text-blue-600 dark:text-blue-400' : 'bg-black/5 dark:bg-white/5 border-transparent text-light-text/40 dark:text-dark-text/40 hover:bg-white/5'}`}
-                                title={t.groundingLabel || 'Google Grounding'}
+                                title={selectedModel === 'gemini-3.1-flash-image-preview' ? 'Image Search Grounding (Text + Images)' : (t.groundingLabel || 'Google Grounding')}
                             >
                                 <span className="text-base leading-none transition-transform group-hover:scale-110">🌐</span>
+                                {selectedModel === 'gemini-3.1-flash-image-preview' && useGrounding && (
+                                    <span className="absolute -top-1 -right-1 text-[8px] bg-emerald-500 text-white rounded-full w-3.5 h-3.5 flex items-center justify-center font-bold shadow-sm">🖼️</span>
+                                )}
                             </button>
 
                             {/* Advanced Settings Cog */}
@@ -470,7 +485,7 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                 {/* Resolution Menu */}
                 {showResolutionMenu && (
                     <div className="absolute bottom-full mb-4 left-64 bg-light-surface/95 dark:bg-dark-surface/95 backdrop-blur-[50px] border border-white/20 dark:border-white/10 rounded-2xl shadow-2xl p-2 flex gap-1.5 animate-slideUp z-[80]">
-                        {['1k', '2k', '4k'].map(res => (
+                        {resolutionOptions.map(res => (
                             <button
                                 key={res}
                                 onClick={() => { onResolutionChange(res as ResolutionType); setShowResolutionMenu(false); }}
