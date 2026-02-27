@@ -1,8 +1,8 @@
-# 🎨 Generentolo PRO v1.9.9 DIRECTORATE
+# 🎨 Generentolo PRO v2.0 DIRECTORATE
 
 **Professional AI-Powered Image Generation & Storyboarding Suite**
 
-A sophisticated web application for generating ultra-high-quality images using Google's Gemini models (Flash & **Gemini 3 Flash**) with **Advanced Native 2K/4K Generation**, **Perspective Studio (Angles v2)**, **Cinematic Storyboarding**, **Generation Queue**, **DNA Character Consistency**, **advanced Google Search Grounding**, and professional production controls.
+A sophisticated web application for generating ultra-high-quality images using Google's Gemini models (Flash, **Gemini 3 Pro** & **Gemini 3.1 Flash Image / Nano Banana 2**) with **Advanced Native 2K/4K Generation**, **Perspective Studio (Angles v2)**, **Cinematic Storyboarding**, **Generation Queue**, **DNA Character Consistency**, **advanced Google Search Grounding**, and professional production controls.
 
 [![Live Demo](https://img.shields.io/badge/Live-Demo-blue?style=for-the-badge)](https://www.dugongo.it/generentolo/)
 [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
@@ -11,7 +11,13 @@ A sophisticated web application for generating ultra-high-quality images using G
 
 ---
 
-## 🎯 **NEW v1.9.9: DNA Character v2.0 (Multi-Subject)**
+## 🎯 **NEW v2.0: Nano Banana 2 (Gemini 3.1 Flash Image)**
+- **🍌 Third AI Model** - New `gemini-3.1-flash-image-preview` model combining Flash speed with Pro-level quality.
+- **🎛️ Triple Model Selector** - Choose between PRO, FLASH, and Nano Banana 2 in the UI.
+- **📐 Native Resolution** - Supports 1K/2K imageSize like Pro, with Google Search Grounding.
+- **⚡ Smart Performance** - 7-minute timeout, auto-fallback to Flash, prompt optimization for multi-image.
+
+## 🎯 **v1.9.9: DNA Character v2.0 (Multi-Subject)**
 - **🧬 Multi-Image DNA Extraction** - Analyze a subject from multiple angles (front, side, back) to create a unified, high-consistency character profile.
 - **👥 Multi-DNA Selection** - Select and combine multiple DNA characters in a single generation for complex multi-subject scenes.
 - **🖼️ Improved DNA Manager** - New "Upload one or more angles" interface with batch processing support.
@@ -281,8 +287,9 @@ A sophisticated web application for generating ultra-high-quality images using G
 - **Styling**: Tailwind CSS 3.4.7
 - **AI Models**:
   - Google Gemini 2.5 Flash Image
-  - **Google Gemini 3 Pro Image (Nano Banana PRO)** 🆕
-- **SDK**: `@google/genai` v1.25.0
+  - **Google Gemini 3 Pro Image (Nano Banana PRO)** 
+  - **Google Gemini 3.1 Flash Image (Nano Banana 2)** 🆕
+- **SDK**: `@google/genai` v1.38.0
 - **Storage**: IndexedDB + localStorage
 - **State Management**: React Hooks
 
@@ -393,6 +400,16 @@ A sophisticated web application for generating ultra-high-quality images using G
 ---
 
 ## 📋 Changelog
+
+### v2.0.0 (February 2026) 🍌
+**🎉 NANO BANANA 2 - TRIPLE MODEL MILESTONE:**
+
+**🍌 NEW: Gemini 3.1 Flash Image (Nano Banana 2)**
+- **Third Model Integration**: New `gemini-3.1-flash-image-preview` with Flash speed + Pro quality.
+- **Triple Selector UI**: PRO / FLASH / NB2 dropdown with emerald/teal branding.
+- **Native Resolution**: Supports 1K/2K imageSize, Google Search Grounding, prompt optimization.
+- **Smart Timeout**: 7-minute API timeout; auto-fallback to Flash on safety blocks.
+- **`isAdvancedModel()` Helper**: Streamlined codebase with shared logic for Pro/NB2.
 
 ### v1.9.9 (February 2026) 🧬
 **🎉 DNA CHARACTER v2.0 - ADVANCED CONSISTENCY:**

@@ -33,7 +33,7 @@ if (!crypto.randomUUID) {
 // --- Localization ---
 const translations = {
     en: {
-        headerTitle: 'Generentolo PRO v1.9.9',
+        headerTitle: 'Generentolo PRO v2.0',
         headerSubtitle: 'Let me do it for you!',
         refImagesTitle: 'Reference & Style Images',
         styleRefTitle: 'Style Reference',
@@ -307,7 +307,7 @@ const translations = {
         presetAppliedToPrompt: 'Will be applied to generation',
     },
     it: {
-        headerTitle: 'Generentolo PRO v1.9.9',
+        headerTitle: 'Generentolo PRO v2.0',
         headerSubtitle: 'Let me do it for you!',
         refImagesTitle: 'Immagini di Riferimento e Stile',
         styleRefTitle: 'Riferimento Stile',
@@ -943,8 +943,8 @@ const ReferencePanel: React.FC<{
                         </label>
 
                         {/* Model Badge */}
-                        <div className={`px-2 py-1 rounded-full text-[9px] font-black uppercase tracking-wider ${selectedModel === 'gemini-3-pro-image-preview' ? 'bg-gradient-to-r from-brand-purple to-brand-magenta text-white' : 'bg-brand-yellow/20 text-brand-yellow'}`}>
-                            {selectedModel === 'gemini-3-pro-image-preview' ? 'PRO' : 'FLASH'}
+                        <div className={`px-2 py-1 rounded-full text-[9px] font-black uppercase tracking-wider ${selectedModel === 'gemini-3-pro-image-preview' ? 'bg-gradient-to-r from-brand-purple to-brand-magenta text-white' : selectedModel === 'gemini-3.1-flash-image-preview' ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white' : 'bg-brand-yellow/20 text-brand-yellow'}`}>
+                            {selectedModel === 'gemini-3-pro-image-preview' ? 'PRO' : selectedModel === 'gemini-3.1-flash-image-preview' ? 'NB2' : 'FLASH'}
                         </div>
                     </div>
                 )}
@@ -3150,7 +3150,7 @@ export default function App() {
 
                 // Generate sequentially if there are multiple references/complex setup to avoid API overload
                 // Otherwise parallel is fine
-                if (hasMultipleReferences || currentModel === 'gemini-3-pro-image-preview') {
+                if (hasMultipleReferences || currentModel === 'gemini-3-pro-image-preview' || currentModel === 'gemini-3.1-flash-image-preview') {
                     const imageDataUrl = await geminiService.generateImage(
                         variantPrompt,
                         currentAspect,

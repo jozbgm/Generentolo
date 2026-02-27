@@ -1,5 +1,24 @@
 # 📋 Changelog - Generentolo PRO
 
+## [2.0.0] - 2026-02-27 🍌
+### Added
+- **🍌 Nano Banana 2 (Gemini 3.1 Flash Image)**: Third AI model integrated into the application.
+  - **API Model**: `gemini-3.1-flash-image-preview` — combines Flash speed with Pro-level quality.
+  - **Native Resolution**: Supports 1K/2K imageSize, same as Pro model.
+  - **Google Search Grounding**: Full support for real-time web search integration.
+  - **Smart Timeout**: 7-minute API timeout (between Flash 5min and Pro 10min).
+  - **Auto-Fallback**: Automatic fallback to Flash when blocked with "OTHER" safety reason.
+  - **Prompt Optimization**: Multi-image prompt optimization for complex scenarios.
+- **🎛️ Triple Model Selector**: New dropdown menu with three options: PRO, FLASH, and Nano Banana 2.
+  - Emerald/teal color scheme for NB2 badge and indicators.
+  - Resolution selector visible for both PRO and NB2 models.
+  - Sequential generation enabled for NB2 (same as PRO).
+- **📊 Updated Badges**: NB2 model badge displayed in FloatingActionBar, QueuePanel, and ReferencePanel.
+
+### Changed
+- **Version Bump**: 1.9.9 → 2.0.0 (milestone release).
+- **`isAdvancedModel()` Helper**: New utility function in geminiService to avoid code duplication for Pro/NB2 feature checks.
+
 ## [1.9.9] - 2026-02-05
 ### Added
 - **🧬 DNA Character v2.0**: Massive upgrade to character consistency.

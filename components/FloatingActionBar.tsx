@@ -292,10 +292,10 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                                 onClick={(e) => { e.stopPropagation(); setShowModelMenu(!showModelMenu); setShowAspectMenu(false); setShowNumImagesMenu(false); setShowResolutionMenu(false); }}
                                 className={`h-full px-3 rounded-[10px] text-[10px] font-bold transition-all flex items-center gap-1.5 whitespace-nowrap ${showModelMenu ? 'bg-light-surface dark:bg-dark-surface text-brand-purple shadow-sm ring-1 ring-black/5 dark:ring-white/10' : 'hover:bg-white/5 text-light-text/60 dark:text-dark-text/60'}`}
                             >
-                                <span className={`text-[10px] ${selectedModel === 'gemini-3-pro-image-preview' ? 'text-yellow-500' : 'text-blue-400 opacity-70'}`}>★</span>
-                                {selectedModel === 'gemini-3-pro-image-preview' ? (t.modelPro || 'PRO') : (t.modelFlash || 'FLASH')}
+                                <span className={`text-[10px] ${selectedModel === 'gemini-3-pro-image-preview' ? 'text-yellow-500' : selectedModel === 'gemini-3.1-flash-image-preview' ? 'text-emerald-400' : 'text-blue-400 opacity-70'}`}>★</span>
+                                {selectedModel === 'gemini-3-pro-image-preview' ? (t.modelPro || 'PRO') : selectedModel === 'gemini-3.1-flash-image-preview' ? 'NB2' : (t.modelFlash || 'FLASH')}
                             </button>
-                            {selectedModel === 'gemini-3-pro-image-preview' && (
+                            {(selectedModel === 'gemini-3-pro-image-preview' || selectedModel === 'gemini-3.1-flash-image-preview') && (
                                 <>
                                     <div className="w-[1px] h-4 bg-black/10 dark:bg-white/10 mx-0.5" />
                                     <button
@@ -453,6 +453,16 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                                 <span>Nano Banana FLASH</span>
                             </span>
                             {selectedModel === 'gemini-2.5-flash-image' && <span className="text-xs">✓</span>}
+                        </button>
+                        <button
+                            onClick={() => { onModelChange('gemini-3.1-flash-image-preview'); setShowModelMenu(false); }}
+                            className={`px-4 py-3 rounded-[14px] text-[11px] font-bold transition-all text-left flex items-center justify-between border ${selectedModel === 'gemini-3.1-flash-image-preview' ? 'bg-brand-purple text-white border-brand-purple' : 'hover:bg-white/10 text-light-text/70 dark:text-dark-text/70 border-transparent'}`}
+                        >
+                            <span className="flex items-center gap-2.5">
+                                <span className="text-emerald-400">🍌</span>
+                                <span>Nano Banana 2</span>
+                            </span>
+                            {selectedModel === 'gemini-3.1-flash-image-preview' && <span className="text-xs">✓</span>}
                         </button>
                     </div>
                 )}

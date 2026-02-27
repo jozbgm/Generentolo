@@ -42,7 +42,7 @@ const QueuePanel: React.FC<QueuePanelProps> = ({ queue, onRemoveFromQueue, t }) 
                                 </p>
                                 <div className="flex items-center gap-1.5 mt-0.5">
                                     <span className="text-[9px] px-1.5 py-0.5 bg-light-surface-accent dark:bg-dark-surface-accent rounded text-light-text-muted dark:text-dark-text-muted">
-                                        {task.model === 'gemini-3-pro-image-preview' ? 'PRO' : 'Flash'}
+                                        {task.model === 'gemini-3-pro-image-preview' ? 'PRO' : task.model === 'gemini-3.1-flash-image-preview' ? 'NB2' : 'Flash'}
                                     </span>
                                     <span className="text-[9px] px-1.5 py-0.5 bg-light-surface-accent dark:bg-dark-surface-accent rounded text-light-text-muted dark:text-dark-text-muted">
                                         {task.numImages}x

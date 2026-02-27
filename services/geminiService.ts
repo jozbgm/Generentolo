@@ -654,12 +654,16 @@ export const rewritePromptWithStyleImage = async (currentPrompt: string, styleFi
     }
 };
 
+// Helper to check if model supports advanced features (resolution, grounding, etc.)
+const isAdvancedModel = (model: string): boolean =>
+    model === 'gemini-3-pro-image-preview' || model === 'gemini-3.1-flash-image-preview';
+
 // Helper function to get ULTRA-AGGRESSIVE aspect ratio composition guidance
 const getAspectRatioGuidance = (aspectRatio: string, language: 'en' | 'it' = 'en', model?: string): string => {
     // v1.0 UPDATE: Now using native imageConfig.aspectRatio parameter for specific ratios
     // Text guidance is only needed for "Auto" mode OR models without native support (Flash)
 
-    const isPro = model === 'gemini-3-pro-image-preview';
+    const isPro = model ? isAdvancedModel(model) : false;
 
     if (aspectRatio === 'Auto') {
         // Auto mode: tell the model to match reference image's aspect ratio
@@ -1077,8 +1081,8 @@ export const generateImage = async (
         const aspectRatioGuidance = getAspectRatioGuidance(aspectRatio, language, model);
         const instructionParts: string[] = [aspectRatioGuidance];
 
-        // v1.0: Add resolution keywords to prompt for Nano Banana Pro (Gemini 3 Pro) to trigger high-res generation
-        if (model === 'gemini-3-pro-image-preview' && resolution) {
+        // v1.0: Add resolution keywords to prompt for advanced models (Pro & NB2) to trigger high-res generation
+        if (isAdvancedModel(model) && resolution) {
             const resolutionKeyword = resolution === '4k' ? 'extreme 4K Ultra HD resolution, 4096px, hyper-detailed textures, macro sharpness' :
                 resolution === '2k' ? '2K HD resolution, 2048px, very sharp details' :
                     '1K standard resolution, 1024px';
@@ -1198,8 +1202,8 @@ export const generateImage = async (
         }
 
 
-        // v1.3: Optimize prompt for Nano Banana Pro with multiple images to reduce complexity
-        if (model === 'gemini-3-pro-image-preview' && imageParts.length > 2 && fullPrompt.length > 500) {
+        // v1.3: Optimize prompt for advanced models (Pro & NB2) with multiple images to reduce complexity
+        if (isAdvancedModel(model) && imageParts.length > 2 && fullPrompt.length > 500) {
             // Keep only essential instructions, remove verbose guidance
             fullPrompt = fullPrompt
                 .replace(/⚠️ COMBINA tutti.*?\./g, '')
@@ -1239,8 +1243,8 @@ export const generateImage = async (
             imageConfig.aspectRatio = aspectRatio;
         }
 
-        // v1.0: Native Resolution for Nano Banana Pro (Gemini 3 Pro Image)
-        if (model === 'gemini-3-pro-image-preview' && resolution) {
+        // v1.0: Native Resolution for advanced models (Pro & NB2)
+        if (isAdvancedModel(model) && resolution) {
             imageConfig.imageSize = resolution.toUpperCase(); // "1K", "2K", or "4K"
         }
 
@@ -1255,8 +1259,8 @@ export const generateImage = async (
         // v1.5.1: Google Search Grounding support (all models)
         // Note: Invisible reference images from Google are added in App.tsx before calling this function
         if (useGrounding) {
-            // For PRO model, also enable textual grounding for real-time data
-            if (model === 'gemini-3-pro-image-preview') {
+            // For advanced models (PRO & NB2), enable textual grounding for real-time data
+            if (isAdvancedModel(model)) {
                 config.tools = [{
                     googleSearch: {}
                 }];
@@ -1269,12 +1273,12 @@ export const generateImage = async (
             (config as any).abortSignal = abortSignal;
         }
         (config as any).httpOptions = {
-            timeout: model === 'gemini-3-pro-image-preview' ? 600000 : 300000, // 10min for Pro, 5min for Flash
+            timeout: model === 'gemini-3-pro-image-preview' ? 600000 : model === 'gemini-3.1-flash-image-preview' ? 420000 : 300000, // 10min for Pro, 7min for NB2, 5min for Flash
         };
 
 
-        // v1.3: Warning for Nano Banana Pro - it's slower and requires patience
-        if (model === 'gemini-3-pro-image-preview') {
+        // v1.3: Warning for advanced models - they may be slower
+        if (isAdvancedModel(model)) {
         }
 
         // Enhanced retry logic: IMAGE_RECITATION/IMAGE_OTHER with prompt variations + 500/503 server errors
@@ -1389,10 +1393,10 @@ export const generateImage = async (
                 const blockReason = result.promptFeedback.blockReason;
                 const safetyRatings = result.promptFeedback.safetyRatings || [];
 
-                // v1.3.1: Auto-fallback to Flash-exp when Pro 3.0 blocks with "OTHER"
+                // v1.3.1: Auto-fallback to Flash when advanced models (Pro/NB2) block with "OTHER"
                 // "OTHER" typically means: face manipulation, personal photos, identity editing
-                if (blockReason === 'OTHER' && model === 'gemini-3-pro-image-preview') {
-                    console.warn('⚠️ Nano Banana Pro blocked with "OTHER". Auto-fallback to Nano Banana Flash...');
+                if (blockReason === 'OTHER' && isAdvancedModel(model)) {
+                    console.warn(`⚠️ ${model === 'gemini-3.1-flash-image-preview' ? 'Nano Banana 2' : 'Nano Banana Pro'} blocked with "OTHER". Auto-fallback to Nano Banana Flash...`);
 
                     // Recursively call generateImage with Flash model
                     return await generateImage(
