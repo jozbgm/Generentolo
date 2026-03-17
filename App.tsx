@@ -757,7 +757,7 @@ const StyleImagePreview = React.memo<{ file: File; onRemove: () => void }>(
         if (!previewUrl) return <div className="aspect-square rounded-xl bg-light-surface-accent animate-pulse" />;
 
         return (
-            <div className="relative group aspect-square overflow-hidden rounded-xl bg-white dark:bg-dark-surface border border-brand-yellow shadow-[0_0_12px_3px_rgba(200,242,58,0.25)]">
+            <div className="relative group w-full h-full overflow-hidden rounded-xl bg-white dark:bg-dark-surface border border-brand-yellow shadow-[0_0_12px_3px_rgba(200,242,58,0.25)]">
                 <img src={previewUrl} alt="Style reference" className="w-full h-full object-cover" />
                 <button onClick={onRemove} className="absolute top-2 right-2 bg-brand-yellow text-dark-bg rounded-xl w-7 h-7 flex items-center justify-center text-sm opacity-0 group-hover:opacity-100 transition-opacity z-10" aria-label="Remove style image">
                     <XIcon className="w-4 h-4" />
