@@ -60,7 +60,7 @@ cp .env.example .env.local
 npm run dev
 ```
 
-Open [http://localhost:5173/generentolo/](http://localhost:5173/generentolo/)
+Open [http://localhost:3000/generentolo/](http://localhost:3000/generentolo/)
 
 ---
 
