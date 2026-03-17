@@ -2996,19 +2996,9 @@ export default function App() {
 
 
 
-            // v2.1: Style extraction pre-computed once before the loop (only if style image present).
-            // enrichPromptWithImageReferences removed from hot path — gemini-3-flash-preview latency
-            // made it block for 17-23s; the standard path already adds multi-image combining instructions.
-            let precomputedStyleDescription: string | undefined = undefined;
-            if (!isPromptEnhancedInternal && currentStyleImage) {
-                console.time('[GEN] preprocessing');
-                const styleTimeout = new Promise<string>(resolve => setTimeout(() => resolve(""), 6000));
-                precomputedStyleDescription = await Promise.race([
-                    geminiService.extractStyleDescription(currentStyleImage, userApiKey, language).catch(() => ""),
-                    styleTimeout
-                ]);
-                console.timeEnd('[GEN] preprocessing');
-            }
+            // v2.1: No pre-loop preprocessing — style image is now sent as a direct reference part
+            // inside generateImage (no Flash extraction calls). Zero blocking API calls before generation.
+            const precomputedStyleDescription: string | undefined = undefined;
 
             // Batch generation: add prompt variations for each image to create diversity
             // NOTE: Gemini API doesn't support seed parameter for image models, so we add subtle prompt variations

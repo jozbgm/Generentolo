@@ -1,4 +1,4 @@
-﻿import { GoogleGenAI, Type, Modality } from "@google/genai";
+﻿import { GoogleGenAI, Type, Modality, HarmCategory, HarmBlockThreshold } from "@google/genai";
 import { DynamicTool, ModelType, ResolutionType, TextInImageConfig } from '../types';
 
 const DEFAULT_API_KEY = import.meta.env.VITE_API_KEY;
@@ -6,6 +6,14 @@ const DEFAULT_API_KEY = import.meta.env.VITE_API_KEY;
 if (!DEFAULT_API_KEY) {
     console.warn("VITE_API_KEY environment variable not set. Users must provide their own API key.");
 }
+
+// v2.1: Minimal safety settings for image generation — BLOCK_NONE on all categories
+const SAFETY_SETTINGS_PERMISSIVE = [
+    { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
+    { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+    { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
+    { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+];
 
 export const getAiClient = (userApiKey?: string | null) => {
     const apiKey = userApiKey || DEFAULT_API_KEY;
@@ -879,7 +887,7 @@ export const generateImage = async (
     abortSignal?: AbortSignal,
     useGrounding?: boolean, // v1.4: Google Search Grounding
     skipPreprocessing?: boolean, // v1.9.2: Speed optimization
-    precomputedStyleDescription?: string // v2.1: Pre-computed to avoid repeated API calls in batch
+    _precomputedStyleDescription?: string // v2.1: kept for API compat, style now handled as direct image part
 ): Promise<string> => {
     try {
         const ai = getAiClient(userApiKey);
@@ -888,19 +896,25 @@ export const generateImage = async (
          * SCENARI SUPPORTATI:
          * 1. 0 reference images → generazione text-to-image pura (solo prompt utente)
          * 2. 1 reference image → generazione basata su singola reference
-         * 3. 2+ reference images → combining con enrichment automatico "Image 1", "Image 2"
-         * 4. + style image (opzionale) → estratta come descrizione testuale, aggiunta al prompt
+         * 3. 2+ reference images → combining con role-based instructions (client-side, no Flash call)
+         * 4. + style image (opzionale) → aggiunta come reference part con istruzione di ruolo nel prompt
          * 5. + structure image (opzionale) → aggiunta come ultima immagine, guidance ControlNet-like
          *
-         * Nota: style image NON viene aggiunta a imageParts (solo descrizione testuale)
-         *       structure image VIENE aggiunta a imageParts come ultima
+         * Ordine imageParts: [ref1..refN, style (se presente), structure (se presente)]
+         * Tutti i ruoli sono descritti nel prompt con linguaggio naturale + indice posizionale.
          */
 
         const imageParts: any[] = [];
 
-        // Process ONLY reference images (NOT style image)
+        // Process reference images
         for (const file of referenceFiles) {
             imageParts.push(await fileToGenerativePart(file));
+        }
+
+        // v2.1: Style image added directly as reference part (no Flash extraction call)
+        // Position is known: index = referenceFiles.length (0-based), label = referenceFiles.length + 1 (1-based)
+        if (styleFile) {
+            imageParts.push(await fileToGenerativePart(styleFile));
         }
 
         /* 
@@ -908,21 +922,15 @@ export const generateImage = async (
          * Optimized for speed: these Flash calls run at the same time.
          * v1.9.2: Skipped if prompt is already SUPER-ENHANCED.
          */
-        const [enrichedPromptResult, styleDescriptionResult] = skipPreprocessing
-            ? [prompt, precomputedStyleDescription ?? ""]
-            : await Promise.all([
-                referenceFiles.length > 1
-                    ? enrichPromptWithImageReferences(prompt, referenceFiles, userApiKey, language)
-                    : Promise.resolve(prompt),
-                precomputedStyleDescription !== undefined
-                    ? Promise.resolve(precomputedStyleDescription)
-                    : styleFile
-                        ? extractStyleDescription(styleFile, userApiKey, language)
-                        : Promise.resolve("")
-            ]);
+        // Enrichment only — style is now handled as a direct image part (no Flash call)
+        const enrichedPromptResult = skipPreprocessing
+            ? prompt
+            : referenceFiles.length > 1
+                ? await enrichPromptWithImageReferences(prompt, referenceFiles, userApiKey, language)
+                : prompt;
 
         const enrichedPrompt = enrichedPromptResult;
-        const styleDescription = styleDescriptionResult;
+        // styleDescriptionResult kept for backward compat but style is now handled via direct image part
 
         // v1.0: Aspect ratio is now handled natively via imageConfig.aspectRatio
         // For NB2 in pure text-to-image mode (no references, no style, no structure),
@@ -943,6 +951,8 @@ export const generateImage = async (
             const config: any = {
                 responseModalities: [Modality.IMAGE],
                 temperature: 0.7,
+                thinkingConfig: { thinkingLevel: 'minimal' },
+                safetySettings: SAFETY_SETTINGS_PERMISSIVE,
             };
 
             const imageConfig: any = {};
@@ -1048,50 +1058,39 @@ export const generateImage = async (
 
         const promptLower = prompt.toLowerCase();
 
-        // STEP 2: Optimized multi-image combining guidance (reduced from ~400 to ~150 chars)
+        // STEP 2: Role-based multi-image guidance (client-side, zero API calls)
+        // Images are ordered: [ref1..refN, style (if any), structure (if any)]
+        // We describe each group's role using natural language + positional index (per Gemini docs best practice)
         if (referenceFiles.length > 1) {
-            const imageListText = language === 'it'
+            const refLabels = language === 'it'
                 ? referenceFiles.map((_, idx) => `Immagine ${idx + 1}`).join(', ')
                 : referenceFiles.map((_, idx) => `Image ${idx + 1}`).join(', ');
 
             instructionParts.push(language === 'it'
-                ? `⚠️ COMBINA tutti gli elementi da ${imageListText} in una scena coerente. Include il soggetto principale di ogni immagine.`
-                : `⚠️ COMBINE all elements from ${imageListText} into one coherent scene. Include the main subject from each image.`);
-        }
+                ? `⚠️ COMBINA: Le immagini ${refLabels} sono le REFERENCE PRINCIPALI — includi il soggetto principale di ognuna in una scena coerente.`
+                : `⚠️ COMBINE: Images ${refLabels} are the MAIN REFERENCES — include the main subject from each into one coherent scene.`);
 
-        // STEP 3: Detect contextual relationship keywords and add micro-guidance (only for multi-image)
-        if (referenceFiles.length > 1) {
-            // Italian keywords
-            if (promptLower.includes('sulla') || promptLower.includes('sul') ||
-                promptLower.includes('on the') || promptLower.includes('on ')) {
-                instructionParts.push(language === 'it'
-                    ? `Applica l'elemento come texture/overlay.`
-                    : `Apply the element as texture/overlay.`);
+            // Contextual relationship micro-guidance
+            if (promptLower.includes('sulla') || promptLower.includes('sul') || promptLower.includes('on the') || promptLower.includes('on ')) {
+                instructionParts.push(language === 'it' ? `Applica l'elemento come texture/overlay.` : `Apply the element as texture/overlay.`);
             } else if (promptLower.includes('con') || promptLower.includes('with')) {
-                instructionParts.push(language === 'it'
-                    ? `Aggiungi l'elemento nella scena.`
-                    : `Add the element to the scene.`);
+                instructionParts.push(language === 'it' ? `Aggiungi l'elemento nella scena.` : `Add the element to the scene.`);
             } else if (promptLower.includes(' in ') || promptLower.includes('dentro')) {
-                instructionParts.push(language === 'it'
-                    ? `Posiziona l'elemento nel contesto.`
-                    : `Place the element in the context.`);
+                instructionParts.push(language === 'it' ? `Posiziona l'elemento nel contesto.` : `Place the element in the context.`);
             }
         }
 
-        // Extract style description from style image (if provided) and add to prompt text
-        // v0.7.1 FIX: Make explicit that style should be APPLIED to reference subjects
-        // v0.7.2 FIX: Log warning when style extraction fails
-        if (styleFile && styleDescription) {
-            // If there are reference images, explicitly tell AI to apply style TO them
+        // STEP 3: Style image role instruction (v2.1 — image sent directly as reference part, no Flash call)
+        if (styleFile) {
+            const styleIdx = referenceFiles.length + 1; // 1-based position in imageParts
             if (referenceFiles.length > 0) {
                 instructionParts.push(language === 'it'
-                    ? `🎨 APPLICA STILE: Usa i soggetti dalle immagini di riferimento MA con questo stile: ${styleDescription}. I prodotti/persone restano quelli delle reference, ma adotta palette, illuminazione e mood dello stile.`
-                    : `🎨 APPLY STYLE: Use subjects from reference images BUT with this style: ${styleDescription}. Products/people remain from references, but adopt palette, lighting and mood from style.`);
+                    ? `🎨 STILE (Immagine ${styleIdx}): Questa è un'immagine di RIFERIMENTO STILISTICO — applica la sua palette, illuminazione, mood e stile artistico. NON copiare i suoi soggetti, solo lo stile visivo.`
+                    : `🎨 STYLE (Image ${styleIdx}): This is a STYLE REFERENCE image — apply its color palette, lighting, mood and artistic style. Do NOT copy its subjects, only the visual style.`);
             } else {
-                // No references, just apply the style to the prompt
                 instructionParts.push(language === 'it'
-                    ? `🎨 Stile: ${styleDescription}`
-                    : `🎨 Style: ${styleDescription}`);
+                    ? `🎨 STILE (Immagine ${styleIdx}): Applica la palette, l'illuminazione e il mood di questa immagine di stile.`
+                    : `🎨 STYLE (Image ${styleIdx}): Apply the color palette, lighting and mood from this style reference image.`);
             }
         }
 
@@ -1161,12 +1160,11 @@ export const generateImage = async (
 
         // v1.3: Optimize prompt for advanced models (Pro & NB2) with multiple images to reduce complexity
         if (isAdvancedModel(model) && imageParts.length > 2 && fullPrompt.length > 500) {
-            // Keep only essential instructions, remove verbose guidance
             fullPrompt = fullPrompt
-                .replace(/⚠️ COMBINA tutti.*?\./g, '')
-                .replace(/⚠️ COMBINE all.*?\./g, '')
-                .replace(/🎨 APPLICA STILE:.*?(?=🏗️|📝|$)/g, '')
-                .replace(/🎨 APPLY STYLE:.*?(?=🏗️|📝|$)/g, '')
+                .replace(/⚠️ COMBINA:.*?(?=🎨|🏗️|📝|🎯|--no|$)/gs, '')
+                .replace(/⚠️ COMBINE:.*?(?=🎨|🏗️|📝|🎯|--no|$)/gs, '')
+                .replace(/🎨 STILE.*?(?=🏗️|📝|🎯|--no|$)/gs, '')
+                .replace(/🎨 STYLE.*?(?=🏗️|📝|🎯|--no|$)/gs, '')
                 .replace(/mantieni stesso soggetto e aspetto/g, '')
                 .replace(/keep same subject appearance/g, '')
                 .trim();
@@ -1177,18 +1175,14 @@ export const generateImage = async (
 
         const config: any = {
             responseModalities: [Modality.IMAGE],
-            // Temperature 0.65 - 0.7 for better balance across all 3.0 models
             temperature: 0.7,
-
-            // v1.0.2: Commenting out safetySettings - testing if explicit BLOCK_NONE causes issues
-            // Theory: LM Arena might NOT set safetySettings at all, using model defaults instead
-            // safetySettings: [
-            //     { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
-            //     { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
-            //     { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
-            //     { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
-            // ],
+            safetySettings: SAFETY_SETTINGS_PERMISSIVE,
         };
+
+        // v2.1: thinkingConfig minimal for NB2 — reduces internal thought overhead for speed
+        if (model === 'gemini-3.1-flash-image-preview') {
+            config.thinkingConfig = { thinkingLevel: 'minimal' };
+        }
 
         // Add imageConfig with aspect ratio
         // NOTE: personGeneration is NOT supported in @google/genai SDK (only in Vertex AI)
