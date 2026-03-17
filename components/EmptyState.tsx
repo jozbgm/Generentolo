@@ -26,7 +26,7 @@ const EmptyState: React.FC<EmptyStateProps> = ({ title, description, icon, actio
             {action && (
                 <button
                     onClick={action.onClick}
-                    className="px-6 py-2.5 bg-gradient-to-r from-brand-purple to-brand-pink text-white font-medium rounded-xl hover:opacity-90 hover:scale-105 active:scale-95 transition-all duration-200 shadow-lg"
+                    className="px-6 py-2.5 bg-brand-yellow text-dark-bg font-bold rounded-xl hover:opacity-90 hover:scale-105 active:scale-95 transition-all duration-200 shadow-md"
                 >
                     {action.label}
                 </button>

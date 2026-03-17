@@ -1,5 +1,20 @@
 # 📋 Changelog - Generentolo PRO
 
+## [2.1.0] - 2026-03-17
+### Changed
+- **FloatingActionBar visual refresh**: Selected pills (aspect ratio, count, model, resolution) now show a persistent lime tint at rest; separators updated to brand-yellow/20; Auto-Enhance toggle gains a ring when active; subtle ambient glow on bar background.
+- **Tailwind opacity variants**: Fixed `brand-yellow` color definition to support opacity modifiers (`/10`, `/20`, etc.) via RGB channel variables.
+
+### Removed
+- **Creative Prompts panel**: Removed the panel and its Generate Suggestions button, along with all related state, handlers, and dead code (`generatePromptsFromImage` ~150 lines).
+
+### Fixed
+- **Accessibility**: Added `role="dialog"`, `aria-modal`, `aria-labelledby` to all 4 modals (HelpModal, ShortcutsModal, InpaintEditor, DnaCharacterModal); added `aria-label` to all icon-only buttons (header, toast, lightbox mobile nav, modal close buttons).
+- **Touch targets**: Increased close button padding in ShortcutsModal and Toast to meet 44px minimum.
+- **Production cleanup**: Removed 6 debug `console.log` calls across App.tsx, QueuePanel, and googleSearchService.
+- **Null guard**: Added base64 validation in storyboardService to prevent silent failures on malformed image data.
+- **Queue button border**: Replaced hardcoded `#c8f23a55` with CSS variable-based `color-mix()`.
+
 ## [2.0.0] - 2026-02-27 🍌
 ### Added
 - **🍌 Nano Banana 2 (Gemini 3.1 Flash Image)**: Third AI model integrated into the application.

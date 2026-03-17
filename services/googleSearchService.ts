@@ -142,7 +142,6 @@ export const searchGoogleImages = async (query: string, maxResults: number = 10)
                 return !blockedDomains.some(domain => urlLower.includes(domain));
             });
 
-        console.log(`✅ Found ${imageUrls.length} images for: "${query}" (watermark sites filtered)`);
 
         return imageUrls;
     } catch (error) {

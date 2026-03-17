@@ -2,6 +2,37 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  :root {
+    /* Brand Colors - Standardized for Single-Point Editing */
+    --color-brand-yellow: #c8f23a; /* Main Accent */
+    --color-brand-yellow-rgb: 200 242 58; /* RGB channels for opacity variants */
+    --color-brand-magenta: #b5db35; /* Variant Accent */
+    --color-brand-cyan: #e8e8e0;
+    --color-brand-blue: #6b6b60;
+    
+    /* Legacy brand colors mapped to main accent for backward compatibility */
+    --color-brand-purple: var(--color-brand-yellow);
+    --color-brand-pink: var(--color-brand-yellow);
+    
+    /* Light Theme */
+    --color-light-bg: #f0f0ed;
+    --color-light-surface: #f8f8f6;
+    --color-light-surface-accent: #ebebe8;
+    --color-light-text: #111110;
+    --color-light-text-muted: #6b6b60;
+    --color-light-border: #dcdcd8;
+
+    /* Dark Theme */
+    --color-dark-bg: #1A1A1A; /* Antracite / Dark Anthracite */
+    --color-dark-surface: #202020;
+    --color-dark-surface-accent: #2A2A2A;
+    --color-dark-text: #F2F2F2;
+    --color-dark-text-muted: #888888;
+    --color-dark-border: #3A3A3A;
+  }
+}
+
 /* Prevent horizontal scroll on mobile */
 html,
 body {
@@ -24,20 +55,31 @@ body {
   }
 }
 
-/* --- Select & Option Styling for readability --- */
+
+/* Custom native select options */
 select option {
-  background-color: #1a1a1a;
-  color: #f0f0f0;
-  padding: 10px;
+  background-color: var(--color-dark-surface, #202020);
+  color: var(--color-dark-text, #F2F2F2);
 }
 
-.dark select option {
-  background-color: #1a1a1a;
-  color: #f0f0f0;
-}
-
+/* Force dark color-scheme on all selects globally to remove browser blue tint */
 select {
   color-scheme: dark;
+  background-color: var(--color-dark-surface, #202020);
+  color: var(--color-dark-text, #F2F2F2);
+}
+
+.dark select {
+  color-scheme: dark;
+}
+
+/* Override browser default blue focus outline on all interactive elements */
+select:focus,
+input:focus,
+textarea:focus,
+button:focus {
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 /* Custom textarea resize handle styling */
@@ -66,7 +108,7 @@ textarea::-webkit-scrollbar-thumb:hover {
 /* Prompt Library Modal Scrollbar */
 .prompt-library-scroll {
   scrollbar-width: thin;
-  scrollbar-color: rgba(138, 120, 244, 0.3) transparent;
+  scrollbar-color: rgba(200, 242, 58, 0.3) transparent;
 }
 
 .prompt-library-scroll::-webkit-scrollbar {
@@ -79,12 +121,12 @@ textarea::-webkit-scrollbar-thumb:hover {
 }
 
 .prompt-library-scroll::-webkit-scrollbar-thumb {
-  background-color: rgba(138, 120, 244, 0.3);
+  background-color: rgba(200, 242, 58, 0.3);
   border-radius: 3px;
 }
 
 .prompt-library-scroll::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(138, 120, 244, 0.5);
+  background-color: rgba(200, 242, 58, 0.5);
 }
 
 /* Hide scrollbar for category tabs */
@@ -156,3 +198,29 @@ textarea::-webkit-scrollbar-thumb:hover {
 .rotate-y-165 { transform: rotateY(165deg); }
 
 .rotate-x-90 { transform: rotateX(90deg); }
+
+/* ============================================================
+   THEME SYSTEM — Change palette from ONE place: index.css :root
+   All color tokens are defined at the top as CSS variables.
+   The .sweep-accent class below uses those same variables so
+   the hover sweep on buttons automatically follows the theme.
+   ============================================================ */
+
+/* Reusable lime sweep gradient — references brand color variable */
+.sweep-accent {
+  background-image: linear-gradient(
+    to right,
+    transparent,
+    var(--color-brand-yellow),
+    transparent
+  );
+  opacity: 0;
+  transition: opacity 0.7s ease-in-out, transform 0.7s ease-in-out;
+  transform: translateX(-150%);
+}
+
+.group:hover .sweep-accent {
+  opacity: 0.4;
+  transform: translateX(150%);
+}
+

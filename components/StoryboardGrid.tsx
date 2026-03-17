@@ -1,6 +1,6 @@
 import React from 'react';
 import { StoryboardPrompt } from '../services/storyboardService';
-import { SparklesIcon, CopyIcon, CheckIcon, XIcon } from './icons';
+import { SparklesIcon, CopyIcon, CheckIcon, XIcon, ClapperboardIcon, ReloadIcon } from './icons';
 
 interface StoryboardGridProps {
     prompts: StoryboardPrompt[];
@@ -42,8 +42,8 @@ const StoryboardGrid: React.FC<StoryboardGridProps> = ({
                 {/* Header */}
                 <div className="flex items-center justify-between px-6 lg:px-8 py-5 border-b border-light-border dark:border-dark-border bg-light-surface/50 dark:bg-dark-surface/50 backdrop-blur-md">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-purple to-brand-pink flex items-center justify-center shadow-lg shadow-brand-purple/20">
-                            <span className="text-xl">🎬</span>
+                        <div className="w-10 h-10 rounded-xl bg-light-surface-accent dark:bg-dark-surface-accent border border-brand-yellow/30 flex items-center justify-center shadow-md">
+                            <ClapperboardIcon className="w-5 h-5 text-brand-yellow" />
                         </div>
                         <div>
                             <h2 className="text-xl font-bold text-light-text dark:text-dark-text tracking-tight">
@@ -59,16 +59,16 @@ const StoryboardGrid: React.FC<StoryboardGridProps> = ({
                         <button
                             onClick={onRegenerate}
                             disabled={isLoading}
-                            className="hidden md:flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-orange-500 to-yellow-500 text-white rounded-xl font-bold hover:scale-105 active:scale-95 transition-all shadow-lg shadow-orange-500/25 disabled:opacity-50"
+                            className="hidden md:flex items-center gap-2 px-4 py-2.5 bg-brand-yellow text-dark-bg rounded-xl font-bold hover:scale-105 active:scale-95 transition-all shadow-lg disabled:opacity-50"
                             title={language === 'it' ? 'Rigenera 9 nuovi prompt per questa immagine' : 'Regenerate 9 new prompts for this image'}
                         >
-                            <span className="text-base">🔄</span>
+                            <ReloadIcon className="w-4 h-4" />
                             {language === 'it' ? 'Rigenera' : 'Regenerate'}
                         </button>
                         <button
                             onClick={onGenerateAll}
                             disabled={isLoading}
-                            className="hidden md:flex items-center gap-2 px-6 py-2.5 bg-brand-purple text-white rounded-xl font-bold hover:scale-105 active:scale-95 transition-all shadow-lg shadow-brand-purple/25 disabled:opacity-50"
+                            className="hidden md:flex items-center gap-2 px-6 py-2.5 bg-light-surface dark:bg-dark-surface text-light-text dark:text-dark-text border border-light-border dark:border-dark-border rounded-xl font-bold hover:border-brand-yellow hover:text-brand-yellow hover:scale-105 active:scale-95 transition-all shadow-md disabled:opacity-50"
                         >
                             <SparklesIcon className="w-4 h-4" />
                             {language === 'it' ? 'Genera Tutto (Coda)' : 'Generate All (Queue)'}
@@ -87,7 +87,7 @@ const StoryboardGrid: React.FC<StoryboardGridProps> = ({
                     {isLoading && prompts.length === 0 ? (
                         /* Loading State */
                         <div className="flex flex-col items-center justify-center h-full min-h-[400px] text-center">
-                            <div className="w-20 h-20 border-4 border-brand-purple/30 border-t-brand-purple rounded-full animate-spin mb-6"></div>
+                            <div className="w-20 h-20 border-4 border-brand-yellow/30 border-t-brand-yellow rounded-full animate-spin mb-6"></div>
                             <h3 className="text-xl font-bold text-light-text dark:text-dark-text mb-2 animate-pulse">
                                 {language === 'it' ? 'Analisi in corso...' : 'Analyzing...'}
                             </h3>
@@ -97,9 +97,9 @@ const StoryboardGrid: React.FC<StoryboardGridProps> = ({
                                     : 'Generentolo is analyzing the image and creating 9 cinematic variations...'}
                             </p>
                             <div className="flex gap-2 mt-4">
-                                <div className="w-2 h-2 rounded-full bg-brand-purple animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                                <div className="w-2 h-2 rounded-full bg-brand-purple animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                                <div className="w-2 h-2 rounded-full bg-brand-purple animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                                <div className="w-2 h-2 rounded-full bg-brand-yellow animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                                <div className="w-2 h-2 rounded-full bg-brand-yellow animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                                <div className="w-2 h-2 rounded-full bg-brand-yellow animate-bounce" style={{ animationDelay: '300ms' }}></div>
                             </div>
                         </div>
                     ) : (
@@ -108,12 +108,12 @@ const StoryboardGrid: React.FC<StoryboardGridProps> = ({
                             {prompts.map((item, index) => (
                                 <div
                                     key={item.id}
-                                    className="group relative flex flex-col bg-light-surface-accent/20 dark:bg-dark-surface-accent/20 border border-light-border dark:border-dark-border/50 rounded-2xl overflow-hidden transition-all duration-300 hover:border-brand-purple/50 hover:shadow-xl hover:shadow-purple-500/5"
+                                    className="group relative flex flex-col bg-light-surface-accent/20 dark:bg-dark-surface-accent/20 border border-light-border dark:border-dark-border/50 rounded-2xl overflow-hidden transition-all duration-300 hover:border-brand-yellow/50 hover:shadow-lg hover:shadow-brand-yellow/5"
                                 >
                                     {/* Shot Number & Title */}
                                     <div className="px-5 py-4 flex items-center justify-between border-b border-light-border dark:border-dark-border/30 bg-light-surface/30 dark:bg-dark-surface/10">
                                         <div className="flex items-center gap-3">
-                                            <span className="text-xs font-black text-brand-purple/60 dark:text-brand-purple/80 italic">#{index + 1}</span>
+                                            <span className="text-xs font-black text-light-text-muted dark:text-dark-text-muted italic">#{index + 1}</span>
                                             <span className="text-sm font-bold text-light-text dark:text-dark-text uppercase tracking-tight truncate max-w-[150px]">
                                                 {item.title}
                                             </span>
@@ -121,7 +121,7 @@ const StoryboardGrid: React.FC<StoryboardGridProps> = ({
                                         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                             <button
                                                 onClick={() => handleCopy(item.id, item.prompt)}
-                                                className="p-1.5 rounded-lg hover:bg-brand-purple/10 text-brand-purple transition-all"
+                                                className="p-1.5 rounded-lg hover:bg-brand-yellow hover:text-dark-bg text-light-text dark:text-dark-text transition-all"
                                                 title="Copy Prompt"
                                             >
                                                 {copiedId === item.id ? <CheckIcon className="w-4 h-4" /> : <CopyIcon className="w-4 h-4" />}
@@ -141,13 +141,13 @@ const StoryboardGrid: React.FC<StoryboardGridProps> = ({
                                         <div className="flex gap-2">
                                             <button
                                                 onClick={() => onUsePrompt(item.prompt)}
-                                                className="flex-1 py-2 text-xs font-bold bg-light-surface dark:bg-dark-surface-accent border border-light-border dark:border-dark-border rounded-lg hover:bg-brand-purple/10 hover:border-brand-purple/50 transition-all active:scale-95"
+                                                className="flex-1 py-2 text-xs font-bold bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border rounded-lg hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:border-brand-yellow transition-all active:scale-95 text-light-text dark:text-dark-text"
                                             >
                                                 {language === 'it' ? 'Usa' : 'Use'}
                                             </button>
                                             <button
                                                 onClick={() => onGenerateOne(item.prompt)}
-                                                className="flex-1 py-2 text-xs font-bold bg-brand-purple text-white rounded-lg hover:shadow-lg hover:shadow-brand-purple/20 transition-all active:scale-95"
+                                                className="flex-1 py-2 text-xs font-bold bg-brand-yellow text-dark-bg rounded-lg hover:scale-105 transition-all shadow-md active:scale-95"
                                             >
                                                 {language === 'it' ? 'Genera' : 'Generate'}
                                             </button>
@@ -164,7 +164,7 @@ const StoryboardGrid: React.FC<StoryboardGridProps> = ({
                     <button
                         onClick={onGenerateAll}
                         disabled={isLoading}
-                        className="w-full flex items-center justify-center gap-2 py-4 bg-brand-purple text-white rounded-2xl font-bold shadow-lg shadow-brand-purple/25"
+                        className="w-full flex items-center justify-center gap-2 py-4 bg-light-surface dark:bg-dark-surface text-light-text dark:text-dark-text border border-light-border dark:border-dark-border rounded-2xl font-bold shadow-md hover:border-brand-yellow hover:text-brand-yellow"
                     >
                         <SparklesIcon className="w-5 h-5" />
                         {language === 'it' ? 'Genera Tutto' : 'Generate All'}

@@ -49,7 +49,7 @@ const LoadingProgress: React.FC<LoadingProgressProps> = ({
                 {/* Animated spinner */}
                 <div className="relative w-20 h-20 mx-auto mb-6">
                     <div className="absolute inset-0 border-4 border-light-border dark:border-dark-border rounded-full"></div>
-                    <div className="absolute inset-0 border-4 border-t-brand-purple border-r-brand-pink border-b-transparent border-l-transparent rounded-full animate-spin"></div>
+                    <div className="absolute inset-0 border-4 border-t-brand-yellow border-r-brand-yellow/50 border-b-transparent border-l-transparent rounded-full animate-spin"></div>
                 </div>
 
                 {/* Step indicator */}
@@ -65,7 +65,7 @@ const LoadingProgress: React.FC<LoadingProgressProps> = ({
                 {/* Progress bar */}
                 <div className="w-full h-2 bg-light-surface-accent dark:bg-dark-surface-accent rounded-full overflow-hidden">
                     <div
-                        className="h-full bg-gradient-to-r from-brand-purple via-brand-pink to-brand-purple transition-all duration-300 ease-out"
+                        className="h-full bg-gradient-to-r from-light-text-muted dark:from-dark-text-muted to-brand-yellow transition-all duration-300 ease-out"
                         style={{ width: `${progress}%` }}
                     />
                 </div>
@@ -82,9 +82,9 @@ const LoadingProgress: React.FC<LoadingProgressProps> = ({
                             key={index}
                             className={`w-2 h-2 rounded-full transition-all duration-300 ${
                                 index < currentStep
-                                    ? 'bg-brand-purple scale-110'
+                                    ? 'bg-brand-yellow scale-110'
                                     : index === currentStep
-                                    ? 'bg-brand-pink scale-125 animate-pulse'
+                                    ? 'bg-brand-yellow scale-125 animate-pulse'
                                     : 'bg-light-border dark:bg-dark-border'
                             }`}
                         />

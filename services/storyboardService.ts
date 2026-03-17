@@ -66,6 +66,7 @@ export const generateCinematicStoryboard = async (
         });
 
         const base64Data = imageData.split(',')[1];
+        if (!base64Data) throw new Error("Invalid image data: could not extract base64 content.");
 
         const result = await (ai as any).models.generateContent({
             model: "gemini-3-flash-preview",

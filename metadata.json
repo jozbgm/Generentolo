@@ -1,5 +1,5 @@
 {
-  "name": "Generentolo PRO v1.9.5",
-  "description": "let me do for you. V.1.9.5 PRO. A professional web application for generating and editing images using Google's Gemini Nano Banana model. Features include reference-based prompt generation, dynamic creative tools, aspect ratio control, persistent history, and a sleek dark/light interface for high-level graphic designers.",
+  "name": "Generentolo PRO v2.1",
+  "description": "Professional AI image generation suite powered by Google Gemini. Triple-model support (Flash, Pro, Nano Banana 2), DNA character consistency, cinematic storyboarding, perspective studio, generation queue, and advanced Google Search Grounding.",
   "requestFramePermissions": []
 }

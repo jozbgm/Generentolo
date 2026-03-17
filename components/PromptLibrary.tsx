@@ -136,10 +136,10 @@ const PromptLibrary: React.FC<PromptLibraryProps> = ({ isOpen, onClose, onUsePro
 
     const getDifficultyColor = (difficulty?: string) => {
         switch (difficulty) {
-            case 'easy': return 'bg-green-500/10 text-green-500';
-            case 'medium': return 'bg-yellow-500/10 text-yellow-500';
-            case 'advanced': return 'bg-red-500/10 text-red-500';
-            default: return 'bg-gray-500/10 text-gray-500';
+            case 'easy': return 'bg-light-surface-accent dark:bg-dark-surface-accent text-light-text dark:text-dark-text border border-light-border dark:border-dark-border';
+            case 'medium': return 'bg-brand-yellow/10 text-brand-yellow border border-brand-yellow/30';
+            case 'advanced': return 'bg-brand-yellow/20 text-brand-yellow border border-brand-yellow/50';
+            default: return 'bg-light-surface dark:bg-dark-surface';
         }
     };
 
@@ -174,7 +174,7 @@ const PromptLibrary: React.FC<PromptLibraryProps> = ({ isOpen, onClose, onUsePro
                             placeholder={t.promptLibrarySearch}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-9 md:pl-10 pr-4 py-2 md:py-3 text-sm md:text-base bg-light-surface-accent dark:bg-dark-surface-accent border border-light-border dark:border-dark-border rounded-xl text-light-text dark:text-dark-text placeholder-light-text-muted dark:placeholder-dark-text-muted focus:outline-none focus:ring-2 focus:ring-brand-purple/50"
+                            className="w-full pl-9 md:pl-10 pr-4 py-2 md:py-3 text-sm md:text-base bg-light-surface-accent dark:bg-dark-surface-accent border border-light-border dark:border-dark-border rounded-xl text-light-text dark:text-dark-text placeholder-light-text-muted dark:placeholder-dark-text-muted focus:outline-none focus:ring-2 focus:ring-brand-yellow/50"
                         />
                     </div>
                 </div>
@@ -203,7 +203,7 @@ const PromptLibrary: React.FC<PromptLibraryProps> = ({ isOpen, onClose, onUsePro
                                 onClick={() => setSelectedCategory(category.id)}
                                 title={getCategoryName(category.id)}
                                 className={`flex items-center gap-1 md:gap-1.5 px-3 md:px-3 py-2.5 md:py-2 rounded-lg whitespace-nowrap transition-all text-sm md:text-base min-h-[44px] ${selectedCategory === category.id
-                                        ? 'bg-gradient-to-r from-brand-purple to-brand-pink text-white shadow-lg'
+                                        ? 'bg-brand-yellow text-dark-bg shadow-sm'
                                         : 'bg-light-surface-accent dark:bg-dark-surface-accent text-light-text dark:text-dark-text hover:bg-light-border dark:hover:bg-dark-border'
                                     }`}
                             >
@@ -228,7 +228,7 @@ const PromptLibrary: React.FC<PromptLibraryProps> = ({ isOpen, onClose, onUsePro
                 <div className="flex-1 overflow-y-auto p-3 md:p-6 min-h-0 prompt-library-scroll">
                     {filteredPrompts.length === 0 ? (
                         <div className="flex flex-col items-center justify-center h-full text-center py-12">
-                            <div className="text-4xl md:text-6xl mb-4 opacity-30">🔍</div>
+                            <div className="mb-4 opacity-30 flex justify-center"><SearchIcon className="w-12 h-12 md:w-16 md:h-16 text-dark-text-muted" /></div>
                             <h3 className="text-lg md:text-xl font-semibold text-light-text dark:text-dark-text mb-2">
                                 {t.promptLibraryNoResults}
                             </h3>
@@ -241,7 +241,7 @@ const PromptLibrary: React.FC<PromptLibraryProps> = ({ isOpen, onClose, onUsePro
                             {filteredPrompts.map((template) => (
                                 <div
                                     key={template.id}
-                                    className="group bg-light-surface-accent dark:bg-dark-surface-accent border border-light-border dark:border-dark-border rounded-xl p-3 md:p-4 hover:border-brand-purple/50 hover:shadow-lg transition-all duration-200"
+                                    className="group bg-light-surface-accent dark:bg-dark-surface-accent border border-light-border dark:border-dark-border rounded-xl p-3 md:p-4 hover:border-brand-yellow/50 hover:shadow-lg hover:shadow-brand-yellow/5 transition-all duration-200"
                                 >
                                     {/* Visual Preset Preview */}
                                     {template.visualPreset && (
@@ -310,13 +310,15 @@ const PromptLibrary: React.FC<PromptLibraryProps> = ({ isOpen, onClose, onUsePro
                                     <div className="flex gap-2">
                                         <button
                                             onClick={() => handleCopyPrompt(template.prompt, template.id)}
-                                            className="flex-1 flex items-center justify-center gap-1.5 md:gap-2 px-2 md:px-3 py-2.5 md:py-2 bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border rounded-lg hover:bg-light-border dark:hover:bg-dark-border transition-colors min-h-[44px]"
+                                            className="relative flex-1 flex items-center justify-center gap-1.5 md:gap-2 px-2 md:px-3 py-2.5 md:py-2 bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border rounded-lg hover:bg-light-border dark:hover:bg-dark-border transition-colors min-h-[44px]"
                                         >
                                             {copiedId === template.id ? (
-                                                <>
-                                                    <CheckIcon className="w-3 h-3 md:w-4 md:h-4 text-green-500" />
-                                                    <span className="text-xs md:text-sm text-green-500 font-medium">{t.promptLibraryCopied}</span>
-                                                </>
+                                                <div className="absolute inset-y-0 right-3 flex items-center justify-end pointer-events-none animate-in fade-in zoom-in duration-200">
+                                                    <div className="flex items-center gap-1.5 px-2 py-1 bg-light-surface dark:bg-dark-surface/80 backdrop-blur-md rounded border border-brand-yellow/50">
+                                                        <CheckIcon className="w-3 h-3 md:w-4 md:h-4 text-brand-yellow" />
+                                                        <span className="text-xs md:text-sm text-brand-yellow font-medium">{t.promptLibraryCopied}</span>
+                                                    </div>
+                                                </div>
                                             ) : (
                                                 <>
                                                     <CopyIcon className="w-3 h-3 md:w-4 md:h-4 text-light-text dark:text-dark-text" />
@@ -326,7 +328,7 @@ const PromptLibrary: React.FC<PromptLibraryProps> = ({ isOpen, onClose, onUsePro
                                         </button>
                                         <button
                                             onClick={() => handleUsePrompt(template.prompt)}
-                                            className="flex-1 px-2 md:px-3 py-2.5 md:py-2 bg-gradient-to-r from-brand-yellow to-brand-magenta text-white font-semibold rounded-lg hover:opacity-90 transition-all duration-300 hover:shadow-[0_0_20px_rgba(255,217,61,0.5)] text-xs md:text-sm min-h-[44px]"
+                                            className="flex-1 px-2 md:px-3 py-2.5 md:py-2 bg-brand-yellow text-dark-bg font-bold rounded-lg hover:opacity-90 transition-all duration-300 hover:shadow-lg hover:scale-105 active:scale-95 text-xs md:text-sm min-h-[44px]"
                                         >
                                             {t.promptLibraryUse}
                                         </button>

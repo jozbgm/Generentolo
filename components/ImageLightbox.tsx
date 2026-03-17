@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { XIcon, ChevronLeftIcon, ChevronRightIcon, DownloadIcon } from './icons';
+import { XIcon, ChevronLeftIcon, ChevronRightIcon, DownloadIcon, DnaIcon, ClapperboardIcon } from './icons';
 
 import { GeneratedImage } from '../types';
 
@@ -198,7 +198,7 @@ const ImageLightbox: React.FC<ImageLightboxProps> = ({
             <div className="flex items-center justify-between p-4 md:p-6 z-[110] bg-gradient-to-b from-black/50 to-transparent">
                 <div className="flex items-center gap-4">
                     <div className="text-white/80">
-                        <p className="text-xs font-bold uppercase tracking-widest opacity-50 mb-0.5">{t.generationResult}</p>
+                        <p className="text-xs font-bold uppercase tracking-widest opacity-75 mb-0.5">{t.generationResult}</p>
                         <p className="text-sm font-medium truncate max-w-[200px] md:max-w-[400px]">{currentImage.prompt}</p>
                     </div>
                 </div>
@@ -206,20 +206,20 @@ const ImageLightbox: React.FC<ImageLightboxProps> = ({
                 <div className="flex items-center gap-2">
                     <button
                         onClick={(e) => { e.stopPropagation(); onSaveAsDna(currentImage); }}
-                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-brand-purple/20 hover:bg-brand-purple/30 text-white transition-all backdrop-blur-md border border-brand-purple/30"
+                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-brand-yellow/10 hover:bg-brand-yellow/20 text-brand-yellow transition-all backdrop-blur-md border border-brand-yellow/20"
                         title="Save DNA"
                     >
-                        <span className="text-lg">🧬</span>
+                        <DnaIcon className="w-5 h-5" />
                         <span className="text-xs font-bold hidden sm:inline uppercase tracking-wider">DNA</span>
                     </button>
 
                     {onStoryboard && (
                         <button
                             onClick={(e) => { e.stopPropagation(); onStoryboard(currentImage); }}
-                            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-brand-magenta/20 hover:bg-brand-magenta/30 text-white transition-all backdrop-blur-md border border-brand-magenta/30"
+                            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-brand-yellow/10 hover:bg-brand-yellow/20 text-brand-yellow transition-all backdrop-blur-md border border-brand-yellow/20"
                             title="Storyboard"
                         >
-                            <span className="text-lg">🎬</span>
+                            <ClapperboardIcon className="w-5 h-5" />
                             <span className="text-xs font-bold hidden sm:inline uppercase tracking-wider">Story</span>
                         </button>
                     )}
@@ -236,7 +236,7 @@ const ImageLightbox: React.FC<ImageLightboxProps> = ({
 
                     <button
                         onClick={onClose}
-                        className="p-2.5 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-red-400 hover:text-red-200 transition-all backdrop-blur-md border border-red-500/30 group"
+                        className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white/70 hover:text-white transition-all backdrop-blur-md border border-white/10 group"
                         title={t.close}
                     >
                         <XIcon className="w-6 h-6 group-hover:scale-110 transition-transform" />
@@ -260,14 +260,14 @@ const ImageLightbox: React.FC<ImageLightboxProps> = ({
                 {/* Navigation Arrows (Desktop) */}
                 <button
                     onClick={(e) => { e.stopPropagation(); handlePrev(); }}
-                    className="absolute left-6 z-[120] p-4 rounded-full bg-white/5 hover:bg-white/10 text-white/50 hover:text-white transition-all backdrop-blur-sm border border-white/5 hidden md:flex items-center justify-center"
+                    className="absolute left-6 z-[120] p-4 rounded-full bg-white/5 hover:bg-white/10 text-white/70 hover:text-white transition-all backdrop-blur-sm border border-white/10 hidden md:flex items-center justify-center"
                 >
                     <ChevronLeftIcon className="w-8 h-8" />
                 </button>
 
                 <button
                     onClick={(e) => { e.stopPropagation(); handleNext(); }}
-                    className="absolute right-6 z-[120] p-4 rounded-full bg-white/5 hover:bg-white/10 text-white/50 hover:text-white transition-all backdrop-blur-sm border border-white/5 hidden md:flex items-center justify-center"
+                    className="absolute right-6 z-[120] p-4 rounded-full bg-white/5 hover:bg-white/10 text-white/70 hover:text-white transition-all backdrop-blur-sm border border-white/10 hidden md:flex items-center justify-center"
                 >
                     <ChevronRightIcon className="w-8 h-8" />
                 </button>
@@ -300,16 +300,16 @@ const ImageLightbox: React.FC<ImageLightboxProps> = ({
             {/* Footer / Info Bar */}
             <div className="p-6 pb-10 md:pb-6 z-[110] bg-gradient-to-t from-black/50 to-transparent flex flex-col items-center gap-4">
                 <div className="px-5 py-2 rounded-full bg-white/10 backdrop-blur-xl border border-white/10 text-white/90 text-sm font-bold tracking-widest uppercase">
-                    {index + 1} <span className="opacity-30 mx-2">/</span> {images.length}
+                    {index + 1} <span className="opacity-60 mx-2">/</span> {images.length}
                 </div>
 
                 <div className="flex items-center gap-8 md:hidden">
-                    <button onClick={handlePrev} className="p-4 text-white/50 hover:text-white"><ChevronLeftIcon className="w-8 h-8" /></button>
+                    <button onClick={handlePrev} aria-label="Previous image" className="p-4 text-white/50 hover:text-white"><ChevronLeftIcon className="w-8 h-8" /></button>
                     <div className="w-1 h-1 rounded-full bg-white/20"></div>
-                    <button onClick={handleNext} className="p-4 text-white/50 hover:text-white"><ChevronRightIcon className="w-8 h-8" /></button>
+                    <button onClick={handleNext} aria-label="Next image" className="p-4 text-white/50 hover:text-white"><ChevronRightIcon className="w-8 h-8" /></button>
                 </div>
 
-                <div className="text-white/30 text-[10px] font-bold uppercase tracking-[0.2em] animate-pulse">
+                <div className="text-white/60 text-[10px] font-bold uppercase tracking-[0.2em] animate-pulse">
                     <span className="hidden md:inline">Scroll to Zoom • Drag to Pan • Escape to Exit</span>
                     <span className="md:hidden">Pinch to Zoom • Swipe to Navigate</span>
                 </div>

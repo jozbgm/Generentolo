@@ -1,4 +1,5 @@
 import { Component, ErrorInfo, ReactNode } from 'react';
+import { AlertTriangleIcon } from './icons';
 
 interface Props {
     children: ReactNode;
@@ -33,7 +34,7 @@ class ErrorBoundary extends Component<Props, State> {
             return (
                 <div className="min-h-screen bg-light-bg dark:bg-dark-bg flex items-center justify-center p-4">
                     <div className="max-w-md w-full bg-light-surface dark:bg-dark-surface rounded-2xl shadow-2xl p-8 text-center">
-                        <div className="text-6xl mb-4">⚠️</div>
+                        <div className="flex justify-center mb-4"><AlertTriangleIcon className="w-16 h-16 text-brand-yellow" /></div>
                         <h1 className="text-2xl font-bold text-light-text dark:text-dark-text mb-4">
                             Oops! Something went wrong
                         </h1>
@@ -52,7 +53,7 @@ class ErrorBoundary extends Component<Props, State> {
                         )}
                         <button
                             onClick={this.handleReset}
-                            className="px-6 py-3 bg-gradient-to-r from-brand-purple to-brand-pink text-white font-semibold rounded-xl hover:opacity-90 transition-opacity"
+                            className="px-6 py-3 bg-brand-yellow text-dark-bg font-bold rounded-xl hover:opacity-90 transition-opacity"
                         >
                             Reload Application
                         </button>

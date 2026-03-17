@@ -173,17 +173,17 @@ const GenerAngles: React.FC<GenerAnglesProps> = ({
             <div className="flex items-center justify-between px-2">
                 <div className="flex items-center gap-2">
                     <div className="relative">
-                        <div className="absolute -inset-1 bg-brand-blue/30 blur-sm rounded-full" />
-                        <svg className="relative size-5 text-brand-blue" viewBox="0 0 24 24" fill="currentColor">
+                        <div className="absolute -inset-1 bg-brand-yellow/30 blur-sm rounded-full" />
+                        <svg className="relative size-5 text-brand-yellow" viewBox="0 0 24 24" fill="currentColor">
                             <path d="M12.8682 5.63231C12.3302 5.32488 11.6698 5.32487 11.1318 5.63231L6.88176 8.06088C6.83858 8.08555 6.7967 8.11191 6.7562 8.13984L11.9998 11.1362L17.2436 8.13972C17.2032 8.11184 17.1614 8.08552 17.1182 8.06088L12.8682 5.63231Z" />
                             <path d="M6 9.58031C6 9.53277 6.00193 9.48551 6.00573 9.43863L11.2498 12.4352V18.4293C11.1292 18.4103 11.1705 18.3898 11.1318 18.3677L6.88176 15.9391C6.3365 15.6275 6 15.0477 6 14.4197V9.58031Z" />
                             <path d="M12.8682 18.3677C12.8294 18.3899 12.7899 18.4105 12.7498 18.4295V12.4352L17.9943 9.43841C17.9981 9.48537 18 9.5327 18 9.58031V14.4197C18 15.0477 17.6635 15.6275 17.1182 15.9391L12.8682 18.3677Z" />
                         </svg>
                     </div>
-                    <span className="text-sm font-bold text-white">3D Angles</span>
+                    <span className="text-sm font-bold text-light-text dark:text-dark-text">3D Angles</span>
                 </div>
                 {/* Live Position Badge */}
-                <div className={`px-3 py-1 rounded-md text-xs font-mono font-bold transition-all ${isSnapped ? 'bg-brand-blue/20 text-brand-blue' : 'bg-white/5 text-white/50'}`}>
+                <div className={`px-3 py-1 rounded-md text-xs font-mono font-bold transition-all ${isSnapped ? 'bg-brand-yellow text-dark-bg' : 'bg-light-surface-accent dark:bg-dark-surface-accent text-light-text-muted dark:text-dark-text-muted'}`}>
                     {getAngleLabel(rotation)} • {getTiltLabel(tilt)}
                 </div>
             </div>
@@ -203,7 +203,7 @@ const GenerAngles: React.FC<GenerAnglesProps> = ({
                 >
                     {/* Instruction */}
                     <div className={`absolute top-3 left-0 right-0 z-10 text-center pointer-events-none transition-opacity ${isDragging ? 'opacity-0' : 'opacity-100'}`}>
-                        <span className="text-[10px] text-white/40 font-medium">Drag to rotate • Snaps to 45°</span>
+                        <span className="text-[10px] text-light-text-muted dark:text-dark-text-muted font-medium">Drag to rotate • Snaps to 45°</span>
                     </div>
 
                     {/* 3D Wireframe Sphere with Orbiting Camera */}
@@ -218,12 +218,12 @@ const GenerAngles: React.FC<GenerAnglesProps> = ({
                             >
                                 {/* Equator Ring - MAIN, most visible */}
                                 <div
-                                    className={`absolute inset-0 rounded-full border-2 transition-colors duration-150 ${isSnapped ? 'border-brand-blue' : 'border-white/50'}`}
+                                    className={`absolute inset-0 rounded-full border-2 transition-colors duration-150 ${isSnapped ? 'border-brand-yellow' : 'border-light-border dark:border-dark-border'}`}
                                     style={{ transform: 'rotateX(90deg)' }}
                                 />
 
                                 {/* Vertical Ring (Meridian) - also visible */}
-                                <div className={`absolute inset-0 rounded-full border-2 transition-colors ${isSnapped ? 'border-brand-blue/60' : 'border-white/40'}`} />
+                                <div className={`absolute inset-0 rounded-full border-2 transition-colors ${isSnapped ? 'border-brand-yellow/60' : 'border-light-border dark:border-dark-border/40'}`} />
 
                                 {/* Additional Longitude Rings for depth */}
                                 {[45, 90, 135].map(deg => (
@@ -246,24 +246,24 @@ const GenerAngles: React.FC<GenerAnglesProps> = ({
                                     <div className="relative flex items-center justify-center" style={{ transformStyle: 'preserve-3d' }}>
                                         {/* Main Lens */}
                                         <div
-                                            className={`absolute w-8 h-8 rounded-full border-2 shadow-lg transition-all duration-150 ${isSnapped ? 'bg-brand-blue/40 border-brand-blue shadow-brand-blue/60' : 'bg-[#222] border-white/60 shadow-white/30'}`}
+                                            className={`absolute w-8 h-8 rounded-full border-2 shadow-lg transition-all duration-150 ${isSnapped ? 'bg-brand-yellow/40 border-brand-yellow shadow-brand-yellow/60' : 'bg-light-surface dark:bg-dark-surface border-light-border dark:border-dark-border shadow-black/30'}`}
                                             style={{ transform: 'translateZ(-4px)' }}
                                         >
                                             <div className="absolute inset-1.5 rounded-full bg-gradient-to-tr from-black to-[#444]" />
-                                            <div className={`absolute inset-2.5 rounded-full blur-[2px] ${isSnapped ? 'bg-brand-blue' : 'bg-brand-blue/50'}`} />
+                                            <div className={`absolute inset-2.5 rounded-full blur-[2px] ${isSnapped ? 'bg-brand-yellow' : 'bg-brand-yellow/50'}`} />
                                         </div>
 
                                         {/* Camera Body */}
                                         <div
-                                            className={`w-10 h-7 border-2 rounded shadow-2xl transition-colors duration-150 ${isSnapped ? 'bg-brand-blue/30 border-brand-blue' : 'bg-[#333] border-white/40'}`}
+                                            className={`w-10 h-7 border-2 rounded shadow-2xl transition-colors duration-150 ${isSnapped ? 'bg-brand-yellow/30 border-brand-yellow' : 'bg-light-surface dark:bg-dark-surface border-light-border dark:border-dark-border'}`}
                                             style={{ transform: 'translateZ(-10px)' }}
                                         >
-                                            <div className={`absolute -top-1.5 right-1 w-2.5 h-1.5 rounded-full shadow-lg ${isSnapped ? 'bg-brand-blue shadow-brand-blue' : 'bg-red-500 shadow-red-500'}`} />
+                                            <div className={`absolute -top-1.5 right-1 w-2.5 h-1.5 rounded-full shadow-lg ${isSnapped ? 'bg-brand-yellow shadow-brand-yellow' : 'bg-light-text-muted dark:bg-dark-border shadow-sm'}`} />
                                         </div>
 
                                         {/* Laser beam to center */}
                                         <div
-                                            className={`absolute w-1 h-[105px] bg-gradient-to-t to-transparent ${isSnapped ? 'from-brand-blue opacity-80' : 'from-white/60 opacity-50'}`}
+                                            className={`absolute w-1 h-[105px] bg-gradient-to-t to-transparent ${isSnapped ? 'from-brand-yellow opacity-80' : 'from-light-text dark:from-dark-text opacity-50'}`}
                                             style={{
                                                 transformOrigin: 'bottom center',
                                                 transform: 'rotateX(90deg)',
@@ -286,13 +286,13 @@ const GenerAngles: React.FC<GenerAnglesProps> = ({
                     >
                         {activeReferenceUrl ? (
                             <img
-                                className={`w-14 h-14 object-cover rounded-lg bg-black/40 shadow-2xl transition-all duration-150 ${isSnapped ? 'ring-2 ring-brand-blue ring-offset-2 ring-offset-[#0c0d0e]' : 'ring-1 ring-white/30'}`}
+                                className={`w-14 h-14 object-cover rounded-lg bg-black/40 shadow-2xl transition-all duration-150 ${isSnapped ? 'ring-2 ring-brand-yellow ring-offset-2 ring-offset-[#0c0d0e]' : 'ring-1 ring-light-border dark:ring-dark-border'}`}
                                 src={activeReferenceUrl}
                                 alt="Reference"
                             />
                         ) : (
                             <div className="w-14 h-14 rounded-lg bg-white/5 border border-dashed border-white/20 flex items-center justify-center">
-                                <span className="text-[8px] font-black text-white/30 uppercase">REF</span>
+                                <span className="text-[8px] font-black text-light-text-muted dark:text-dark-text-muted uppercase">REF</span>
                             </div>
                         )}
                     </div>
@@ -309,8 +309,8 @@ const GenerAngles: React.FC<GenerAnglesProps> = ({
                             }}
                         />
                         <div className="relative z-1 flex items-center justify-between w-full pointer-events-none">
-                            <span className="text-[10px] font-black uppercase tracking-widest text-white/40">Orbit</span>
-                            <span className={`text-xs font-mono font-bold transition-colors ${SNAP_ANGLES.includes(rotation) ? 'text-brand-blue' : 'text-white'}`}>
+                            <span className="text-[10px] font-black uppercase tracking-widest text-white/70">Orbit</span>
+                            <span className={`text-xs font-mono font-bold transition-colors ${SNAP_ANGLES.includes(rotation) ? 'text-brand-yellow' : 'text-light-text dark:text-dark-text'}`}>
                                 {Math.round(rotation)}°
                             </span>
                         </div>
@@ -332,8 +332,8 @@ const GenerAngles: React.FC<GenerAnglesProps> = ({
                             }}
                         />
                         <div className="relative z-1 flex items-center justify-between w-full pointer-events-none">
-                            <span className="text-[10px] font-black uppercase tracking-widest text-white/40">Tilt</span>
-                            <span className={`text-xs font-mono font-bold transition-colors ${SNAP_TILTS.includes(tilt) ? 'text-brand-blue' : 'text-white'}`}>
+                            <span className="text-[10px] font-black uppercase tracking-widest text-white/70">Tilt</span>
+                            <span className={`text-xs font-mono font-bold transition-colors ${SNAP_TILTS.includes(tilt) ? 'text-brand-yellow' : 'text-light-text dark:text-dark-text'}`}>
                                 {Math.round(tilt)}°
                             </span>
                         </div>
@@ -355,8 +355,8 @@ const GenerAngles: React.FC<GenerAnglesProps> = ({
                             }}
                         />
                         <div className="relative z-1 flex items-center justify-between w-full pointer-events-none">
-                            <span className="text-[10px] font-black uppercase tracking-widest text-white/40">Zoom</span>
-                            <span className="text-xs font-mono font-bold text-white">X{zoom === 0 ? '1.0' : (1 + zoom / 10).toFixed(1)}</span>
+                            <span className="text-[10px] font-black uppercase tracking-widest text-white/70">Zoom</span>
+                            <span className="text-xs font-mono font-bold text-light-text dark:text-dark-text">X{zoom === 0 ? '1.0' : (1 + zoom / 10).toFixed(1)}</span>
                         </div>
                         <input
                             min="0" max="10" step="1"
@@ -373,9 +373,9 @@ const GenerAngles: React.FC<GenerAnglesProps> = ({
                             type="checkbox"
                             checked={generateBestAngles}
                             onChange={(e) => setGenerateBestAngles(e.target.checked)}
-                            className="w-4 h-4 rounded bg-transparent border-white/30 text-brand-blue focus:ring-brand-blue"
+                            className="w-4 h-4 rounded bg-transparent border-light-border dark:border-dark-border text-brand-yellow focus:ring-brand-yellow"
                         />
-                        <span className="text-[11px] uppercase font-black tracking-widest text-white/60">Generate 12 Key Angles</span>
+                        <span className="text-[11px] uppercase font-black tracking-widest text-light-text-muted dark:text-dark-text-muted">Generate 12 Key Angles</span>
                     </label>
                 </div>
             </div>
@@ -388,7 +388,7 @@ const GenerAngles: React.FC<GenerAnglesProps> = ({
                     className="w-full relative group h-14 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-2xl transition-all active:scale-[0.98] disabled:opacity-20 flex items-center justify-center gap-3"
                 >
                     <div className="flex flex-col items-center">
-                        <span className="text-[12px] font-black uppercase tracking-[0.25em] text-white">Generate View</span>
+                        <span className="text-[12px] font-black uppercase tracking-[0.25em] text-light-text dark:text-dark-text group-hover:text-brand-yellow transition-colors">Generate View</span>
                         <div className="flex gap-1 mt-1 opacity-40">
                             {[1, 2, 3].map(i => <div key={i} className="w-1 h-1 bg-white rounded-full" />)}
                         </div>
@@ -396,7 +396,7 @@ const GenerAngles: React.FC<GenerAnglesProps> = ({
                     {isGenerating ? (
                         <div className="w-4 h-4 border-2 border-white/60 border-t-white rounded-full animate-spin" />
                     ) : (
-                        <svg className="size-5 text-brand-blue" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14l-5-4.87 6.91-1.01L12 2z" /></svg>
+                        <svg className="size-5 text-brand-yellow" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14l-5-4.87 6.91-1.01L12 2z" /></svg>
                     )}
                 </button>
             </div>

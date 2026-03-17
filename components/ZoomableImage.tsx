@@ -202,8 +202,8 @@ const ZoomableImage: React.FC<ZoomableImageProps> = ({ src, alt }) => {
             {/* Instructions overlay (only show initially) */}
             {scale === 1 && (
                 <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 bg-black/60 text-white text-xs rounded-full pointer-events-none animate-fadeIn">
-                    <span className="hidden sm:inline">🖱️ Scroll to zoom • Click & drag to pan</span>
-                    <span className="sm:hidden">👆 Pinch to zoom • Double tap</span>
+                    <span className="hidden sm:inline">Scroll to zoom • Click &amp; drag to pan</span>
+                    <span className="sm:hidden">Pinch to zoom • Double tap</span>
                 </div>
             )}
         </div>

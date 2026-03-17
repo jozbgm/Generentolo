@@ -12,28 +12,28 @@ export default {
     extend: {
       colors: {
         'brand': {
-          'yellow': '#FFD93D', // Banana yellow - primary accent
-          'magenta': '#FF006E', // Magenta/Fuschia - secondary
-          'cyan': '#00F5FF', // Bright cyan - accent
-          'blue': '#5E8BFF', // Legacy support
-          'purple': '#8A78F4', // Legacy support
-          'pink': '#F075B6' // Legacy support
+          'yellow': 'rgb(var(--color-brand-yellow-rgb) / <alpha-value>)',
+          'magenta': 'var(--color-brand-magenta)',
+          'cyan': 'var(--color-brand-cyan)',
+          'blue': 'var(--color-brand-blue)',
+          'purple': 'var(--color-brand-purple)',
+          'pink': 'var(--color-brand-pink)'
         },
         'dark': {
-          'bg': '#0D0D0D', // Pure anthracite black
-          'surface': '#1A1A1A', // Pure anthracite grey for cards
-          'surface-accent': '#252525', // Lighter pure anthracite for hover
-          'text': '#F0F0F0',
-          'text-muted': '#A0A0A0',
-          'border': '#2D2D2D'
+          'bg': 'var(--color-dark-bg)',
+          'surface': 'var(--color-dark-surface)',
+          'surface-accent': 'var(--color-dark-surface-accent)',
+          'text': 'var(--color-dark-text)',
+          'text-muted': 'var(--color-dark-text-muted)',
+          'border': 'var(--color-dark-border)'
         },
         'light': {
-          'bg': '#FAFBFC',
-          'surface': '#FFFFFF',
-          'surface-accent': '#F5F6F8',
-          'text': '#0A0B0F',
-          'text-muted': '#6B6C76',
-          'border': '#E5E6E9'
+          'bg': 'var(--color-light-bg)',
+          'surface': 'var(--color-light-surface)',
+          'surface-accent': 'var(--color-light-surface-accent)',
+          'text': 'var(--color-light-text)',
+          'text-muted': 'var(--color-light-text-muted)',
+          'border': 'var(--color-light-border)'
         },
       },
       keyframes: {

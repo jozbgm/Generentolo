@@ -6,7 +6,7 @@ import * as storyboardService from './services/storyboardService';
 import { StoryboardPrompt } from './services/storyboardService';
 import * as anglePromptService from './services/anglePromptService';
 import { useKeyboardShortcuts, APP_SHORTCUTS } from './hooks/useKeyboardShortcuts';
-import { SunIcon, MoonIcon, UploadIcon, DownloadIcon, SparklesIcon, CopyIcon, SettingsIcon, XIcon, CheckIcon, LanguageIcon, BrushIcon, DiceIcon, TrashIcon, ReloadIcon, StarIcon, CornerUpLeftIcon, ChevronDownIcon } from './components/icons';
+import { SunIcon, MoonIcon, UploadIcon, DownloadIcon, SparklesIcon, CopyIcon, SettingsIcon, XIcon, CheckIcon, LanguageIcon, BrushIcon, DiceIcon, TrashIcon, ReloadIcon, StarIcon, CornerUpLeftIcon, ChevronDownIcon, ClapperboardIcon, DnaIcon, TargetIcon, PaletteIcon, PlusIcon, CameraIcon, LightbulbIcon, KeyboardIcon, ImageIcon, AlertTriangleIcon } from './components/icons';
 import { indexedDBService, DnaCharacter } from './services/indexedDB';
 import FloatingActionBar from './components/FloatingActionBar';
 import ImageLightbox from './components/ImageLightbox';
@@ -17,6 +17,7 @@ import GenerAngles, { AngleGenerationParams } from './components/GenerAngles';
 import { STYLE_PRESETS, PHYSICS_PRESETS } from './data/stylePresets'; // v1.4
 import { fetchInvisibleReferences, removeBracketsFromPrompt } from './services/googleSearchService'; // v1.5.1
 import StudioPanel from './components/StudioPanel'; // v1.8: Studio Mode
+import CustomSelect from './components/CustomSelect'; // v2.x: accessible custom select
 import { CAMERAS, LENSES, FOCAL_LENGTHS, LIGHT_DIRECTIONS, WARDROBE_CATEGORIES, SHOTS, PRODUCTION_KITS } from './data/studioPresets';
 
 // Polyfill for crypto.randomUUID() on browsers that don't support it (mobile Safari, etc)
@@ -33,7 +34,7 @@ if (!crypto.randomUUID) {
 // --- Localization ---
 const translations = {
     en: {
-        headerTitle: 'Generentolo PRO v2.0',
+        headerTitle: 'Generentolo PRO v2.1',
         headerSubtitle: 'Let me do it for you!',
         refImagesTitle: 'Reference & Style Images',
         styleRefTitle: 'Style Reference',
@@ -45,11 +46,7 @@ const translations = {
         preciseReference: 'Precise Reference',
         preciseReferenceTooltip: 'Preserves EXACTLY facial features, skin texture, eye color, and hairstyle from reference images without any modification. Maximum fidelity to original faces.',
         structureTooltip: 'Upload an image whose composition and structure will be preserved in the generation (like ControlNet depth map)',
-        creativePromptsTitle: 'Creative Prompts',
-        generateSuggestions: 'Generate Suggestions',
-        suggestionsPlaceholder: "Click 'Generate Suggestions' to get creative ideas.",
-        promptsLoading: 'Upload an image to generate prompts.',
-        promptPlaceholder: 'Write your prompt or generate one from images...',
+        promptPlaceholder: 'Write your prompt...',
         createFromImage: 'Create from Images',
         enhancePrompt: 'Enhance Prompt',
         professionalToolsTitle: 'Professional Tools',
@@ -249,7 +246,7 @@ const translations = {
         addToQueue: 'Add to Queue',
         putInQueue: 'Put in Queue',
         queueNext: 'Queue Next',
-        addedToQueue: '📋 Added to queue!',
+        addedToQueue: 'Added to queue!',
         cinematicStoryboardTitle: 'Cinematic Storyboard',
         storyboardSubtext: '9 directorial variations',
         storyboardAnalyzing: 'Analyzing frame...',
@@ -284,12 +281,12 @@ const translations = {
         kitBtsDesc: 'Shows the studio environment & crew',
         kitBillboardDesc: 'Optimized for commercial & billboard use',
         // Toasts & Labels
-        generationCancelled: '🛑 Generation cancelled',
-        generatingVariations: '🎲 Generating variations...',
-        variationsGenerated: '✅ Variations generated!',
+        generationCancelled: 'Generation cancelled',
+        generatingVariations: 'Generating variations...',
+        variationsGenerated: 'Variations generated!',
         variationsFailed: 'Variation generation failed',
-        settingsCopied: '📋 Settings copied!',
-        variantGenerated: '🎲 Variant generated!',
+        settingsCopied: 'Settings copied!',
+        variantGenerated: 'Variant generated!',
         shotsAddedToQueue: 'shots added to queue',
         storyboardFailed: 'Storyboard generation failed',
         presetsSaved: 'Presets saved successfully!',
@@ -307,7 +304,7 @@ const translations = {
         presetAppliedToPrompt: 'Will be applied to generation',
     },
     it: {
-        headerTitle: 'Generentolo PRO v2.0',
+        headerTitle: 'Generentolo PRO v2.1',
         headerSubtitle: 'Let me do it for you!',
         refImagesTitle: 'Immagini di Riferimento e Stile',
         styleRefTitle: 'Riferimento Stile',
@@ -319,11 +316,7 @@ const translations = {
         preciseReference: 'Riferimento Preciso',
         preciseReferenceTooltip: 'Preserva ESATTAMENTE i tratti del viso, texture della pelle, colore degli occhi e acconciatura dalle immagini di riferimento senza alcuna modifica. Massima fedeltà ai volti originali.',
         structureTooltip: 'Carica un\'immagine la cui composizione e struttura verranno preservate nella generazione (come depth map ControlNet)',
-        creativePromptsTitle: 'Prompt Creativi',
-        generateSuggestions: 'Genera Suggerimenti',
-        suggestionsPlaceholder: "Clicca 'Genera Suggerimenti' per ottenere idee creative.",
-        promptsLoading: 'Carica un\'immagine per generare i prompt.',
-        promptPlaceholder: 'Scrivi il tuo prompt o creane uno dalle immagini...',
+        promptPlaceholder: 'Scrivi il tuo prompt...',
         createFromImage: 'Crea da Immagini',
         enhancePrompt: 'Migliora Prompt',
         professionalToolsTitle: 'Strumenti Professionali',
@@ -523,7 +516,7 @@ const translations = {
         addToQueue: 'Aggiungi alla coda',
         putInQueue: 'Metti in coda',
         queueNext: 'Metti in coda',
-        addedToQueue: '📋 Aggiunto alla coda!',
+        addedToQueue: 'Aggiunto alla coda!',
         cinematicStoryboardTitle: 'Cinematic Storyboard',
         storyboardSubtext: '9 varianti registiche',
         storyboardAnalyzing: 'Analisi in corso...',
@@ -558,12 +551,12 @@ const translations = {
         kitBtsDesc: 'Mostra l\'ambiente dello studio e la troupe',
         kitBillboardDesc: 'Ottimizzato per uso commerciale e billboard',
         // Toasts & Labels
-        generationCancelled: '🛑 Generazione annullata',
-        generatingVariations: '🎲 Generando variazioni...',
-        variationsGenerated: '✅ Variazioni generate!',
+        generationCancelled: 'Generazione annullata',
+        generatingVariations: 'Generando variazioni...',
+        variationsGenerated: 'Variazioni generate!',
         variationsFailed: 'Generazione variazioni fallita',
-        settingsCopied: '📋 Parametri copiati!',
-        variantGenerated: '🎲 Variante generata!',
+        settingsCopied: 'Parametri copiati!',
+        variantGenerated: 'Variante generata!',
         shotsAddedToQueue: 'inquadrature aggiunte alla coda',
         storyboardFailed: 'Generazione storyboard fallita',
         presetsSaved: 'Preset salvato con successo!',
@@ -665,51 +658,39 @@ const createThumbnailDataUrl = (dataUrl: string, maxSize = 256): Promise<string>
 // --- Child Components ---
 const MAX_USER_IMAGES = 14; // v1.0: Increased for Nano Banana PRO support (up to 14 reference images)
 
-const SkeletonLoader: React.FC<{ className?: string }> = ({ className }) => (
-    <div className={`bg-light-surface-accent/50 dark:bg-dark-surface-accent/50 rounded-lg animate-pulse ${className || ''}`} />
-);
 
 interface HeaderProps {
     theme: 'dark' | 'light';
     toggleTheme: () => void;
     onOpenSettings: () => void;
     onOpenShortcuts: () => void;
-    onOpenPromptLibrary: () => void;
 }
-const Header: React.FC<HeaderProps> = ({ theme, toggleTheme, onOpenSettings, onOpenShortcuts, onOpenPromptLibrary }) => {
+const Header: React.FC<HeaderProps> = ({ theme, toggleTheme, onOpenSettings, onOpenShortcuts }) => {
     const { t, language, setLanguage } = useLocalization();
     const toggleLanguage = () => setLanguage(language === 'en' ? 'it' : 'en');
     return (
         <header className="flex justify-between items-center p-4">
             <div>
                 <h1 className="text-xl font-bold flex items-center">
-                    <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-yellow to-brand-magenta">
-                        {t.headerTitle}
-                    </span>
+                    <span className="text-brand-yellow">Generentolo</span>
+                    <span className="text-light-text-muted dark:text-white/90 ml-2">PRO</span>
+                    <span className="text-brand-yellow ml-2">v2.1</span>
                 </h1>
-                <p className="text-xs text-light-text-muted dark:text-dark-text-muted">
-                    {t.headerSubtitle} Powered by <span className="font-bold text-yellow-400">JOZ</span> for <span className="font-bold text-brand-magenta">Dugongo</span>
+                <p className="text-xs text-light-text-muted dark:text-dark-text-muted mt-1">
+                    {t.headerSubtitle} Powered by <span className="font-bold text-brand-yellow">JOZ</span> for <span className="font-bold text-brand-yellow">Dugongo</span>
                 </p>
             </div>
             <div className="flex items-center gap-2">
-                <button
-                    onClick={onOpenPromptLibrary}
-                    className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-brand-yellow to-brand-magenta text-white text-sm font-semibold hover:opacity-90 transition-all duration-300 hover:shadow-[0_0_20px_rgba(255,217,61,0.5)] flex items-center gap-2"
-                    title="Prompt Library"
-                >
-                    <SparklesIcon className="w-4 h-4" />
-                    <span className="hidden sm:inline">Prompts</span>
+                <button onClick={onOpenShortcuts} className="p-2 rounded-full text-light-text-muted dark:text-brand-yellow hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors" title="Keyboard Shortcuts">
+                    <KeyboardIcon className="w-5 h-5" />
                 </button>
-                <button onClick={onOpenShortcuts} className="p-2 rounded-full text-light-text-muted dark:text-dark-text-muted hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors" title="Keyboard Shortcuts">
-                    <span className="text-lg">⌨️</span>
-                </button>
-                <button onClick={toggleLanguage} className="p-2 rounded-full text-light-text-muted dark:text-dark-text-muted hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors">
+                <button onClick={toggleLanguage} title={language === 'en' ? 'Switch to Italian' : 'Switch to English'} className="p-2 rounded-full text-light-text-muted dark:text-brand-yellow hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors">
                     <LanguageIcon className="w-5 h-5" />
                 </button>
-                <button onClick={onOpenSettings} className="p-2 rounded-full text-light-text-muted dark:text-dark-text-muted hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors">
+                <button onClick={onOpenSettings} title={t.settingsTitle} className="p-2 rounded-full text-light-text-muted dark:text-brand-yellow hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors">
                     <SettingsIcon className="w-5 h-5" />
                 </button>
-                <button onClick={toggleTheme} className="p-2 rounded-full text-light-text-muted dark:text-dark-text-muted hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors">
+                <button onClick={toggleTheme} title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'} className="p-2 rounded-full text-light-text-muted dark:text-dark-text-muted hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors">
                     {theme === 'dark' ? <SunIcon className="w-5 h-5" /> : <MoonIcon className="w-5 h-5" />}
                 </button>
             </div>
@@ -739,8 +720,8 @@ const ImagePreview = React.memo<{ file: File; index: number; isGuide?: boolean; 
         if (!previewUrl) return <div className="aspect-square rounded-xl bg-light-surface-accent animate-pulse" />;
 
         return (
-            <div className="relative group aspect-square rounded-xl shadow-[0_0_12px_3px_rgba(250,204,21,0.6)] bg-white dark:bg-dark-surface flex items-center justify-center overflow-hidden">
-                <div className={`absolute top-1.5 left-1.5 px-1.5 py-0.5 text-[10px] font-bold rounded-full backdrop-blur-sm z-10 ${isGuide ? 'bg-blue-400/20 text-blue-800 dark:text-blue-300' : 'bg-yellow-400/30 text-yellow-800 dark:text-yellow-300'}`}>
+            <div className={`relative group aspect-square rounded-xl bg-light-surface dark:bg-dark-surface flex items-center justify-center overflow-hidden border border-brand-yellow shadow-[0_0_12px_3px_rgba(200,242,58,0.25)]`}>
+                <div className={`absolute top-1.5 left-1.5 px-1.5 py-0.5 text-[10px] font-bold rounded-[6px] backdrop-blur-sm z-10 border border-brand-yellow/30 bg-black/40 text-brand-yellow`}>
                     {isGuide ? 'GUIDE' : `REF.${index + 1}`}
                 </div>
                 <img src={previewUrl} alt={`Reference ${index + 1}`} className="w-full h-full object-cover" />
@@ -776,9 +757,9 @@ const StyleImagePreview = React.memo<{ file: File; onRemove: () => void }>(
         if (!previewUrl) return <div className="aspect-square rounded-xl bg-light-surface-accent animate-pulse" />;
 
         return (
-            <div className="relative group overflow-hidden rounded-xl bg-white dark:bg-dark-surface">
-                <img src={previewUrl} alt="Style reference" className="w-full h-auto max-h-48 object-cover translate-y-0" />
-                <button onClick={onRemove} className="absolute top-2 right-2 bg-black/60 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm opacity-0 group-hover:opacity-100 transition-opacity z-10" aria-label="Remove style image">
+            <div className="relative group aspect-square overflow-hidden rounded-xl bg-white dark:bg-dark-surface border border-brand-yellow shadow-[0_0_12px_3px_rgba(200,242,58,0.25)]">
+                <img src={previewUrl} alt="Style reference" className="w-full h-full object-cover" />
+                <button onClick={onRemove} className="absolute top-2 right-2 bg-brand-yellow text-dark-bg rounded-xl w-7 h-7 flex items-center justify-center text-sm opacity-0 group-hover:opacity-100 transition-opacity z-10" aria-label="Remove style image">
                     <XIcon className="w-4 h-4" />
                 </button>
             </div>
@@ -877,25 +858,26 @@ const ReferencePanel: React.FC<{
     return (
         <div className="flex flex-col h-full overflow-hidden">
             <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-4">
-                <div className="flex p-0.5 rounded-xl bg-light-surface-accent dark:bg-dark-surface-accent border border-light-border dark:border-dark-border/50 mb-2">
+                <div className="flex p-0.5 rounded-xl bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 mb-2">
                     <button
                         onClick={() => setAppMode('classic')}
-                        className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${appMode === 'classic' ? 'bg-white dark:bg-dark-surface text-light-text dark:text-dark-text shadow-sm border border-light-border dark:border-dark-border/30' : 'text-light-text-muted dark:text-dark-text-muted hover:text-light-text dark:hover:text-dark-text'}`}
+                        className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${appMode === 'classic' ? 'bg-brand-yellow text-dark-bg shadow-sm' : 'text-light-text-muted dark:text-dark-text-muted hover:text-brand-yellow dark:hover:text-brand-yellow'}`}
                     >
+                        <ImageIcon className={`w-3.5 h-3.5 transition-colors ${appMode === 'classic' ? 'text-dark-bg' : 'text-brand-yellow'}`} />
                         {t.studioModeToggleClassic}
                     </button>
                     <button
                         onClick={() => setAppMode('studio')}
-                        className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${appMode === 'studio' ? 'bg-gradient-to-r from-brand-yellow to-brand-magenta text-white shadow-sm' : 'text-light-text-muted dark:text-dark-text-muted hover:text-light-text dark:hover:text-dark-text'}`}
+                        className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${appMode === 'studio' ? 'bg-brand-yellow text-dark-bg shadow-sm' : 'text-light-text-muted dark:text-dark-text-muted hover:text-brand-yellow dark:hover:text-brand-yellow'}`}
                     >
-                        <SparklesIcon className="w-3.5 h-3.5" />
+                        <SparklesIcon className={`w-3.5 h-3.5 transition-colors ${appMode === 'studio' ? 'text-dark-bg' : 'text-brand-yellow'}`} />
                         {t.studioModeToggleStudio}
                     </button>
                     <button
                         onClick={() => setAppMode('angles')}
-                        className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${appMode === 'angles' ? 'bg-gradient-to-r from-brand-purple to-brand-blue text-white shadow-sm' : 'text-light-text-muted dark:text-dark-text-muted hover:text-light-text dark:hover:text-dark-text'}`}
+                        className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${appMode === 'angles' ? 'bg-brand-yellow text-dark-bg shadow-sm' : 'text-light-text-muted dark:text-dark-text-muted hover:text-brand-yellow dark:hover:text-brand-yellow'}`}
                     >
-                        <span className="text-sm">📐</span>
+                        <TargetIcon className={`w-3.5 h-3.5 transition-colors ${appMode === 'angles' ? 'text-dark-bg' : 'text-brand-yellow'}`} />
                         Angles
                     </button>
                 </div>
@@ -903,7 +885,7 @@ const ReferencePanel: React.FC<{
                 <h3 className="font-semibold text-light-text dark:text-dark-text">{t.refImagesTitle}</h3>
                 <div
                     onDragEnter={handleRefDragEnter} onDragLeave={handleRefDragLeave} onDragOver={handleDragOver} onDrop={handleRefDrop}
-                    className={`rounded-xl transition-all relative ${isDraggingRef ? 'border-2 border-dashed border-brand-yellow bg-brand-purple/10 p-1' : 'border-2 border-transparent'}`}
+                    className={`rounded-2xl transition-all relative p-3 bg-white/5 dark:bg-black/10 border ${isDraggingRef ? 'border-brand-yellow border-dashed bg-brand-yellow/10 ring-2 ring-brand-yellow/20' : 'border-white/10 dark:border-white/5'}`}
                 >
                     <div className="grid grid-cols-3 gap-3">
                         {referenceImages.map((file, index) => (
@@ -911,8 +893,8 @@ const ReferencePanel: React.FC<{
                         ))}
 
                         {referenceImages.length < 5 && (
-                            <div onClick={() => fileInputRef.current?.click()} className="relative group aspect-square rounded-xl shadow-[0_0_12px_3px_rgba(94,139,255,0.5)] bg-light-surface/50 dark:bg-dark-surface/30 flex items-center justify-center cursor-pointer">
-                                <div className="text-light-text-muted dark:text-dark-text-muted text-center">
+                            <div onClick={() => fileInputRef.current?.click()} className="relative group aspect-square rounded-xl shadow-[0_0_16px_5px_rgba(200,242,58,0.35)] bg-black/5 dark:bg-white/5 flex items-center justify-center cursor-pointer border border-black/5 dark:border-white/5 hover:border-brand-yellow transition-colors">
+                                <div className="text-light-text-muted dark:text-dark-text-muted text-center group-hover:text-brand-yellow transition-colors">
                                     <UploadIcon className="w-6 h-6 mx-auto" />
                                     <span className="text-xs mt-1 block">{t.addImage}</span>
                                 </div>
@@ -934,16 +916,16 @@ const ReferencePanel: React.FC<{
                                     onChange={(e) => setPreciseReference(e.target.checked)}
                                     className="sr-only peer"
                                 />
-                                <div className="w-9 h-5 bg-gray-300 dark:bg-gray-600 peer-checked:bg-brand-purple rounded-full transition-all peer-focus:ring-2 peer-focus:ring-brand-purple/30"></div>
+                                <div className="w-9 h-5 bg-light-surface-accent dark:bg-dark-surface-accent peer-checked:bg-brand-yellow rounded-full transition-all peer-focus:ring-2 peer-focus:ring-brand-yellow/30"></div>
                                 <div className="absolute left-0.5 top-0.5 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-4 shadow-sm"></div>
                             </div>
-                            <span className="text-[10px] font-bold text-light-text-muted dark:text-dark-text-muted group-hover:text-brand-purple transition-colors">
-                                🎯 {t.preciseReference}
+                            <span className="text-[10px] font-bold text-light-text-muted dark:text-dark-text-muted group-hover:text-brand-yellow transition-colors flex items-center gap-1">
+                                <TargetIcon className="w-3 h-3" /> {t.preciseReference}
                             </span>
                         </label>
 
                         {/* Model Badge */}
-                        <div className={`px-2 py-1 rounded-full text-[9px] font-black uppercase tracking-wider ${selectedModel === 'gemini-3-pro-image-preview' ? 'bg-gradient-to-r from-brand-purple to-brand-magenta text-white' : selectedModel === 'gemini-3.1-flash-image-preview' ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white' : 'bg-brand-yellow/20 text-brand-yellow'}`}>
+                        <div className={`px-2 py-1 rounded-full text-[9px] font-black uppercase tracking-wider ${selectedModel === 'gemini-3-pro-image-preview' ? 'bg-light-border dark:bg-dark-border text-light-text dark:text-dark-text' : selectedModel === 'gemini-3.1-flash-image-preview' ? 'bg-light-surface-accent dark:bg-dark-surface-accent text-light-text dark:text-dark-text' : 'bg-brand-yellow/20 text-brand-yellow'}`}>
                             {selectedModel === 'gemini-3-pro-image-preview' ? 'PRO' : selectedModel === 'gemini-3.1-flash-image-preview' ? 'NB2' : 'FLASH'}
                         </div>
                     </div>
@@ -956,12 +938,12 @@ const ReferencePanel: React.FC<{
                         <button
                             onClick={() => onGenerateStoryboard()}
                             disabled={referenceImages.length === 0 || isStoryboardLoading}
-                            className={`w-full group relative overflow-hidden flex items-center justify-center gap-3 py-3 bg-gradient-to-br from-brand-purple/20 to-brand-pink/10 border border-brand-purple/30 rounded-2xl transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:hover:scale-100 ${isStoryboardLoading ? 'animate-pulse' : ''}`}
+                            className={`w-full group relative overflow-hidden flex items-center justify-center gap-3 py-3 bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border hover:border-brand-yellow rounded-2xl transition-all cursor-pointer select-none hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:border-light-border disabled:dark:hover:border-dark-border ${isStoryboardLoading ? 'animate-pulse' : ''}`}
                         >
-                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-                            <span className="text-xl">🎬</span>
-                            <div className="text-left">
-                                <span className="block text-[10px] font-black uppercase tracking-widest text-brand-purple">
+                            <div className="sweep-accent absolute inset-0 pointer-events-none" />
+                            <ClapperboardIcon className="w-6 h-6 text-brand-yellow relative pointer-events-none" />
+                            <div className="text-left relative pointer-events-none">
+                                <span className="block text-[10px] font-black uppercase tracking-widest text-light-text dark:text-dark-text transition-colors group-hover:text-brand-yellow">
                                     {t.cinematicStoryboardTitle}
                                 </span>
                                 <span className="block text-[9px] text-light-text-muted dark:text-dark-text-muted font-medium">
@@ -969,7 +951,7 @@ const ReferencePanel: React.FC<{
                                 </span>
                             </div>
                             {isStoryboardLoading && (
-                                <div className="ml-auto mr-2 w-3 h-3 border-2 border-brand-purple border-t-transparent rounded-full animate-spin" />
+                                <div className="ml-auto mr-2 w-3 h-3 border-2 border-brand-yellow border-t-transparent rounded-full animate-spin pointer-events-none relative" />
                             )}
                         </button>
                         {referenceImages.length === 0 && (
@@ -989,16 +971,16 @@ const ReferencePanel: React.FC<{
                                 onDragEnter={handleStyleDragEnter} onDragLeave={handleStyleDragLeave} onDragOver={handleDragOver} onDrop={handleStyleDrop}
                                 className={`rounded-2xl transition-all relative ${isDraggingStyle ? 'scale-105 z-10' : ''}`}
                             >
-                                <div className={`relative group shadow-[0_8px_30px_rgb(0,0,0,0.12)] rounded-2xl overflow-hidden aspect-[4/5] bg-white/5 dark:bg-black/10 backdrop-blur-3xl border ${isDraggingStyle ? 'border-brand-pink ring-2 ring-brand-pink/20' : 'border-white/10 dark:border-white/5'} transition-all`}>
-                                    <div className="absolute top-2 left-2 px-2.5 py-1 bg-brand-pink/90 text-white text-[7px] rounded-full font-black tracking-[.2em] z-10 shadow-lg backdrop-blur-md">STYLE</div>
+                                <div className={`relative group shadow-sm rounded-2xl overflow-hidden aspect-[4/5] bg-white/5 dark:bg-black/10 backdrop-blur-3xl border ${isDraggingStyle ? 'border-brand-yellow ring-2 ring-brand-yellow/20' : 'border-white/10 dark:border-white/5'} transition-all`}>
+                                    <div className="absolute top-2 left-2 px-2.5 py-1 bg-light-surface-accent dark:bg-dark-surface-accent text-brand-yellow text-[7px] rounded-full font-black tracking-[.2em] z-10 shadow-sm backdrop-blur-md">STYLE</div>
                                     {styleImage ? (
                                         <StyleImagePreview file={styleImage} onRemove={onRemoveStyleImage} />
                                     ) : (
-                                        <label htmlFor="style-file-upload" className="cursor-pointer w-full h-full flex flex-col justify-center items-center text-light-text-muted dark:text-dark-text-muted hover:bg-brand-pink/10 transition-all p-2 text-center group">
-                                            <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center mb-2 group-hover:scale-110 group-hover:bg-brand-pink/20 transition-all">
-                                                <UploadIcon className="w-5 h-5 opacity-40 group-hover:opacity-100 group-hover:text-brand-pink transition-all" />
+                                        <label htmlFor="style-file-upload" className="cursor-pointer w-full h-full flex flex-col justify-center items-center text-light-text-muted dark:text-dark-text-muted hover:bg-black/5 dark:hover:bg-white/5 transition-all p-2 text-center group relative">
+                                            <div className="w-10 h-10 rounded-full bg-light-border dark:bg-dark-border flex items-center justify-center absolute top-1/2 -translate-y-1/2 group-hover:scale-110 group-hover:bg-brand-yellow group-hover:text-dark-bg transition-all text-light-text dark:text-dark-text">
+                                                <UploadIcon className="w-5 h-5 opacity-40 group-hover:opacity-100 transition-all" />
                                             </div>
-                                            <span className="text-[9px] font-black uppercase tracking-widest opacity-40 group-hover:opacity-100 group-hover:text-brand-pink">{t.refImagesTitle}</span>
+                                            <span className="text-[9px] font-black uppercase tracking-widest opacity-40 group-hover:opacity-100 group-hover:text-brand-yellow absolute bottom-4 w-full left-0 px-2 line-clamp-2">{t.refImagesTitle}</span>
                                         </label>
                                     )}
                                     <input id="style-file-upload" type="file" className="hidden" accept="image/*" onChange={handleStyleFileChange} />
@@ -1009,16 +991,16 @@ const ReferencePanel: React.FC<{
                                 onDragEnter={handleStructureDragEnter} onDragLeave={handleStructureDragLeave} onDragOver={handleDragOver} onDrop={handleStructureDrop}
                                 className={`rounded-2xl transition-all relative ${isDraggingStructure ? 'scale-105 z-10' : ''}`}
                             >
-                                <div className={`relative group shadow-[0_8px_30px_rgb(0,0,0,0.12)] rounded-2xl overflow-hidden aspect-[4/5] bg-white/5 dark:bg-black/10 backdrop-blur-3xl border ${isDraggingStructure ? 'border-brand-blue ring-2 ring-brand-blue/20' : 'border-white/10 dark:border-white/5'} transition-all`}>
-                                    <div className="absolute top-2 left-2 px-2.5 py-1 bg-brand-blue/90 text-white text-[7px] rounded-full font-black tracking-[.2em] z-10 shadow-lg backdrop-blur-md">STRUCTURE</div>
+                                <div className={`relative group shadow-sm rounded-2xl overflow-hidden aspect-[4/5] bg-white/5 dark:bg-black/10 backdrop-blur-3xl border ${isDraggingStructure ? 'border-brand-yellow ring-2 ring-brand-yellow/20' : 'border-white/10 dark:border-white/5'} transition-all`}>
+                                    <div className="absolute top-2 left-2 px-2.5 py-1 bg-light-surface-accent dark:bg-dark-surface-accent text-brand-yellow text-[7px] rounded-full font-black tracking-[.2em] z-10 shadow-sm backdrop-blur-md">STRUCTURE</div>
                                     {structureImage ? (
                                         <StyleImagePreview file={structureImage} onRemove={onRemoveStructureImage} />
                                     ) : (
-                                        <label htmlFor="structure-file-upload" className="cursor-pointer w-full h-full flex flex-col justify-center items-center text-light-text-muted dark:text-dark-text-muted hover:bg-brand-blue/10 transition-all p-2 text-center group">
-                                            <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center mb-2 group-hover:scale-110 group-hover:bg-brand-blue/20 transition-all">
-                                                <UploadIcon className="w-5 h-5 opacity-40 group-hover:opacity-100 group-hover:text-brand-blue transition-all" />
+                                        <label htmlFor="structure-file-upload" className="cursor-pointer w-full h-full flex flex-col justify-center items-center text-light-text-muted dark:text-dark-text-muted hover:bg-black/5 dark:hover:bg-white/5 transition-all p-2 text-center group relative">
+                                            <div className="w-10 h-10 rounded-full bg-light-border dark:bg-dark-border flex items-center justify-center absolute top-1/2 -translate-y-1/2 group-hover:scale-110 group-hover:bg-brand-yellow group-hover:text-dark-bg transition-all text-light-text dark:text-dark-text">
+                                                <UploadIcon className="w-5 h-5 opacity-40 group-hover:opacity-100 transition-all" />
                                             </div>
-                                            <span className="text-[9px] font-black uppercase tracking-widest opacity-40 group-hover:opacity-100 group-hover:text-brand-blue">{t.structureRefTitle}</span>
+                                            <span className="text-[9px] font-black uppercase tracking-widest opacity-40 group-hover:opacity-100 group-hover:text-brand-yellow absolute bottom-4 w-full left-0 px-2 line-clamp-2">{t.structureRefTitle}</span>
                                         </label>
                                     )}
                                     <input id="structure-file-upload" type="file" className="hidden" accept="image/*" onChange={handleStructureFileChange} />
@@ -1026,13 +1008,14 @@ const ReferencePanel: React.FC<{
                             </div>
                         </div>
 
-                        <div className="group bg-gradient-to-br from-brand-purple/10 via-transparent to-brand-pink/5 dark:from-brand-purple/20 dark:to-transparent rounded-[2rem] p-4 border border-white/10 dark:border-white/5 backdrop-blur-2xl shadow-xl transition-all hover:border-brand-purple/30">
-                            <div className="flex items-center justify-between mb-3">
-                                <h3 className="text-[10px] font-black uppercase tracking-wider text-brand-purple flex items-center gap-2">
-                                    <span className="text-sm">🧬</span>
+                        <div onClick={onManageDna} role="button" className="group relative overflow-hidden bg-light-surface dark:bg-dark-surface rounded-[2rem] p-4 border border-light-border dark:border-dark-border backdrop-blur-2xl shadow-sm transition-all hover:border-brand-yellow cursor-pointer select-none">
+                            <div className="sweep-accent absolute inset-0 pointer-events-none" />
+                            <div className="flex items-center justify-between mb-3 relative">
+                                <h3 className="text-[10px] font-black uppercase tracking-wider text-light-text dark:text-dark-text flex items-center gap-2 group-hover:text-brand-yellow transition-colors">
+                                    <DnaIcon className="w-4 h-4 text-brand-yellow" />
                                     <span>{t.dnaCharacterTitle}</span>
                                 </h3>
-                                <button onClick={onManageDna} className="px-2 py-1 rounded-full bg-brand-purple/10 text-[9px] font-black uppercase tracking-widest text-brand-purple hover:bg-brand-purple hover:text-white transition-all">{t.select}</button>
+                                <span className="px-2 py-1 rounded-full bg-light-surface-accent dark:bg-dark-surface-accent text-[9px] font-black uppercase tracking-widest text-light-text dark:text-dark-text group-hover:bg-brand-yellow group-hover:text-dark-bg transition-all pointer-events-none">{t.select}</span>
                             </div>
 
                             {dnaCharacters.length === 0 ? (
@@ -1047,15 +1030,15 @@ const ReferencePanel: React.FC<{
                                             onClick={() => onSelectDna(char.id)}
                                             className="flex-shrink-0 relative group/char"
                                         >
-                                            <div className={`w-11 h-11 rounded-full p-0.5 border-2 transition-all duration-500 scale-95 group-hover/char:scale-105 ${selectedDnaIds.includes(char.id) ? 'border-brand-purple shadow-[0_0_15px_rgba(114,9,183,0.4)] rotate-3 scale-110' : 'border-white/10 opacity-60 hover:opacity-100 hover:rotate-2'}`}>
+                                            <div className={`w-11 h-11 rounded-full p-0.5 border-2 transition-all duration-500 scale-95 group-hover/char:scale-105 ${selectedDnaIds.includes(char.id) ? 'border-brand-yellow shadow-[0_0_15px_rgba(200,242,58,0.4)] rotate-3 scale-110' : 'border-white/10 opacity-60 hover:opacity-100 hover:rotate-2'}`}>
                                                 {char.thumbnailData ? (
                                                     <img src={char.thumbnailData} alt={char.name} className="w-full h-full object-cover rounded-full" />
                                                 ) : (
-                                                    <div className="w-full h-full bg-gradient-to-br from-brand-purple/40 to-brand-pink/40 rounded-full flex items-center justify-center text-[11px] font-black text-white">{char.name.charAt(0)}</div>
+                                                    <div className="w-full h-full bg-brand-yellow rounded-full flex items-center justify-center text-[11px] font-black text-dark-bg">{char.name.charAt(0)}</div>
                                                 )}
                                             </div>
                                             {selectedDnaIds.includes(char.id) && (
-                                                <div className="absolute -top-1 -right-1 w-4 h-4 bg-brand-purple rounded-full border-2 border-dark-surface flex items-center justify-center shadow-lg">
+                                                <div className="absolute -top-1 -right-1 w-4 h-4 bg-brand-yellow rounded-full border-2 border-dark-surface flex items-center justify-center shadow-lg">
                                                     <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
                                                 </div>
                                             )}
@@ -1069,10 +1052,10 @@ const ReferencePanel: React.FC<{
                             <div className="group/item">
                                 <button
                                     onClick={() => setShowPresets(!showPresets)}
-                                    className="w-full flex items-center justify-between py-1 px-1 rounded-lg transition-all hover:bg-white/5"
+                                    className="w-full flex items-center justify-between py-1 px-1 rounded-lg transition-all hover:bg-white/5 focus:outline-none"
                                 >
                                     <div className="flex items-center gap-3">
-                                        <div className="w-6 h-6 rounded-md bg-brand-yellow/10 flex items-center justify-center text-xs">🎨</div>
+                                        <div className="w-6 h-6 rounded-md bg-brand-yellow/10 flex items-center justify-center text-brand-yellow"><PaletteIcon className="w-3.5 h-3.5" /></div>
                                         <span className="text-[10px] font-black uppercase tracking-[0.15em] text-light-text/60 dark:text-dark-text/50 group-hover/item:text-brand-yellow transition-colors">{t.stylePresetsTitle}</span>
                                     </div>
                                     <div className={`transition-transform duration-300 ${showPresets ? 'rotate-180' : ''}`}>
@@ -1081,23 +1064,12 @@ const ReferencePanel: React.FC<{
                                 </button>
                                 {showPresets && (
                                     <div className="mt-3 px-1 animate-in fade-in slide-in-from-top-1 duration-300">
-                                        <select
-                                            value={selectedStylePreset || ''}
-                                            onChange={(e) => {
-                                                const presetId = e.target.value || null;
-                                                setSelectedStylePreset(presetId);
-                                                // NOTE: Prompt modification is handled in the generation logic
-                                                // to avoid duplication and ensure proper integration with Auto-Enhance
-                                            }}
-                                            className="w-full px-4 py-2.5 rounded-xl bg-brand-yellow/10 border border-brand-yellow/30 text-light-text dark:text-dark-text text-[11px] font-bold focus:outline-none focus:ring-2 focus:ring-brand-yellow/50 appearance-none bg-no-repeat bg-[right_12px_center]"
-                                        >
-                                            <option value="">{language === 'it' ? '--- Scegli uno stile ---' : '--- Choose a style ---'}</option>
-                                            {STYLE_PRESETS.map(preset => (
-                                                <option key={preset.id} value={preset.id}>
-                                                    {preset.icon} {language === 'it' ? preset.nameIt : preset.name}
-                                                </option>
-                                            ))}
-                                        </select>
+                                        <CustomSelect
+                                            value={selectedStylePreset}
+                                            placeholder={language === 'it' ? '--- Scegli uno stile ---' : '--- Choose a style ---'}
+                                            options={STYLE_PRESETS.map(preset => ({ value: preset.id, label: language === 'it' ? preset.nameIt : preset.name }))}
+                                            onChange={(val) => setSelectedStylePreset(val)}
+                                        />
                                     </div>
                                 )}
                             </div>
@@ -1105,11 +1077,11 @@ const ReferencePanel: React.FC<{
                             <div className="group/item">
                                 <button
                                     onClick={() => setShowPhysics(!showPhysics)}
-                                    className="w-full flex items-center justify-between py-1 px-1 rounded-lg transition-all hover:bg-white/5"
+                                    className="w-full flex items-center justify-between py-1 px-1 rounded-lg transition-all hover:bg-white/5 focus:outline-none"
                                 >
                                     <div className="flex items-center gap-3">
-                                        <div className="w-6 h-6 rounded-md bg-brand-magenta/10 flex items-center justify-center text-xs">⚙️</div>
-                                        <span className="text-[10px] font-black uppercase tracking-[0.15em] text-light-text/60 dark:text-dark-text/50 group-hover/item:text-brand-magenta transition-colors">{t.physicsControlTitle}</span>
+                                        <div className="w-6 h-6 rounded-md bg-brand-yellow/10 flex items-center justify-center text-brand-yellow"><SettingsIcon className="w-3.5 h-3.5" /></div>
+                                        <span className="text-[10px] font-black uppercase tracking-[0.15em] text-light-text/60 dark:text-dark-text/50 group-hover/item:text-brand-yellow transition-colors">{t.physicsControlTitle}</span>
                                     </div>
                                     <div className={`transition-transform duration-300 ${showPhysics ? 'rotate-180' : ''}`}>
                                         <ChevronDownIcon className="w-3 h-3 opacity-30" />
@@ -1122,22 +1094,12 @@ const ReferencePanel: React.FC<{
                                             <label className="text-[9px] font-black uppercase tracking-[0.2em] text-light-text-muted/60 dark:text-dark-text-muted/60 ml-1">
                                                 {t.lightingLabel}
                                             </label>
-                                            <select
-                                                value={selectedLighting || ''}
-                                                onChange={(e) => {
-                                                    const lightingId = e.target.value || null;
-                                                    setSelectedLighting(lightingId);
-                                                    // NOTE: Prompt modification is handled in the generation logic
-                                                }}
-                                                className="w-full px-4 py-2.5 rounded-xl bg-brand-yellow/10 border border-brand-yellow/30 text-light-text dark:text-dark-text text-[11px] font-bold focus:outline-none focus:ring-2 focus:ring-brand-yellow/50 appearance-none bg-no-repeat bg-[right_12px_center]"
-                                            >
-                                                <option value="">{language === 'it' ? 'Illuminazione predefinita' : 'Default Lighting'}</option>
-                                                {PHYSICS_PRESETS.lighting.map(preset => (
-                                                    <option key={preset.id} value={preset.id}>
-                                                        {language === 'it' ? preset.nameIt : preset.name}
-                                                    </option>
-                                                ))}
-                                            </select>
+                                        <CustomSelect
+                                                value={selectedLighting}
+                                                placeholder={language === 'it' ? 'Illuminazione predefinita' : 'Default Lighting'}
+                                                options={PHYSICS_PRESETS.lighting.map(p => ({ value: p.id, label: language === 'it' ? p.nameIt : p.name }))}
+                                                onChange={(val) => setSelectedLighting(val)}
+                                            />
                                         </div>
 
                                         {/* Camera Control */}
@@ -1145,22 +1107,12 @@ const ReferencePanel: React.FC<{
                                             <label className="text-[9px] font-black uppercase tracking-[0.2em] text-light-text-muted/60 dark:text-dark-text-muted/60 ml-1">
                                                 {t.cameraLabel}
                                             </label>
-                                            <select
-                                                value={selectedCamera || ''}
-                                                onChange={(e) => {
-                                                    const cameraId = e.target.value || null;
-                                                    setSelectedCamera(cameraId);
-                                                    // NOTE: Prompt modification is handled in the generation logic
-                                                }}
-                                                className="w-full px-4 py-2.5 rounded-xl bg-brand-magenta/10 border border-brand-magenta/30 text-light-text dark:text-dark-text text-[11px] font-bold focus:outline-none focus:ring-2 focus:ring-brand-magenta/50 appearance-none bg-no-repeat bg-[right_12px_center]"
-                                            >
-                                                <option value="">{language === 'it' ? 'Vista predefinita' : 'Default View'}</option>
-                                                {PHYSICS_PRESETS.camera.map(preset => (
-                                                    <option key={preset.id} value={preset.id}>
-                                                        {language === 'it' ? preset.nameIt : preset.name}
-                                                    </option>
-                                                ))}
-                                            </select>
+                                        <CustomSelect
+                                                value={selectedCamera}
+                                                placeholder={language === 'it' ? 'Vista predefinita' : 'Default View'}
+                                                options={PHYSICS_PRESETS.camera.map(p => ({ value: p.id, label: language === 'it' ? p.nameIt : p.name }))}
+                                                onChange={(val) => setSelectedCamera(val)}
+                                            />
                                         </div>
 
                                         {/* Focus Control */}
@@ -1168,22 +1120,12 @@ const ReferencePanel: React.FC<{
                                             <label className="text-[9px] font-black uppercase tracking-[0.2em] text-light-text-muted/60 dark:text-dark-text-muted/60 ml-1">
                                                 {t.focusLabel}
                                             </label>
-                                            <select
-                                                value={selectedFocus || ''}
-                                                onChange={(e) => {
-                                                    const focusId = e.target.value || null;
-                                                    setSelectedFocus(focusId);
-                                                    // NOTE: Prompt modification is handled in the generation logic
-                                                }}
-                                                className="w-full px-4 py-2.5 rounded-xl bg-brand-blue/10 border border-brand-blue/30 text-light-text dark:text-dark-text text-[11px] font-bold focus:outline-none focus:ring-2 focus:ring-brand-blue/50 appearance-none bg-no-repeat bg-[right_12px_center]"
-                                            >
-                                                <option value="">{language === 'it' ? 'Fuoco predefinito' : 'Default Focus'}</option>
-                                                {PHYSICS_PRESETS.focus.map(preset => (
-                                                    <option key={preset.id} value={preset.id}>
-                                                        {language === 'it' ? preset.nameIt : preset.name}
-                                                    </option>
-                                                ))}
-                                            </select>
+                                        <CustomSelect
+                                                value={selectedFocus}
+                                                placeholder={language === 'it' ? 'Fuoco predefinito' : 'Default Focus'}
+                                                options={PHYSICS_PRESETS.focus.map(p => ({ value: p.id, label: language === 'it' ? p.nameIt : p.name }))}
+                                                onChange={(val) => setSelectedFocus(val)}
+                                            />
                                         </div>
                                     </div>
                                 )}
@@ -1191,9 +1133,9 @@ const ReferencePanel: React.FC<{
 
                             {/* Active Presets Strip - Shows what will be applied */}
                             {(selectedStylePreset || selectedLighting || selectedCamera || selectedFocus) && (
-                                <div className="mt-4 p-3 rounded-xl bg-gradient-to-r from-brand-purple/10 to-brand-yellow/10 border border-white/10">
+                                <div className="mt-4 p-3 rounded-xl bg-brand-yellow/10 border border-brand-yellow/20">
                                     <div className="flex items-center justify-between mb-2">
-                                        <span className="text-[9px] font-black uppercase tracking-widest text-brand-purple/80">{t.activePresetsTitle}</span>
+                                        <span className="text-[9px] font-black uppercase tracking-widest text-brand-yellow">{t.activePresetsTitle}</span>
                                         <button
                                             onClick={() => {
                                                 setSelectedStylePreset(null);
@@ -1201,7 +1143,7 @@ const ReferencePanel: React.FC<{
                                                 setSelectedCamera(null);
                                                 setSelectedFocus(null);
                                             }}
-                                            className="px-2 py-0.5 text-[8px] font-bold uppercase tracking-wider bg-red-500/10 text-red-400 rounded-full hover:bg-red-500/20 transition-all"
+                                            className="px-2 py-0.5 text-[8px] font-bold uppercase tracking-wider bg-light-surface-accent dark:bg-dark-surface-accent text-light-text-muted dark:text-dark-text-muted rounded-full hover:bg-brand-yellow hover:text-black transition-all"
                                         >
                                             {t.resetAllPresets}
                                         </button>
@@ -1217,7 +1159,7 @@ const ReferencePanel: React.FC<{
                                                 >
                                                     <span>{preset.icon}</span>
                                                     <span>{language === 'it' ? preset.nameIt : preset.name}</span>
-                                                    <span className="opacity-0 group-hover:opacity-100 ml-1 text-[10px]">✕</span>
+                                                    <XIcon className="opacity-0 group-hover:opacity-100 ml-1 w-2.5 h-2.5" />
                                                 </div>
                                             ) : null;
                                         })()}
@@ -1225,13 +1167,13 @@ const ReferencePanel: React.FC<{
                                             const preset = PHYSICS_PRESETS.lighting.find(p => p.id === selectedLighting);
                                             return preset ? (
                                                 <div
-                                                    className="group relative px-2 py-1 bg-yellow-500/20 text-yellow-400 rounded-full text-[9px] font-bold flex items-center gap-1 cursor-pointer hover:bg-yellow-500/30 transition-all"
+                                                    className="group relative px-2 py-1 bg-brand-yellow/20 text-brand-yellow rounded-full text-[9px] font-bold flex items-center gap-1 cursor-pointer hover:bg-brand-yellow/30 transition-all"
                                                     onClick={() => setSelectedLighting(null)}
                                                     title={preset.prompt}
                                                 >
-                                                    <span>💡</span>
+                                                    <span><LightbulbIcon className="w-3 h-3" /></span>
                                                     <span>{language === 'it' ? preset.nameIt : preset.name}</span>
-                                                    <span className="opacity-0 group-hover:opacity-100 ml-1 text-[10px]">✕</span>
+                                                    <XIcon className="opacity-0 group-hover:opacity-100 ml-1 w-2.5 h-2.5" />
                                                 </div>
                                             ) : null;
                                         })()}
@@ -1239,13 +1181,13 @@ const ReferencePanel: React.FC<{
                                             const preset = PHYSICS_PRESETS.camera.find(p => p.id === selectedCamera);
                                             return preset ? (
                                                 <div
-                                                    className="group relative px-2 py-1 bg-brand-magenta/20 text-brand-magenta rounded-full text-[9px] font-bold flex items-center gap-1 cursor-pointer hover:bg-brand-magenta/30 transition-all"
+                                                    className="group relative px-2 py-1 bg-brand-yellow/20 text-brand-yellow rounded-full text-[9px] font-bold flex items-center gap-1 cursor-pointer hover:bg-brand-yellow/30 transition-all"
                                                     onClick={() => setSelectedCamera(null)}
                                                     title={preset.prompt}
                                                 >
-                                                    <span>📷</span>
+                                                    <span><CameraIcon className="w-3 h-3" /></span>
                                                     <span>{language === 'it' ? preset.nameIt : preset.name}</span>
-                                                    <span className="opacity-0 group-hover:opacity-100 ml-1 text-[10px]">✕</span>
+                                                    <XIcon className="opacity-0 group-hover:opacity-100 ml-1 w-2.5 h-2.5" />
                                                 </div>
                                             ) : null;
                                         })()}
@@ -1253,13 +1195,13 @@ const ReferencePanel: React.FC<{
                                             const preset = PHYSICS_PRESETS.focus.find(p => p.id === selectedFocus);
                                             return preset ? (
                                                 <div
-                                                    className="group relative px-2 py-1 bg-brand-blue/20 text-brand-blue rounded-full text-[9px] font-bold flex items-center gap-1 cursor-pointer hover:bg-brand-blue/30 transition-all"
+                                                    className="group relative px-2 py-1 bg-brand-yellow/20 text-brand-yellow rounded-full text-[9px] font-bold flex items-center gap-1 cursor-pointer hover:bg-brand-yellow/30 transition-all"
                                                     onClick={() => setSelectedFocus(null)}
                                                     title={preset.prompt}
                                                 >
-                                                    <span>🎯</span>
+                                                    <span><TargetIcon className="w-3 h-3" /></span>
                                                     <span>{language === 'it' ? preset.nameIt : preset.name}</span>
-                                                    <span className="opacity-0 group-hover:opacity-100 ml-1 text-[10px]">✕</span>
+                                                    <XIcon className="opacity-0 group-hover:opacity-100 ml-1 w-2.5 h-2.5" />
                                                 </div>
                                             ) : null;
                                         })()}
@@ -1341,7 +1283,7 @@ const ImageDisplay: React.FC<ImageDisplayProps> = ({ images, isLoading, onDownlo
                                         {/* v0.8: Favorite/Bookmark button */}
                                         <button
                                             onClick={() => onToggleFavorite(image.id)}
-                                            className={`p-2 rounded-full ${image.isFavorite ? 'bg-yellow-400 text-black' : 'bg-black/50 text-white'} hover:bg-yellow-400 hover:text-black transition-colors`}
+                                            className={`p-2 rounded-full transition-colors ${image.isFavorite ? 'bg-brand-yellow text-dark-bg' : 'bg-black/50 text-white/70 hover:bg-black/70 hover:text-brand-yellow'}`}
                                             aria-label={image.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
                                             title={image.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
                                         >
@@ -1351,31 +1293,31 @@ const ImageDisplay: React.FC<ImageDisplayProps> = ({ images, isLoading, onDownlo
                                         {/* v1.9.5: Storyboard button */}
                                         <button
                                             onClick={(e) => { e.stopPropagation(); onGenerateStoryboard(image); }}
-                                            className="p-2 rounded-full bg-black/50 text-white hover:bg-brand-pink transition-colors"
+                                            className="p-2 rounded-full bg-black/50 text-brand-yellow hover:bg-brand-yellow hover:text-dark-bg transition-colors"
                                             aria-label={t.cinematicStoryboardTitle}
                                             title={t.storyboardTooltip}
                                         >
-                                            <span className="text-xl leading-none">🎬</span>
+                                            <ClapperboardIcon className="w-5 h-5" />
                                         </button>
 
                                         {/* v1.7: Save as DNA button */}
                                         <button
                                             onClick={(e) => { e.stopPropagation(); onSaveDna(image); }}
-                                            className="p-2 rounded-full bg-black/50 text-white hover:bg-brand-purple transition-colors"
+                                            className="p-2 rounded-full bg-black/50 text-brand-yellow hover:bg-brand-yellow hover:text-dark-bg transition-colors"
                                             aria-label={t.dnaCharacterTitle}
                                             title={t.dnaTooltip}
                                         >
-                                            <span className="text-xl leading-none">🧬</span>
+                                            <DnaIcon className="w-5 h-5" />
                                         </button>
 
-                                        <button onClick={() => onEdit(image)} className="p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors" aria-label={t.editAction}><BrushIcon className="w-5 h-5" /></button>
+                                        <button onClick={() => onEdit(image)} className="p-2 rounded-full bg-black/50 text-brand-yellow hover:bg-brand-yellow hover:text-dark-bg transition-colors" aria-label={t.editAction}><BrushIcon className="w-5 h-5" /></button>
 
                                         {/* v1.1: Upscale button with dropdown */}
                                         {!isUpscaling && (
                                             <div className="relative">
                                                 <button
                                                     onClick={() => setShowUpscaleMenu(showUpscaleMenu === image.id ? null : image.id)}
-                                                    className="p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+                                                    className="p-2 rounded-full bg-black/50 text-brand-yellow hover:bg-brand-yellow hover:text-dark-bg transition-colors"
                                                     aria-label={t.upscaleAction}
                                                     title={t.upscaleAction}
                                                 >
@@ -1401,12 +1343,12 @@ const ImageDisplay: React.FC<ImageDisplayProps> = ({ images, isLoading, onDownlo
                                             </div>
                                         )}
 
-                                        <button onClick={() => onDownload(image)} className="p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors" aria-label="Download image"><DownloadIcon className="w-5 h-5" /></button>
+                                        <button onClick={() => onDownload(image)} className="p-2 rounded-full bg-black/50 text-brand-yellow hover:bg-brand-yellow hover:text-dark-bg transition-colors" aria-label="Download image"><DownloadIcon className="w-5 h-5" /></button>
 
                                         {/* v0.8: Re-roll button */}
                                         <button
                                             onClick={() => onReroll(image)}
-                                            className="p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+                                            className="p-2 rounded-full bg-black/50 text-brand-yellow hover:bg-brand-yellow hover:text-dark-bg transition-colors"
                                             aria-label={t.reroll}
                                             title={t.rerollTooltip}
                                         >
@@ -1421,8 +1363,14 @@ const ImageDisplay: React.FC<ImageDisplayProps> = ({ images, isLoading, onDownlo
             )}
             {!isLoading && images.length === 0 && (
                 <div className="text-center text-light-text-muted dark:text-dark-text-muted">
-                    <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-gradient-to-br from-brand-blue/10 to-brand-purple/10 flex items-center justify-center">
-                        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-brand-blue/20 to-brand-purple/20"></div>
+                    <div
+                        className="w-24 h-24 mx-auto mb-4 rounded-full flex items-center justify-center"
+                        style={{ background: 'radial-gradient(circle, rgba(200,242,58,0.15) 0%, rgba(200,242,58,0.05) 100%)' }}
+                    >
+                        <div
+                            className="w-16 h-16 rounded-full"
+                            style={{ background: 'radial-gradient(circle, rgba(200,242,58,0.3) 0%, rgba(200,242,58,0.1) 100%)' }}
+                        />
                     </div>
                     <p className="font-semibold text-lg">{t.imageDisplayPlaceholderTitle}</p>
                     <p className="text-sm opacity-70">{t.imageDisplayPlaceholderSubtext}</p>
@@ -1506,18 +1454,18 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
                     <div className="flex items-center gap-2">
                         {!isSelectionMode ? (
                             <>
-                                <button onClick={onEnterSelectionMode} className="text-sm font-medium text-brand-blue hover:underline">{t.select}</button>
+                                <button onClick={onEnterSelectionMode} className="text-sm font-medium text-brand-yellow hover:underline">{t.select}</button>
                                 <button
                                     onClick={onClearAll}
                                     title={t.clearHistory}
-                                    className="p-1.5 rounded-full text-light-text-muted dark:text-dark-text-muted hover:bg-red-500/20 hover:text-red-500 dark:hover:bg-red-500/20 transition-colors"
+                                    className="p-1.5 rounded-full text-light-text-muted dark:text-dark-text-muted hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors"
                                 >
                                     <TrashIcon className="w-4 h-4" />
                                 </button>
                             </>
                         ) : (
                             <>
-                                <button onClick={onDeleteSelected} disabled={selectedIds.size === 0} className="text-sm font-medium text-red-500 hover:underline disabled:opacity-50 disabled:no-underline">{t.deleteSelected} ({selectedIds.size})</button>
+                                <button onClick={onDeleteSelected} disabled={selectedIds.size === 0} className="text-sm font-medium text-light-text hover:text-brand-yellow hover:underline disabled:opacity-50 disabled:no-underline">{t.deleteSelected} ({selectedIds.size})</button>
                                 <button onClick={onCancelSelectionMode} className="text-sm font-medium text-light-text-muted dark:text-dark-text-muted hover:underline">{t.cancel}</button>
                             </>
                         )}
@@ -1560,8 +1508,8 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
                                     <img src={item.thumbnailDataUrl || item.imageDataUrl} alt={item.prompt} className={`aspect-square object-cover rounded-xl w-full transition-transform duration-300 ${isSelectionMode ? 'group-hover:scale-95 cursor-pointer' : 'cursor-zoom-in'}`} />
 
                                     {isSelectionMode ? (
-                                        <div className={`absolute inset-0 rounded-xl cursor-pointer transition-all border-2 ${isSelected ? 'border-brand-blue bg-brand-blue/30' : 'border-transparent group-hover:bg-black/30'}`}>
-                                            <div className={`absolute top-1.5 right-1.5 w-5 h-5 rounded-full flex items-center justify-center transition-all ${isSelected ? 'bg-brand-blue border-2 border-white' : 'bg-black/30 border-2 border-white/50'}`}>
+                                        <div className={`absolute inset-0 rounded-xl cursor-pointer transition-all border-2 ${isSelected ? 'border-brand-yellow bg-brand-yellow/30' : 'border-transparent group-hover:bg-black/30'}`}>
+                                            <div className={`absolute top-1.5 right-1.5 w-5 h-5 rounded-full flex items-center justify-center transition-all ${isSelected ? 'bg-brand-yellow border-2 border-white text-dark-bg' : 'bg-black/30 border-2 border-white/50'}`}>
                                                 {isSelected && <CheckIcon className="w-3 h-3 text-white" />}
                                             </div>
                                         </div>
@@ -1573,7 +1521,7 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
                                             <div className="absolute top-1.5 left-1.5 z-20 opacity-0 group-hover:opacity-100 transition-opacity">
                                                 <button
                                                     onClick={(e) => { e.stopPropagation(); onDelete(item.id); }}
-                                                    className="p-1.5 rounded-full bg-red-600/60 text-white transition-all hover:bg-red-500 hover:scale-110 active:scale-95 shadow-lg backdrop-blur-md"
+                                                    className="p-1.5 rounded-full bg-black/60 text-brand-yellow transition-all hover:bg-brand-yellow hover:text-dark-bg hover:scale-110 active:scale-95 shadow-lg backdrop-blur-md"
                                                     aria-label={t.deleteAction}
                                                     title={t.deleteAction}
                                                 >
@@ -1585,7 +1533,7 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
                                             <div className="absolute top-1.5 right-1.5 z-20 flex flex-col gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity max-h-[calc(100%-12px)] flex-wrap-reverse content-end items-end">
                                                 <button
                                                     onClick={(e) => { e.stopPropagation(); onSelect(item); }}
-                                                    className="p-1.5 rounded-full bg-black/60 text-white transition-all hover:bg-brand-purple hover:scale-110 active:scale-95 shadow-lg backdrop-blur-md"
+                                                    className="p-1.5 rounded-full bg-black/60 text-brand-yellow transition-all hover:bg-brand-yellow hover:text-dark-bg hover:scale-110 active:scale-95 shadow-lg backdrop-blur-md"
                                                     aria-label={t.reuseAction}
                                                     title={t.reuseAction}
                                                 >
@@ -1593,25 +1541,25 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
                                                 </button>
                                                 <button
                                                     onClick={(e) => { e.stopPropagation(); onCopySettings(item); }}
-                                                    className="p-1.5 rounded-full bg-black/60 text-white transition-all hover:bg-brand-magenta hover:scale-110 active:scale-95 shadow-lg backdrop-blur-md"
+                                                    className="p-1.5 rounded-full bg-black/60 text-brand-yellow transition-all hover:bg-brand-yellow hover:text-dark-bg hover:scale-110 active:scale-95 shadow-lg backdrop-blur-md"
                                                     aria-label="Copy settings"
-                                                    title="📋 Copy all settings"
+                                                    title="Copy all settings"
                                                 >
                                                     <CopyIcon className="w-3.5 h-3.5" />
                                                 </button>
                                                 <button
                                                     onClick={(e) => { e.stopPropagation(); onSaveDna(item); }}
-                                                    className="p-1.5 rounded-full bg-black/60 text-white transition-all hover:bg-indigo-500 hover:scale-110 active:scale-95 shadow-lg backdrop-blur-md"
+                                                    className="p-1.5 rounded-full bg-black/60 text-brand-yellow transition-all hover:bg-brand-yellow hover:text-dark-bg hover:scale-110 active:scale-95 shadow-lg backdrop-blur-md"
                                                     aria-label="Save as DNA"
-                                                    title="🧬 Save as DNA Character"
+                                                    title="Save as DNA Character"
                                                 >
-                                                    <span className="text-xs">🧬</span>
+                                                    <DnaIcon className="w-3.5 h-3.5" />
                                                 </button>
                                                 <button
                                                     onClick={(e) => { e.stopPropagation(); onGenerateVariations(item); }}
-                                                    className="p-1.5 rounded-full bg-black/60 text-white transition-all hover:bg-brand-yellow hover:text-black hover:scale-110 active:scale-95 shadow-lg backdrop-blur-md disabled:opacity-50"
+                                                    className="p-1.5 rounded-full bg-black/60 text-brand-yellow transition-all hover:bg-brand-yellow hover:text-dark-bg hover:scale-110 active:scale-95 shadow-lg backdrop-blur-md disabled:opacity-50"
                                                     aria-label="Generate variations"
-                                                    title="🎲 Generate 4 variations"
+                                                    title="Generate 4 variations"
                                                     disabled={variationsLoadingId !== null}
                                                 >
                                                     <DiceIcon className="w-3.5 h-3.5" />
@@ -1719,7 +1667,7 @@ const PresetsPanel: React.FC<PresetsPanelProps> = ({
                         value={presetName}
                         onChange={(e) => setPresetName(e.target.value)}
                         placeholder="Preset name..."
-                        className="w-full mb-2 p-2 bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded-lg focus:ring-2 focus:ring-brand-purple focus:outline-none text-sm"
+                        className="w-full mb-2 p-2 bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded-lg focus:ring-2 focus:ring-brand-yellow focus:outline-none text-sm"
                         autoFocus
                         onKeyPress={(e) => e.key === 'Enter' && handleSave()}
                     />
@@ -1727,7 +1675,7 @@ const PresetsPanel: React.FC<PresetsPanelProps> = ({
                         <button
                             onClick={handleSave}
                             disabled={!presetName.trim()}
-                            className="flex-1 py-1.5 px-3 bg-brand-purple text-white rounded-lg hover:bg-brand-purple/90 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="flex-1 py-1.5 px-3 bg-brand-yellow text-dark-bg rounded-lg hover:bg-brand-yellow/90 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             Save
                         </button>
@@ -1751,14 +1699,14 @@ const PresetsPanel: React.FC<PresetsPanelProps> = ({
                                     <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                         <button
                                             onClick={() => onLoadPreset(preset)}
-                                            className="p-1 rounded-lg bg-brand-purple/10 text-brand-yellow hover:bg-brand-purple/20 transition-colors"
+                                            className="p-1 rounded-lg bg-brand-yellow/10 text-brand-yellow hover:bg-brand-yellow/20 transition-colors"
                                             title="Load preset"
                                         >
                                             <CornerUpLeftIcon className="w-3.5 h-3.5" />
                                         </button>
                                         <button
                                             onClick={() => onDeletePreset(preset.id)}
-                                            className="p-1 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-colors"
+                                            className="p-1 rounded-lg bg-light-surface-accent dark:bg-dark-surface-accent hover:bg-brand-yellow hover:text-black transition-colors"
                                             title="Delete preset"
                                         >
                                             <TrashIcon className="w-3.5 h-3.5" />
@@ -1767,7 +1715,7 @@ const PresetsPanel: React.FC<PresetsPanelProps> = ({
                                 </div>
                                 <p className="text-xs text-light-text-muted dark:text-dark-text-muted line-clamp-2">{preset.prompt}</p>
                                 {preset.negativePrompt && (
-                                    <p className="text-xs text-red-500/70 dark:text-red-400/70 mt-1 line-clamp-1">
+                                    <p className="text-xs text-light-text-muted dark:text-dark-text-muted mt-1 line-clamp-1">
                                         Negative: {preset.negativePrompt}
                                     </p>
                                 )}
@@ -1786,66 +1734,6 @@ const PresetsPanel: React.FC<PresetsPanelProps> = ({
     );
 }
 
-interface CreativePromptsPanelProps {
-    prompts: string[];
-    onSelectPrompt: (prompt: string) => void;
-    onGenerate: () => void;
-    selectedPrompt: string;
-    isLoading: boolean;
-    hasImages: boolean;
-}
-const CreativePromptsPanel: React.FC<CreativePromptsPanelProps> = ({ prompts, onSelectPrompt, onGenerate, selectedPrompt, isLoading, hasImages }) => {
-    const { t } = useLocalization();
-    return (
-        <div className="flex-shrink-0 w-full p-4 bg-light-surface/50 dark:bg-dark-surface/30 backdrop-blur-xl rounded-2xl border border-light-border dark:border-dark-border/50 shadow-sm">
-            <div className="flex justify-between items-center mb-3">
-                <h4 className="text-xs font-semibold text-light-text-muted dark:text-dark-text-muted uppercase tracking-wider">{t.creativePromptsTitle}</h4>
-                {prompts.length > 0 && hasImages && (
-                    <button
-                        onClick={onGenerate}
-                        disabled={isLoading}
-                        className="p-1.5 rounded-full text-brand-yellow hover:bg-brand-purple/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        title={t.generateSuggestions}
-                    >
-                        <ReloadIcon className="w-4 h-4" />
-                    </button>
-                )}
-            </div>
-            {isLoading ? (
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-2">
-                    <SkeletonLoader className="h-20" />
-                    <SkeletonLoader className="h-20" />
-                    <SkeletonLoader className="h-20" />
-                </div>
-            ) : prompts.length > 0 ? (
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-2">
-                    {prompts.map((prompt, index) => {
-                        const isSelected = selectedPrompt === prompt;
-                        return (
-                            <button
-                                key={`${index}-${prompt}`}
-                                onClick={() => onSelectPrompt(prompt)}
-                                className={`text-left p-3 rounded-lg text-sm transition-all border ${isSelected ? 'bg-brand-purple/20 border-brand-yellow text-light-text dark:text-dark-text font-medium' : 'bg-light-surface/50 dark:bg-dark-surface/50 border-transparent hover:border-dark-border text-light-text-muted dark:text-dark-text-muted'}`}
-                            >
-                                {prompt}
-                            </button>
-                        )
-                    })}
-                </div>
-            ) : (
-                <div className="text-center py-4 space-y-3">
-                    {hasImages ? (
-                        <button onClick={onGenerate} className="text-center py-2 px-4 rounded-lg bg-light-surface dark:bg-dark-surface/50 border border-light-border dark:border-dark-border hover:border-brand-yellow transition-colors font-semibold text-sm">
-                            {t.generateSuggestions}
-                        </button>
-                    ) : (
-                        <p className="text-sm text-light-text-muted dark:text-dark-text-muted">{t.promptsLoading}</p>
-                    )}
-                </div>
-            )}
-        </div>
-    );
-};
 
 interface SettingsModalProps {
     isOpen: boolean;
@@ -1866,12 +1754,12 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, onSave, 
                 <h2 id="settings-title" className="text-lg font-semibold mb-4 text-light-text dark:text-dark-text">{t.settingsTitle}</h2>
                 <div>
                     <label htmlFor="api-key-input" className="block text-sm font-medium text-light-text-muted dark:text-dark-text-muted mb-1">{t.apiKeyLabel}</label>
-                    <input id="api-key-input" type="password" value={apiKeyInput} onChange={e => setApiKeyInput(e.target.value)} onMouseDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()} placeholder={t.apiKeyPlaceholder} className="w-full p-2 bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded-lg focus:ring-2 focus:ring-brand-purple focus:outline-none" />
+                    <input id="api-key-input" type="password" value={apiKeyInput} onChange={e => setApiKeyInput(e.target.value)} onMouseDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()} placeholder={t.apiKeyPlaceholder} className="w-full p-2 bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded-lg focus:ring-2 focus:ring-brand-yellow focus:outline-none" />
                     <p className="text-xs text-light-text-muted dark:text-dark-text-muted mt-2">{t.apiKeySubtext}</p>
                 </div>
                 <div className="mt-6 flex justify-end gap-3">
                     <button onClick={onClose} className="px-4 py-2 rounded-lg border border-light-border dark:border-dark-border text-sm font-semibold hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors">{t.cancel}</button>
-                    <button onClick={handleSave} className="px-4 py-2 rounded-lg bg-gradient-to-r from-brand-yellow to-brand-magenta text-white text-sm font-semibold hover:opacity-90 transition-opacity">{t.save}</button>
+                    <button onClick={handleSave} className="px-4 py-2 rounded-lg bg-brand-yellow text-dark-bg text-sm font-semibold hover:opacity-90 transition-opacity">{t.save}</button>
                 </div>
             </div>
         </div>
@@ -1889,90 +1777,90 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
     const helpContent = language === 'it' ? {
         sections: [
             {
-                title: "👋 Benvenuto in Generentolo!",
+                title: "Benvenuto in Generentolo!",
                 content: "Generentolo è un potente generatore di immagini AI che ti permette di creare immagini pubblicitarie professionali utilizzando l'intelligenza artificiale di Google Gemini."
             },
             {
-                title: "🚀 Come Iniziare",
-                content: "1. **Aggiungi Immagini di Riferimento**: Carica fino a 4 immagini che vuoi usare come ispirazione (prodotti, persone, scene).\n\n2. **Scrivi o Genera un Prompt**: Descrivi l'immagine che vuoi creare, oppure clicca 'Genera Suggerimenti' per ottenere idee creative.\n\n3. **Seleziona l'Aspect Ratio**: Scegli il formato desiderato (1:1 quadrato, 16:9 orizzontale, 9:16 verticale, ecc.).\n\n4. **Genera**: Premi il pulsante viola 'Genera' o usa Ctrl+G!"
+                title: "Come Iniziare",
+                content: "1. **Aggiungi Immagini di Riferimento**: Carica fino a 4 immagini che vuoi usare come ispirazione (prodotti, persone, scene).\n\n2. **Scrivi un Prompt**: Descrivi l'immagine che vuoi creare. Il Magic Prompt la genererà automaticamente dalle tue immagini.\n\n3. **Seleziona l'Aspect Ratio**: Scegli il formato desiderato (1:1 quadrato, 16:9 orizzontale, 9:16 verticale, ecc.).\n\n4. **Genera**: Premi il pulsante 'Genera' o usa Ctrl+G!"
             },
             {
-                title: "🖼️ Immagini di Riferimento",
+                title: "Immagini di Riferimento",
                 content: "**Reference Images**: Fino a 4 immagini che il modello userà come soggetti principali.\n\n**Style Image**: Un'immagine separata per definire lo stile visivo (colori, lighting, mood). Perfetta per mantenere coerenza con il tuo brand!"
             },
             {
-                title: "✨ Magic Prompt",
+                title: "Magic Prompt",
                 content: "Il pulsante con la bacchetta magica ha due funzioni:\n\n• **Senza testo**: Genera automaticamente un prompt dalle tue immagini\n• **Con testo**: Migliora e arricchisce il tuo prompt esistente\n\nUsa Ctrl+E come scorciatoia!"
             },
             {
-                title: "🎨 Strumenti Professionali",
+                title: "Strumenti Professionali",
                 content: "Clicca 'Genera Strumenti' per ottenere controlli avanzati basati sulle tue immagini:\n\n• **Hairstyle/Outfit** per persone\n• **Camera Angle/Lighting** per prodotti\n• **Time of Day/Weather** per scene\n\nSeleziona le opzioni che preferisci e il prompt verrà riscritto automaticamente!"
             },
             {
-                title: "⚙️ Impostazioni Avanzate",
+                title: "Impostazioni Avanzate",
                 content: "**Negative Prompt**: Specifica cosa NON vuoi nell'immagine (es: 'testo, watermark, sfocato'). Clicca la bacchetta per generarlo automaticamente.\n\n**Seed**: Un numero per riprodurre la stessa immagine. Lascia vuoto per risultati casuali. Usa Ctrl+R per randomizzare!"
             },
             {
-                title: "⌨️ Scorciatoie Tastiera",
+                title: "Scorciatoie Tastiera",
                 content: "• Ctrl+G: Genera immagini\n• Ctrl+E: Migliora prompt\n• Ctrl+R: Seed casuale\n• Ctrl+K: Pulisci interfaccia\n• Ctrl+P: Focus prompt\n• Ctrl+Shift+T: Cambia tema"
             },
             {
-                title: "💡 Tips & Tricks",
-                content: "• **Aspect Ratio**: Le immagini vengono croppate al formato esatto, nessuna banda bianca!\n\n• **Adapt Buttons**: Dopo aver generato un'immagine, usa i pulsanti 'Adapt to Portrait/Landscape' per estendere la scena.\n\n• **History**: Clicca un'immagine nella cronologia per riusare le sue impostazioni.\n\n• **'Let Me Do For You'**: Il pulsante 'Magic Prompt' rosa genera automaticamente tutto per te!"
+                title: "Tips & Tricks",
+                content: "• **Aspect Ratio**: Le immagini vengono croppate al formato esatto, nessuna banda bianca!\n\n• **Adapt Buttons**: Dopo aver generato un'immagine, usa i pulsanti 'Adapt to Portrait/Landscape' per estendere la scena.\n\n• **History**: Clicca un'immagine nella cronologia per riusare le sue impostazioni.\n\n• **Magic Prompt**: Il pulsante con la bacchetta magica genera automaticamente prompt e strumenti dalle tue immagini!"
             },
             {
-                title: "🔑 API Key",
+                title: "API Key",
                 content: "L'app usa una chiave condivisa, ma per uso intensivo puoi inserire la tua chiave Gemini gratuita:\n\n1. Vai su ai.google.dev\n2. Crea una API key gratuita\n3. Inseriscila nelle Impostazioni (icona ingranaggio)\n\nLa tua chiave è salvata solo nel tuo browser!"
             }
         ]
     } : {
         sections: [
             {
-                title: "👋 Welcome to Generentolo!",
+                title: "Welcome to Generentolo!",
                 content: "Generentolo is a powerful AI image generator that lets you create professional advertising images using Google Gemini's artificial intelligence."
             },
             {
-                title: "🚀 Getting Started",
-                content: "1. **Add Reference Images**: Upload up to 4 images to use as inspiration (products, people, scenes).\n\n2. **Write or Generate a Prompt**: Describe the image you want, or click 'Generate Suggestions' for creative ideas.\n\n3. **Select Aspect Ratio**: Choose your desired format (1:1 square, 16:9 landscape, 9:16 portrait, etc.).\n\n4. **Generate**: Press the purple 'Generate' button or use Ctrl+G!"
+                title: "Getting Started",
+                content: "1. **Add Reference Images**: Upload up to 4 images to use as inspiration (products, people, scenes).\n\n2. **Write a Prompt**: Describe the image you want. Magic Prompt will generate it automatically from your images.\n\n3. **Select Aspect Ratio**: Choose your desired format (1:1 square, 16:9 landscape, 9:16 portrait, etc.).\n\n4. **Generate**: Press the 'Generate' button or use Ctrl+G!"
             },
             {
-                title: "🖼️ Reference Images",
+                title: "Reference Images",
                 content: "**Reference Images**: Up to 4 images the model will use as main subjects.\n\n**Style Image**: A separate image to define visual style (colors, lighting, mood). Perfect for maintaining brand consistency!"
             },
             {
-                title: "✨ Magic Prompt",
+                title: "Magic Prompt",
                 content: "The wand button has two functions:\n\n• **Without text**: Automatically generates a prompt from your images\n• **With text**: Enhances and enriches your existing prompt\n\nUse Ctrl+E as a shortcut!"
             },
             {
-                title: "🎨 Professional Tools",
+                title: "Professional Tools",
                 content: "Click 'Generate Tools' to get advanced controls based on your images:\n\n• **Hairstyle/Outfit** for people\n• **Camera Angle/Lighting** for products\n• **Time of Day/Weather** for scenes\n\nSelect your preferred options and the prompt will be automatically rewritten!"
             },
             {
-                title: "⚙️ Advanced Settings",
+                title: "Advanced Settings",
                 content: "**Negative Prompt**: Specify what you DON'T want in the image (e.g., 'text, watermark, blurry'). Click the wand to generate it automatically.\n\n**Seed**: A number to reproduce the same image. Leave empty for random results. Use Ctrl+R to randomize!"
             },
             {
-                title: "⌨️ Keyboard Shortcuts",
+                title: "Keyboard Shortcuts",
                 content: "• Ctrl+G: Generate images\n• Ctrl+E: Enhance prompt\n• Ctrl+R: Random seed\n• Ctrl+K: Clear interface\n• Ctrl+P: Focus prompt\n• Ctrl+Shift+T: Toggle theme"
             },
             {
-                title: "💡 Tips & Tricks",
-                content: "• **Aspect Ratio**: Images are cropped to exact format, no white bars!\n\n• **Adapt Buttons**: After generating an image, use 'Adapt to Portrait/Landscape' buttons to extend the scene.\n\n• **History**: Click an image in history to reuse its settings.\n\n• **'Let Me Do For You'**: The pink 'Magic Prompt' button automatically generates everything for you!"
+                title: "Tips & Tricks",
+                content: "• **Aspect Ratio**: Images are cropped to exact format, no white bars!\n\n• **Adapt Buttons**: After generating an image, use 'Adapt to Portrait/Landscape' buttons to extend the scene.\n\n• **History**: Click an image in history to reuse its settings.\n\n• **Magic Prompt**: The wand button automatically generates prompts and tools from your images!"
             },
             {
-                title: "🔑 API Key",
+                title: "API Key",
                 content: "The app uses a shared key, but for intensive use you can insert your own free Gemini key:\n\n1. Go to ai.google.dev\n2. Create a free API key\n3. Insert it in Settings (gear icon)\n\nYour key is saved only in your browser!"
             }
         ]
     };
 
     return (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose} role="dialog">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose} role="dialog" aria-modal="true" aria-labelledby="help-modal-title">
             <div className="bg-light-surface/90 dark:bg-dark-surface/90 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl w-full max-w-3xl max-h-[85vh] flex flex-col" onClick={e => e.stopPropagation()}>
                 <div className="flex items-center justify-between p-6 border-b border-light-border dark:border-dark-border">
                     <div className="flex items-center gap-3">
-                        <span className="text-2xl">ℹ️</span>
-                        <h2 className="text-2xl font-bold text-light-text dark:text-dark-text">{t.helpGuide}</h2>
+                        <SparklesIcon className="w-6 h-6 text-brand-yellow" />
+                        <h2 id="help-modal-title" className="text-2xl font-bold text-light-text dark:text-dark-text">{t.helpGuide}</h2>
                     </div>
                     <button onClick={onClose} className="p-2 rounded-full text-light-text-muted dark:text-dark-text-muted hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors">
                         <XIcon className="w-6 h-6" />
@@ -1991,7 +1879,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                 </div>
 
                 <div className="flex justify-end p-6 border-t border-light-border dark:border-dark-border">
-                    <button onClick={onClose} className="px-6 py-3 rounded-lg bg-gradient-to-r from-brand-yellow to-brand-magenta text-white font-semibold hover:opacity-90 transition-opacity">
+                    <button onClick={onClose} className="px-6 py-3 rounded-lg bg-brand-yellow text-dark-bg font-semibold hover:opacity-90 transition-opacity">
                         {t.cancel}
                     </button>
                 </div>
@@ -2020,14 +1908,14 @@ const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ isOpen, onClose }) => {
     ];
 
     return (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose} role="dialog" aria-modal="true">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose} role="dialog" aria-modal="true" aria-labelledby="shortcuts-modal-title">
             <div className="bg-light-surface/80 dark:bg-dark-surface/80 backdrop-blur-xl border border-white/10 dark:border-white/10 rounded-2xl shadow-2xl w-full max-w-md p-6" onClick={e => e.stopPropagation()}>
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
-                        <span className="text-2xl">⌨️</span>
-                        <h2 className="text-lg font-semibold text-light-text dark:text-dark-text">{t.keyboardShortcuts}</h2>
+                        <KeyboardIcon className="w-6 h-6 text-brand-yellow" />
+                        <h2 id="shortcuts-modal-title" className="text-lg font-semibold text-light-text dark:text-dark-text">{t.keyboardShortcuts}</h2>
                     </div>
-                    <button onClick={onClose} className="p-1 rounded-full text-light-text-muted dark:text-dark-text-muted hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent">
+                    <button onClick={onClose} aria-label={t.cancel} className="p-2 rounded-full text-light-text-muted dark:text-dark-text-muted hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors">
                         <XIcon className="w-5 h-5" />
                     </button>
                 </div>
@@ -2041,7 +1929,7 @@ const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ isOpen, onClose }) => {
                     ))}
                 </div>
                 <div className="mt-6 flex justify-end">
-                    <button onClick={onClose} className="px-4 py-2 rounded-lg bg-gradient-to-r from-brand-yellow to-brand-magenta text-white text-sm font-semibold hover:opacity-90 transition-opacity">
+                    <button onClick={onClose} className="px-4 py-2 rounded-lg bg-brand-yellow text-dark-bg text-sm font-semibold hover:opacity-90 transition-opacity">
                         {t.cancel}
                     </button>
                 </div>
@@ -2102,7 +1990,7 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose }) => {
                                     onMouseEnter={() => setHoverRating(star)}
                                     onMouseLeave={() => setHoverRating(0)}
                                     onClick={() => setRating(star)}
-                                    className="text-yellow-400"
+                                    className="text-brand-yellow"
                                 >
                                     <StarIcon filled={(hoverRating || rating) >= star} className="w-6 h-6" />
                                 </button>
@@ -2111,20 +1999,20 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose }) => {
                     </div>
                     <div>
                         <label htmlFor="feedback-name" className="block text-sm font-medium text-light-text-muted dark:text-dark-text-muted mb-1">{t.yourName}</label>
-                        <input id="feedback-name" type="text" value={name} onChange={e => setName(e.target.value)} className="w-full p-2 bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded-lg focus:ring-2 focus:ring-brand-purple focus:outline-none" />
+                        <input id="feedback-name" type="text" value={name} onChange={e => setName(e.target.value)} className="w-full p-2 bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded-lg focus:ring-2 focus:ring-brand-yellow focus:outline-none" />
                     </div>
                     <div>
                         <label htmlFor="feedback-email" className="block text-sm font-medium text-light-text-muted dark:text-dark-text-muted mb-1">{t.yourEmail}</label>
-                        <input id="feedback-email" type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full p-2 bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded-lg focus:ring-2 focus:ring-brand-purple focus:outline-none" />
+                        <input id="feedback-email" type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full p-2 bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded-lg focus:ring-2 focus:ring-brand-yellow focus:outline-none" />
                     </div>
                     <div>
                         <label htmlFor="feedback-message" className="block text-sm font-medium text-light-text-muted dark:text-dark-text-muted mb-1">{t.yourMessage}</label>
-                        <textarea id="feedback-message" value={message} onChange={e => setMessage(e.target.value)} rows={4} className="w-full p-2 bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded-lg focus:ring-2 focus:ring-brand-purple focus:outline-none" />
+                        <textarea id="feedback-message" value={message} onChange={e => setMessage(e.target.value)} rows={4} className="w-full p-2 bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded-lg focus:ring-2 focus:ring-brand-yellow focus:outline-none" />
                     </div>
                 </div>
                 <div className="mt-6 flex justify-end gap-3">
                     <button onClick={onClose} className="px-4 py-2 rounded-lg border border-light-border dark:border-dark-border text-sm font-semibold hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors">{t.cancel}</button>
-                    <button onClick={handleSend} className="px-4 py-2 rounded-lg bg-gradient-to-r from-brand-yellow to-brand-magenta text-white text-sm font-semibold hover:opacity-90 transition-opacity">{t.sendFeedback}</button>
+                    <button onClick={handleSend} className="px-4 py-2 rounded-lg bg-brand-yellow text-dark-bg text-sm font-semibold hover:opacity-90 transition-opacity">{t.sendFeedback}</button>
                 </div>
             </div>
         </div>
@@ -2145,10 +2033,13 @@ const Toast: React.FC<ToastProps> = ({ message, type, onClose }) => {
     const isSuccess = type === 'success';
 
     return (
-        <div className={`fixed bottom-28 right-5 z-[100] flex items-center gap-3 p-3 rounded-xl shadow-2xl border backdrop-blur-xl animate-slide-in-right ${isSuccess ? 'bg-green-500/20 text-green-200 border-green-500/30' : 'bg-red-500/20 text-red-200 border-red-500/30'}`}>
-            {isSuccess ? <span>✅</span> : <span>⚠️</span>}
+        <div className={`fixed bottom-28 right-5 z-[100] flex items-center gap-3 p-3 rounded-xl shadow-2xl border backdrop-blur-xl animate-slide-in-right ${isSuccess ? 'bg-brand-yellow/20 text-light-text dark:text-dark-text border-brand-yellow/30' : 'bg-light-surface dark:bg-dark-surface text-light-text dark:text-dark-text border-light-border dark:border-dark-border'}`}>
+            {isSuccess
+                ? <CheckIcon className="w-4 h-4 text-brand-yellow flex-shrink-0" />
+                : <AlertTriangleIcon className="w-4 h-4 text-dark-text-muted flex-shrink-0" />
+            }
             <span className="text-sm font-medium">{message}</span>
-            <button onClick={onClose} className="p-1 -mr-1 rounded-full hover:bg-white/10"><XIcon className="w-4 h-4" /></button>
+            <button onClick={onClose} aria-label="Close" className="p-2 -mr-1 rounded-full hover:bg-white/10 transition-colors"><XIcon className="w-4 h-4" /></button>
         </div>
     );
 };
@@ -2246,11 +2137,11 @@ const InpaintEditor: React.FC<InpaintEditorProps> = ({ image, onClose, onSave })
     };
 
     return (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose} role="dialog">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose} role="dialog" aria-modal="true" aria-labelledby="inpaint-modal-title">
             <div className="bg-light-surface/80 dark:bg-dark-surface/80 backdrop-blur-xl border border-white/10 dark:border-white/10 rounded-2xl shadow-2xl w-full max-w-4xl flex flex-col" onClick={e => e.stopPropagation()}>
                 <div className="flex justify-between items-center p-4 border-b border-light-border dark:border-dark-border">
-                    <h2 className="text-lg font-semibold">{t.inpaintModalTitle}</h2>
-                    <button onClick={onClose}><XIcon className="w-5 h-5" /></button>
+                    <h2 id="inpaint-modal-title" className="text-lg font-semibold text-light-text dark:text-dark-text">{t.inpaintModalTitle}</h2>
+                    <button onClick={onClose} aria-label={t.cancel} className="p-2 rounded-xl text-light-text-muted dark:text-dark-text-muted hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors"><XIcon className="w-5 h-5" /></button>
                 </div>
                 <div className="flex-1 p-4 grid grid-cols-1 md:grid-cols-3 gap-4 overflow-y-auto">
                     <div className="md:col-span-2 relative w-full h-full min-h-[400px]">
@@ -2274,7 +2165,7 @@ const InpaintEditor: React.FC<InpaintEditorProps> = ({ image, onClose, onSave })
                 </div>
                 <div className="flex justify-end gap-3 p-4 border-t border-light-border dark:border-dark-border">
                     <button onClick={onClose} className="px-4 py-2 rounded-lg">{t.cancel}</button>
-                    <button onClick={handleSave} disabled={!inpaintPrompt || isLoading} className="px-4 py-2 rounded-lg bg-gradient-to-r from-brand-yellow to-brand-magenta text-white text-sm font-semibold disabled:opacity-50 flex items-center gap-2">
+                    <button onClick={handleSave} disabled={!inpaintPrompt || isLoading} className="px-4 py-2 rounded-lg bg-brand-yellow text-dark-bg text-sm font-semibold disabled:opacity-50 flex items-center gap-2">
                         {isLoading && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>}
                         {isLoading ? t.generatingButton : t.generateButton}
                     </button>
@@ -2326,14 +2217,14 @@ const DnaCharacterModal: React.FC<DnaCharacterModalProps> = ({ isOpen, onClose, 
     };
 
     return (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in" onClick={onClose}>
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in" onClick={onClose} role="dialog" aria-modal="true" aria-labelledby="dna-modal-title">
             <div className="bg-light-surface dark:bg-dark-surface w-full max-w-2xl rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh] animate-scale-up" onClick={e => e.stopPropagation()}>
-                <div className="flex items-center justify-between p-6 border-b border-light-border dark:border-dark-border">
-                    <h2 className="text-xl font-bold flex items-center gap-2">
-                        <span className="text-2xl">🧬</span>
+                <div className="flex items-center justify-between p-6 border-b border-brand-yellow/30">
+                    <h2 id="dna-modal-title" className="text-xl font-bold flex items-center gap-2 text-light-text dark:text-dark-text">
+                        <DnaIcon className="w-6 h-6 text-brand-yellow" />
                         {t.dnaCharacterTitle}
                     </h2>
-                    <button onClick={onClose} className="p-2 rounded-full hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors">
+                    <button onClick={onClose} className="p-2 rounded-full hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors text-light-text-muted dark:text-dark-text-muted hover:text-brand-yellow">
                         <XIcon className="w-6 h-6" />
                     </button>
                 </div>
@@ -2341,13 +2232,13 @@ const DnaCharacterModal: React.FC<DnaCharacterModalProps> = ({ isOpen, onClose, 
                 <div className="flex-1 overflow-y-auto p-6 space-y-8">
                     {/* Add New DNA */}
                     <div className="space-y-4">
-                        <h3 className="text-sm font-bold uppercase tracking-wider opacity-60 flex items-center gap-2">
-                            <span>✨</span> {language === 'it' ? 'Crea Nuovo Profilo' : 'Create New Profile'}
+                        <h3 className="text-sm font-bold uppercase tracking-wider text-brand-yellow flex items-center gap-2">
+                            <SparklesIcon className="w-4 h-4" /> {language === 'it' ? 'Crea Nuovo Profilo' : 'Create New Profile'}
                         </h3>
                         <div className="p-4 bg-light-surface-accent dark:bg-dark-surface-accent rounded-2xl flex flex-col sm:flex-row gap-4">
                             <div
                                 onClick={() => fileInputRef.current?.click()}
-                                className="w-full sm:w-24 h-24 rounded-xl border-2 border-dashed border-light-border dark:border-dark-border flex items-center justify-center cursor-pointer hover:border-brand-purple transition-colors bg-black/5 overflow-hidden"
+                                className="w-full sm:w-24 h-24 rounded-xl border-2 border-dashed border-light-border dark:border-dark-border flex items-center justify-center cursor-pointer hover:border-brand-yellow transition-colors bg-black/5 overflow-hidden"
                             >
                                 {selectedFiles.length > 0 ? (
                                     <div className="relative w-full h-full group/preview">
@@ -2359,7 +2250,7 @@ const DnaCharacterModal: React.FC<DnaCharacterModalProps> = ({ isOpen, onClose, 
                                         )}
                                         <button
                                             onClick={(e) => { e.stopPropagation(); setSelectedFiles([]); }}
-                                            className="absolute top-1 right-1 p-1 bg-red-500 rounded-lg text-white opacity-0 group-hover/preview:opacity-100 transition-opacity"
+                                            className="absolute top-1 right-1 p-1 bg-light-surface dark:bg-dark-surface border border-brand-yellow rounded-lg text-brand-yellow opacity-0 group-hover/preview:opacity-100 transition-opacity"
                                             title="Clear all"
                                         >
                                             <TrashIcon className="w-3 h-3" />
@@ -2367,7 +2258,7 @@ const DnaCharacterModal: React.FC<DnaCharacterModalProps> = ({ isOpen, onClose, 
                                     </div>
                                 ) : (
                                     <div className="text-center px-2">
-                                        <UploadIcon className="w-6 h-6 mx-auto opacity-50" />
+                                        <UploadIcon className="w-6 h-6 mx-auto text-brand-yellow opacity-70" />
                                         <span className="text-[9px] mt-1 block opacity-50 leading-tight">{language === 'it' ? 'Carica una o più angolazioni' : 'Upload one or more angles'}</span>
                                     </div>
                                 )}
@@ -2378,17 +2269,17 @@ const DnaCharacterModal: React.FC<DnaCharacterModalProps> = ({ isOpen, onClose, 
                                     value={newName}
                                     onChange={(e) => setNewName(e.target.value)}
                                     placeholder={t.dnaCharacterEnterName}
-                                    className="w-full px-4 py-2 rounded-xl bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border focus:ring-2 focus:ring-brand-purple focus:outline-none transition-all text-sm"
+                                    className="w-full px-4 py-2 rounded-xl bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border focus:ring-2 focus:ring-brand-yellow focus:outline-none transition-all text-sm"
                                 />
                                 <button
                                     onClick={handleSave}
                                     disabled={isLoading || selectedFiles.length === 0 || !newName.trim()}
-                                    className="w-full py-2.5 bg-brand-purple text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50"
+                                    className="w-full py-2.5 bg-brand-yellow text-dark-bg rounded-xl font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50"
                                 >
                                     {isLoading ? (
-                                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                        <div className="w-4 h-4 border-2 border-dark-bg border-t-transparent rounded-full animate-spin"></div>
                                     ) : (
-                                        <span>🧬 {t.dnaCharacterSave}</span>
+                                        <span className="flex items-center gap-2"><DnaIcon className="w-4 h-4" /> {t.dnaCharacterSave}</span>
                                     )}
                                 </button>
                             </div>
@@ -2398,14 +2289,14 @@ const DnaCharacterModal: React.FC<DnaCharacterModalProps> = ({ isOpen, onClose, 
 
                     {/* Existing DNA List */}
                     <div className="space-y-4">
-                        <h3 className="text-sm font-bold uppercase tracking-wider opacity-60 flex items-center gap-2">
-                            <span>📂</span> {t.dnaCharacterSubtitle}
+                        <h3 className="text-sm font-bold uppercase tracking-wider text-brand-yellow flex items-center gap-2">
+                            <UploadIcon className="w-4 h-4" /> {t.dnaCharacterSubtitle}
                         </h3>
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                             {characters.map(char => (
                                 <div
                                     key={char.id}
-                                    className={`relative group rounded-2xl p-3 border-2 transition-all cursor-pointer ${selectedIds.includes(char.id) ? 'border-brand-purple bg-brand-purple/5' : 'border-light-border dark:border-dark-border hover:border-light-text-muted dark:hover:border-dark-text-muted'}`}
+                                    className={`relative group rounded-2xl p-3 border-2 transition-all cursor-pointer ${selectedIds.includes(char.id) ? 'border-brand-yellow bg-brand-yellow/5' : 'border-light-border dark:border-dark-border hover:border-brand-yellow'}`}
                                     onClick={() => onSelect(char.id)}
                                 >
                                     <div className="aspect-square rounded-xl bg-black/10 overflow-hidden mb-2">
@@ -2419,7 +2310,7 @@ const DnaCharacterModal: React.FC<DnaCharacterModalProps> = ({ isOpen, onClose, 
                                     </div>
                                     <div
                                         onClick={(e) => { e.stopPropagation(); setExpandedCharId(expandedCharId === char.id ? null : char.id); }}
-                                        className="text-center truncate font-bold text-xs mb-1 hover:text-brand-purple flex items-center justify-center gap-1"
+                                        className="text-center truncate font-bold text-xs mb-1 hover:text-brand-yellow flex items-center justify-center gap-1"
                                     >
                                         {char.name}
                                         <SparklesIcon className="w-2.5 h-2.5 opacity-40" />
@@ -2448,7 +2339,7 @@ const DnaCharacterModal: React.FC<DnaCharacterModalProps> = ({ isOpen, onClose, 
                                     {expandedCharId === char.id && char.sourceImages && (
                                         <div className="mt-3 grid grid-cols-4 gap-1 p-2 bg-black/20 rounded-xl animate-fade-in">
                                             {char.sourceImages.map((img, idx) => (
-                                                <div key={idx} className="aspect-square rounded-md overflow-hidden border border-white/10 hover:border-brand-purple transition-colors">
+                                                <div key={idx} className="aspect-square rounded-md overflow-hidden border border-white/10 hover:border-brand-yellow transition-colors">
                                                     <img src={img} alt={`Angle ${idx}`} className="w-full h-full object-cover" />
                                                 </div>
                                             ))}
@@ -2458,14 +2349,14 @@ const DnaCharacterModal: React.FC<DnaCharacterModalProps> = ({ isOpen, onClose, 
                                     <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                         <button
                                             onClick={(e) => { e.stopPropagation(); onDelete(char.id); }}
-                                            className="p-1.5 bg-red-500/80 text-white rounded-lg hover:bg-red-600 transition-colors"
+                                            className="p-1.5 bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border text-light-text dark:text-dark-text rounded-lg hover:border-brand-yellow transition-colors"
                                         >
                                             <TrashIcon className="w-3.5 h-3.5" />
                                         </button>
                                     </div>
 
                                     {selectedIds.includes(char.id) && (
-                                        <div className="absolute -top-2 -right-2 bg-brand-purple text-white rounded-full p-1 shadow-lg">
+                                        <div className="absolute -top-2 -right-2 bg-brand-yellow text-dark-bg rounded-full p-1 shadow-md">
                                             <CheckIcon className="w-3 h-3" />
                                         </div>
                                     )}
@@ -2481,7 +2372,7 @@ const DnaCharacterModal: React.FC<DnaCharacterModalProps> = ({ isOpen, onClose, 
                 </div>
 
                 <div className="p-6 bg-light-surface-accent dark:bg-dark-surface-accent flex justify-center">
-                    <button onClick={onClose} className="px-8 py-2.5 bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border rounded-2xl font-bold hover:opacity-80 transition-opacity">
+                    <button onClick={onClose} className="px-8 py-2.5 bg-brand-yellow text-dark-bg rounded-2xl font-bold hover:opacity-90 transition-opacity">
                         {t.save}
                     </button>
                 </div>
@@ -2547,15 +2438,13 @@ export default function App() {
     const [styleReferenceImage, setStyleReferenceImage] = useState<File | null>(null);
     const [structureImage, setStructureImage] = useState<File | null>(null);
     const [preciseReference, setPreciseReference] = useState<boolean>(false); // v0.7: Precise Reference Mode
-    const [prompts, setPrompts] = useState<string[]>([]);
-    const [isPromptsLoading, setIsPromptsLoading] = useState(false);
     const [editedPrompt, setEditedPrompt] = useState<string>('');
     const [negativePrompt, setNegativePrompt] = useState<string>('');
     const [seed, setSeed] = useState<string>('');
 
     const [aspectRatio, setAspectRatio] = useState<string>('1:1');
     // v1.0: New PRO features states
-    const [selectedModel, setSelectedModel] = useState<ModelType>('gemini-3-pro-image-preview');
+    const [selectedModel, setSelectedModel] = useState<ModelType>('gemini-3.1-flash-image-preview');
     const [selectedResolution, setSelectedResolution] = useState<ResolutionType>('2k');
 
     // v2.0: Auto-reset resolution and aspect ratio when switching models
@@ -2658,9 +2547,9 @@ export default function App() {
         setPresets(loadedPresets);
 
         // Load DNA Characters from IndexedDB
-        indexedDBService.getAllDnaCharacters().then(chars => {
-            setDnaCharacters(chars);
-        });
+        indexedDBService.getAllDnaCharacters()
+            .then(chars => { setDnaCharacters(chars); })
+            .catch(err => { console.error('Failed to load DNA characters:', err); });
     }, [t]);
 
 
@@ -2722,32 +2611,6 @@ export default function App() {
     const toggleTheme = () => setTheme(prev => prev === 'dark' ? 'light' : 'dark');
 
 
-    useEffect(() => {
-        const hasImages = referenceImages.length > 0 || styleReferenceImage;
-        if (!hasImages) {
-            setPrompts([]);
-
-        }
-    }, [referenceImages, styleReferenceImage]);
-
-    const handleGenerateCreativePrompts = useCallback(async () => {
-        const hasImages = referenceImages.length > 0 || styleReferenceImage || structureImage;
-        if (!hasImages) return;
-
-        setIsPromptsLoading(true);
-        try {
-            const newPrompts = await geminiService.generatePromptsFromImage(referenceImages, styleReferenceImage, structureImage, userApiKey, language);
-            setPrompts(newPrompts);
-            if (newPrompts.length > 0 && !editedPrompt) {
-                setEditedPrompt(newPrompts[0]);
-            }
-        } catch (error: any) {
-            console.error("Failed to generate creative prompts", error);
-            showToast(error.message, 'error');
-        } finally {
-            setIsPromptsLoading(false);
-        }
-    }, [referenceImages, styleReferenceImage, structureImage, userApiKey, language, showToast, editedPrompt]);
 
     const handleSaveDna = async (imageFiles: File[], name: string) => {
         setIsDnaLoading(true);
@@ -2865,7 +2728,6 @@ export default function App() {
     };
 
     const handleGenerate = useCallback(async (task?: GenerationTask) => {
-        console.log('🎯 handleGenerate called - isLoading:', isLoading, 'task:', task);
         if (isLoading && !task) {
             // v1.9.5: Add to queue if already generating
             const newTask: GenerationTask = {
@@ -2887,12 +2749,7 @@ export default function App() {
                 autoEnhance: autoEnhance,
                 timestamp: Date.now(),
             };
-            console.log('➕ Adding to queue:', newTask);
-            setQueue(prev => {
-                const newQueue = [...prev, newTask];
-                console.log('📋 Queue updated - length:', newQueue.length);
-                return newQueue;
-            });
+            setQueue(prev => [...prev, newTask]);
             showToast(t.addedToQueue, 'success');
             return;
         }
@@ -2973,16 +2830,16 @@ export default function App() {
                                 displayPrompt = result.enhancedPrompt;
                                 setIsPromptEnhancedInternal(true);
                             }
-                            setIsEnhancing(false);
                         })
+                        .catch(e => { console.error("Enhance prompt failed (non-fatal):", e); })
+                        .finally(() => { setIsEnhancing(false); })
                 );
             } else {
                 // Classic reasoning plan if Auto-Enhance is off
                 tasks.push(
                     geminiService.getReasoningPlan(currentPrompt || "Image generation", userApiKey, language)
-                        .then(plan => {
-                            setReasoningText(plan);
-                        })
+                        .then(plan => { setReasoningText(plan); })
+                        .catch(() => {}) // Non-critical — silent fail
                 );
             }
 
@@ -2995,13 +2852,15 @@ export default function App() {
                                 invisibleReferences = refs;
                             }
                         })
+                        .catch(() => {}) // Non-critical — silent fail
                 );
             }
 
-            // Execute all pre-processing in parallel
+            // Execute all pre-processing in parallel (each task handles its own errors)
             await Promise.all(tasks);
 
         } catch (error) {
+            // Safety net for synchronous errors in task setup
             console.error("Pre-processing error (non-fatal):", error);
             setIsEnhancing(false);
         }
@@ -3134,9 +2993,6 @@ export default function App() {
             // Merge user's visible references with invisible Google references and DNA references
             const allReferenceFiles = [...dnaReferenceFiles, ...currentRefImages, ...invisibleReferences]; // Add DNA first for priority
 
-            console.log(currentGrounding && currentPrompt !== cleanedPrompt
-                ? `🧹 Cleaned prompt for Gemini: "${cleanedPrompt}" (removed brackets)`
-                : '');
 
 
 
@@ -3296,7 +3152,8 @@ export default function App() {
         studioConfig,
         dnaCharacters,
         selectedDnaIds,
-        appMode
+        appMode,
+        isLoading
     ]);
 
     // v1.9.5: Generation Queue Processor
@@ -3326,7 +3183,7 @@ export default function App() {
 
             showToast(
                 queueCleared
-                    ? (language === 'it' ? '🛑 Generazione e coda annullate' : '🛑 Generation and queue cancelled')
+                    ? (language === 'it' ? 'Generazione e coda annullate' : 'Generation and queue cancelled')
                     : t.generationCancelled,
                 'success'
             );
@@ -3412,13 +3269,13 @@ export default function App() {
 
                 showToast(
                     language === 'it'
-                        ? `✅ ${generatedImages.length} angolazioni generate!`
-                        : `✅ ${generatedImages.length} angles generated!`,
+                        ? `${generatedImages.length} angolazioni generate!`
+                        : `${generatedImages.length} angles generated!`,
                     'success'
                 );
             } else {
                 // v1.9.9: COGNITIVE ANGLE GENERATION
-                setLoadingMessage(language === 'it' ? '🧠 Simulazione 3D del soggetto...' : '🧠 Simulating 3D subject physics...');
+                setLoadingMessage(language === 'it' ? 'Simulazione 3D del soggetto...' : 'Simulating 3D subject physics...');
 
                 // 1. Generate the cognitive prompt first (Reasoning Phase)
                 const cognitivePrompt = await anglePromptService.generateCognitiveAnglePrompt(
@@ -3478,8 +3335,8 @@ export default function App() {
 
                 showToast(
                     language === 'it'
-                        ? '✅ Nuova angolazione generata!'
-                        : '✅ New angle generated!',
+                        ? 'Nuova angolazione generata!'
+                        : 'New angle generated!',
                     'success'
                 );
             }
@@ -3815,6 +3672,9 @@ export default function App() {
 
         try {
             const prompts = await storyboardService.generateCinematicStoryboard(imageToAnalyze, userApiKey, language);
+            if (prompts.length === 0) {
+                throw new Error(t.storyboardFailed);
+            }
             setStoryboardPrompts(prompts);
         } catch (error: any) {
             showToast(error.message || t.storyboardFailed, 'error');
@@ -3987,7 +3847,6 @@ export default function App() {
         setReferenceImages([]);
         setStyleReferenceImage(null);
         setStructureImage(null);
-        setPrompts([]);
         setEditedPrompt('');
         setNegativePrompt('');
         setSeed('');
@@ -4026,14 +3885,7 @@ export default function App() {
     return (
         <LanguageContext.Provider value={{ language, setLanguage, t }}>
             <div className="h-screen w-screen bg-light-bg dark:bg-dark-bg text-light-text dark:text-dark-text flex flex-col font-sans">
-                <Header theme={theme} toggleTheme={toggleTheme} onOpenSettings={() => setIsSettingsOpen(true)} onOpenShortcuts={() => setIsShortcutsOpen(true)} onOpenPromptLibrary={() => {
-                    const libraryWindow = window.open('./prompt-library.html', '_blank', 'width=1400,height=900');
-                    if (libraryWindow) {
-                        libraryWindow.addEventListener('load', () => {
-                            libraryWindow.postMessage({ type: 'SET_LANGUAGE', language }, '*');
-                        });
-                    }
-                }} />
+                <Header theme={theme} toggleTheme={toggleTheme} onOpenSettings={() => setIsSettingsOpen(true)} onOpenShortcuts={() => setIsShortcutsOpen(true)} />
                 <main className="flex-1 flex flex-col lg:flex-row gap-4 lg:gap-6 px-4 pt-4 pb-32 lg:pb-28 overflow-y-auto lg:overflow-hidden">
                     {/* --- Left Sidebar (only references/style/structure) --- */}
                     <aside className="w-full lg:w-[280px] flex-shrink-0 bg-light-surface/50 dark:bg-dark-surface/30 backdrop-blur-xl rounded-3xl overflow-y-auto h-full custom-scrollbar">
@@ -4097,27 +3949,15 @@ export default function App() {
                             />
                         </div>
 
-                        {((referenceImages.length > 0 || !!styleReferenceImage) || currentImages.length > 0 || isLoading) && (
-                            <div className="flex-shrink-0 space-y-2 lg:space-y-4 overflow-y-auto max-h-[300px] lg:max-h-[250px]">
-                                {(referenceImages.length > 0 || !!styleReferenceImage) && (
-                                    <CreativePromptsPanel
-                                        prompts={prompts}
-                                        onSelectPrompt={setEditedPrompt}
-                                        onGenerate={handleGenerateCreativePrompts}
-                                        selectedPrompt={editedPrompt}
-                                        isLoading={isPromptsLoading}
-                                        hasImages={(referenceImages.length > 0 || !!styleReferenceImage)}
-                                    />
-                                )}
-
-                                {(currentImages.length > 0 || isLoading) && (
-                                    <div className="w-full p-4 bg-light-surface/60 dark:bg-dark-surface/40 backdrop-blur-2xl rounded-2xl border border-light-border dark:border-dark-border/50 shadow-lg animate-fadeIn">
+                        {(currentImages.length > 0 || isLoading) && (
+                            <div className="flex-shrink-0 overflow-y-auto max-h-[300px] lg:max-h-[250px]">
+                                <div className="w-full p-4 bg-light-surface/60 dark:bg-dark-surface/40 backdrop-blur-2xl rounded-2xl border border-light-border dark:border-dark-border/50 shadow-lg animate-fadeIn">
                                         <div className="flex justify-between items-start gap-4">
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center gap-2 mb-1.5">
                                                     <h4 className="text-[10px] lg:text-xs font-bold text-light-text-muted dark:text-dark-text-muted uppercase tracking-[0.1em]">{t.generationPromptTitle}</h4>
                                                     {(autoEnhance || isPromptEnhancedInternal) && (
-                                                        <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-brand-purple/20 text-brand-purple text-[9px] font-bold uppercase tracking-wider animate-pulse">
+                                                        <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-brand-yellow/20 text-brand-yellow text-[9px] font-bold uppercase tracking-wider animate-pulse">
                                                             <SparklesIcon className="w-2.5 h-2.5" />
                                                             AI Enhanced
                                                         </span>
@@ -4126,7 +3966,7 @@ export default function App() {
                                                 <p className="text-xs lg:text-sm text-light-text dark:text-dark-text leading-relaxed line-clamp-3 hover:line-clamp-none transition-all duration-300">
                                                     {isEnhancing ? (
                                                         <span className="italic opacity-70 flex items-center gap-2 animate-pulse">
-                                                            <span className="w-1.5 h-1.5 bg-brand-purple rounded-full"></span>
+                                                            <span className="w-1.5 h-1.5 bg-brand-yellow rounded-full"></span>
                                                             {t.creativeEnhancementInProgress}
                                                         </span>
                                                     ) : (
@@ -4136,14 +3976,13 @@ export default function App() {
                                             </div>
                                             <button
                                                 onClick={() => handleCopyToClipboard(isLoading ? editedPrompt : (currentImages[0]?.prompt || ''))}
-                                                className="flex-shrink-0 p-2 rounded-xl bg-light-surface-accent dark:bg-dark-surface-accent border border-light-border dark:border-dark-border hover:border-brand-purple/50 active:scale-95 transition-all duration-200"
+                                                className="flex-shrink-0 p-2 rounded-xl bg-light-surface-accent dark:bg-dark-surface-accent border border-light-border dark:border-dark-border hover:border-brand-yellow/50 active:scale-95 transition-all duration-200"
                                                 title={t.copy}
                                             >
-                                                <CopyIcon className="w-4 h-4 text-light-text-muted dark:text-dark-text-muted group-hover:text-brand-purple" />
+                                                <CopyIcon className="w-4 h-4 text-light-text-muted dark:text-dark-text-muted group-hover:text-brand-yellow" />
                                             </button>
                                         </div>
-                                    </div>
-                                )}
+                                </div>
                             </div>
                         )}
                     </div>
@@ -4155,11 +3994,13 @@ export default function App() {
                                 onClick={() => isLoading ? handleAbortGeneration() : handleGenerate()}
                                 disabled={isEnhancing}
                                 className={`w-full flex justify-center items-center gap-2 font-semibold py-3 rounded-xl transition-all duration-300 disabled:opacity-50 ${isLoading
-                                    ? 'bg-red-500/10 text-red-500 border border-red-500/30 hover:bg-red-500/20'
-                                    : 'bg-gradient-to-r from-brand-yellow to-brand-magenta text-white hover:shadow-[0_0_20px_rgba(255,217,61,0.5)]'
+                                    ? 'bg-light-surface-accent dark:bg-dark-surface-accent text-brand-yellow border border-brand-yellow hover:bg-brand-yellow/10'
+                                    : 'bg-brand-yellow text-dark-bg hover:shadow-lg'
                                     }`}
                             >
-                                {isLoading ? <span className="text-base">⏹</span> : <SparklesIcon className="w-5 h-5" />}
+                                {isLoading ? (
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h12v12H6z"/></svg>
+                                ) : <SparklesIcon className="w-5 h-5" />}
                                 <span className={isLoading ? "text-sm" : ""}>{isLoading ? t.stopGeneration : t.generateButton}</span>
                             </button>
 
@@ -4167,23 +4008,19 @@ export default function App() {
                             {isLoading && (
                                 <button
                                     onClick={() => handleGenerate()}
-                                    className="w-full py-2 rounded-xl bg-brand-purple/10 text-brand-purple border border-brand-purple/20 text-xs font-bold hover:bg-brand-purple/20 transition-all flex items-center justify-center gap-2"
+                                    className="w-full py-2 rounded-xl bg-brand-yellow/10 text-brand-yellow border border-brand-yellow/20 text-xs font-bold hover:bg-brand-yellow/20 transition-all flex items-center justify-center gap-2"
                                 >
-                                    <span>➕</span> {t.addToQueue}
+                                    <span><PlusIcon className="w-3.5 h-3.5" /></span> {t.addToQueue}
                                 </button>
                             )}
                             <div className="flex flex-col gap-3">
-                                <button onClick={handleUseAsReference} disabled={isActionDisabled || currentImages.length === 0 || referenceImages.length >= MAX_USER_IMAGES} className="w-full p-[2px] bg-gradient-to-r from-yellow-400 to-amber-500 rounded-xl disabled:opacity-50 group transition-all">
-                                    <div className="w-full h-full bg-light-surface dark:bg-dark-surface-accent rounded-[10px] flex justify-center items-center gap-2 text-light-text dark:text-dark-text font-semibold py-2 transition-all group-hover:bg-opacity-80 disabled:group-hover:bg-opacity-100 dark:group-hover:bg-opacity-80">
-                                        <CornerUpLeftIcon className="w-4 h-4 text-yellow-500" />
-                                        <span className="text-sm">{t.useAsReference}</span>
-                                    </div>
+                                <button onClick={handleUseAsReference} disabled={isActionDisabled || currentImages.length === 0 || referenceImages.length >= MAX_USER_IMAGES} className="w-full flex justify-center items-center gap-2 font-semibold py-2.5 rounded-xl border border-light-border dark:border-dark-border text-light-text dark:text-dark-text hover:border-brand-yellow hover:text-brand-yellow disabled:opacity-40 transition-all duration-200 group text-sm">
+                                    <CornerUpLeftIcon className="w-4 h-4 group-hover:text-brand-yellow transition-colors" />
+                                    {t.useAsReference}
                                 </button>
-                                <button onClick={handleResetInterface} title={t.resetInterface} disabled={isActionDisabled} className="w-full p-[2px] bg-gradient-to-r from-brand-pink to-fuchsia-500 rounded-xl disabled:opacity-50 group transition-all">
-                                    <div className="w-full h-full bg-light-surface dark:bg-dark-surface-accent rounded-[10px] flex justify-center items-center gap-2 text-light-text dark:text-dark-text font-semibold py-2 transition-all group-hover:bg-opacity-80 disabled:group-hover:bg-opacity-100 dark:group-hover:bg-opacity-80">
-                                        <ReloadIcon className="w-4 h-4 text-brand-magenta" />
-                                        <span className="text-sm">{t.resetInterface}</span>
-                                    </div>
+                                <button onClick={handleResetInterface} title={t.resetInterface} disabled={isActionDisabled} className="w-full flex justify-center items-center gap-2 font-semibold py-2.5 rounded-xl border border-light-border dark:border-dark-border text-light-text dark:text-dark-text hover:border-brand-yellow hover:text-brand-yellow disabled:opacity-40 transition-all duration-200 group text-sm">
+                                    <ReloadIcon className="w-4 h-4 group-hover:text-brand-yellow transition-colors" />
+                                    {t.resetInterface}
                                 </button>
                             </div>
                         </div>

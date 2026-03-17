@@ -1,4 +1,4 @@
-import { GoogleGenAI, Type, Modality } from "@google/genai";
+﻿import { GoogleGenAI, Type, Modality } from "@google/genai";
 import { DynamicTool, ModelType, ResolutionType, TextInImageConfig } from '../types';
 
 const DEFAULT_API_KEY = import.meta.env.VITE_API_KEY;
@@ -290,161 +290,6 @@ OUTPUT FORMAT (JSON):
     } catch (error) {
         console.error("Multi-image DNA extraction error:", error);
         throw error;
-    }
-};
-
-export const generatePromptsFromImage = async (imageFiles: File[], styleFile: File | null, structureFile: File | null, userApiKey?: string | null, language: 'en' | 'it' = 'en'): Promise<string[]> => {
-    try {
-        if (imageFiles.length === 0 && !styleFile && !structureFile) return [];
-        const ai = getAiClient(userApiKey);
-
-        const imageParts = [];
-        for (const file of imageFiles) {
-            imageParts.push(await fileToGenerativePart(file));
-        }
-        if (styleFile) {
-            imageParts.push(await fileToGenerativePart(styleFile));
-        }
-        if (structureFile) {
-            imageParts.push(await fileToGenerativePart(structureFile));
-        }
-
-        const stylePromptPart = styleFile
-            ? (language === 'it' ? "Applica lo stile visivo (colori, illuminazione, atmosfera) dell'immagine di stile fornita a questi scenari." : "Apply the visual style (colors, lighting, mood) from the provided style image to these scenarios.")
-            : "";
-
-        const structurePromptPart = structureFile
-            ? (language === 'it' ? "L'ultima immagine è una guida strutturale: mantieni la stessa composizione spaziale, layout e geometria nella generazione." : "The last image is a structural guide: maintain the same spatial composition, layout and geometry in the generation.")
-            : "";
-
-        const promptText = language === 'it'
-            ? `Sei un art director senior e un esperto di fotografia pubblicitaria per agenzie di comunicazione. Analizza TUTTI i soggetti e gli elementi in TUTTE le immagini di riferimento fornite. Il tuo obiettivo è creare 3 prompt distinti per immagini pubblicitarie professionali che COMBININO in modo creativo i soggetti delle diverse immagini. ${stylePromptPart} ${structurePromptPart}
-
-**STRUTTURA DEI 3 PROMPT:**
-1. **HERO SHOT** - Focus principale sul prodotto/soggetto con lighting da studio professionale
-2. **LIFESTYLE/CONTEXT** - Soggetto in un contesto reale/ambientato con narrativa
-3. **DETAIL/MACRO** - Close-up dettagliato su texture, materiali, caratteristiche uniche
-
-**CATEGORIE DI PRODOTTO E SPECIFICHE TECNICHE:**
-
-- **PACKAGING** (scatole, etichette, flaconi, bottiglie):
-  → Hero: Lighting setup da catalogo (key light + fill + rim), negative space per copy, angles da 45° o flat lay dall'alto
-  → Lifestyle: Prodotto in contesto d'uso reale (bagno, cucina, tavolo), props complementari
-  → Detail: Macro su logo/etichetta, texture del materiale, riflessi e trasparenze
-  → Usa termini: "product photography", "commercial shot", "catalog quality", "studio lighting"
-
-- **BEAUTY/COSMETICS** (creme, makeup, profumi):
-  → Hero: Softbox diffusion, beauty dish, acqua/splash se pertinente, sfondo gradient o marmo
-  → Lifestyle: Hand modeling con prodotto, applicazione naturale, morning/evening routine
-  → Detail: Texture cremosa, pigmento, finish (matte/glossy), ingredienti chiave
-  → Color grading: Clean, high-key, o moody low-key; retouching stile high-end beauty
-
-- **FASHION/CLOTHING** (abiti, accessori, modelli):
-  → Hero: Editorial fashion shot, dramatic lighting, rule of thirds, pose dinamica
-  → Lifestyle: Street style, candid moment, urban/natural setting, movement
-  → Detail: Texture del tessuto, cuciture, pattern, dettagli costruttivi
-  → Specifiche: "fashion editorial", "Vogue style", "lookbook quality", lens flare controllato
-
-- **FOOD/BEVERAGE** (cibo, drink):
-  → Hero: Overhead flat lay o 45° angle, natural daylight o studio setup, fresh ingredients visible
-  → Lifestyle: Hands reaching/pouring, table setting, social moment, steam/condensation
-  → Detail: Macro su texture (crumb, foam, ice), color pop, ingredienti hero
-  → Termini: "food photography", "appetizing", "fresh", "Michelin quality", garnish
-
-- **HOUSEHOLD PRODUCTS** (detersivi, cleaning, home):
-  → Hero: Before/after implicito, risultato visibile, packaging chiaro
-  → Lifestyle: Scene di vita vera, ambiente domestico realistico ma idealizzato
-  → Detail: Efficacia visibile, texture pulita, shine/sparkle
-  
-**SPECIFICHE FOTOGRAFICHE DA INCLUDERE:**
-- Lighting: "three-point lighting", "softbox", "golden hour", "ring light", "rim light"
-- Composition: "negative space for copy", "rule of thirds", "leading lines", "visual hierarchy"
-- Camera: "shallow depth of field", "tack sharp focus", "bokeh background", "50mm lens perspective"
-- Post: "color grading: [muted/vibrant/vintage]", "film emulation: Portra 400", "natural retouching"
-- Shot types: "hero shot", "flat lay", "lifestyle", "macro detail", "product beauty shot"
-
-**IMPORTANTE:** 
-- Lascia sempre spazio compositivo per testo/logo (negative space intenzionale)
-- Specifica se l'immagine è per print, social, billboard (formato influenza composizione)
-- Ogni prompt deve essere auto-contenuto e immediatamente utilizzabile
-- Varia mood e tecnica tra i 3 prompt ma mantieni coerenza di brand
-
-Restituisci un array JSON di 3 stringhe, ciascuna altamente dettagliata e professionale.`
-            : `You are a senior art director and expert in advertising photography for communication agencies. Analyze ALL subjects and elements in ALL provided reference images. Your goal is to create 3 distinct prompts for professional advertising images that creatively COMBINE the subjects from different images. ${stylePromptPart} ${structurePromptPart}
-
-**STRUCTURE OF 3 PROMPTS:**
-1. **HERO SHOT** - Main focus on product/subject with professional studio lighting
-2. **LIFESTYLE/CONTEXT** - Subject in real-world context with narrative
-3. **DETAIL/MACRO** - Detailed close-up on textures, materials, unique features
-
-**PRODUCT CATEGORIES & TECHNICAL SPECS:**
-
-- **PACKAGING** (boxes, labels, bottles, containers):
-  → Hero: Catalog lighting setup (key + fill + rim), negative space for copy, 45° angles or top-down flat lay
-  → Lifestyle: Product in real-use context (bathroom, kitchen, table), complementary props
-  → Detail: Macro on logo/label, material texture, reflections and transparencies
-  → Use terms: "product photography", "commercial shot", "catalog quality", "studio lighting"
-
-- **BEAUTY/COSMETICS** (creams, makeup, perfumes):
-  → Hero: Softbox diffusion, beauty dish, water/splash if relevant, gradient or marble background
-  → Lifestyle: Hand modeling with product, natural application, morning/evening routine
-  → Detail: Creamy texture, pigment, finish (matte/glossy), key ingredients
-  → Color grading: Clean high-key or moody low-key; high-end beauty retouching
-
-- **FASHION/CLOTHING** (garments, accessories, models):
-  → Hero: Editorial fashion shot, dramatic lighting, rule of thirds, dynamic pose
-  → Lifestyle: Street style, candid moment, urban/natural setting, movement
-  → Detail: Fabric texture, stitching, patterns, construction details
-  → Specs: "fashion editorial", "Vogue style", "lookbook quality", controlled lens flare
-
-- **FOOD/BEVERAGE** (food, drinks):
-  → Hero: Overhead flat lay or 45° angle, natural daylight or studio setup, visible fresh ingredients
-  → Lifestyle: Hands reaching/pouring, table setting, social moment, steam/condensation
-  → Detail: Macro on texture (crumb, foam, ice), color pop, hero ingredients
-  → Terms: "food photography", "appetizing", "fresh", "Michelin quality", garnish
-
-- **HOUSEHOLD PRODUCTS** (detergents, cleaning, home):
-  → Hero: Implied before/after, visible results, clear packaging
-  → Lifestyle: Real-life scenes, realistic but idealized domestic environment
-  → Detail: Visible effectiveness, clean texture, shine/sparkle
-
-**PHOTOGRAPHY SPECS TO INCLUDE:**
-- Lighting: "three-point lighting", "softbox", "golden hour", "ring light", "rim light"
-- Composition: "negative space for copy", "rule of thirds", "leading lines", "visual hierarchy"
-- Camera: "shallow depth of field", "tack sharp focus", "bokeh background", "50mm lens perspective"
-- Post: "color grading: [muted/vibrant/vintage]", "film emulation: Portra 400", "natural retouching"
-- Shot types: "hero shot", "flat lay", "lifestyle", "macro detail", "product beauty shot"
-
-**IMPORTANT:**
-- Always leave compositional space for text/logo (intentional negative space)
-- Specify if image is for print, social, billboard (format influences composition)
-- Each prompt must be self-contained and immediately usable
-- Vary mood and technique across 3 prompts but maintain brand coherence
-
-Return a JSON array of 3 strings, each highly detailed and professional.`;
-
-        const result = await ai.models.generateContent({
-            model: 'gemini-3-flash-preview',
-            contents: {
-                parts: [
-                    ...imageParts,
-                    { text: promptText }
-                ]
-            },
-            config: {
-                responseMimeType: "application/json",
-                responseSchema: {
-                    type: Type.ARRAY,
-                    items: { type: Type.STRING }
-                }
-            }
-        });
-
-        const responseText = result.text?.trim() || "[]";
-        const prompts = JSON.parse(responseText);
-        return Array.isArray(prompts) && prompts.length > 0 ? prompts : [];
-    } catch (error) {
-        throw handleError(error, language);
     }
 };
 
@@ -1077,7 +922,115 @@ export const generateImage = async (
         const styleDescription = styleDescriptionResult;
 
         // v1.0: Aspect ratio is now handled natively via imageConfig.aspectRatio
-        // Text guidance is minimal - just a reminder to fill the frame
+        // For NB2 in pure text-to-image mode (no references, no style, no structure),
+        // send the prompt clean — the model understands composition via the native aspectRatio API param.
+        const isNB2PureTextToImage = model === 'gemini-3.1-flash-image-preview' &&
+            referenceFiles.length === 0 &&
+            !styleFile &&
+            !structureFile;
+
+        if (isNB2PureTextToImage) {
+            // Build minimal clean prompt — no injected instructions
+            let fullPrompt = enrichedPrompt;
+            if (negativePrompt && negativePrompt.trim() !== '') {
+                fullPrompt += ` --no ${negativePrompt.trim()}`;
+            }
+
+            const parts: any[] = [{ text: fullPrompt }];
+            const config: any = {
+                responseModalities: [Modality.IMAGE],
+                temperature: 0.7,
+            };
+
+            const imageConfig: any = {};
+            if (aspectRatio !== 'Auto') {
+                imageConfig.aspectRatio = aspectRatio;
+            }
+            if (resolution) {
+                imageConfig.imageSize = resolution === '0.5k' ? '0.5K' : resolution.toUpperCase();
+            }
+            if (Object.keys(imageConfig).length > 0) {
+                config.imageConfig = imageConfig;
+            }
+            if (seed && /^\d+$/.test(seed)) {
+                config.seed = parseInt(seed, 10);
+            }
+            if (abortSignal) {
+                (config as any).abortSignal = abortSignal;
+            }
+            (config as any).httpOptions = { timeout: 420000 };
+
+            const MAX_RETRIES = 5;
+            let lastError: any = null;
+
+            for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+                let result: any = null;
+                try {
+                    result = await ai.models.generateContent({
+                        model: model,
+                        contents: { parts },
+                        config: config as any,
+                    });
+                } catch (error: any) {
+                    lastError = error;
+                    const errorMessage = error?.message || '';
+                    if (error.name === 'AbortError' || errorMessage.includes('abort')) {
+                        throw new Error(language === 'it' ? '🛑 Generazione annullata.' : '🛑 Generation cancelled.');
+                    }
+                    const isRetriable = errorMessage.includes('500') || errorMessage.includes('503') ||
+                        errorMessage.includes('429') || errorMessage.includes('timeout') || errorMessage.includes('TIMEOUT');
+                    if (isRetriable && attempt < MAX_RETRIES - 1) {
+                        await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, attempt)));
+                        continue;
+                    }
+                    throw error;
+                }
+
+                // API call succeeded — now check for image data in response
+                const nbCandidate = result?.candidates?.[0];
+                if (nbCandidate?.content?.parts) {
+                    for (const part of nbCandidate.content.parts) {
+                        if (part.inlineData) {
+                            return `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
+                        }
+                    }
+                }
+
+                // No image data found — log full response for diagnosis then retry
+                const finishReason = result?.candidates?.[0]?.finishReason;
+                const promptFeedback = result?.promptFeedback;
+                const partsCount = result?.candidates?.[0]?.content?.parts?.length ?? 'none';
+
+                // NO_IMAGE: model explicitly refused to generate — fallback immediately to PRO
+                if (finishReason === 'NO_IMAGE') {
+                    console.warn(`⚠️ NB2: NO_IMAGE on attempt ${attempt + 1} — falling back to PRO model...`);
+                    return await generateImage(
+                        prompt, aspectRatio, referenceFiles, styleFile, structureFile,
+                        userApiKey, negativePrompt, seed, language, preciseReference,
+                        'gemini-3-pro-image-preview', resolution, textInImage, abortSignal, useGrounding
+                    );
+                }
+
+                if (attempt < MAX_RETRIES - 1) {
+                    console.warn(`⚠️ NB2: No image (attempt ${attempt + 1}/${MAX_RETRIES}) | finishReason: ${finishReason} | parts: ${partsCount} | promptFeedback: ${JSON.stringify(promptFeedback)}`);
+                    await new Promise(resolve => setTimeout(resolve, 800 * Math.pow(2, attempt)));
+                    continue;
+                }
+
+                // All attempts exhausted — log final state
+                const finalFinishReason = result?.candidates?.[0]?.finishReason;
+                const finalFeedback = result?.promptFeedback;
+                console.error(`❌ NB2: All ${MAX_RETRIES} attempts failed | finishReason: ${finalFinishReason} | promptFeedback:`, finalFeedback);
+                throw new Error(language === 'it' ? 'Nessuna immagine generata dopo 5 tentativi. Riprova.' : 'No image generated after 5 attempts. Please try again.');
+
+
+            }
+
+            throw lastError || new Error('Failed to generate content after retries');
+        }
+
+        // --- Standard path (all other models and scenarios with reference images) ---
+
         const aspectRatioGuidance = getAspectRatioGuidance(aspectRatio, language, model);
         const instructionParts: string[] = [aspectRatioGuidance];
 
@@ -1485,7 +1438,8 @@ export const generateImage = async (
                 const originalImageDataUrl = `data:${part.inlineData.mimeType};base64,${base64ImageBytes}`;
 
                 // Skip cropping for "Auto" aspect ratio - use reference image's original ratio
-                if (aspectRatio === 'Auto') {
+                // Also skip for advanced models that natively support aspect ratio to avoid distorting perfectly valid images
+                if (aspectRatio === 'Auto' || isAdvancedModel(model)) {
                     return originalImageDataUrl;
                 }
 
