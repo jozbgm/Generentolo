@@ -722,7 +722,7 @@ const aggressiveCropAndResize = (imageDataUrl: string, targetAspectRatio: string
 };
 
 // Helper function to enrich user prompt with explicit "Image 1", "Image 2" references
-const enrichPromptWithImageReferences = async (
+export const enrichPromptWithImageReferences = async (
     userPrompt: string,
     referenceFiles: File[],
     userApiKey: string | null,
@@ -838,7 +838,7 @@ Rewritten: "Create the man from Image 1 wearing a hoodie with the logo from Imag
 };
 
 // Helper function to extract style description from style image
-const extractStyleDescription = async (styleFile: File, userApiKey: string | null, language: 'en' | 'it' = 'en'): Promise<string> => {
+export const extractStyleDescription = async (styleFile: File, userApiKey: string | null, language: 'en' | 'it' = 'en'): Promise<string> => {
     try {
         const ai = getAiClient(userApiKey);
         const stylePart = await fileToGenerativePart(styleFile);
@@ -878,7 +878,8 @@ export const generateImage = async (
     textInImage?: TextInImageConfig,
     abortSignal?: AbortSignal,
     useGrounding?: boolean, // v1.4: Google Search Grounding
-    skipPreprocessing?: boolean // v1.9.2: Speed optimization
+    skipPreprocessing?: boolean, // v1.9.2: Speed optimization
+    precomputedStyleDescription?: string // v2.1: Pre-computed to avoid repeated API calls in batch
 ): Promise<string> => {
     try {
         const ai = getAiClient(userApiKey);
@@ -908,14 +909,16 @@ export const generateImage = async (
          * v1.9.2: Skipped if prompt is already SUPER-ENHANCED.
          */
         const [enrichedPromptResult, styleDescriptionResult] = skipPreprocessing
-            ? [prompt, ""]
+            ? [prompt, precomputedStyleDescription ?? ""]
             : await Promise.all([
                 referenceFiles.length > 1
                     ? enrichPromptWithImageReferences(prompt, referenceFiles, userApiKey, language)
                     : Promise.resolve(prompt),
-                styleFile
-                    ? extractStyleDescription(styleFile, userApiKey, language)
-                    : Promise.resolve("")
+                precomputedStyleDescription !== undefined
+                    ? Promise.resolve(precomputedStyleDescription)
+                    : styleFile
+                        ? extractStyleDescription(styleFile, userApiKey, language)
+                        : Promise.resolve("")
             ]);
 
         const enrichedPrompt = enrichedPromptResult;

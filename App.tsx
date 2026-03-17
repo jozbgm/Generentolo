@@ -2798,6 +2798,8 @@ export default function App() {
             : undefined;
 
         try {
+            console.time('[GEN] total');
+            console.log(`[GEN] Start | model: ${currentModel} | refs: ${currentRefImages.length} | autoEnhance: ${currentAutoEnhance}`);
             const tasks: Promise<any>[] = [];
 
             // Task 1: Prompt Enhancement Master Brain
@@ -2835,12 +2837,10 @@ export default function App() {
                         .finally(() => { setIsEnhancing(false); })
                 );
             } else {
-                // Classic reasoning plan if Auto-Enhance is off
-                tasks.push(
-                    geminiService.getReasoningPlan(currentPrompt || "Image generation", userApiKey, language)
-                        .then(plan => { setReasoningText(plan); })
-                        .catch(() => {}) // Non-critical — silent fail
-                );
+                // Classic reasoning plan — fire-and-forget, does NOT block generation
+                geminiService.getReasoningPlan(currentPrompt || "Image generation", userApiKey, language)
+                    .then(plan => { setReasoningText(plan); })
+                    .catch(() => {});
             }
 
             // Task 2: Google Search Grounding
@@ -2996,6 +2996,20 @@ export default function App() {
 
 
 
+            // v2.1: Style extraction pre-computed once before the loop (only if style image present).
+            // enrichPromptWithImageReferences removed from hot path — gemini-3-flash-preview latency
+            // made it block for 17-23s; the standard path already adds multi-image combining instructions.
+            let precomputedStyleDescription: string | undefined = undefined;
+            if (!isPromptEnhancedInternal && currentStyleImage) {
+                console.time('[GEN] preprocessing');
+                const styleTimeout = new Promise<string>(resolve => setTimeout(() => resolve(""), 6000));
+                precomputedStyleDescription = await Promise.race([
+                    geminiService.extractStyleDescription(currentStyleImage, userApiKey, language).catch(() => ""),
+                    styleTimeout
+                ]);
+                console.timeEnd('[GEN] preprocessing');
+            }
+
             // Batch generation: add prompt variations for each image to create diversity
             // NOTE: Gemini API doesn't support seed parameter for image models, so we add subtle prompt variations
             // v1.3 FIX: Generate sequentially instead of parallel to avoid NO_IMAGE errors with multiple references
@@ -3030,6 +3044,7 @@ export default function App() {
                 // Generate sequentially if there are multiple references/complex setup to avoid API overload
                 // Otherwise parallel is fine
                 if (hasMultipleReferences || currentModel === 'gemini-3-pro-image-preview' || currentModel === 'gemini-3.1-flash-image-preview') {
+                    console.time(`[GEN] image ${index + 1}`);
                     const imageDataUrl = await geminiService.generateImage(
                         variantPrompt,
                         currentAspect,
@@ -3045,9 +3060,11 @@ export default function App() {
                         currentRes,
                         undefined,
                         controller.signal,
-                        currentGrounding, // v1.4: Google Search Grounding
-                        isPromptEnhancedInternal // v1.9.2: Speed optimization
+                        currentGrounding,
+                        true, // v2.1: skipPreprocessing — already done once before the loop
+                        precomputedStyleDescription
                     );
+                    console.timeEnd(`[GEN] image ${index + 1}`);
                     imageDataUrls.push(imageDataUrl);
                 } else {
                     // Simple case: can generate in parallel
@@ -3088,8 +3105,9 @@ export default function App() {
                             currentRes,
                             undefined,
                             controller.signal,
-                            currentGrounding, // v1.4: Google Search Grounding
-                            isPromptEnhancedInternal // v1.9.2: Speed optimization
+                            currentGrounding,
+                            true, // v2.1: skipPreprocessing — already done once before the loop
+                            precomputedStyleDescription
                         );
                     });
                     imageDataUrls.push(...await Promise.all(generationPromises));
