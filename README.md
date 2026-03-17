@@ -47,8 +47,8 @@ Generate, iterate, and storyboard images at up to 4K resolution with triple-mode
 
 ```bash
 # 1. Clone
-git clone https://github.com/jozbgm/generentolo-v0.1-beta.git
-cd generentolo-v0.1-beta
+git clone https://github.com/jozbgm/Generentolo.git
+cd Generentolo
 
 # 2. Install
 npm install
@@ -134,6 +134,6 @@ MIT — see [LICENSE](LICENSE) for details.
 
 <div align="center">
 
-[Live Demo](https://www.dugongo.it/generentolo/) · [Report Bug](https://github.com/jozbgm/generentolo-v0.1-beta/issues) · [Request Feature](https://github.com/jozbgm/generentolo-v0.1-beta/issues)
+[Live Demo](https://www.dugongo.it/generentolo/) · [Report Bug](https://github.com/jozbgm/Generentolo/issues) · [Request Feature](https://github.com/jozbgm/Generentolo/issues)
 
 </div>
