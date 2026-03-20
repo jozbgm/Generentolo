@@ -1027,7 +1027,7 @@ const ReferencePanel: React.FC<{
                                     {dnaCharacters.map(char => (
                                         <button
                                             key={char.id}
-                                            onClick={() => onSelectDna(char.id)}
+                                            onClick={(e) => { e.stopPropagation(); onSelectDna(char.id); }}
                                             className="flex-shrink-0 relative group/char"
                                         >
                                             <div className={`w-11 h-11 rounded-full p-0.5 border-2 transition-all duration-500 scale-95 group-hover/char:scale-105 ${selectedDnaIds.includes(char.id) ? 'border-brand-yellow shadow-[0_0_15px_rgba(200,242,58,0.4)] rotate-3 scale-110' : 'border-white/10 opacity-60 hover:opacity-100 hover:rotate-2'}`}>
@@ -1266,8 +1266,8 @@ const ImageDisplay: React.FC<ImageDisplayProps> = ({ images, isLoading, onDownlo
                         {images.map(image => {
                             const isUpscaling = upscalingImageId === image.id;
                             return (
-                                <div key={image.id} className="relative group flex items-center justify-center min-h-0 w-full h-full">
-                                    <img src={image.imageDataUrl || image.thumbnailDataUrl} alt={image.prompt} className="max-w-full max-h-full object-contain cursor-zoom-in transition-all duration-700 hover:scale-[1.02]" onClick={() => onZoom(image)} />
+                                <div key={image.id} className="relative group w-full h-full overflow-hidden">
+                                    <img src={image.imageDataUrl || image.thumbnailDataUrl} alt={image.prompt} className="absolute inset-0 w-full h-full object-contain cursor-zoom-in transition-all duration-700 hover:scale-[1.02]" onClick={() => onZoom(image)} />
 
                                     {/* Upscaling overlay */}
                                     {isUpscaling && (
@@ -1749,12 +1749,13 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, onSave, 
     const handleSave = () => { onSave(apiKeyInput); onClose(); };
 
     return (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose} role="dialog" aria-modal="true" aria-labelledby="settings-title">
-            <div className="bg-light-surface/80 dark:bg-dark-surface/80 backdrop-blur-xl border border-white/10 dark:border-white/10 rounded-2xl shadow-2xl w-full max-w-md p-6" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }} role="dialog" aria-modal="true" aria-labelledby="settings-title">
+            <div className="bg-[#f8f8f6]/90 dark:bg-[#202020]/80 backdrop-blur-xl border border-white/10 dark:border-white/10 rounded-2xl shadow-2xl w-full max-w-md p-6" onMouseDown={e => e.stopPropagation()}>
                 <h2 id="settings-title" className="text-lg font-semibold mb-4 text-light-text dark:text-dark-text">{t.settingsTitle}</h2>
                 <div>
                     <label htmlFor="api-key-input" className="block text-sm font-medium text-light-text-muted dark:text-dark-text-muted mb-1">{t.apiKeyLabel}</label>
-                    <input id="api-key-input" type="password" value={apiKeyInput} onChange={e => setApiKeyInput(e.target.value)} onMouseDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()} placeholder={t.apiKeyPlaceholder} className="w-full p-2 bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded-lg focus:ring-2 focus:ring-brand-yellow focus:outline-none" />
+                    <input id="api-key-input" type="password" value={apiKeyInput} onChange={e => setApiKeyInput(e.target.value)} placeholder={t.apiKeyPlaceholder} className="w-full p-2 bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded-lg focus:ring-2 focus:ring-brand-yellow focus:outline-none" />
+
                     <p className="text-xs text-light-text-muted dark:text-dark-text-muted mt-2">{t.apiKeySubtext}</p>
                 </div>
                 <div className="mt-6 flex justify-end gap-3">
@@ -1856,10 +1857,10 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
 
     return (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose} role="dialog" aria-modal="true" aria-labelledby="help-modal-title">
-            <div className="bg-light-surface/90 dark:bg-dark-surface/90 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl w-full max-w-3xl max-h-[85vh] flex flex-col" onClick={e => e.stopPropagation()}>
+            <div className="bg-[#f8f8f6]/95 dark:bg-[#202020]/90 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl w-full max-w-3xl max-h-[85vh] flex flex-col" onClick={e => e.stopPropagation()}>
                 <div className="flex items-center justify-between p-6 border-b border-light-border dark:border-dark-border">
                     <div className="flex items-center gap-3">
-                        <SparklesIcon className="w-6 h-6 text-brand-yellow" />
+                        <SparklesIcon className="w-6 h-6 text-[#4a5d16] dark:text-brand-yellow" />
                         <h2 id="help-modal-title" className="text-2xl font-bold text-light-text dark:text-dark-text">{t.helpGuide}</h2>
                     </div>
                     <button onClick={onClose} className="p-2 rounded-full text-light-text-muted dark:text-dark-text-muted hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors">
@@ -1909,10 +1910,10 @@ const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ isOpen, onClose }) => {
 
     return (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose} role="dialog" aria-modal="true" aria-labelledby="shortcuts-modal-title">
-            <div className="bg-light-surface/80 dark:bg-dark-surface/80 backdrop-blur-xl border border-white/10 dark:border-white/10 rounded-2xl shadow-2xl w-full max-w-md p-6" onClick={e => e.stopPropagation()}>
+            <div className="bg-[#f8f8f6]/90 dark:bg-[#202020]/80 backdrop-blur-xl border border-white/10 dark:border-white/10 rounded-2xl shadow-2xl w-full max-w-md p-6" onClick={e => e.stopPropagation()}>
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
-                        <KeyboardIcon className="w-6 h-6 text-brand-yellow" />
+                        <KeyboardIcon className="w-6 h-6 text-[#4a5d16] dark:text-brand-yellow" />
                         <h2 id="shortcuts-modal-title" className="text-lg font-semibold text-light-text dark:text-dark-text">{t.keyboardShortcuts}</h2>
                     </div>
                     <button onClick={onClose} aria-label={t.cancel} className="p-2 rounded-full text-light-text-muted dark:text-dark-text-muted hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors">
@@ -1922,9 +1923,9 @@ const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ isOpen, onClose }) => {
                 <p className="text-sm text-light-text-muted dark:text-dark-text-muted mb-4">{t.shortcutsDescription}</p>
                 <div className="space-y-2">
                     {shortcuts.map((shortcut, index) => (
-                        <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-light-surface dark:bg-dark-surface/50 border border-light-border dark:border-dark-border">
-                            <span className="text-sm text-light-text dark:text-dark-text">{shortcut.description}</span>
-                            <kbd className="px-2 py-1 text-xs font-mono bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded">{shortcut.keys}</kbd>
+                        <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-light-bg/50 dark:bg-dark-surface/50 border border-light-border dark:border-dark-border">
+                            <span className="text-sm font-semibold text-light-text dark:text-dark-text">{shortcut.description}</span>
+                            <kbd className="px-2 py-1 text-xs font-mono bg-white dark:bg-dark-bg border border-light-border dark:border-dark-border rounded text-light-text dark:text-dark-text font-bold shadow-sm">{shortcut.keys}</kbd>
                         </div>
                     ))}
                 </div>
@@ -1978,7 +1979,7 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose }) => {
 
     return (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose} role="dialog" aria-modal="true" aria-labelledby="feedback-title">
-            <div className="bg-light-surface/80 dark:bg-dark-surface/80 backdrop-blur-xl border border-white/10 dark:border-white/10 rounded-2xl shadow-2xl w-full max-w-md p-6" onClick={e => e.stopPropagation()}>
+            <div className="bg-[#f8f8f6]/90 dark:bg-[#202020]/80 backdrop-blur-xl border border-white/10 dark:border-white/10 rounded-2xl shadow-2xl w-full max-w-md p-6" onClick={e => e.stopPropagation()}>
                 <h2 id="feedback-title" className="text-lg font-semibold mb-4 text-light-text dark:text-dark-text">{t.feedbackTitle}</h2>
                 <div className="space-y-4">
                     <div>

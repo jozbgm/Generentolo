@@ -20,17 +20,17 @@ export default {
           'pink': 'var(--color-brand-pink)'
         },
         'dark': {
-          'bg': 'var(--color-dark-bg)',
-          'surface': 'var(--color-dark-surface)',
-          'surface-accent': 'var(--color-dark-surface-accent)',
+          'bg': 'rgb(var(--color-dark-bg-rgb) / <alpha-value>)',
+          'surface': 'rgb(var(--color-dark-surface-rgb) / <alpha-value>)',
+          'surface-accent': 'rgb(var(--color-dark-surface-accent-rgb) / <alpha-value>)',
           'text': 'var(--color-dark-text)',
           'text-muted': 'var(--color-dark-text-muted)',
           'border': 'var(--color-dark-border)'
         },
         'light': {
-          'bg': 'var(--color-light-bg)',
-          'surface': 'var(--color-light-surface)',
-          'surface-accent': 'var(--color-light-surface-accent)',
+          'bg': 'rgb(var(--color-light-bg-rgb) / <alpha-value>)',
+          'surface': 'rgb(var(--color-light-surface-rgb) / <alpha-value>)',
+          'surface-accent': 'rgb(var(--color-light-surface-accent-rgb) / <alpha-value>)',
           'text': 'var(--color-light-text)',
           'text-muted': 'var(--color-light-text-muted)',
           'border': 'var(--color-light-border)'

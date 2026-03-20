@@ -17,21 +17,42 @@
     
     /* Light Theme */
     --color-light-bg: #f0f0ed;
+    --color-light-bg-rgb: 240 240 237;
     --color-light-surface: #f8f8f6;
+    --color-light-surface-rgb: 248 248 246;
     --color-light-surface-accent: #ebebe8;
+    --color-light-surface-accent-rgb: 235 235 232;
     --color-light-text: #111110;
     --color-light-text-muted: #6b6b60;
     --color-light-border: #dcdcd8;
 
     /* Dark Theme */
     --color-dark-bg: #1A1A1A; /* Antracite / Dark Anthracite */
+    --color-dark-bg-rgb: 26 26 26;
     --color-dark-surface: #202020;
+    --color-dark-surface-rgb: 32 32 32;
     --color-dark-surface-accent: #2A2A2A;
+    --color-dark-surface-accent-rgb: 42 42 42;
     --color-dark-text: #F2F2F2;
     --color-dark-text-muted: #888888;
     --color-dark-border: #3A3A3A;
   }
 }
+
+/* Light Mode Overrides for Lime Text Readability */
+html:not(.dark) .text-brand-yellow,
+html:not(.dark) .text-brand-yellow\/80 {
+  color: #4a5d16 !important; /* Dark Olive/Lime for stark contrast on white */
+}
+html:not(.dark) .hover\:text-brand-yellow:hover,
+html:not(.dark) .group:hover .group-hover\:text-brand-yellow {
+  color: #4a5d16 !important;
+}
+html:not(.dark) .peer:checked ~ div .peer-checked\:text-brand-yellow,
+html:not(.dark) .peer:checked ~ span .peer-checked\:text-brand-yellow {
+  color: #4a5d16 !important;
+}
+
 
 /* Prevent horizontal scroll on mobile */
 html,
