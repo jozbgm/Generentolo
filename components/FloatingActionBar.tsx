@@ -34,7 +34,7 @@ interface FloatingActionBarProps {
     onThinkingLevelChange: (level: ThinkingLevel) => void;
     isEnhancing?: boolean;
     referenceCount: number;
-    onOutpaintReference: (direction: 'up' | 'down' | 'left' | 'right') => void;
+    onOutpaintReference: (direction: 'up' | 'down' | 'left' | 'right', targetAspect?: string) => void;
 }
 
 const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
@@ -89,6 +89,7 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
     const [showResolutionMenu, setShowResolutionMenu] = useState(false);
     const [showThinkingMenu, setShowThinkingMenu] = useState(false);
     const [showOutpaintRefMenu, setShowOutpaintRefMenu] = useState(false);
+    const [outpaintRefRatio, setOutpaintRefRatio] = useState('Auto');
 
     // UI state for copy feedback
     const [justCopied, setJustCopied] = useState(false);
@@ -417,17 +418,28 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                                         <span className="hidden sm:inline">Outpaint</span>
                                     </button>
                                     {showOutpaintRefMenu && (
-                                        <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-dark-surface/95 backdrop-blur-xl border border-white/15 rounded-2xl shadow-2xl p-3 z-50 min-w-[130px]" onClick={e => e.stopPropagation()}>
-                                            <p className="text-[9px] font-black uppercase tracking-widest text-dark-text-muted mb-2 text-center">REF.1 direction</p>
+                                        <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-dark-surface/95 backdrop-blur-xl border border-white/15 rounded-2xl shadow-2xl p-3 z-50 min-w-[160px]" onClick={e => e.stopPropagation()}>
+                                            <p className="text-[9px] font-black uppercase tracking-widest text-dark-text-muted mb-1.5">Output ratio</p>
+                                            <select
+                                                value={outpaintRefRatio}
+                                                onChange={e => setOutpaintRefRatio(e.target.value)}
+                                                className="w-full mb-3 bg-white/10 text-white text-[10px] rounded-lg px-2 py-1 border border-white/10 outline-none cursor-pointer"
+                                            >
+                                                <option value="Auto">Auto (nearest)</option>
+                                                {['1:1','4:3','3:4','16:9','9:16','3:2','2:3','21:9','4:5','5:4'].map(r => (
+                                                    <option key={r} value={r}>{r}</option>
+                                                ))}
+                                            </select>
+                                            <p className="text-[9px] font-black uppercase tracking-widest text-dark-text-muted mb-1.5">REF.1 direction</p>
                                             <div className="grid grid-cols-3 gap-1">
                                                 <div />
-                                                <button onClick={() => { onOutpaintReference('up'); setShowOutpaintRefMenu(false); }} className="aspect-square rounded-lg bg-white/5 hover:bg-brand-yellow/20 hover:text-brand-yellow text-white/60 flex items-center justify-center transition-colors text-sm">↑</button>
+                                                <button onClick={() => { onOutpaintReference('up', outpaintRefRatio === 'Auto' ? undefined : outpaintRefRatio); setShowOutpaintRefMenu(false); }} className="aspect-square rounded-lg bg-white/5 hover:bg-brand-yellow/20 hover:text-brand-yellow text-white/60 flex items-center justify-center transition-colors text-sm">↑</button>
                                                 <div />
-                                                <button onClick={() => { onOutpaintReference('left'); setShowOutpaintRefMenu(false); }} className="aspect-square rounded-lg bg-white/5 hover:bg-brand-yellow/20 hover:text-brand-yellow text-white/60 flex items-center justify-center transition-colors text-sm">←</button>
+                                                <button onClick={() => { onOutpaintReference('left', outpaintRefRatio === 'Auto' ? undefined : outpaintRefRatio); setShowOutpaintRefMenu(false); }} className="aspect-square rounded-lg bg-white/5 hover:bg-brand-yellow/20 hover:text-brand-yellow text-white/60 flex items-center justify-center transition-colors text-sm">←</button>
                                                 <div className="aspect-square rounded-lg bg-white/10 flex items-center justify-center"><svg className="w-3 h-3 text-white/30" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="1"/></svg></div>
-                                                <button onClick={() => { onOutpaintReference('right'); setShowOutpaintRefMenu(false); }} className="aspect-square rounded-lg bg-white/5 hover:bg-brand-yellow/20 hover:text-brand-yellow text-white/60 flex items-center justify-center transition-colors text-sm">→</button>
+                                                <button onClick={() => { onOutpaintReference('right', outpaintRefRatio === 'Auto' ? undefined : outpaintRefRatio); setShowOutpaintRefMenu(false); }} className="aspect-square rounded-lg bg-white/5 hover:bg-brand-yellow/20 hover:text-brand-yellow text-white/60 flex items-center justify-center transition-colors text-sm">→</button>
                                                 <div />
-                                                <button onClick={() => { onOutpaintReference('down'); setShowOutpaintRefMenu(false); }} className="aspect-square rounded-lg bg-white/5 hover:bg-brand-yellow/20 hover:text-brand-yellow text-white/60 flex items-center justify-center transition-colors text-sm">↓</button>
+                                                <button onClick={() => { onOutpaintReference('down', outpaintRefRatio === 'Auto' ? undefined : outpaintRefRatio); setShowOutpaintRefMenu(false); }} className="aspect-square rounded-lg bg-white/5 hover:bg-brand-yellow/20 hover:text-brand-yellow text-white/60 flex items-center justify-center transition-colors text-sm">↓</button>
                                                 <div />
                                             </div>
                                         </div>

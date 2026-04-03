@@ -1349,7 +1349,7 @@ interface ImageDisplayProps {
     onSaveDna: (image: GeneratedImage) => void; // v1.7
     onGenerateStoryboard: (image: GeneratedImage) => void; // v1.9.5
     onQuickEdit: (image: GeneratedImage, instruction: string) => void; // v2.4
-    onOutpaint: (image: GeneratedImage, direction: 'left'|'right'|'up'|'down', amount: number) => void; // v2.4
+    onOutpaint: (image: GeneratedImage, direction: 'left'|'right'|'up'|'down', amount: number, targetAspect?: string) => void; // v2.4
     externalQuickEditTarget?: GeneratedImage | null; // v2.4: target from history
     reasoningText?: string; // v1.7: Creative reasoning plan
     loadingMessage?: string; // v1.9.2: Funny loading messages
@@ -1358,6 +1358,7 @@ const ImageDisplay: React.FC<ImageDisplayProps> = ({ images, isLoading, onDownlo
     const { t } = useLocalization();
     const [showUpscaleMenu, setShowUpscaleMenu] = useState<string | null>(null);
     const [showOutpaintMenu, setShowOutpaintMenu] = useState<string | null>(null);
+    const [outpaintRatio, setOutpaintRatio] = useState('Auto');
     const [quickEditText, setQuickEditText] = useState('');
     const [quickEditTarget, setQuickEditTarget] = useState<GeneratedImage | null>(null);
 
@@ -1463,20 +1464,31 @@ const ImageDisplay: React.FC<ImageDisplayProps> = ({ images, isLoading, onDownlo
 
                                     {/* Outpaint popup — outside hover div so it doesn't disappear on mousemove */}
                                     {showOutpaintMenu === image.id && (
-                                        <div className="absolute top-14 right-2 bg-dark-surface/95 backdrop-blur-xl border border-white/15 rounded-2xl shadow-2xl p-3 z-30 min-w-[140px]" onClick={e => e.stopPropagation()}>
-                                            <p className="text-[9px] font-black uppercase tracking-widest text-dark-text-muted mb-2">Expand direction</p>
-                                            <div className="grid grid-cols-3 gap-1 mb-2">
+                                        <div className="absolute top-14 right-2 bg-dark-surface/95 backdrop-blur-xl border border-white/15 rounded-2xl shadow-2xl p-3 z-30 min-w-[160px]" onClick={e => e.stopPropagation()}>
+                                            {/* Ratio selector */}
+                                            <p className="text-[9px] font-black uppercase tracking-widest text-dark-text-muted mb-1.5">Output ratio</p>
+                                            <select
+                                                value={outpaintRatio}
+                                                onChange={e => setOutpaintRatio(e.target.value)}
+                                                className="w-full mb-3 bg-white/10 text-white text-[10px] rounded-lg px-2 py-1 border border-white/10 outline-none cursor-pointer"
+                                            >
+                                                <option value="Auto">Auto (nearest)</option>
+                                                {['1:1','4:3','3:4','16:9','9:16','3:2','2:3','21:9','4:5','5:4'].map(r => (
+                                                    <option key={r} value={r}>{r}</option>
+                                                ))}
+                                            </select>
+                                            <p className="text-[9px] font-black uppercase tracking-widest text-dark-text-muted mb-1.5">Direction</p>
+                                            <div className="grid grid-cols-3 gap-1">
                                                 <div />
-                                                <button onClick={() => { onOutpaint(image, 'up', 50); setShowOutpaintMenu(null); }} className="aspect-square rounded-lg bg-white/5 hover:bg-brand-yellow/20 hover:text-brand-yellow text-white/60 flex items-center justify-center transition-colors text-sm">↑</button>
+                                                <button onClick={() => { onOutpaint(image, 'up', 50, outpaintRatio === 'Auto' ? undefined : outpaintRatio); setShowOutpaintMenu(null); }} className="aspect-square rounded-lg bg-white/5 hover:bg-brand-yellow/20 hover:text-brand-yellow text-white/60 flex items-center justify-center transition-colors text-sm">↑</button>
                                                 <div />
-                                                <button onClick={() => { onOutpaint(image, 'left', 50); setShowOutpaintMenu(null); }} className="aspect-square rounded-lg bg-white/5 hover:bg-brand-yellow/20 hover:text-brand-yellow text-white/60 flex items-center justify-center transition-colors text-sm">←</button>
+                                                <button onClick={() => { onOutpaint(image, 'left', 50, outpaintRatio === 'Auto' ? undefined : outpaintRatio); setShowOutpaintMenu(null); }} className="aspect-square rounded-lg bg-white/5 hover:bg-brand-yellow/20 hover:text-brand-yellow text-white/60 flex items-center justify-center transition-colors text-sm">←</button>
                                                 <div className="aspect-square rounded-lg bg-white/10 flex items-center justify-center"><svg className="w-3 h-3 text-white/30" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="1"/></svg></div>
-                                                <button onClick={() => { onOutpaint(image, 'right', 50); setShowOutpaintMenu(null); }} className="aspect-square rounded-lg bg-white/5 hover:bg-brand-yellow/20 hover:text-brand-yellow text-white/60 flex items-center justify-center transition-colors text-sm">→</button>
+                                                <button onClick={() => { onOutpaint(image, 'right', 50, outpaintRatio === 'Auto' ? undefined : outpaintRatio); setShowOutpaintMenu(null); }} className="aspect-square rounded-lg bg-white/5 hover:bg-brand-yellow/20 hover:text-brand-yellow text-white/60 flex items-center justify-center transition-colors text-sm">→</button>
                                                 <div />
-                                                <button onClick={() => { onOutpaint(image, 'down', 50); setShowOutpaintMenu(null); }} className="aspect-square rounded-lg bg-white/5 hover:bg-brand-yellow/20 hover:text-brand-yellow text-white/60 flex items-center justify-center transition-colors text-sm">↓</button>
+                                                <button onClick={() => { onOutpaint(image, 'down', 50, outpaintRatio === 'Auto' ? undefined : outpaintRatio); setShowOutpaintMenu(null); }} className="aspect-square rounded-lg bg-white/5 hover:bg-brand-yellow/20 hover:text-brand-yellow text-white/60 flex items-center justify-center transition-colors text-sm">↓</button>
                                                 <div />
                                             </div>
-                                            <p className="text-[8px] text-white/30 text-center">+50% in chosen direction</p>
                                         </div>
                                     )}
 
@@ -3910,7 +3922,7 @@ export default function App() {
     }, [isLoading, language, userApiKey, selectedModel, selectedResolution, thinkingLevel, showToast, t.generationFailed]);
 
     // v2.4: Outpainting — expand canvas in one direction, fill with AI
-    const handleOutpaint = useCallback(async (image: GeneratedImage, direction: 'left' | 'right' | 'up' | 'down', amount: number) => {
+    const handleOutpaint = useCallback(async (image: GeneratedImage, direction: 'left' | 'right' | 'up' | 'down', amount: number, targetAspect?: string) => {
         if (isLoading) return;
         const dataUrl = image.imageDataUrl || image.thumbnailDataUrl;
         if (!dataUrl) return;
@@ -3943,13 +3955,14 @@ export default function App() {
             const dirLabels = { left: 'left side', right: 'right side', up: 'top', down: 'bottom' };
             const outpaintPrompt = `Seamlessly extend this image by filling the white area on the ${dirLabels[direction]}. Continue the scene naturally: match the style, lighting, perspective, colors, and content of the original image. The white area is the new region to generate.`;
 
-            // Snap to nearest Gemini-valid aspect ratio
+            // Use user-selected ratio or snap to nearest valid one
             const VALID_RATIOS = ['1:1','1:4','1:8','2:3','3:2','3:4','4:1','4:3','4:5','5:4','8:1','9:16','16:9','21:9'];
-            const targetRatio = newW / newH;
-            const newAspect = VALID_RATIOS.reduce((best, r) => {
+            const pixelRatio = newW / newH;
+            const autoAspect = VALID_RATIOS.reduce((best, r) => {
                 const [a, b] = r.split(':').map(Number);
-                return Math.abs(a / b - targetRatio) < Math.abs(best.split(':').map(Number).reduce((x, y) => x / y) - targetRatio) ? r : best;
+                return Math.abs(a / b - pixelRatio) < Math.abs(best.split(':').map(Number).reduce((x, y) => x / y) - pixelRatio) ? r : best;
             }, VALID_RATIOS[0]);
+            const newAspect = (targetAspect && VALID_RATIOS.includes(targetAspect)) ? targetAspect : autoAspect;
 
             const imageDataUrl = await geminiService.generateImage(
                 outpaintPrompt,
@@ -3983,7 +3996,7 @@ export default function App() {
     }, [isLoading, language, userApiKey, selectedModel, selectedResolution, thinkingLevel, showToast, t.generationFailed]);
 
     // v2.4: Outpaint a reference image directly from the FAB
-    const handleOutpaintReference = useCallback(async (direction: 'left' | 'right' | 'up' | 'down') => {
+    const handleOutpaintReference = useCallback(async (direction: 'left' | 'right' | 'up' | 'down', targetAspect?: string) => {
         if (referenceImages.length === 0 || isLoading) return;
         const file = referenceImages[0];
         const dataUrl = await new Promise<string>((resolve) => {
@@ -3995,10 +4008,10 @@ export default function App() {
             id: crypto.randomUUID(),
             imageDataUrl: dataUrl,
             prompt: '',
-            aspectRatio: '1:1', // recalculated inside handleOutpaint from actual pixel dimensions
+            aspectRatio: '1:1',
             timestamp: Date.now(),
         };
-        handleOutpaint(fakeImage, direction, 50);
+        handleOutpaint(fakeImage, direction, 50, targetAspect);
     }, [referenceImages, isLoading, handleOutpaint]);
 
     // v0.8: Toggle favorite/bookmark
