@@ -1350,10 +1350,11 @@ interface ImageDisplayProps {
     onGenerateStoryboard: (image: GeneratedImage) => void; // v1.9.5
     onQuickEdit: (image: GeneratedImage, instruction: string) => void; // v2.4
     onOutpaint: (image: GeneratedImage, direction: 'left'|'right'|'up'|'down', amount: number) => void; // v2.4
+    externalQuickEditTarget?: GeneratedImage | null; // v2.4: target from history
     reasoningText?: string; // v1.7: Creative reasoning plan
     loadingMessage?: string; // v1.9.2: Funny loading messages
 }
-const ImageDisplay: React.FC<ImageDisplayProps> = ({ images, isLoading, onDownload, onZoom, onEdit, onReroll, onToggleFavorite, onUpscale, upscalingImageId, onSaveDna, onGenerateStoryboard, onQuickEdit, onOutpaint, reasoningText, loadingMessage }) => {
+const ImageDisplay: React.FC<ImageDisplayProps> = ({ images, isLoading, onDownload, onZoom, onEdit, onReroll, onToggleFavorite, onUpscale, upscalingImageId, onSaveDna, onGenerateStoryboard, onQuickEdit, onOutpaint, externalQuickEditTarget, reasoningText, loadingMessage }) => {
     const { t } = useLocalization();
     const [showUpscaleMenu, setShowUpscaleMenu] = useState<string | null>(null);
     const [showOutpaintMenu, setShowOutpaintMenu] = useState<string | null>(null);
@@ -1504,20 +1505,35 @@ const ImageDisplay: React.FC<ImageDisplayProps> = ({ images, isLoading, onDownlo
 
                     {/* v2.4: Quick Edit bar */}
                     <div className="px-2 sm:px-3 pb-3 pt-1.5">
-                        <div className="flex items-center gap-2 bg-black/20 dark:bg-black/30 border border-white/10 rounded-2xl px-3 py-2">
+                        {/* History target indicator */}
+                        {externalQuickEditTarget && (
+                            <div className="flex items-center gap-1.5 mb-1.5 px-1">
+                                <img src={externalQuickEditTarget.thumbnailDataUrl || externalQuickEditTarget.imageDataUrl} alt="" className="w-5 h-5 rounded object-cover border border-brand-yellow/40" />
+                                <span className="text-[9px] text-brand-yellow/80 font-bold truncate flex-1">Editing from history</span>
+                            </div>
+                        )}
+                        <div className={`flex items-center gap-2 bg-black/20 dark:bg-black/30 border rounded-2xl px-3 py-2 ${externalQuickEditTarget ? 'border-brand-yellow/30' : 'border-white/10'}`}>
                             <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-brand-yellow/60 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                             <input
                                 type="text"
                                 value={quickEditText}
-                                onChange={e => { setQuickEditText(e.target.value); if (images.length > 0) setQuickEditTarget(images[0]); }}
-                                onFocus={() => { if (images.length > 0 && !quickEditTarget) setQuickEditTarget(images[0]); }}
-                                onKeyDown={e => { if (e.key === 'Enter' && quickEditText.trim()) { onQuickEdit(quickEditTarget ?? images[0], quickEditText); setQuickEditText(''); setQuickEditTarget(null); } }}
+                                onChange={e => { setQuickEditText(e.target.value); if (!externalQuickEditTarget && images.length > 0) setQuickEditTarget(images[0]); }}
+                                onFocus={() => { if (!externalQuickEditTarget && images.length > 0 && !quickEditTarget) setQuickEditTarget(images[0]); }}
+                                onKeyDown={e => {
+                                    if (e.key === 'Enter' && quickEditText.trim()) {
+                                        const target = externalQuickEditTarget ?? quickEditTarget ?? images[0];
+                                        if (target) { onQuickEdit(target, quickEditText); setQuickEditText(''); setQuickEditTarget(null); }
+                                    }
+                                }}
                                 placeholder="Quick edit: make the sky orange, add fog…"
                                 className="flex-1 min-w-0 bg-transparent text-xs text-light-text dark:text-dark-text placeholder:text-white/20 outline-none"
                             />
                             <button
-                                onClick={() => { if (quickEditText.trim() && images.length > 0) { onQuickEdit(quickEditTarget ?? images[0], quickEditText); setQuickEditText(''); setQuickEditTarget(null); } }}
-                                disabled={!quickEditText.trim() || images.length === 0}
+                                onClick={() => {
+                                    const target = externalQuickEditTarget ?? quickEditTarget ?? images[0];
+                                    if (quickEditText.trim() && target) { onQuickEdit(target, quickEditText); setQuickEditText(''); setQuickEditTarget(null); }
+                                }}
+                                disabled={!quickEditText.trim() || (!externalQuickEditTarget && images.length === 0)}
                                 className="shrink-0 px-2.5 py-1 rounded-xl bg-brand-yellow/15 hover:bg-brand-yellow/30 text-brand-yellow text-[10px] font-bold disabled:opacity-30 transition-colors whitespace-nowrap"
                             >
                                 Apply
@@ -1561,11 +1577,12 @@ interface HistoryPanelProps {
     variationsLoadingId: string | null; // v1.3
     onCopySettings: (image: GeneratedImage) => void; // v1.3
     onSaveDna: (image: GeneratedImage) => void; // v1.7
+    onQuickEditHistory: (image: GeneratedImage) => void; // v2.4
 }
 const HistoryPanel: React.FC<HistoryPanelProps> = ({
     history, onSelect, onZoom, onDelete, onClearAll,
     isSelectionMode, selectedIds, onEnterSelectionMode, onCancelSelectionMode, onToggleSelection, onDeleteSelected,
-    onGenerateVariations, variationsLoadingId, onCopySettings, onSaveDna
+    onGenerateVariations, variationsLoadingId, onCopySettings, onSaveDna, onQuickEditHistory
 }) => {
     const { t } = useLocalization();
     const [displayCount, setDisplayCount] = useState(30); // Show 30 images initially
@@ -1728,6 +1745,14 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
                                                     disabled={variationsLoadingId !== null}
                                                 >
                                                     <DiceIcon className="w-3.5 h-3.5" />
+                                                </button>
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); onQuickEditHistory(item); }}
+                                                    className="p-1.5 rounded-full bg-black/60 text-brand-yellow transition-all hover:bg-brand-yellow hover:text-dark-bg hover:scale-110 active:scale-95 shadow-lg backdrop-blur-md"
+                                                    aria-label="Quick edit"
+                                                    title="Quick edit this image"
+                                                >
+                                                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                                                 </button>
                                             </div>
                                         </>
@@ -2628,6 +2653,7 @@ export default function App() {
     const [structureImage, setStructureImage] = useState<File | null>(null);
     const [videoReference, setVideoReference] = useState<File | null>(null); // v2.4: video input (NB2 only)
     const [videoAsStyle, setVideoAsStyle] = useState<boolean>(false); // v2.4: use full video as style ref
+    const [quickEditSourceImage, setQuickEditSourceImage] = useState<GeneratedImage | null>(null); // v2.4: history quick edit target
     const [videoThumbnail, setVideoThumbnail] = useState<string | null>(null);
     const [preciseReference, setPreciseReference] = useState<boolean>(false); // v0.7: Precise Reference Mode
     const [editedPrompt, setEditedPrompt] = useState<string>('');
@@ -3855,6 +3881,7 @@ export default function App() {
         if (!instruction.trim() || isLoading) return;
         const dataUrl = image.imageDataUrl || image.thumbnailDataUrl;
         if (!dataUrl) return;
+        setQuickEditSourceImage(null); // clear history target after submitting
         setIsLoading(true);
         setCurrentImages([]);
         setLoadingMessage(language === 'it' ? 'Applicando modifica...' : 'Applying edit...');
@@ -4312,6 +4339,7 @@ export default function App() {
                                 }}
                                 onQuickEdit={handleQuickEdit}
                                 onOutpaint={handleOutpaint}
+                                externalQuickEditTarget={quickEditSourceImage}
                                 reasoningText={reasoningText}
                                 loadingMessage={loadingMessage}
                             />
@@ -4445,6 +4473,7 @@ export default function App() {
                                         variationsLoadingId={variationsLoadingId}
                                         onCopySettings={handleCopySettings}
                                         onSaveDna={handleSaveImageAsDna}
+                                        onQuickEditHistory={setQuickEditSourceImage}
                                     />
                                 ) : (
                                     <PresetsPanel

@@ -955,10 +955,11 @@ export const generateImage = async (
             }
 
             const parts: any[] = [{ text: fullPrompt }];
+            const budgetMapPure = { minimal: 0, medium: 4096, high: -1 };
             const config: any = {
                 responseModalities: [Modality.IMAGE],
                 temperature: 0.7,
-                thinkingConfig: { thinkingLevel: 'minimal' },
+                thinkingConfig: { thinkingBudget: budgetMapPure[thinkingLevel ?? 'medium'] },
                 safetySettings: SAFETY_SETTINGS_PERMISSIVE,
             };
 
@@ -1193,9 +1194,11 @@ export const generateImage = async (
             safetySettings: SAFETY_SETTINGS_PERMISSIVE,
         };
 
-        // v2.4: thinkingConfig for NB2/PRO — user-configurable level, defaults to 'minimal'
+        // v2.4: thinkingConfig for NB2/PRO — user-configurable budget
+        // thinkingBudget: 0 = no thinking (fastest), 4096 = balanced, -1 = max (deepest)
         if (model === 'gemini-3.1-flash-image-preview' || model === 'gemini-3-pro-image-preview') {
-            config.thinkingConfig = { thinkingLevel: thinkingLevel ?? 'minimal' };
+            const budgetMap = { minimal: 0, medium: 4096, high: -1 };
+            config.thinkingConfig = { thinkingBudget: budgetMap[thinkingLevel ?? 'medium'] };
         }
 
         // Add imageConfig with aspect ratio
