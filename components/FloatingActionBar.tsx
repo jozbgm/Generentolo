@@ -506,7 +506,6 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                             <span className="flex items-center gap-2.5">
                                 <StarIcon className={`w-3.5 h-3.5 ${selectedModel === 'gemini-3-pro-image-preview' ? 'text-dark-bg' : 'text-light-text dark:text-dark-text'}`} />
                                 <span className={selectedModel === 'gemini-3-pro-image-preview' ? 'text-dark-bg' : ''}>Nano Banana PRO</span>
-                                <span className={`text-[9px] px-1 py-0.5 rounded font-black ${selectedModel === 'gemini-3-pro-image-preview' ? 'bg-black/20 text-dark-bg' : 'bg-yellow-500/20 text-yellow-600 dark:text-yellow-400'}`} title="API stability issues reported — may error more than usual">⚠ UNSTABLE</span>
                             </span>
                             {selectedModel === 'gemini-3-pro-image-preview' && <CheckIcon className="w-3.5 h-3.5" />}
                         </button>
