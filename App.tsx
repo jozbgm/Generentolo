@@ -6,6 +6,7 @@ import * as storyboardService from './services/storyboardService';
 import { StoryboardPrompt } from './services/storyboardService';
 import * as anglePromptService from './services/anglePromptService';
 import { useKeyboardShortcuts, APP_SHORTCUTS } from './hooks/useKeyboardShortcuts';
+import { useAccentColor } from './hooks/useAccentColor';
 import { SunIcon, MoonIcon, UploadIcon, DownloadIcon, SparklesIcon, CopyIcon, SettingsIcon, XIcon, CheckIcon, LanguageIcon, BrushIcon, DiceIcon, TrashIcon, ReloadIcon, StarIcon, CornerUpLeftIcon, ChevronDownIcon, ClapperboardIcon, DnaIcon, TargetIcon, PaletteIcon, PlusIcon, CameraIcon, LightbulbIcon, KeyboardIcon, ImageIcon, AlertTriangleIcon } from './components/icons';
 import { indexedDBService, DnaCharacter } from './services/indexedDB';
 import FloatingActionBar from './components/FloatingActionBar';
@@ -18,6 +19,7 @@ import { STYLE_PRESETS, PHYSICS_PRESETS } from './data/stylePresets'; // v1.4
 import { fetchInvisibleReferences, removeBracketsFromPrompt } from './services/googleSearchService'; // v1.5.1
 import StudioPanel from './components/StudioPanel'; // v1.8: Studio Mode
 import CustomSelect from './components/CustomSelect'; // v2.x: accessible custom select
+import ThemePicker from './components/ThemePicker'; // v2.2: on-the-fly accent color picker
 import { CAMERAS, LENSES, FOCAL_LENGTHS, LIGHT_DIRECTIONS, WARDROBE_CATEGORIES, SHOTS, PRODUCTION_KITS } from './data/studioPresets';
 
 // Polyfill for crypto.randomUUID() on browsers that don't support it (mobile Safari, etc)
@@ -34,7 +36,7 @@ if (!crypto.randomUUID) {
 // --- Localization ---
 const translations = {
     en: {
-        headerTitle: 'Generentolo PRO v2.1',
+        headerTitle: 'Generentolo PRO v2.2',
         headerSubtitle: 'Let me do it for you!',
         refImagesTitle: 'Reference & Style Images',
         styleRefTitle: 'Style Reference',
@@ -304,7 +306,7 @@ const translations = {
         presetAppliedToPrompt: 'Will be applied to generation',
     },
     it: {
-        headerTitle: 'Generentolo PRO v2.1',
+        headerTitle: 'Generentolo PRO v2.2',
         headerSubtitle: 'Let me do it for you!',
         refImagesTitle: 'Immagini di Riferimento e Stile',
         styleRefTitle: 'Riferimento Stile',
@@ -664,8 +666,12 @@ interface HeaderProps {
     toggleTheme: () => void;
     onOpenSettings: () => void;
     onOpenShortcuts: () => void;
+    accentColor: string;
+    onAccentColorChange: (hex: string) => void;
+    onAccentColorReset: () => void;
+    defaultAccentColor: string;
 }
-const Header: React.FC<HeaderProps> = ({ theme, toggleTheme, onOpenSettings, onOpenShortcuts }) => {
+const Header: React.FC<HeaderProps> = ({ theme, toggleTheme, onOpenSettings, onOpenShortcuts, accentColor, onAccentColorChange, onAccentColorReset, defaultAccentColor }) => {
     const { t, language, setLanguage } = useLocalization();
     const toggleLanguage = () => setLanguage(language === 'en' ? 'it' : 'en');
     return (
@@ -674,7 +680,7 @@ const Header: React.FC<HeaderProps> = ({ theme, toggleTheme, onOpenSettings, onO
                 <h1 className="text-xl font-bold flex items-center">
                     <span className="text-brand-yellow">Generentolo</span>
                     <span className="text-light-text-muted dark:text-white/90 ml-2">PRO</span>
-                    <span className="text-brand-yellow ml-2">v2.1</span>
+                    <span className="text-brand-yellow ml-2">v2.2</span>
                 </h1>
                 <p className="text-xs text-light-text-muted dark:text-dark-text-muted mt-1">
                     {t.headerSubtitle} Powered by <span className="font-bold text-brand-yellow">JOZ</span> for <span className="font-bold text-brand-yellow">Dugongo</span>
@@ -687,6 +693,12 @@ const Header: React.FC<HeaderProps> = ({ theme, toggleTheme, onOpenSettings, onO
                 <button onClick={toggleLanguage} title={language === 'en' ? 'Switch to Italian' : 'Switch to English'} className="p-2 rounded-full text-light-text-muted dark:text-brand-yellow hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors">
                     <LanguageIcon className="w-5 h-5" />
                 </button>
+                <ThemePicker
+                    accentColor={accentColor}
+                    onColorChange={onAccentColorChange}
+                    onReset={onAccentColorReset}
+                    defaultColor={defaultAccentColor}
+                />
                 <button onClick={onOpenSettings} title={t.settingsTitle} className="p-2 rounded-full text-light-text-muted dark:text-brand-yellow hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors">
                     <SettingsIcon className="w-5 h-5" />
                 </button>
@@ -720,7 +732,7 @@ const ImagePreview = React.memo<{ file: File; index: number; isGuide?: boolean; 
         if (!previewUrl) return <div className="aspect-square rounded-xl bg-light-surface-accent animate-pulse" />;
 
         return (
-            <div className={`relative group aspect-square rounded-xl bg-light-surface dark:bg-dark-surface flex items-center justify-center overflow-hidden border border-brand-yellow shadow-[0_0_12px_3px_rgba(200,242,58,0.25)]`}>
+            <div className={`relative group aspect-square rounded-xl bg-light-surface dark:bg-dark-surface flex items-center justify-center overflow-hidden border border-brand-yellow glow-accent-sm`}>
                 <div className={`absolute top-1.5 left-1.5 px-1.5 py-0.5 text-[10px] font-bold rounded-[6px] backdrop-blur-sm z-10 border border-brand-yellow/30 bg-black/40 text-brand-yellow`}>
                     {isGuide ? 'GUIDE' : `REF.${index + 1}`}
                 </div>
@@ -757,7 +769,7 @@ const StyleImagePreview = React.memo<{ file: File; onRemove: () => void }>(
         if (!previewUrl) return <div className="aspect-square rounded-xl bg-light-surface-accent animate-pulse" />;
 
         return (
-            <div className="relative group w-full h-full overflow-hidden rounded-xl bg-white dark:bg-dark-surface border border-brand-yellow shadow-[0_0_12px_3px_rgba(200,242,58,0.25)]">
+            <div className="relative group w-full h-full overflow-hidden rounded-xl bg-white dark:bg-dark-surface border border-brand-yellow glow-accent-sm">
                 <img src={previewUrl} alt="Style reference" className="w-full h-full object-cover" />
                 <button onClick={onRemove} className="absolute top-2 right-2 bg-brand-yellow text-dark-bg rounded-xl w-7 h-7 flex items-center justify-center text-sm opacity-0 group-hover:opacity-100 transition-opacity z-10" aria-label="Remove style image">
                     <XIcon className="w-4 h-4" />
@@ -893,7 +905,7 @@ const ReferencePanel: React.FC<{
                         ))}
 
                         {referenceImages.length < 5 && (
-                            <div onClick={() => fileInputRef.current?.click()} className="relative group aspect-square rounded-xl shadow-[0_0_16px_5px_rgba(200,242,58,0.35)] bg-black/5 dark:bg-white/5 flex items-center justify-center cursor-pointer border border-black/5 dark:border-white/5 hover:border-brand-yellow transition-colors">
+                            <div onClick={() => fileInputRef.current?.click()} className="relative group aspect-square rounded-xl glow-accent-md bg-black/5 dark:bg-white/5 flex items-center justify-center cursor-pointer border border-black/5 dark:border-white/5 hover:border-brand-yellow transition-colors">
                                 <div className="text-light-text-muted dark:text-dark-text-muted text-center group-hover:text-brand-yellow transition-colors">
                                     <UploadIcon className="w-6 h-6 mx-auto" />
                                     <span className="text-xs mt-1 block">{t.addImage}</span>
@@ -1030,7 +1042,7 @@ const ReferencePanel: React.FC<{
                                             onClick={(e) => { e.stopPropagation(); onSelectDna(char.id); }}
                                             className="flex-shrink-0 relative group/char"
                                         >
-                                            <div className={`w-11 h-11 rounded-full p-0.5 border-2 transition-all duration-500 scale-95 group-hover/char:scale-105 ${selectedDnaIds.includes(char.id) ? 'border-brand-yellow shadow-[0_0_15px_rgba(200,242,58,0.4)] rotate-3 scale-110' : 'border-white/10 opacity-60 hover:opacity-100 hover:rotate-2'}`}>
+                                            <div className={`w-11 h-11 rounded-full p-0.5 border-2 transition-all duration-500 scale-95 group-hover/char:scale-105 ${selectedDnaIds.includes(char.id) ? 'border-brand-yellow glow-accent-lg rotate-3 scale-110' : 'border-white/10 opacity-60 hover:opacity-100 hover:rotate-2'}`}>
                                                 {char.thumbnailData ? (
                                                     <img src={char.thumbnailData} alt={char.name} className="w-full h-full object-cover rounded-full" />
                                                 ) : (
@@ -1365,11 +1377,11 @@ const ImageDisplay: React.FC<ImageDisplayProps> = ({ images, isLoading, onDownlo
                 <div className="text-center text-light-text-muted dark:text-dark-text-muted">
                     <div
                         className="w-24 h-24 mx-auto mb-4 rounded-full flex items-center justify-center"
-                        style={{ background: 'radial-gradient(circle, rgba(200,242,58,0.15) 0%, rgba(200,242,58,0.05) 100%)' }}
+                        style={{ background: 'radial-gradient(circle, rgb(var(--color-brand-yellow-rgb) / 0.15) 0%, rgb(var(--color-brand-yellow-rgb) / 0.05) 100%)' }}
                     >
                         <div
                             className="w-16 h-16 rounded-full"
-                            style={{ background: 'radial-gradient(circle, rgba(200,242,58,0.3) 0%, rgba(200,242,58,0.1) 100%)' }}
+                            style={{ background: 'radial-gradient(circle, rgb(var(--color-brand-yellow-rgb) / 0.30) 0%, rgb(var(--color-brand-yellow-rgb) / 0.10) 100%)' }}
                         />
                     </div>
                     <p className="font-semibold text-lg">{t.imageDisplayPlaceholderTitle}</p>
@@ -2435,6 +2447,7 @@ const detectImageAspectRatio = (file: File): Promise<string> => {
 export default function App() {
     const [theme, setTheme] = useState<'dark' | 'light'>(getInitialTheme());
     const [language, setLanguage] = useState<Language>(getInitialLanguage());
+    const { accentColor, setAccentColor, resetToDefault: resetAccentColor, defaultColor: defaultAccentColor } = useAccentColor();
     const [referenceImages, setReferenceImages] = useState<File[]>([]);
     const [styleReferenceImage, setStyleReferenceImage] = useState<File | null>(null);
     const [structureImage, setStructureImage] = useState<File | null>(null);
@@ -3894,7 +3907,7 @@ export default function App() {
     return (
         <LanguageContext.Provider value={{ language, setLanguage, t }}>
             <div className="h-screen w-screen bg-light-bg dark:bg-dark-bg text-light-text dark:text-dark-text flex flex-col font-sans">
-                <Header theme={theme} toggleTheme={toggleTheme} onOpenSettings={() => setIsSettingsOpen(true)} onOpenShortcuts={() => setIsShortcutsOpen(true)} />
+                <Header theme={theme} toggleTheme={toggleTheme} onOpenSettings={() => setIsSettingsOpen(true)} onOpenShortcuts={() => setIsShortcutsOpen(true)} accentColor={accentColor} onAccentColorChange={setAccentColor} onAccentColorReset={resetAccentColor} defaultAccentColor={defaultAccentColor} />
                 <main className="flex-1 flex flex-col lg:flex-row gap-4 lg:gap-6 px-4 pt-4 pb-32 lg:pb-28 overflow-y-auto lg:overflow-hidden">
                     {/* --- Left Sidebar (only references/style/structure) --- */}
                     <aside className="w-full lg:w-[280px] flex-shrink-0 bg-light-surface/50 dark:bg-dark-surface/30 backdrop-blur-xl rounded-3xl overflow-y-auto h-full custom-scrollbar">

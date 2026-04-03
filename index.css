@@ -4,53 +4,114 @@
 
 @layer base {
   :root {
-    /* Brand Colors - Standardized for Single-Point Editing */
-    --color-brand-yellow: #c8f23a; /* Main Accent */
-    --color-brand-yellow-rgb: 200 242 58; /* RGB channels for opacity variants */
-    --color-brand-magenta: #b5db35; /* Variant Accent */
-    --color-brand-cyan: #e8e8e0;
-    --color-brand-blue: #6b6b60;
-    
+    /* Brand Colors - Amber/Professional Theme */
+    --color-brand-yellow: #f59e0b; /* Main Accent — Amber 500 */
+    --color-brand-yellow-rgb: 245 158 11; /* RGB channels for opacity variants */
+    --color-brand-magenta: #d97706; /* Variant Accent — Amber 600 */
+    --color-brand-cyan: #e5e7eb;
+    --color-brand-blue: #6b7280;
+
     /* Legacy brand colors mapped to main accent for backward compatibility */
     --color-brand-purple: var(--color-brand-yellow);
     --color-brand-pink: var(--color-brand-yellow);
-    
+
     /* Light Theme */
-    --color-light-bg: #f0f0ed;
-    --color-light-bg-rgb: 240 240 237;
-    --color-light-surface: #f8f8f6;
-    --color-light-surface-rgb: 248 248 246;
-    --color-light-surface-accent: #ebebe8;
-    --color-light-surface-accent-rgb: 235 235 232;
-    --color-light-text: #111110;
-    --color-light-text-muted: #6b6b60;
-    --color-light-border: #dcdcd8;
+    --color-light-bg: #ffffff;
+    --color-light-bg-rgb: 255 255 255;
+    --color-light-surface: #f9fafb;
+    --color-light-surface-rgb: 249 250 251;
+    --color-light-surface-accent: #f3f4f6;
+    --color-light-surface-accent-rgb: 243 244 246;
+    --color-light-text: #262626;
+    --color-light-text-muted: #6b7280;
+    --color-light-border: #e5e7eb;
 
     /* Dark Theme */
-    --color-dark-bg: #1A1A1A; /* Antracite / Dark Anthracite */
-    --color-dark-bg-rgb: 26 26 26;
-    --color-dark-surface: #202020;
-    --color-dark-surface-rgb: 32 32 32;
-    --color-dark-surface-accent: #2A2A2A;
-    --color-dark-surface-accent-rgb: 42 42 42;
-    --color-dark-text: #F2F2F2;
-    --color-dark-text-muted: #888888;
-    --color-dark-border: #3A3A3A;
+    --color-dark-bg: #171717;
+    --color-dark-bg-rgb: 23 23 23;
+    --color-dark-surface: #262626;
+    --color-dark-surface-rgb: 38 38 38;
+    --color-dark-surface-accent: #404040;
+    --color-dark-surface-accent-rgb: 64 64 64;
+    --color-dark-text: #e5e5e5;
+    --color-dark-text-muted: #a3a3a3;
+    --color-dark-border: #404040;
+
+    /* Shadcn-style variables — Light */
+    --card: #ffffff;
+    --ring: #f59e0b;
+    --input: #e5e7eb;
+    --muted: #f9fafb;
+    --accent: #fffbeb;
+    --border: #e5e7eb;
+    --radius: 0.375rem;
+    --popover: #ffffff;
+    --primary: #f59e0b;
+    --sidebar: #f9fafb;
+    --secondary: #f3f4f6;
+    --background: #ffffff;
+    --foreground: #262626;
+    --destructive: #ef4444;
+    --sidebar-ring: #f59e0b;
+    --sidebar-accent: #fffbeb;
+    --sidebar-border: #e5e7eb;
+    --card-foreground: #262626;
+    --sidebar-primary: #f59e0b;
+    --muted-foreground: #6b7280;
+    --accent-foreground: #92400e;
+    --popover-foreground: #262626;
+    --primary-foreground: #000000;
+    --sidebar-foreground: #262626;
+    --secondary-foreground: #4b5563;
+    --destructive-foreground: #ffffff;
+    --sidebar-accent-foreground: #92400e;
+    --sidebar-primary-foreground: #ffffff;
   }
 }
 
-/* Light Mode Overrides for Lime Text Readability */
+/* Shadcn-style variables — Dark */
+.dark {
+  --card: #262626;
+  --ring: #f59e0b;
+  --input: #404040;
+  --muted: #262626;
+  --accent: #92400e;
+  --border: #404040;
+  --popover: #262626;
+  --primary: #f59e0b;
+  --sidebar: #0f0f0f;
+  --secondary: #262626;
+  --background: #171717;
+  --foreground: #e5e5e5;
+  --destructive: #ef4444;
+  --sidebar-ring: #f59e0b;
+  --sidebar-accent: #92400e;
+  --sidebar-border: #404040;
+  --card-foreground: #e5e5e5;
+  --sidebar-primary: #f59e0b;
+  --muted-foreground: #a3a3a3;
+  --accent-foreground: #fde68a;
+  --popover-foreground: #e5e5e5;
+  --primary-foreground: #000000;
+  --sidebar-foreground: #e5e5e5;
+  --secondary-foreground: #e5e5e5;
+  --destructive-foreground: #ffffff;
+  --sidebar-accent-foreground: #fde68a;
+  --sidebar-primary-foreground: #ffffff;
+}
+
+/* Light Mode Overrides for Amber Text Readability */
 html:not(.dark) .text-brand-yellow,
 html:not(.dark) .text-brand-yellow\/80 {
-  color: #4a5d16 !important; /* Dark Olive/Lime for stark contrast on white */
+  color: #92400e !important; /* Amber-900 for stark contrast on white */
 }
 html:not(.dark) .hover\:text-brand-yellow:hover,
 html:not(.dark) .group:hover .group-hover\:text-brand-yellow {
-  color: #4a5d16 !important;
+  color: #92400e !important;
 }
 html:not(.dark) .peer:checked ~ div .peer-checked\:text-brand-yellow,
 html:not(.dark) .peer:checked ~ span .peer-checked\:text-brand-yellow {
-  color: #4a5d16 !important;
+  color: #92400e !important;
 }
 
 
@@ -129,7 +190,7 @@ textarea::-webkit-scrollbar-thumb:hover {
 /* Prompt Library Modal Scrollbar */
 .prompt-library-scroll {
   scrollbar-width: thin;
-  scrollbar-color: rgba(200, 242, 58, 0.3) transparent;
+  scrollbar-color: rgba(245, 158, 11, 0.3) transparent;
 }
 
 .prompt-library-scroll::-webkit-scrollbar {
@@ -142,12 +203,12 @@ textarea::-webkit-scrollbar-thumb:hover {
 }
 
 .prompt-library-scroll::-webkit-scrollbar-thumb {
-  background-color: rgba(200, 242, 58, 0.3);
+  background-color: rgba(245, 158, 11, 0.3);
   border-radius: 3px;
 }
 
 .prompt-library-scroll::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(200, 242, 58, 0.5);
+  background-color: rgba(245, 158, 11, 0.5);
 }
 
 /* Hide scrollbar for category tabs */
@@ -243,5 +304,19 @@ textarea::-webkit-scrollbar-thumb:hover {
 .group:hover .sweep-accent {
   opacity: 0.4;
   transform: translateX(150%);
+}
+
+/* ============================================================
+   DYNAMIC GLOW HELPERS — driven by --color-brand-yellow-rgb
+   These replace hardcoded rgba() in Tailwind arbitrary values
+   so accent color changes propagate instantly on theme switch.
+   ============================================================ */
+.glow-accent-sm  { box-shadow: 0 0 12px 3px rgb(var(--color-brand-yellow-rgb) / 0.25); }
+.glow-accent-md  { box-shadow: 0 0 16px 5px rgb(var(--color-brand-yellow-rgb) / 0.35); }
+.glow-accent-lg  { box-shadow: 0 0 15px     rgb(var(--color-brand-yellow-rgb) / 0.40); }
+.glow-accent-xl  { box-shadow: 0 0  8px     rgb(var(--color-brand-yellow-rgb) / 0.60); }
+.shadow-floating-bar {
+  box-shadow: 0 25px 60px -15px rgba(0,0,0,0.4),
+              0 0 80px -30px rgb(var(--color-brand-yellow-rgb) / 0.08);
 }
 

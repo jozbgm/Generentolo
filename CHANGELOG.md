@@ -1,5 +1,13 @@
 # 📋 Changelog - Generentolo PRO
 
+## [2.2.0] - 2026-04-03
+### Added
+- **Accent Color Picker**: New swatch icon in the header allows changing the app's accent color on the fly. Includes 8 curated presets (Amber, Lime, Violet, Rose, Sky, Emerald, Orange, Slate), a custom hex input, a native color wheel, and a "Reset to default" option. Choice persists across sessions via localStorage.
+
+### Changed
+- **Amber palette as new default**: Replaced the lime/acid-green accent (`#c8f23a`) with a warm amber (`#f59e0b`) for a more professional and refined look across both dark and light modes.
+- **Dynamic glow system**: Replaced all hardcoded `rgba()` glow values in Tailwind arbitrary classes with CSS helper classes (`.glow-accent-sm/md/lg/xl`, `.shadow-floating-bar`) driven by `--color-brand-yellow-rgb`, ensuring glows update instantly when the accent color changes.
+
 ## [2.1.0] - 2026-03-17
 ### Changed
 - **FloatingActionBar visual refresh**: Selected pills (aspect ratio, count, model, resolution) now show a persistent lime tint at rest; separators updated to brand-yellow/20; Auto-Enhance toggle gains a ring when active; subtle ambient glow on bar background.

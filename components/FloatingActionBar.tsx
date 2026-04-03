@@ -217,13 +217,13 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
             <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 lg:left-[calc(50%-20px)] lg:-translate-x-1/2 w-[95%] lg:w-fit lg:min-w-[720px] max-w-5xl z-[70] transition-all duration-500`}>
 
                 {/* Visual Body - Handles Background, Border, Shadow and CLIPPING of the loading bar */}
-                <div className="absolute inset-0 bg-light-surface/85 dark:bg-dark-surface/65 backdrop-blur-[40px] border border-white/20 dark:border-white/10 rounded-[32px] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.4),0_0_80px_-30px_rgba(200,242,58,0.08)] overflow-hidden">
+                <div className="absolute inset-0 bg-light-surface/85 dark:bg-dark-surface/65 backdrop-blur-[40px] border border-white/20 dark:border-white/10 rounded-[32px] shadow-floating-bar overflow-hidden">
                     {isLoading && (
                     <div className="absolute top-0 left-0 right-0 h-[3px] overflow-hidden rounded-t-[32px]">
                         <div
                             className="animate-shimmer h-full w-full"
                             style={{
-                                background: 'linear-gradient(90deg, #1e2b0a 0%, #1e2b0a 15%, color-mix(in srgb, var(--color-brand-yellow) 90%, transparent) 40%, var(--color-brand-yellow) 50%, color-mix(in srgb, var(--color-brand-yellow) 90%, transparent) 60%, #1e2b0a 85%, #1e2b0a 100%)',
+                                background: 'linear-gradient(90deg, #1c0e00 0%, #1c0e00 15%, color-mix(in srgb, var(--color-brand-yellow) 90%, transparent) 40%, var(--color-brand-yellow) 50%, color-mix(in srgb, var(--color-brand-yellow) 90%, transparent) 60%, #1c0e00 85%, #1c0e00 100%)',
                                 backgroundSize: '200% 100%'
                             }}
                         />
@@ -339,7 +339,7 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                                 >
                                     <div
                                         className={`absolute top-0.5 w-4 h-4 rounded-full shadow-sm transition-all duration-300 cubic-bezier(0.4, 0.0, 0.2, 1) ${autoEnhance
-                                            ? 'translate-x-[18px] bg-brand-yellow shadow-[0_0_8px_rgba(200,242,58,0.6)]'
+                                            ? 'translate-x-[18px] bg-brand-yellow glow-accent-xl'
                                             : 'translate-x-0.5 bg-white/40 dark:bg-white/60'
                                             }`}
                                     />

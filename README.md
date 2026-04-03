@@ -1,4 +1,4 @@
-# Generentolo PRO
+# Generentolo PRO v2.2
 
 **Professional AI image generation suite powered by Google Gemini.**
 
@@ -27,6 +27,7 @@ Generate, iterate, and storyboard images at up to 4K resolution with triple-mode
 - **Multi-reference support** — up to 14 reference images (PRO), style reference, and structure guide image
 - **Persistent history** — last 12 generations saved with full metadata; favorites system
 - **Bilingual UI** — full English / Italian support with live toggle
+- **Accent Color Picker** — change the app's accent color on the fly from 8 curated presets or any custom hex; persists across sessions
 
 ---
 
