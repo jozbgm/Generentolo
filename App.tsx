@@ -1427,63 +1427,25 @@ const ImageDisplay: React.FC<ImageDisplayProps> = ({ images, isLoading, onDownlo
                                         <button onClick={() => onEdit(image)} className="p-2 rounded-full bg-black/50 text-brand-yellow hover:bg-brand-yellow hover:text-dark-bg transition-colors" aria-label={t.editAction}><BrushIcon className="w-5 h-5" /></button>
 
                                         {/* v2.4: Outpaint */}
-                                        <div className="relative">
-                                            <button
-                                                onClick={(e) => { e.stopPropagation(); setShowOutpaintMenu(showOutpaintMenu === image.id ? null : image.id); setShowUpscaleMenu(null); }}
-                                                className="p-2 rounded-full bg-black/50 text-brand-yellow hover:bg-brand-yellow hover:text-dark-bg transition-colors"
-                                                aria-label="Outpaint — expand image"
-                                                title="Outpaint"
-                                            >
-                                                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="5" y="5" width="14" height="14" rx="1"/><path d="M5 12H2M22 12h-3M12 5V2M12 22v-3"/><path d="M2 12l2-2m-2 2 2 2M22 12l-2-2m2 2-2 2M12 2l-2 2m2-2 2 2M12 22l-2-2m2 2 2-2"/></svg>
-                                            </button>
-                                            {showOutpaintMenu === image.id && (
-                                                <div className="absolute bottom-full mb-2 right-0 bg-dark-surface/95 backdrop-blur-xl border border-white/15 rounded-2xl shadow-2xl p-3 z-30 min-w-[180px]" onClick={e => e.stopPropagation()}>
-                                                    <p className="text-[9px] font-black uppercase tracking-widest text-dark-text-muted mb-2">Expand direction</p>
-                                                    <div className="grid grid-cols-3 gap-1 mb-3">
-                                                        <div />
-                                                        <button onClick={() => { onOutpaint(image, 'up', 50); setShowOutpaintMenu(null); }} className="aspect-square rounded-lg bg-white/5 hover:bg-brand-yellow/20 hover:text-brand-yellow text-white/60 flex items-center justify-center transition-colors text-xs">↑</button>
-                                                        <div />
-                                                        <button onClick={() => { onOutpaint(image, 'left', 50); setShowOutpaintMenu(null); }} className="aspect-square rounded-lg bg-white/5 hover:bg-brand-yellow/20 hover:text-brand-yellow text-white/60 flex items-center justify-center transition-colors text-xs">←</button>
-                                                        <div className="aspect-square rounded-lg bg-white/10 flex items-center justify-center"><svg className="w-3 h-3 text-white/30" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="1"/></svg></div>
-                                                        <button onClick={() => { onOutpaint(image, 'right', 50); setShowOutpaintMenu(null); }} className="aspect-square rounded-lg bg-white/5 hover:bg-brand-yellow/20 hover:text-brand-yellow text-white/60 flex items-center justify-center transition-colors text-xs">→</button>
-                                                        <div />
-                                                        <button onClick={() => { onOutpaint(image, 'down', 50); setShowOutpaintMenu(null); }} className="aspect-square rounded-lg bg-white/5 hover:bg-brand-yellow/20 hover:text-brand-yellow text-white/60 flex items-center justify-center transition-colors text-xs">↓</button>
-                                                        <div />
-                                                    </div>
-                                                    <p className="text-[8px] text-white/30 text-center">+50% in chosen direction</p>
-                                                </div>
-                                            )}
-                                        </div>
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); setShowOutpaintMenu(showOutpaintMenu === image.id ? null : image.id); setShowUpscaleMenu(null); }}
+                                            className="p-2 rounded-full bg-black/50 text-brand-yellow hover:bg-brand-yellow hover:text-dark-bg transition-colors"
+                                            aria-label="Outpaint — expand image"
+                                            title="Outpaint"
+                                        >
+                                            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="5" y="5" width="14" height="14" rx="1"/><path d="M5 12H2M22 12h-3M12 5V2M12 22v-3"/><path d="M2 12l2-2m-2 2 2 2M22 12l-2-2m2 2-2 2M12 2l-2 2m2-2 2 2M12 22l-2-2m2 2 2-2"/></svg>
+                                        </button>
 
-                                        {/* v1.1: Upscale button with dropdown */}
+                                        {/* v1.1: Upscale button */}
                                         {!isUpscaling && (
-                                            <div className="relative">
-                                                <button
-                                                    onClick={() => setShowUpscaleMenu(showUpscaleMenu === image.id ? null : image.id)}
-                                                    className="p-2 rounded-full bg-black/50 text-brand-yellow hover:bg-brand-yellow hover:text-dark-bg transition-colors"
-                                                    aria-label={t.upscaleAction}
-                                                    title={t.upscaleAction}
-                                                >
-                                                    <SparklesIcon className="w-5 h-5" />
-                                                </button>
-
-                                                {showUpscaleMenu === image.id && (
-                                                    <div className="absolute top-full right-0 mt-1 bg-dark-surface border border-dark-border rounded-lg shadow-lg overflow-hidden z-20 min-w-[160px]">
-                                                        <button
-                                                            onClick={(e) => { e.stopPropagation(); onUpscale(image, '2k'); setShowUpscaleMenu(null); }}
-                                                            className="w-full px-4 py-2 text-left text-white hover:bg-dark-surface-accent transition-colors"
-                                                        >
-                                                            {t.upscale2K}
-                                                        </button>
-                                                        <button
-                                                            onClick={(e) => { e.stopPropagation(); onUpscale(image, '4k'); setShowUpscaleMenu(null); }}
-                                                            className="w-full px-4 py-2 text-left text-white hover:bg-dark-surface-accent transition-colors"
-                                                        >
-                                                            {t.upscale4K}
-                                                        </button>
-                                                    </div>
-                                                )}
-                                            </div>
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); setShowUpscaleMenu(showUpscaleMenu === image.id ? null : image.id); setShowOutpaintMenu(null); }}
+                                                className="p-2 rounded-full bg-black/50 text-brand-yellow hover:bg-brand-yellow hover:text-dark-bg transition-colors"
+                                                aria-label={t.upscaleAction}
+                                                title={t.upscaleAction}
+                                            >
+                                                <SparklesIcon className="w-5 h-5" />
+                                            </button>
                                         )}
 
                                         <button onClick={() => onDownload(image)} className="p-2 rounded-full bg-black/50 text-brand-yellow hover:bg-brand-yellow hover:text-dark-bg transition-colors" aria-label="Download image"><DownloadIcon className="w-5 h-5" /></button>
@@ -1498,6 +1460,33 @@ const ImageDisplay: React.FC<ImageDisplayProps> = ({ images, isLoading, onDownlo
                                             <DiceIcon className="w-5 h-5" />
                                         </button>
                                     </div>
+
+                                    {/* Outpaint popup — outside hover div so it doesn't disappear on mousemove */}
+                                    {showOutpaintMenu === image.id && (
+                                        <div className="absolute top-14 right-2 bg-dark-surface/95 backdrop-blur-xl border border-white/15 rounded-2xl shadow-2xl p-3 z-30 min-w-[140px]" onClick={e => e.stopPropagation()}>
+                                            <p className="text-[9px] font-black uppercase tracking-widest text-dark-text-muted mb-2">Expand direction</p>
+                                            <div className="grid grid-cols-3 gap-1 mb-2">
+                                                <div />
+                                                <button onClick={() => { onOutpaint(image, 'up', 50); setShowOutpaintMenu(null); }} className="aspect-square rounded-lg bg-white/5 hover:bg-brand-yellow/20 hover:text-brand-yellow text-white/60 flex items-center justify-center transition-colors text-sm">↑</button>
+                                                <div />
+                                                <button onClick={() => { onOutpaint(image, 'left', 50); setShowOutpaintMenu(null); }} className="aspect-square rounded-lg bg-white/5 hover:bg-brand-yellow/20 hover:text-brand-yellow text-white/60 flex items-center justify-center transition-colors text-sm">←</button>
+                                                <div className="aspect-square rounded-lg bg-white/10 flex items-center justify-center"><svg className="w-3 h-3 text-white/30" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="1"/></svg></div>
+                                                <button onClick={() => { onOutpaint(image, 'right', 50); setShowOutpaintMenu(null); }} className="aspect-square rounded-lg bg-white/5 hover:bg-brand-yellow/20 hover:text-brand-yellow text-white/60 flex items-center justify-center transition-colors text-sm">→</button>
+                                                <div />
+                                                <button onClick={() => { onOutpaint(image, 'down', 50); setShowOutpaintMenu(null); }} className="aspect-square rounded-lg bg-white/5 hover:bg-brand-yellow/20 hover:text-brand-yellow text-white/60 flex items-center justify-center transition-colors text-sm">↓</button>
+                                                <div />
+                                            </div>
+                                            <p className="text-[8px] text-white/30 text-center">+50% in chosen direction</p>
+                                        </div>
+                                    )}
+
+                                    {/* Upscale popup — outside hover div */}
+                                    {showUpscaleMenu === image.id && (
+                                        <div className="absolute top-14 right-2 bg-dark-surface border border-dark-border rounded-xl shadow-lg overflow-hidden z-30 min-w-[160px]" onClick={e => e.stopPropagation()}>
+                                            <button onClick={(e) => { e.stopPropagation(); onUpscale(image, '2k'); setShowUpscaleMenu(null); }} className="w-full px-4 py-2 text-left text-white hover:bg-dark-surface-accent transition-colors">{t.upscale2K}</button>
+                                            <button onClick={(e) => { e.stopPropagation(); onUpscale(image, '4k'); setShowUpscaleMenu(null); }} className="w-full px-4 py-2 text-left text-white hover:bg-dark-surface-accent transition-colors">{t.upscale4K}</button>
+                                        </div>
+                                    )}
                                 </div>
                             );
                         })}
@@ -3990,6 +3979,25 @@ export default function App() {
         }
     }, [isLoading, language, userApiKey, selectedModel, selectedResolution, thinkingLevel, showToast, t.generationFailed]);
 
+    // v2.4: Outpaint a reference image directly from the FAB
+    const handleOutpaintReference = useCallback(async (direction: 'left' | 'right' | 'up' | 'down') => {
+        if (referenceImages.length === 0 || isLoading) return;
+        const file = referenceImages[0];
+        const dataUrl = await new Promise<string>((resolve) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result as string);
+            reader.readAsDataURL(file);
+        });
+        const fakeImage: GeneratedImage = {
+            id: crypto.randomUUID(),
+            imageDataUrl: dataUrl,
+            prompt: '',
+            aspectRatio: '1:1', // recalculated inside handleOutpaint from actual pixel dimensions
+            timestamp: Date.now(),
+        };
+        handleOutpaint(fakeImage, direction, 50);
+    }, [referenceImages, isLoading, handleOutpaint]);
+
     // v0.8: Toggle favorite/bookmark
     const handleToggleFavorite = useCallback((imageId: string) => {
         setHistory(prev => prev.map(img =>
@@ -4523,6 +4531,8 @@ export default function App() {
                     thinkingLevel={thinkingLevel}
                     onThinkingLevelChange={setThinkingLevel}
                     isEnhancing={isEnhancing}
+                    referenceCount={referenceImages.length}
+                    onOutpaintReference={handleOutpaintReference}
                 />
 
                 <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} onSave={handleSaveApiKey} currentApiKey={userApiKey} />

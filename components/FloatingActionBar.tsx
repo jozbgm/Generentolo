@@ -33,6 +33,8 @@ interface FloatingActionBarProps {
     thinkingLevel: ThinkingLevel;
     onThinkingLevelChange: (level: ThinkingLevel) => void;
     isEnhancing?: boolean;
+    referenceCount: number;
+    onOutpaintReference: (direction: 'up' | 'down' | 'left' | 'right') => void;
 }
 
 const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
@@ -65,6 +67,8 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
     thinkingLevel,
     onThinkingLevelChange,
     isEnhancing,
+    referenceCount,
+    onOutpaintReference,
 }) => {
     const { t, language } = useLocalization();
 
@@ -84,6 +88,7 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
     const [showModelMenu, setShowModelMenu] = useState(false);
     const [showResolutionMenu, setShowResolutionMenu] = useState(false);
     const [showThinkingMenu, setShowThinkingMenu] = useState(false);
+    const [showOutpaintRefMenu, setShowOutpaintRefMenu] = useState(false);
 
     // UI state for copy feedback
     const [justCopied, setJustCopied] = useState(false);
@@ -399,6 +404,36 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                                     </span>
                                 )}
                             </button>
+
+                            {/* Outpaint Reference pill — visible only when reference images are loaded */}
+                            {referenceCount > 0 && (
+                                <div className="relative h-full">
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); setShowOutpaintRefMenu(v => !v); setShowAdvancedPanel(false); setShowModelMenu(false); setShowResolutionMenu(false); setShowThinkingMenu(false); }}
+                                        className={`h-full flex items-center gap-1.5 px-2.5 rounded-xl transition-all border text-[10px] font-bold ${showOutpaintRefMenu ? 'bg-brand-yellow/15 border-brand-yellow/30 text-brand-yellow' : 'bg-black/5 dark:bg-white/5 border-transparent text-light-text-muted dark:text-dark-text-muted hover:bg-white/5'}`}
+                                        title="Outpaint reference image"
+                                    >
+                                        <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="5" y="5" width="14" height="14" rx="1"/><path d="M5 12H2M22 12h-3M12 5V2M12 22v-3"/></svg>
+                                        <span className="hidden sm:inline">Outpaint</span>
+                                    </button>
+                                    {showOutpaintRefMenu && (
+                                        <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-dark-surface/95 backdrop-blur-xl border border-white/15 rounded-2xl shadow-2xl p-3 z-50 min-w-[130px]" onClick={e => e.stopPropagation()}>
+                                            <p className="text-[9px] font-black uppercase tracking-widest text-dark-text-muted mb-2 text-center">REF.1 direction</p>
+                                            <div className="grid grid-cols-3 gap-1">
+                                                <div />
+                                                <button onClick={() => { onOutpaintReference('up'); setShowOutpaintRefMenu(false); }} className="aspect-square rounded-lg bg-white/5 hover:bg-brand-yellow/20 hover:text-brand-yellow text-white/60 flex items-center justify-center transition-colors text-sm">↑</button>
+                                                <div />
+                                                <button onClick={() => { onOutpaintReference('left'); setShowOutpaintRefMenu(false); }} className="aspect-square rounded-lg bg-white/5 hover:bg-brand-yellow/20 hover:text-brand-yellow text-white/60 flex items-center justify-center transition-colors text-sm">←</button>
+                                                <div className="aspect-square rounded-lg bg-white/10 flex items-center justify-center"><svg className="w-3 h-3 text-white/30" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="1"/></svg></div>
+                                                <button onClick={() => { onOutpaintReference('right'); setShowOutpaintRefMenu(false); }} className="aspect-square rounded-lg bg-white/5 hover:bg-brand-yellow/20 hover:text-brand-yellow text-white/60 flex items-center justify-center transition-colors text-sm">→</button>
+                                                <div />
+                                                <button onClick={() => { onOutpaintReference('down'); setShowOutpaintRefMenu(false); }} className="aspect-square rounded-lg bg-white/5 hover:bg-brand-yellow/20 hover:text-brand-yellow text-white/60 flex items-center justify-center transition-colors text-sm">↓</button>
+                                                <div />
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
 
                             {/* Advanced Settings Cog */}
                             <button
