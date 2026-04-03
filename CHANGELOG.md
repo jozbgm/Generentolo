@@ -1,5 +1,12 @@
 # 📋 Changelog - Generentolo PRO
 
+## [2.4.0] - 2026-04-03
+### Added
+- **Thinking Level selector** (NB2 / PRO only): Nuovo controllo nel model group della FloatingActionBar per selezionare la profondità di ragionamento interno del modello. ⚡ Fast (minimal, default), 🧠 Balanced (medium), 🔬 Deep (high). Visibile solo quando è selezionato NB2 o PRO.
+- **Video Reference input** (NB2 only): Nuova zona di upload video nella sidebar (visibile solo con NB2 selezionato). Supporta mp4, mov, webm. Genera automaticamente una thumbnail frame dal video al momento dell'upload. Il video viene passato come parte inline alla chiamata di generazione prima delle immagini di reference.
+- **Quick Edit bar**: Barra di editing rapido sempre visibile sotto l'immagine generata. Permette di digitare un'istruzione testuale ("make the sky orange", "add fog") e applicarla all'immagine corrente con un click o Enter. Responsive su mobile.
+- **Outpaint**: Pulsante expand nella hover bar di ogni immagine. Apre un menu a griglia con 4 direzioni (↑↓←→). Espande il canvas del 50% nella direzione scelta, riempie l'area bianca con il modello AI continuando la scena in modo seamless.
+
 ## [2.3.0] - 2026-04-03
 ### Changed
 - **Angles — prompt engine v4.0**: Riscritto `anglePromptService.ts` con vocabolario cinematografico research-backed (natural language + gradi combinati, terminologia Gemini-native: `rear view`, `bird's-eye view`, `three-quarter angle`, ecc.), struttura prompt a 5 layer, aggiunta simulazione lente fotografica in base allo zoom. Il cognitive step ora estrae descrizione soggetto+ambiente dalla reference per constraint di consistency più specifici.

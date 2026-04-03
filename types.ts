@@ -1,5 +1,6 @@
 export type ModelType = 'gemini-2.5-flash-image' | 'gemini-3-pro-image-preview' | 'gemini-3.1-flash-image-preview';
 export type ResolutionType = '0.5k' | '1k' | '2k' | '4k';
+export type ThinkingLevel = 'minimal' | 'medium' | 'high';
 
 export interface GeneratedImage {
   id: string;

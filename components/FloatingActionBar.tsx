@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocalization } from '../App';
-import { ModelType, ResolutionType } from '../types';
+import { ModelType, ResolutionType, ThinkingLevel } from '../types';
 import { XIcon, CopyIcon, PlusIcon, SparklesIcon, UserIcon, LanguageIcon, ImageIcon, SettingsIcon, ZapIcon, StarIcon, DiceIcon, CheckIcon, ReloadIcon, ClapperboardIcon, Layers2Icon, MonitorIcon, SmartphoneIcon, RatioSquareIcon } from './icons';
 
 interface FloatingActionBarProps {
@@ -30,6 +30,8 @@ interface FloatingActionBarProps {
     onModelChange: (model: ModelType) => void;
     selectedResolution: ResolutionType;
     onResolutionChange: (resolution: ResolutionType) => void;
+    thinkingLevel: ThinkingLevel;
+    onThinkingLevelChange: (level: ThinkingLevel) => void;
     isEnhancing?: boolean;
 }
 
@@ -60,6 +62,8 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
     onModelChange,
     selectedResolution,
     onResolutionChange,
+    thinkingLevel,
+    onThinkingLevelChange,
     isEnhancing,
 }) => {
     const { t, language } = useLocalization();
@@ -79,6 +83,7 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
     const [showAdvancedPanel, setShowAdvancedPanel] = useState(false);
     const [showModelMenu, setShowModelMenu] = useState(false);
     const [showResolutionMenu, setShowResolutionMenu] = useState(false);
+    const [showThinkingMenu, setShowThinkingMenu] = useState(false);
 
     // UI state for copy feedback
     const [justCopied, setJustCopied] = useState(false);
@@ -167,7 +172,7 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
     return (
         <>
             {/* Backdrop for Popovers/Advanced Panel */}
-            {(showAdvancedPanel || showAspectMenu || showNumImagesMenu || showModelMenu || showResolutionMenu) && (
+            {(showAdvancedPanel || showAspectMenu || showNumImagesMenu || showModelMenu || showResolutionMenu || showThinkingMenu) && (
                 <div
                     className="fixed inset-0 bg-black/5 backdrop-blur-[2px] z-[65] animate-fadeIn"
                     onClick={() => {
@@ -176,6 +181,7 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                         setShowNumImagesMenu(false);
                         setShowModelMenu(false);
                         setShowResolutionMenu(false);
+                        setShowThinkingMenu(false);
                     }}
                 />
             )}
@@ -330,10 +336,23 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                                 <>
                                     <div className="w-[1px] h-4 bg-brand-yellow/20 mx-0.5" />
                                     <button
-                                        onClick={(e) => { e.stopPropagation(); setShowResolutionMenu(!showResolutionMenu); setShowAspectMenu(false); setShowNumImagesMenu(false); setShowModelMenu(false); }}
+                                        onClick={(e) => { e.stopPropagation(); setShowResolutionMenu(!showResolutionMenu); setShowAspectMenu(false); setShowNumImagesMenu(false); setShowModelMenu(false); setShowThinkingMenu(false); }}
                                         className={`h-full px-3 rounded-[10px] text-[10px] font-bold transition-all whitespace-nowrap ${showResolutionMenu ? 'bg-brand-yellow text-dark-bg shadow-sm' : 'bg-brand-yellow/10 text-brand-yellow/80 hover:bg-brand-yellow/15'}`}
                                     >
                                         {selectedResolution.toUpperCase()}
+                                    </button>
+                                    <div className="w-[1px] h-4 bg-brand-yellow/20 mx-0.5" />
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); setShowThinkingMenu(!showThinkingMenu); setShowAspectMenu(false); setShowNumImagesMenu(false); setShowModelMenu(false); setShowResolutionMenu(false); }}
+                                        className={`h-full px-3 rounded-[10px] text-[10px] font-bold transition-all whitespace-nowrap ${showThinkingMenu ? 'bg-brand-yellow text-dark-bg shadow-sm' : 'bg-brand-yellow/10 text-brand-yellow/80 hover:bg-brand-yellow/15'}`}
+                                        title="Thinking level — controls internal reasoning depth"
+                                    >
+                                        {thinkingLevel === 'minimal'
+                                            ? <ZapIcon className="w-3.5 h-3.5" />
+                                            : thinkingLevel === 'medium'
+                                                ? <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="14" y2="12"/><line x1="4" y1="18" x2="9" y2="18"/></svg>
+                                                : <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg>
+                                        }
                                     </button>
                                 </>
                             )}
@@ -383,7 +402,7 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
 
                             {/* Advanced Settings Cog */}
                             <button
-                                onClick={(e) => { e.stopPropagation(); setShowAdvancedPanel(!showAdvancedPanel); setShowAspectMenu(false); setShowNumImagesMenu(false); setShowModelMenu(false); setShowResolutionMenu(false); }}
+                                onClick={(e) => { e.stopPropagation(); setShowAdvancedPanel(!showAdvancedPanel); setShowAspectMenu(false); setShowNumImagesMenu(false); setShowModelMenu(false); setShowResolutionMenu(false); setShowThinkingMenu(false); }}
                                 className={`h-full w-10 flex items-center justify-center rounded-xl transition-all hover:scale-105 active:scale-90 border border-transparent ${showAdvancedPanel ? 'bg-brand-yellow/20 text-brand-yellow border-brand-yellow/20 ring-2 ring-brand-yellow/10' : 'bg-black/5 dark:bg-white/5 text-light-text-muted dark:text-dark-text-muted hover:bg-white/10 hover:text-light-text/70 hover:rotate-90 grayscale saturate-0'}`}
                                 title={t.advancedSettings}
                             >
@@ -524,6 +543,46 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                                 className={`px-5 py-2.5 rounded-[14px] text-[11px] font-extrabold transition-all border ${selectedResolution === res ? 'bg-brand-yellow text-dark-bg border-brand-yellow shadow-lg shadow-brand-yellow/20' : 'hover:bg-white/10 text-light-text/70 dark:text-dark-text/70 border-transparent'}`}
                             >
                                 {res.toUpperCase()}
+                            </button>
+                        ))}
+                    </div>
+                )}
+
+                {/* Thinking Level Menu */}
+                {showThinkingMenu && (
+                    <div className="absolute bottom-full mb-4 left-64 bg-light-surface/95 dark:bg-dark-surface/95 backdrop-blur-[50px] border border-white/20 dark:border-white/10 rounded-2xl shadow-2xl p-3 animate-slideUp z-[80] min-w-[220px]">
+                        <p className="text-[9px] font-black uppercase tracking-widest text-light-text-muted dark:text-dark-text-muted mb-2 px-1">Thinking Depth</p>
+                        {([
+                            {
+                                level: 'minimal' as ThinkingLevel,
+                                icon: <ZapIcon className="w-4 h-4" />,
+                                label: 'Fast',
+                                desc: 'Minimal reasoning — fastest'
+                            },
+                            {
+                                level: 'medium' as ThinkingLevel,
+                                icon: <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="14" y2="12"/><line x1="4" y1="18" x2="9" y2="18"/></svg>,
+                                label: 'Balanced',
+                                desc: 'More creative, slightly slower'
+                            },
+                            {
+                                level: 'high' as ThinkingLevel,
+                                icon: <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg>,
+                                label: 'Deep',
+                                desc: 'Max reasoning — best quality'
+                            },
+                        ]).map(({ level, icon, label, desc }) => (
+                            <button
+                                key={level}
+                                onClick={() => { onThinkingLevelChange(level); setShowThinkingMenu(false); }}
+                                className={`w-full flex items-center gap-3 px-3 py-2 rounded-[12px] text-left transition-all ${thinkingLevel === level ? 'bg-brand-yellow/15 border border-brand-yellow/30' : 'hover:bg-white/5 border border-transparent'}`}
+                            >
+                                <span className={`shrink-0 ${thinkingLevel === level ? 'text-brand-yellow' : 'text-light-text-muted dark:text-dark-text-muted'}`}>{icon}</span>
+                                <div>
+                                    <p className={`text-[11px] font-extrabold ${thinkingLevel === level ? 'text-brand-yellow' : 'text-light-text dark:text-dark-text'}`}>{label}</p>
+                                    <p className="text-[9px] text-light-text-muted dark:text-dark-text-muted">{desc}</p>
+                                </div>
+                                {thinkingLevel === level && <CheckIcon className="w-3.5 h-3.5 text-brand-yellow ml-auto" />}
                             </button>
                         ))}
                     </div>

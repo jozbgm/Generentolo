@@ -887,7 +887,9 @@ export const generateImage = async (
     abortSignal?: AbortSignal,
     useGrounding?: boolean, // v1.4: Google Search Grounding
     skipPreprocessing?: boolean, // v1.9.2: Speed optimization
-    _precomputedStyleDescription?: string // v2.1: kept for API compat, style now handled as direct image part
+    _precomputedStyleDescription?: string, // v2.1: kept for API compat, style now handled as direct image part
+    thinkingLevel?: 'minimal' | 'medium' | 'high', // v2.4: configurable thinking budget for NB2/PRO
+    videoReferenceFile?: File | null // v2.4: full video as style reference (NB2 only)
 ): Promise<string> => {
     try {
         const ai = getAiClient(userApiKey);
@@ -905,6 +907,11 @@ export const generateImage = async (
          */
 
         const imageParts: any[] = [];
+
+        // v2.4: Video reference (NB2 only) — added first so model sees it before images
+        if (videoReferenceFile && model === 'gemini-3.1-flash-image-preview') {
+            imageParts.push(await fileToGenerativePart(videoReferenceFile));
+        }
 
         // Process reference images
         for (const file of referenceFiles) {
@@ -1047,6 +1054,13 @@ export const generateImage = async (
         const aspectRatioGuidance = getAspectRatioGuidance(aspectRatio, language, model);
         const instructionParts: string[] = [aspectRatioGuidance];
 
+        // v2.4: Video reference instruction
+        if (videoReferenceFile && model === 'gemini-3.1-flash-image-preview') {
+            instructionParts.push(language === 'it'
+                ? `🎬 VIDEO REFERENCE: Il primo elemento è un video — usalo come riferimento visivo per soggetto, stile, ambiente, lighting e composizione. Genera un'immagine coerente con il contenuto del video.`
+                : `🎬 VIDEO REFERENCE: The first element is a video — use it as visual reference for subject, style, environment, lighting and composition. Generate an image consistent with the video content.`);
+        }
+
         // v1.0: Add resolution keywords to prompt for advanced models (Pro & NB2) to trigger high-res generation
         if (isAdvancedModel(model) && resolution) {
             const resolutionKeyword = resolution === '4k' ? 'extreme 4K Ultra HD resolution, 4096px, hyper-detailed textures, macro sharpness' :
@@ -1179,9 +1193,9 @@ export const generateImage = async (
             safetySettings: SAFETY_SETTINGS_PERMISSIVE,
         };
 
-        // v2.1: thinkingConfig minimal for NB2 — reduces internal thought overhead for speed
-        if (model === 'gemini-3.1-flash-image-preview') {
-            config.thinkingConfig = { thinkingLevel: 'minimal' };
+        // v2.4: thinkingConfig for NB2/PRO — user-configurable level, defaults to 'minimal'
+        if (model === 'gemini-3.1-flash-image-preview' || model === 'gemini-3-pro-image-preview') {
+            config.thinkingConfig = { thinkingLevel: thinkingLevel ?? 'minimal' };
         }
 
         // Add imageConfig with aspect ratio

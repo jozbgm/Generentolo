@@ -36,7 +36,7 @@ if (!crypto.randomUUID) {
 // --- Localization ---
 const translations = {
     en: {
-        headerTitle: 'Generentolo PRO v2.3',
+        headerTitle: 'Generentolo PRO v2.4',
         headerSubtitle: 'Let me do it for you!',
         refImagesTitle: 'Reference & Style Images',
         styleRefTitle: 'Style Reference',
@@ -306,7 +306,7 @@ const translations = {
         presetAppliedToPrompt: 'Will be applied to generation',
     },
     it: {
-        headerTitle: 'Generentolo PRO v2.3',
+        headerTitle: 'Generentolo PRO v2.4',
         headerSubtitle: 'Let me do it for you!',
         refImagesTitle: 'Immagini di Riferimento e Stile',
         styleRefTitle: 'Riferimento Stile',
@@ -680,7 +680,7 @@ const Header: React.FC<HeaderProps> = ({ theme, toggleTheme, onOpenSettings, onO
                 <h1 className="text-xl font-bold flex items-center">
                     <span className="text-brand-yellow">Generentolo</span>
                     <span className="text-light-text-muted dark:text-white/90 ml-2">PRO</span>
-                    <span className="text-brand-yellow ml-2">v2.2</span>
+                    <span className="text-brand-yellow ml-2">v2.4</span>
                 </h1>
                 <p className="text-xs text-light-text-muted dark:text-dark-text-muted mt-1">
                     {t.headerSubtitle} Powered by <span className="font-bold text-brand-yellow">JOZ</span> for <span className="font-bold text-brand-yellow">Dugongo</span>
@@ -815,7 +815,14 @@ const ReferencePanel: React.FC<{
     // GenerAngles
     onGenerateFromAngle: (params: AngleGenerationParams) => void;
     isGeneratingAngles: boolean;
-}> = ({ onAddImages, onRemoveImage, referenceImages, onAddStyleImage, onRemoveStyleImage, styleImage, onAddStructureImage, onRemoveStructureImage, structureImage, selectedStylePreset, setSelectedStylePreset, selectedLighting, setSelectedLighting, selectedCamera, setSelectedCamera, selectedFocus, setSelectedFocus, selectedModel, preciseReference, setPreciseReference, dnaCharacters, selectedDnaIds, onSelectDna, onManageDna, appMode, setAppMode, studioConfig, setStudioConfig, onGenerateStoryboard, isStoryboardLoading, onGenerateFromAngle, isGeneratingAngles }) => {
+    // v2.4: Video reference (NB2 only)
+    videoReference: File | null;
+    onAddVideoReference: (file: File) => void;
+    onRemoveVideoReference: () => void;
+    onCaptureVideoFrame: (frameFile: File) => void;
+    videoAsStyle: boolean;
+    onToggleVideoAsStyle: () => void;
+}> = ({ onAddImages, onRemoveImage, referenceImages, onAddStyleImage, onRemoveStyleImage, styleImage, onAddStructureImage, onRemoveStructureImage, structureImage, selectedStylePreset, setSelectedStylePreset, selectedLighting, setSelectedLighting, selectedCamera, setSelectedCamera, selectedFocus, setSelectedFocus, selectedModel, preciseReference, setPreciseReference, dnaCharacters, selectedDnaIds, onSelectDna, onManageDna, appMode, setAppMode, studioConfig, setStudioConfig, onGenerateStoryboard, isStoryboardLoading, onGenerateFromAngle, isGeneratingAngles, videoReference, onAddVideoReference, onRemoveVideoReference, onCaptureVideoFrame, videoAsStyle, onToggleVideoAsStyle }) => {
     const { t, language } = useLocalization();
     const [isDraggingRef, setIsDraggingRef] = useState(false);
     const [isDraggingStyle, setIsDraggingStyle] = useState(false);
@@ -826,6 +833,32 @@ const ReferencePanel: React.FC<{
     const [showPhysics, setShowPhysics] = useState(false);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const videoElRef = useRef<HTMLVideoElement>(null);
+    const [videoObjectUrl, setVideoObjectUrl] = useState<string | null>(null);
+    const [frameCaptured, setFrameCaptured] = useState(false);
+
+    useEffect(() => {
+        if (!videoReference) { setVideoObjectUrl(null); setFrameCaptured(false); return; }
+        const url = URL.createObjectURL(videoReference);
+        setVideoObjectUrl(url);
+        setFrameCaptured(false);
+        return () => URL.revokeObjectURL(url);
+    }, [videoReference]);
+
+    const handleCaptureFrame = () => {
+        const video = videoElRef.current;
+        if (!video) return;
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth || 640;
+        canvas.height = video.videoHeight || 360;
+        canvas.getContext('2d')!.drawImage(video, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob(blob => {
+            if (!blob) return;
+            const file = new File([blob], `frame-${Math.round(video.currentTime * 100)}.png`, { type: 'image/png' });
+            onCaptureVideoFrame(file);
+            setFrameCaptured(true);
+        }, 'image/png');
+    };
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) onAddImages(Array.from(e.target.files));
@@ -915,6 +948,69 @@ const ReferencePanel: React.FC<{
                     </div>
                 </div>
                 <input ref={fileInputRef} id="file-upload" type="file" className="hidden" multiple accept="image/*" onChange={handleFileChange} />
+
+                {/* v2.4: Video Reference (NB2 only) */}
+                {selectedModel === 'gemini-3.1-flash-image-preview' && (
+                    <div className="space-y-1.5">
+                        <div className="flex items-center gap-1.5 px-0.5">
+                            <svg className="w-3 h-3 text-brand-yellow" viewBox="0 0 24 24" fill="currentColor"><path d="M17 10.5V7a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-3.5l4 4v-11l-4 4z"/></svg>
+                            <span className="text-[10px] font-black uppercase tracking-widest text-light-text-muted dark:text-dark-text-muted">Video Reference</span>
+                            <span className="ml-auto text-[9px] text-brand-yellow/50 font-mono">NB2</span>
+                        </div>
+                        {videoReference && videoObjectUrl ? (
+                            <div className="rounded-xl overflow-hidden border border-brand-yellow/20 bg-black">
+                                {/* Native video element — full scrubbing, play/pause */}
+                                <video
+                                    ref={videoElRef}
+                                    src={videoObjectUrl}
+                                    controls
+                                    preload="metadata"
+                                    className="w-full max-h-40 object-contain bg-black"
+                                    style={{ display: 'block' }}
+                                />
+                                {/* Action bar */}
+                                <div className="px-2 py-1.5 bg-black/60 space-y-1.5">
+                                    <div className="flex items-center gap-1.5">
+                                        <span className="text-[9px] text-white/40 truncate flex-1">{videoReference.name}</span>
+                                        <button
+                                            onClick={onRemoveVideoReference}
+                                            className="shrink-0 w-5 h-5 rounded-full bg-white/10 hover:bg-red-500/80 flex items-center justify-center transition-colors"
+                                            aria-label="Remove video"
+                                        >
+                                            <svg className="w-2.5 h-2.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                                        </button>
+                                    </div>
+                                    <div className="flex items-center gap-1.5">
+                                        {/* Capture Frame */}
+                                        <button
+                                            onClick={handleCaptureFrame}
+                                            className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-1 rounded-lg text-[10px] font-bold transition-all ${frameCaptured ? 'bg-brand-yellow/20 text-brand-yellow border border-brand-yellow/30' : 'bg-white/10 text-white/70 hover:bg-white/20'}`}
+                                        >
+                                            <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="12" cy="12" r="4"/></svg>
+                                            {frameCaptured ? 'Frame ✓' : 'Capture Frame'}
+                                        </button>
+                                        {/* Use as Style */}
+                                        <button
+                                            onClick={onToggleVideoAsStyle}
+                                            className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-1 rounded-lg text-[10px] font-bold transition-all ${videoAsStyle ? 'bg-brand-yellow text-dark-bg' : 'bg-white/10 text-white/70 hover:bg-white/20'}`}
+                                            title="Send the full video to the AI as style reference"
+                                        >
+                                            <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M17 10.5V7a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-3.5l4 4v-11l-4 4z"/></svg>
+                                            {videoAsStyle ? 'Style Active' : 'Use as Style'}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <label className="flex flex-col items-center justify-center gap-1.5 py-4 rounded-xl border border-dashed border-brand-yellow/20 hover:border-brand-yellow/50 bg-brand-yellow/5 hover:bg-brand-yellow/8 cursor-pointer transition-all group">
+                                <svg className="w-6 h-6 text-brand-yellow/40 group-hover:text-brand-yellow/70 transition-colors" viewBox="0 0 24 24" fill="currentColor"><path d="M17 10.5V7a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-3.5l4 4v-11l-4 4z"/></svg>
+                                <span className="text-[10px] font-bold text-light-text-muted dark:text-dark-text-muted group-hover:text-brand-yellow transition-colors">Upload video</span>
+                                <span className="text-[9px] text-light-text-muted/50 dark:text-dark-text-muted/50">mp4 · mov · webm</span>
+                                <input type="file" className="hidden" accept="video/*" onChange={(e) => { if (e.target.files?.[0]) { onAddVideoReference(e.target.files[0]); e.target.value = ''; } }} />
+                            </label>
+                        )}
+                    </div>
+                )}
 
                 {/* Precise Reference Toggle + Model Indicator */}
                 {referenceImages.length > 0 && (
@@ -1252,12 +1348,17 @@ interface ImageDisplayProps {
     upscalingImageId: string | null; // v1.1
     onSaveDna: (image: GeneratedImage) => void; // v1.7
     onGenerateStoryboard: (image: GeneratedImage) => void; // v1.9.5
+    onQuickEdit: (image: GeneratedImage, instruction: string) => void; // v2.4
+    onOutpaint: (image: GeneratedImage, direction: 'left'|'right'|'up'|'down', amount: number) => void; // v2.4
     reasoningText?: string; // v1.7: Creative reasoning plan
     loadingMessage?: string; // v1.9.2: Funny loading messages
 }
-const ImageDisplay: React.FC<ImageDisplayProps> = ({ images, isLoading, onDownload, onZoom, onEdit, onReroll, onToggleFavorite, onUpscale, upscalingImageId, onSaveDna, onGenerateStoryboard, reasoningText, loadingMessage }) => {
+const ImageDisplay: React.FC<ImageDisplayProps> = ({ images, isLoading, onDownload, onZoom, onEdit, onReroll, onToggleFavorite, onUpscale, upscalingImageId, onSaveDna, onGenerateStoryboard, onQuickEdit, onOutpaint, reasoningText, loadingMessage }) => {
     const { t } = useLocalization();
     const [showUpscaleMenu, setShowUpscaleMenu] = useState<string | null>(null);
+    const [showOutpaintMenu, setShowOutpaintMenu] = useState<string | null>(null);
+    const [quickEditText, setQuickEditText] = useState('');
+    const [quickEditTarget, setQuickEditTarget] = useState<GeneratedImage | null>(null);
 
     return (
         <div className="relative w-full h-full flex items-center justify-center bg-transparent rounded-[32px] overflow-hidden">
@@ -1324,6 +1425,35 @@ const ImageDisplay: React.FC<ImageDisplayProps> = ({ images, isLoading, onDownlo
 
                                         <button onClick={() => onEdit(image)} className="p-2 rounded-full bg-black/50 text-brand-yellow hover:bg-brand-yellow hover:text-dark-bg transition-colors" aria-label={t.editAction}><BrushIcon className="w-5 h-5" /></button>
 
+                                        {/* v2.4: Outpaint */}
+                                        <div className="relative">
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); setShowOutpaintMenu(showOutpaintMenu === image.id ? null : image.id); setShowUpscaleMenu(null); }}
+                                                className="p-2 rounded-full bg-black/50 text-brand-yellow hover:bg-brand-yellow hover:text-dark-bg transition-colors"
+                                                aria-label="Outpaint — expand image"
+                                                title="Outpaint"
+                                            >
+                                                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="5" y="5" width="14" height="14" rx="1"/><path d="M5 12H2M22 12h-3M12 5V2M12 22v-3"/><path d="M2 12l2-2m-2 2 2 2M22 12l-2-2m2 2-2 2M12 2l-2 2m2-2 2 2M12 22l-2-2m2 2 2-2"/></svg>
+                                            </button>
+                                            {showOutpaintMenu === image.id && (
+                                                <div className="absolute bottom-full mb-2 right-0 bg-dark-surface/95 backdrop-blur-xl border border-white/15 rounded-2xl shadow-2xl p-3 z-30 min-w-[180px]" onClick={e => e.stopPropagation()}>
+                                                    <p className="text-[9px] font-black uppercase tracking-widest text-dark-text-muted mb-2">Expand direction</p>
+                                                    <div className="grid grid-cols-3 gap-1 mb-3">
+                                                        <div />
+                                                        <button onClick={() => { onOutpaint(image, 'up', 50); setShowOutpaintMenu(null); }} className="aspect-square rounded-lg bg-white/5 hover:bg-brand-yellow/20 hover:text-brand-yellow text-white/60 flex items-center justify-center transition-colors text-xs">↑</button>
+                                                        <div />
+                                                        <button onClick={() => { onOutpaint(image, 'left', 50); setShowOutpaintMenu(null); }} className="aspect-square rounded-lg bg-white/5 hover:bg-brand-yellow/20 hover:text-brand-yellow text-white/60 flex items-center justify-center transition-colors text-xs">←</button>
+                                                        <div className="aspect-square rounded-lg bg-white/10 flex items-center justify-center"><svg className="w-3 h-3 text-white/30" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="1"/></svg></div>
+                                                        <button onClick={() => { onOutpaint(image, 'right', 50); setShowOutpaintMenu(null); }} className="aspect-square rounded-lg bg-white/5 hover:bg-brand-yellow/20 hover:text-brand-yellow text-white/60 flex items-center justify-center transition-colors text-xs">→</button>
+                                                        <div />
+                                                        <button onClick={() => { onOutpaint(image, 'down', 50); setShowOutpaintMenu(null); }} className="aspect-square rounded-lg bg-white/5 hover:bg-brand-yellow/20 hover:text-brand-yellow text-white/60 flex items-center justify-center transition-colors text-xs">↓</button>
+                                                        <div />
+                                                    </div>
+                                                    <p className="text-[8px] text-white/30 text-center">+50% in chosen direction</p>
+                                                </div>
+                                            )}
+                                        </div>
+
                                         {/* v1.1: Upscale button with dropdown */}
                                         {!isUpscaling && (
                                             <div className="relative">
@@ -1370,6 +1500,29 @@ const ImageDisplay: React.FC<ImageDisplayProps> = ({ images, isLoading, onDownlo
                                 </div>
                             );
                         })}
+                    </div>
+
+                    {/* v2.4: Quick Edit bar */}
+                    <div className="px-2 sm:px-3 pb-3 pt-1.5">
+                        <div className="flex items-center gap-2 bg-black/20 dark:bg-black/30 border border-white/10 rounded-2xl px-3 py-2">
+                            <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-brand-yellow/60 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                            <input
+                                type="text"
+                                value={quickEditText}
+                                onChange={e => { setQuickEditText(e.target.value); if (images.length > 0) setQuickEditTarget(images[0]); }}
+                                onFocus={() => { if (images.length > 0 && !quickEditTarget) setQuickEditTarget(images[0]); }}
+                                onKeyDown={e => { if (e.key === 'Enter' && quickEditText.trim()) { onQuickEdit(quickEditTarget ?? images[0], quickEditText); setQuickEditText(''); setQuickEditTarget(null); } }}
+                                placeholder="Quick edit: make the sky orange, add fog…"
+                                className="flex-1 min-w-0 bg-transparent text-xs text-light-text dark:text-dark-text placeholder:text-white/20 outline-none"
+                            />
+                            <button
+                                onClick={() => { if (quickEditText.trim() && images.length > 0) { onQuickEdit(quickEditTarget ?? images[0], quickEditText); setQuickEditText(''); setQuickEditTarget(null); } }}
+                                disabled={!quickEditText.trim() || images.length === 0}
+                                className="shrink-0 px-2.5 py-1 rounded-xl bg-brand-yellow/15 hover:bg-brand-yellow/30 text-brand-yellow text-[10px] font-bold disabled:opacity-30 transition-colors whitespace-nowrap"
+                            >
+                                Apply
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
@@ -2426,6 +2579,28 @@ const FUNNY_MESSAGES = [
     "Generentolo is architettoling..."
 ];
 
+const extractVideoThumbnail = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+        const video = document.createElement('video');
+        const url = URL.createObjectURL(file);
+        video.src = url;
+        video.muted = true;
+        video.playsInline = true;
+        video.currentTime = 0.1;
+        video.onloadeddata = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth || 320;
+            canvas.height = video.videoHeight || 180;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) { URL.revokeObjectURL(url); reject(new Error('no ctx')); return; }
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            URL.revokeObjectURL(url);
+            resolve(canvas.toDataURL('image/jpeg', 0.7));
+        };
+        video.onerror = () => { URL.revokeObjectURL(url); reject(new Error('video load error')); };
+    });
+};
+
 const detectImageAspectRatio = (file: File): Promise<string> => {
     return new Promise((resolve) => {
         const img = new Image();
@@ -2451,6 +2626,9 @@ export default function App() {
     const [referenceImages, setReferenceImages] = useState<File[]>([]);
     const [styleReferenceImage, setStyleReferenceImage] = useState<File | null>(null);
     const [structureImage, setStructureImage] = useState<File | null>(null);
+    const [videoReference, setVideoReference] = useState<File | null>(null); // v2.4: video input (NB2 only)
+    const [videoAsStyle, setVideoAsStyle] = useState<boolean>(false); // v2.4: use full video as style ref
+    const [videoThumbnail, setVideoThumbnail] = useState<string | null>(null);
     const [preciseReference, setPreciseReference] = useState<boolean>(false); // v0.7: Precise Reference Mode
     const [editedPrompt, setEditedPrompt] = useState<string>('');
     const [negativePrompt, setNegativePrompt] = useState<string>('');
@@ -2460,6 +2638,8 @@ export default function App() {
     // v1.0: New PRO features states
     const [selectedModel, setSelectedModel] = useState<ModelType>('gemini-3.1-flash-image-preview');
     const [selectedResolution, setSelectedResolution] = useState<ResolutionType>('2k');
+    // v2.4: Thinking level for NB2/PRO — controls internal reasoning budget
+    const [thinkingLevel, setThinkingLevel] = useState<'minimal' | 'medium' | 'high'>('medium');
 
     // v2.0: Auto-reset resolution and aspect ratio when switching models
     const nb2ExclusiveRatios = ['1:4', '4:1', '1:8', '8:1'];
@@ -2794,6 +2974,7 @@ export default function App() {
         const currentGrounding = isTask ? task.useGrounding : useGrounding;
         const currentPrecise = isTask ? task.preciseReference : preciseReference;
         const currentAutoEnhance = isTask ? task.autoEnhance : autoEnhance;
+        const currentVideoRef = (!isTask && videoAsStyle) ? videoReference : null; // v2.4: full video style ref
 
         if (currentRefImages.length === 0 && !currentPrompt && !currentStyleImage) return;
 
@@ -3079,7 +3260,9 @@ export default function App() {
                         controller.signal,
                         currentGrounding,
                         true, // v2.1: skipPreprocessing — already done once before the loop
-                        precomputedStyleDescription
+                        precomputedStyleDescription,
+                        thinkingLevel,
+                        currentVideoRef
                     );
                     console.timeEnd(`[GEN] image ${index + 1}`);
                     imageDataUrls.push(imageDataUrl);
@@ -3124,7 +3307,9 @@ export default function App() {
                             controller.signal,
                             currentGrounding,
                             true, // v2.1: skipPreprocessing — already done once before the loop
-                            precomputedStyleDescription
+                            precomputedStyleDescription,
+                            thinkingLevel,
+                            currentVideoRef
                         );
                     });
                     imageDataUrls.push(...await Promise.all(generationPromises));
@@ -3289,7 +3474,9 @@ export default function App() {
                             selectedResolution,
                             undefined,
                             angleController.signal, // v2.3: abort support
-                            false
+                            false,
+                            undefined,
+                            thinkingLevel
                         );
 
                         const thumbnailDataUrl = await createThumbnailDataUrl(imageDataUrl);
@@ -3360,7 +3547,9 @@ export default function App() {
                     selectedResolution,
                     undefined,
                     angleController.signal, // v2.3: abort support
-                    false
+                    false,
+                    undefined,
+                    thinkingLevel
                 );
 
                 const thumbnailDataUrl = await createThumbnailDataUrl(imageDataUrl);
@@ -3435,7 +3624,9 @@ export default function App() {
                     sourceImage.resolution || selectedResolution,
                     undefined,
                     controller.signal, // v2.3: propagate abort signal
-                    false // v1.4: No grounding for variations
+                    false, // v1.4: No grounding for variations
+                    undefined,
+                    thinkingLevel
                 );
 
                 const thumbnailDataUrl = await createThumbnailDataUrl(imageDataUrl);
@@ -3631,7 +3822,9 @@ export default function App() {
                 image.resolution || selectedResolution,
                 undefined,
                 undefined,
-                false // v1.4: No grounding for recreate
+                false, // v1.4: No grounding for recreate
+                undefined,
+                thinkingLevel
             );
 
             const thumbnailDataUrl = await createThumbnailDataUrl(imageDataUrl);
@@ -3656,6 +3849,119 @@ export default function App() {
             setIsLoading(false);
         }
     }, [referenceImages, styleReferenceImage, structureImage, userApiKey, language, preciseReference, showToast, t.generationFailed]);
+
+    // v2.4: Quick Edit — take current image + instruction, generate edited version
+    const handleQuickEdit = useCallback(async (image: GeneratedImage, instruction: string) => {
+        if (!instruction.trim() || isLoading) return;
+        const dataUrl = image.imageDataUrl || image.thumbnailDataUrl;
+        if (!dataUrl) return;
+        setIsLoading(true);
+        setCurrentImages([]);
+        setLoadingMessage(language === 'it' ? 'Applicando modifica...' : 'Applying edit...');
+        try {
+            const res = await fetch(dataUrl);
+            const blob = await res.blob();
+            const sourceFile = new File([blob], 'source.png', { type: 'image/png' });
+            const imageDataUrl = await geminiService.generateImage(
+                instruction,
+                image.aspectRatio,
+                [sourceFile],
+                null, null, userApiKey,
+                '', '', language,
+                false,
+                selectedModel, selectedResolution,
+                undefined, undefined, false,
+                false, undefined, thinkingLevel
+            );
+            const thumbnailDataUrl = await createThumbnailDataUrl(imageDataUrl);
+            const newImage: GeneratedImage = {
+                id: crypto.randomUUID(),
+                imageDataUrl, thumbnailDataUrl,
+                prompt: instruction,
+                aspectRatio: image.aspectRatio,
+                timestamp: Date.now(),
+                model: selectedModel,
+                resolution: selectedResolution,
+            };
+            setCurrentImages([newImage]);
+            setHistory(prev => [newImage, ...prev].slice(0, MAX_HISTORY_ITEMS));
+            showToast(language === 'it' ? 'Modifica applicata!' : 'Edit applied!', 'success');
+        } catch (error: any) {
+            showToast(error.message || t.generationFailed, 'error');
+        } finally {
+            setIsLoading(false);
+        }
+    }, [isLoading, language, userApiKey, selectedModel, selectedResolution, thinkingLevel, showToast, t.generationFailed]);
+
+    // v2.4: Outpainting — expand canvas in one direction, fill with AI
+    const handleOutpaint = useCallback(async (image: GeneratedImage, direction: 'left' | 'right' | 'up' | 'down', amount: number) => {
+        if (isLoading) return;
+        const dataUrl = image.imageDataUrl || image.thumbnailDataUrl;
+        if (!dataUrl) return;
+        setIsLoading(true);
+        setCurrentImages([]);
+        setLoadingMessage(language === 'it' ? 'Espandendo immagine...' : 'Expanding image...');
+        try {
+            // Build padded canvas
+            const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+                const el = new Image();
+                el.onload = () => resolve(el);
+                el.onerror = reject;
+                el.src = dataUrl;
+            });
+            const pad = Math.round((direction === 'left' || direction === 'right' ? img.width : img.height) * (amount / 100));
+            const newW = img.width + (direction === 'left' || direction === 'right' ? pad : 0);
+            const newH = img.height + (direction === 'up' || direction === 'down' ? pad : 0);
+            const canvas = document.createElement('canvas');
+            canvas.width = newW;
+            canvas.height = newH;
+            const ctx = canvas.getContext('2d')!;
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, newW, newH);
+            const dx = direction === 'right' ? 0 : direction === 'left' ? pad : 0;
+            const dy = direction === 'down' ? 0 : direction === 'up' ? pad : 0;
+            ctx.drawImage(img, dx, dy);
+            const blob = await new Promise<Blob>((resolve) => canvas.toBlob(b => resolve(b!), 'image/png'));
+            const paddedFile = new File([blob], 'outpaint.png', { type: 'image/png' });
+
+            const dirLabels = { left: 'left side', right: 'right side', up: 'top', down: 'bottom' };
+            const outpaintPrompt = `Seamlessly extend this image by filling the white area on the ${dirLabels[direction]}. Continue the scene naturally: match the style, lighting, perspective, colors, and content of the original image. The white area is the new region to generate.`;
+
+            // Compute new aspect ratio
+            const gcd = (a: number, b: number): number => b === 0 ? a : gcd(b, a % b);
+            const g = gcd(newW, newH);
+            const newAspect = `${newW / g}:${newH / g}`;
+
+            const imageDataUrl = await geminiService.generateImage(
+                outpaintPrompt,
+                newAspect,
+                [paddedFile],
+                null, null, userApiKey,
+                '', '', language,
+                false,
+                selectedModel, selectedResolution,
+                undefined, undefined, false,
+                false, undefined, thinkingLevel
+            );
+            const thumbnailDataUrl = await createThumbnailDataUrl(imageDataUrl);
+            const newImage: GeneratedImage = {
+                id: crypto.randomUUID(),
+                imageDataUrl, thumbnailDataUrl,
+                prompt: `Outpaint ${direction} +${amount}% — ${image.prompt}`,
+                aspectRatio: newAspect,
+                timestamp: Date.now(),
+                model: selectedModel,
+                resolution: selectedResolution,
+            };
+            setCurrentImages([newImage]);
+            setHistory(prev => [newImage, ...prev].slice(0, MAX_HISTORY_ITEMS));
+            showToast(language === 'it' ? 'Outpaint completato!' : 'Outpaint complete!', 'success');
+        } catch (error: any) {
+            showToast(error.message || t.generationFailed, 'error');
+        } finally {
+            setIsLoading(false);
+        }
+    }, [isLoading, language, userApiKey, selectedModel, selectedResolution, thinkingLevel, showToast, t.generationFailed]);
 
     // v0.8: Toggle favorite/bookmark
     const handleToggleFavorite = useCallback((imageId: string) => {
@@ -3976,6 +4282,12 @@ export default function App() {
                             isStoryboardLoading={isStoryboardLoading}
                             onGenerateFromAngle={handleGenerateFromAngle}
                             isGeneratingAngles={isGeneratingAngles}
+                            videoReference={videoReference}
+                            onAddVideoReference={setVideoReference}
+                            onRemoveVideoReference={() => { setVideoReference(null); setVideoAsStyle(false); }}
+                            onCaptureVideoFrame={(frameFile) => handleAddImages([frameFile])}
+                            videoAsStyle={videoAsStyle}
+                            onToggleVideoAsStyle={() => setVideoAsStyle(v => !v)}
                         />
                     </aside>
 
@@ -3998,6 +4310,8 @@ export default function App() {
                                     const file = dataURLtoFile(img.imageDataUrl || img.thumbnailDataUrl!, `storyboard-${img.id}.png`);
                                     handleGenerateStoryboard(file);
                                 }}
+                                onQuickEdit={handleQuickEdit}
+                                onOutpaint={handleOutpaint}
                                 reasoningText={reasoningText}
                                 loadingMessage={loadingMessage}
                             />
@@ -4177,6 +4491,8 @@ export default function App() {
                     onModelChange={handleModelChange}
                     selectedResolution={selectedResolution}
                     onResolutionChange={setSelectedResolution}
+                    thinkingLevel={thinkingLevel}
+                    onThinkingLevelChange={setThinkingLevel}
                     isEnhancing={isEnhancing}
                 />
 
