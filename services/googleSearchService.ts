@@ -97,20 +97,31 @@ export const searchGoogleImages = async (query: string, maxResults: number = 10)
             return [];
         }
 
-
         const url = new URL('https://www.googleapis.com/customsearch/v1');
         url.searchParams.set('key', GOOGLE_SEARCH_API_KEY);
         url.searchParams.set('cx', GOOGLE_SEARCH_ENGINE_ID);
         url.searchParams.set('q', query);
         url.searchParams.set('searchType', 'image');
-        url.searchParams.set('num', String(Math.min(maxResults, 10))); // Max 10 per request
-        url.searchParams.set('imgSize', 'large'); // Prefer large images
-        url.searchParams.set('safe', 'active'); // Safe search
+        url.searchParams.set('num', String(Math.min(maxResults, 10)));
+        url.searchParams.set('imgSize', 'large');
+        url.searchParams.set('safe', 'active');
 
-        const response = await fetch(url.toString());
-
-        if (!response.ok) {
+        // v2.3: Exponential backoff retry for transient errors (429, 503)
+        const MAX_RETRIES = 2;
+        let response: Response | null = null;
+        for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+            response = await fetch(url.toString());
+            if (response.ok) break;
+            const isTransient = response.status === 429 || response.status >= 500;
+            if (isTransient && attempt < MAX_RETRIES) {
+                await new Promise(r => setTimeout(r, 600 * Math.pow(2, attempt)));
+                continue;
+            }
             throw new Error(`Google Search API error: ${response.status}`);
+        }
+
+        if (!response || !response.ok) {
+            throw new Error(`Google Search API error after retries`);
         }
 
         const data: GoogleSearchResponse = await response.json();

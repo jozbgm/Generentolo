@@ -36,7 +36,7 @@ if (!crypto.randomUUID) {
 // --- Localization ---
 const translations = {
     en: {
-        headerTitle: 'Generentolo PRO v2.2',
+        headerTitle: 'Generentolo PRO v2.3',
         headerSubtitle: 'Let me do it for you!',
         refImagesTitle: 'Reference & Style Images',
         styleRefTitle: 'Style Reference',
@@ -306,7 +306,7 @@ const translations = {
         presetAppliedToPrompt: 'Will be applied to generation',
     },
     it: {
-        headerTitle: 'Generentolo PRO v2.2',
+        headerTitle: 'Generentolo PRO v2.3',
         headerSubtitle: 'Let me do it for you!',
         refImagesTitle: 'Immagini di Riferimento e Stile',
         styleRefTitle: 'Riferimento Stile',
@@ -1762,7 +1762,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, onSave, 
 
     return (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }} role="dialog" aria-modal="true" aria-labelledby="settings-title">
-            <div className="bg-[#f8f8f6]/90 dark:bg-[#202020]/80 backdrop-blur-xl border border-white/10 dark:border-white/10 rounded-2xl shadow-2xl w-full max-w-md p-6" onMouseDown={e => e.stopPropagation()}>
+            <div className="bg-light-surface/95 dark:bg-dark-surface/95 backdrop-blur-xl border border-light-border dark:border-dark-border rounded-2xl shadow-2xl w-full max-w-md p-6" onMouseDown={e => e.stopPropagation()}>
                 <h2 id="settings-title" className="text-lg font-semibold mb-4 text-light-text dark:text-dark-text">{t.settingsTitle}</h2>
                 <div>
                     <label htmlFor="api-key-input" className="block text-sm font-medium text-light-text-muted dark:text-dark-text-muted mb-1">{t.apiKeyLabel}</label>
@@ -2552,6 +2552,8 @@ export default function App() {
 
     const promptTextareaRef = useRef<HTMLTextAreaElement>(null);
     const abortControllerRef = useRef<AbortController | null>(null);
+    const variationsAbortControllerRef = useRef<AbortController | null>(null);
+    const isProcessingQueueRef = useRef(false); // v2.3: prevents queue race condition
 
     const t = useMemo(() => translations[language], [language]);
 
@@ -2602,19 +2604,27 @@ export default function App() {
     }, []);
 
     useEffect(() => {
+        const saveHistory = (items: typeof history) => {
+            const toSave = items.map(({ imageDataUrl, ...rest }) => rest);
+            localStorage.setItem('nano-generator-history', JSON.stringify(toSave));
+        };
         try {
-            const historyToSave = history.map(image => {
-                const { imageDataUrl, ...savableImage } = image;
-                return savableImage;
-            });
-            localStorage.setItem('nano-generator-history', JSON.stringify(historyToSave));
+            saveHistory(history);
         } catch (error) {
-            console.error("Failed to save history to localStorage", error);
             if (error instanceof DOMException && error.name === 'QuotaExceededError') {
-                showToast(t.historySaveFailed, 'error');
+                // v2.3: Auto-trim oldest entries until it fits, then notify
+                try {
+                    const trimmed = history.slice(0, Math.floor(history.length / 2));
+                    saveHistory(trimmed);
+                    showToast(language === 'it' ? 'Spazio esaurito: storico ridotto automaticamente.' : 'Storage full: history trimmed automatically.', 'error');
+                } catch {
+                    showToast(t.historySaveFailed, 'error');
+                }
+            } else {
+                console.error("Failed to save history to localStorage", error);
             }
         }
-    }, [history, showToast, t.historySaveFailed]);
+    }, [history, language, showToast, t.historySaveFailed]);
 
     const handleSaveApiKey = (apiKey: string) => {
         setUserApiKey(apiKey);
@@ -2847,7 +2857,10 @@ export default function App() {
                                 setIsPromptEnhancedInternal(true);
                             }
                         })
-                        .catch(e => { console.error("Enhance prompt failed (non-fatal):", e); })
+                        .catch(e => {
+                            console.error("Enhance prompt failed (non-fatal):", e);
+                            showToast(language === 'it' ? 'Auto-enhance fallito, uso prompt originale.' : 'Auto-enhance failed, using original prompt.', 'error');
+                        })
                         .finally(() => { setIsEnhancing(false); })
                 );
             } else {
@@ -3125,8 +3138,8 @@ export default function App() {
                     try {
                         thumbnailDataUrl = await createThumbnailDataUrl(imageDataUrl);
                     } catch (e) {
-                        console.error("Failed to create thumbnail, falling back to full image.", e);
-                        thumbnailDataUrl = imageDataUrl;
+                        console.error("Failed to create thumbnail.", e);
+                        thumbnailDataUrl = undefined; // v2.3: never store full image as thumbnail (storage overflow risk)
                     }
                     return ({
                         id: crypto.randomUUID(),
@@ -3178,12 +3191,14 @@ export default function App() {
         isLoading
     ]);
 
-    // v1.9.5: Generation Queue Processor
+    // v1.9.5: Generation Queue Processor — v2.3: ref mutex prevents race condition
     useEffect(() => {
-        if (!isLoading && queue.length > 0) {
+        if (!isLoading) {
+            isProcessingQueueRef.current = false; // Reset mutex when generation completes
+        }
+        if (!isLoading && !isProcessingQueueRef.current && queue.length > 0) {
+            isProcessingQueueRef.current = true;
             const nextTask = queue[0];
-
-            // Remove from queue and start generation
             setQueue(prev => prev.slice(1));
             handleGenerate(nextTask);
         }
@@ -3191,6 +3206,12 @@ export default function App() {
 
     // v1.3: Abort generation
     const handleAbortGeneration = useCallback(() => {
+        // v2.3: Also abort variations if running
+        if (variationsAbortControllerRef.current) {
+            variationsAbortControllerRef.current.abort();
+            variationsAbortControllerRef.current = null;
+            setVariationsLoadingId(null);
+        }
         if (abortControllerRef.current) {
             abortControllerRef.current.abort();
             abortControllerRef.current = null;
@@ -3219,6 +3240,10 @@ export default function App() {
         setIsGeneratingAngles(true);
         setLoadingMessage(FUNNY_MESSAGES[Math.floor(Math.random() * FUNNY_MESSAGES.length)]);
         setIsLoading(true);
+
+        // v2.3: Create AbortController so Stop button works for angle generation too
+        const angleController = new AbortController();
+        abortControllerRef.current = angleController;
 
         try {
             // Convert base64 reference image to File
@@ -3263,7 +3288,7 @@ export default function App() {
                             selectedModel,
                             selectedResolution,
                             undefined,
-                            undefined,
+                            angleController.signal, // v2.3: abort support
                             false
                         );
 
@@ -3307,7 +3332,8 @@ export default function App() {
                     params.tilt,
                     params.zoom,
                     userApiKey,
-                    language
+                    language,
+                    angleController.signal // v2.3: abort support
                 );
 
                 setLoadingMessage(FUNNY_MESSAGES[Math.floor(Math.random() * FUNNY_MESSAGES.length)]);
@@ -3333,7 +3359,7 @@ export default function App() {
                     selectedModel,
                     selectedResolution,
                     undefined,
-                    undefined,
+                    angleController.signal, // v2.3: abort support
                     false
                 );
 
@@ -3377,6 +3403,10 @@ export default function App() {
 
         setVariationsLoadingId(sourceImage.id);
 
+        // v2.3: Create AbortController so variations can be cancelled
+        const controller = new AbortController();
+        variationsAbortControllerRef.current = controller;
+
         try {
             const NUM_VARIATIONS = 4;
             const variations: GeneratedImage[] = [];
@@ -3404,7 +3434,7 @@ export default function App() {
                     sourceImage.model || selectedModel,
                     sourceImage.resolution || selectedResolution,
                     undefined,
-                    undefined, // No abort signal for variations
+                    controller.signal, // v2.3: propagate abort signal
                     false // v1.4: No grounding for variations
                 );
 
@@ -3434,10 +3464,12 @@ export default function App() {
                 'success'
             );
         } catch (error: any) {
+            if (error.name === 'AbortError' || error?.message?.includes('cancel')) return;
             console.error("Variation generation failed", error);
             showToast(error.message || t.variationsFailed, 'error');
         } finally {
             setVariationsLoadingId(null);
+            variationsAbortControllerRef.current = null;
         }
     }, [isLoading, variationsLoadingId, language, userApiKey, selectedModel, selectedResolution, showToast]);
 

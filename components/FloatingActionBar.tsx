@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useLocalization } from '../App';
 import { ModelType, ResolutionType } from '../types';
 import { XIcon, CopyIcon, PlusIcon, SparklesIcon, UserIcon, LanguageIcon, ImageIcon, SettingsIcon, ZapIcon, StarIcon, DiceIcon, CheckIcon, ReloadIcon, ClapperboardIcon, Layers2Icon, MonitorIcon, SmartphoneIcon, RatioSquareIcon } from './icons';
@@ -63,6 +63,17 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
     isEnhancing,
 }) => {
     const { t, language } = useLocalization();
+
+    // v2.3: Local prompt state + debounced parent update (prevents re-render storm on every keystroke)
+    const [localPrompt, setLocalPrompt] = useState(prompt);
+    const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    useEffect(() => { setLocalPrompt(prompt); }, [prompt]);
+    const handlePromptChange = (value: string) => {
+        setLocalPrompt(value);
+        if (debounceRef.current) clearTimeout(debounceRef.current);
+        debounceRef.current = setTimeout(() => onPromptChange(value), 150);
+    };
+
     const [showAspectMenu, setShowAspectMenu] = useState(false);
     const [showNumImagesMenu, setShowNumImagesMenu] = useState(false);
     const [showAdvancedPanel, setShowAdvancedPanel] = useState(false);
@@ -239,8 +250,8 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                         <div className={`flex-1 relative bg-black/5 dark:bg-white/5 rounded-[22px] border border-black/5 dark:border-white/5 transition-all duration-300 ${isEnhancing ? 'ring-2 ring-brand-yellow/50 ring-offset-4 dark:ring-offset-black animate-pulse bg-brand-yellow/5' : 'hover:bg-black/[0.07] dark:hover:bg-white/[0.07]'}`}>
                             <textarea
                                 ref={promptTextareaRef}
-                                value={prompt}
-                                onChange={(e) => onPromptChange(e.target.value)}
+                                value={localPrompt}
+                                onChange={(e) => handlePromptChange(e.target.value)}
                                 rows={1}
                                 placeholder={isEnhancing ? (language === 'it' ? 'L\'Art Director sta perfezionando...' : 'Art Director is perfecting...') : (t.promptPlaceholder || "Describe what you want to generate...")}
                                 className="w-full px-5 py-3.5 pr-20 bg-transparent text-sm lg:text-[15px] text-light-text dark:text-dark-text outline-none resize-none max-h-[120px] custom-scrollbar placeholder:opacity-40 leading-relaxed font-medium floating-prompt-textarea"
@@ -476,6 +487,7 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                             <span className="flex items-center gap-2.5">
                                 <StarIcon className={`w-3.5 h-3.5 ${selectedModel === 'gemini-3-pro-image-preview' ? 'text-dark-bg' : 'text-light-text dark:text-dark-text'}`} />
                                 <span className={selectedModel === 'gemini-3-pro-image-preview' ? 'text-dark-bg' : ''}>Nano Banana PRO</span>
+                                <span className={`text-[9px] px-1 py-0.5 rounded font-black ${selectedModel === 'gemini-3-pro-image-preview' ? 'bg-black/20 text-dark-bg' : 'bg-yellow-500/20 text-yellow-600 dark:text-yellow-400'}`} title="API stability issues reported — may error more than usual">⚠ UNSTABLE</span>
                             </span>
                             {selectedModel === 'gemini-3-pro-image-preview' && <CheckIcon className="w-3.5 h-3.5" />}
                         </button>

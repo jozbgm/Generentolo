@@ -1,5 +1,29 @@
 # 📋 Changelog - Generentolo PRO
 
+## [2.3.0] - 2026-04-03
+### Changed
+- **Angles — prompt engine v4.0**: Riscritto `anglePromptService.ts` con vocabolario cinematografico research-backed (natural language + gradi combinati, terminologia Gemini-native: `rear view`, `bird's-eye view`, `three-quarter angle`, ecc.), struttura prompt a 5 layer, aggiunta simulazione lente fotografica in base allo zoom. Il cognitive step ora estrae descrizione soggetto+ambiente dalla reference per constraint di consistency più specifici.
+- **Angles — header badge compatto**: Badge posizione (es. "FRONT-R • EYE-LEVEL") ridotto (`text-[9px]`, padding minimo) per evitare che "3D Angles" vada a capo.
+- **SettingsModal background**: Rimosso colore hardcoded bianco (`bg-[#f8f8f6]/90`) — ora usa `bg-light-surface/95 dark:bg-dark-surface/95` per rispettare il tema.
+
+### Fixed
+- **[CRITICO] AbortSignal in variazioni**: Le variazioni ora possono essere annullate correttamente tramite il pulsante Stop.
+- **[CRITICO] Race condition queue**: Aggiunto mutex `isProcessingQueueRef` che previene la doppia esecuzione di task dalla coda.
+- **[CRITICO] AbortSignal in Angles**: `generateCognitiveAnglePrompt` ora accetta e propaga un `AbortSignal`; anche le chiamate `generateImage` nella tab Angles usano il controller corretto.
+- **[CRITICO] Object URL leak in GenerAngles**: Sostituita la `useMemo` con `useEffect + useState` per la gestione dell'URL della reference image — l'URL viene ora revocato correttamente al cleanup.
+- **Thumbnail fallback**: In caso di errore nella creazione del thumbnail, si usa `undefined` invece del full image DataURL, prevenendo overflow dello storage.
+- **Enhancement feedback**: Se Auto-Enhance fallisce, viene mostrato un toast esplicito invece di un silent failure.
+- **Storage quota**: In caso di `QuotaExceededError` su localStorage, la history viene ridotta automaticamente al 50% prima di mostrare l'errore.
+
+### Changed
+- **Angles — prompt sempre in inglese**: `generateCognitiveAnglePrompt` produce sempre prompt in inglese per l'API di generazione (requisito dell'API), indipendentemente dalla lingua dell'UI.
+- **Angles — modello aggiornato**: Il modello di analisi cognitiva è passato da `gemini-2.0-flash` a `gemini-2.5-flash` per migliore qualità di analisi visiva.
+- **PRO model warning**: Badge `⚠ UNSTABLE` nel model selector per segnalare i problemi di stabilità API del modello `gemini-3-pro-image-preview`.
+- **Google Search retry**: `searchGoogleImages` ora ritenta fino a 2 volte con exponential backoff su errori transitori (429, 5xx).
+- **Debounce prompt input**: L'input del prompt ora aggiorna il parent state dopo 150ms di inattività, riducendo i re-render durante la digitazione veloce.
+- **Aria labels**: Aggiunti `aria-label` ai 3 slider della tab Angles (Orbit, Tilt, Zoom).
+- **Pricing README**: Aggiornata la tabella prezzi con i valori corretti per tutti e 3 i modelli (aprile 2026).
+
 ## [2.2.0] - 2026-04-03
 ### Added
 - **Accent Color Picker**: New swatch icon in the header allows changing the app's accent color on the fly. Includes 8 curated presets (Amber, Lime, Violet, Rose, Sky, Emerald, Orange, Slate), a custom hex input, a native color wheel, and a "Reset to default" option. Choice persists across sessions via localStorage.

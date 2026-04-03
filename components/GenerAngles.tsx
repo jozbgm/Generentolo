@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 
 // v2.0: Professional Perspective Studio with improved mouse interaction
 // Features: Snap-to-grid, visual guides, smoother dragging, and tactile feedback
@@ -40,11 +40,16 @@ const GenerAngles: React.FC<GenerAnglesProps> = ({
     const containerRef = useRef<HTMLDivElement>(null);
 
     // Get the first reference image as the primary one for the viewport
-    const activeReferenceUrl = useMemo(() => {
+    // useEffect + useState ensures the Object URL is revoked on cleanup (prevents memory leak)
+    const [activeReferenceUrl, setActiveReferenceUrl] = useState<string | null>(null);
+    useEffect(() => {
         if (referenceImages.length > 0) {
-            return URL.createObjectURL(referenceImages[0]);
+            const url = URL.createObjectURL(referenceImages[0]);
+            setActiveReferenceUrl(url);
+            return () => URL.revokeObjectURL(url);
         }
-        return null;
+        setActiveReferenceUrl(null);
+        return undefined;
     }, [referenceImages]);
 
     // Snap value to nearest key angle if within threshold
@@ -180,10 +185,10 @@ const GenerAngles: React.FC<GenerAnglesProps> = ({
                             <path d="M12.8682 18.3677C12.8294 18.3899 12.7899 18.4105 12.7498 18.4295V12.4352L17.9943 9.43841C17.9981 9.48537 18 9.5327 18 9.58031V14.4197C18 15.0477 17.6635 15.6275 17.1182 15.9391L12.8682 18.3677Z" />
                         </svg>
                     </div>
-                    <span className="text-sm font-bold text-light-text dark:text-dark-text">3D Angles</span>
+                    <span className="text-sm font-bold text-light-text dark:text-dark-text whitespace-nowrap">3D Angles</span>
                 </div>
                 {/* Live Position Badge */}
-                <div className={`px-3 py-1 rounded-md text-xs font-mono font-bold transition-all ${isSnapped ? 'bg-brand-yellow text-dark-bg' : 'bg-light-surface-accent dark:bg-dark-surface-accent text-light-text-muted dark:text-dark-text-muted'}`}>
+                <div className={`px-2 py-0.5 rounded text-[9px] font-mono font-bold transition-all whitespace-nowrap ${isSnapped ? 'bg-brand-yellow text-dark-bg' : 'bg-light-surface-accent dark:bg-dark-surface-accent text-light-text-muted dark:text-dark-text-muted'}`}>
                     {getAngleLabel(rotation)} • {getTiltLabel(tilt)}
                 </div>
             </div>
@@ -305,7 +310,7 @@ const GenerAngles: React.FC<GenerAnglesProps> = ({
                         <div
                             className="absolute inset-0 pointer-events-none transition-all duration-150"
                             style={{
-                                background: `linear-gradient(to right, ${isSnapped ? 'rgba(99,102,241,0.2)' : 'rgba(255,255,255,0.05)'} 0%, ${isSnapped ? 'rgba(99,102,241,0.2)' : 'rgba(255,255,255,0.05)'} ${(rotation / 360) * 100}%, transparent ${(rotation / 360) * 100}%)`
+                                background: `linear-gradient(to right, ${isSnapped ? 'rgb(var(--color-brand-yellow-rgb) / 0.25)' : 'rgba(255,255,255,0.05)'} 0%, ${isSnapped ? 'rgb(var(--color-brand-yellow-rgb) / 0.25)' : 'rgba(255,255,255,0.05)'} ${(rotation / 360) * 100}%, transparent ${(rotation / 360) * 100}%)`
                             }}
                         />
                         <div className="relative z-1 flex items-center justify-between w-full pointer-events-none">
@@ -320,6 +325,7 @@ const GenerAngles: React.FC<GenerAnglesProps> = ({
                             type="range"
                             value={rotation}
                             onChange={(e) => setRotation(Number(e.target.value))}
+                            aria-label={`Orbit rotation: ${Math.round(rotation)} degrees`}
                         />
                     </div>
 
@@ -328,7 +334,7 @@ const GenerAngles: React.FC<GenerAnglesProps> = ({
                         <div
                             className="absolute inset-0 pointer-events-none transition-all duration-150"
                             style={{
-                                background: `linear-gradient(to right, ${isSnapped ? 'rgba(99,102,241,0.2)' : 'rgba(255,255,255,0.05)'} 0%, ${isSnapped ? 'rgba(99,102,241,0.2)' : 'rgba(255,255,255,0.05)'} ${((tilt + 30) / 90) * 100}%, transparent ${((tilt + 30) / 90) * 100}%)`
+                                background: `linear-gradient(to right, ${isSnapped ? 'rgb(var(--color-brand-yellow-rgb) / 0.25)' : 'rgba(255,255,255,0.05)'} 0%, ${isSnapped ? 'rgb(var(--color-brand-yellow-rgb) / 0.25)' : 'rgba(255,255,255,0.05)'} ${((tilt + 30) / 90) * 100}%, transparent ${((tilt + 30) / 90) * 100}%)`
                             }}
                         />
                         <div className="relative z-1 flex items-center justify-between w-full pointer-events-none">
@@ -343,6 +349,7 @@ const GenerAngles: React.FC<GenerAnglesProps> = ({
                             type="range"
                             value={tilt}
                             onChange={(e) => setTilt(Number(e.target.value))}
+                            aria-label={`Tilt angle: ${Math.round(tilt)} degrees`}
                         />
                     </div>
 
@@ -364,6 +371,7 @@ const GenerAngles: React.FC<GenerAnglesProps> = ({
                             type="range"
                             value={zoom}
                             onChange={(e) => setZoom(Number(e.target.value))}
+                            aria-label={`Zoom level: ${zoom === 0 ? '1.0' : (1 + zoom / 10).toFixed(1)}x`}
                         />
                     </div>
 

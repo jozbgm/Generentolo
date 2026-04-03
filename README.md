@@ -97,12 +97,19 @@ Create a `.env.local` file at the project root:
 
 | Model | Resolution | Est. cost / image |
 |---|---|---|
-| Flash (`gemini-2.5-flash-image`) | up to 2K | ~$0.04 |
-| PRO (`gemini-3-pro-image-preview`) | 1K / 2K | ~$0.13 |
-| PRO (`gemini-3-pro-image-preview`) | 4K | ~$0.24 |
-| Nano Banana 2 (`gemini-3.1-flash-image-preview`) | 1K / 2K | variable |
+| Flash (`gemini-2.5-flash-image`) | 1K | ~$0.039 |
+| Flash (`gemini-2.5-flash-image`) | 2K | ~$0.039 |
+| Nano Banana 2 (`gemini-3.1-flash-image-preview`) | 512px | ~$0.045 |
+| Nano Banana 2 (`gemini-3.1-flash-image-preview`) | 1K | ~$0.067 |
+| Nano Banana 2 (`gemini-3.1-flash-image-preview`) | 2K | ~$0.101 |
+| Nano Banana 2 (`gemini-3.1-flash-image-preview`) | 4K | ~$0.151 |
+| PRO (`gemini-3-pro-image-preview`) ⚠ | 1K | ~$0.134 |
+| PRO (`gemini-3-pro-image-preview`) ⚠ | 2K | ~$0.154 |
+| PRO (`gemini-3-pro-image-preview`) ⚠ | 4K | ~$0.240 |
 
-Reference images add ~$0.067 each (PRO model). Costs are estimates — see [Google AI pricing](https://ai.google.dev/pricing) for current rates.
+> ⚠ **PRO model**: Reported API instability (high error rate as of March 2026). Nano Banana 2 is the recommended alternative for production use.
+
+Costs are estimates — see [Google AI pricing](https://ai.google.dev/pricing) for current rates.
 
 ---
 
