@@ -3943,10 +3943,13 @@ export default function App() {
             const dirLabels = { left: 'left side', right: 'right side', up: 'top', down: 'bottom' };
             const outpaintPrompt = `Seamlessly extend this image by filling the white area on the ${dirLabels[direction]}. Continue the scene naturally: match the style, lighting, perspective, colors, and content of the original image. The white area is the new region to generate.`;
 
-            // Compute new aspect ratio
-            const gcd = (a: number, b: number): number => b === 0 ? a : gcd(b, a % b);
-            const g = gcd(newW, newH);
-            const newAspect = `${newW / g}:${newH / g}`;
+            // Snap to nearest Gemini-valid aspect ratio
+            const VALID_RATIOS = ['1:1','1:4','1:8','2:3','3:2','3:4','4:1','4:3','4:5','5:4','8:1','9:16','16:9','21:9'];
+            const targetRatio = newW / newH;
+            const newAspect = VALID_RATIOS.reduce((best, r) => {
+                const [a, b] = r.split(':').map(Number);
+                return Math.abs(a / b - targetRatio) < Math.abs(best.split(':').map(Number).reduce((x, y) => x / y) - targetRatio) ? r : best;
+            }, VALID_RATIOS[0]);
 
             const imageDataUrl = await geminiService.generateImage(
                 outpaintPrompt,
