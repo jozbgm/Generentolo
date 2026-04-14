@@ -75,7 +75,13 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
     // v2.3: Local prompt state + debounced parent update (prevents re-render storm on every keystroke)
     const [localPrompt, setLocalPrompt] = useState(prompt);
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    useEffect(() => { setLocalPrompt(prompt); }, [prompt]);
+    useEffect(() => {
+        // Only sync from parent when the textarea is NOT focused (external update, e.g. history selection)
+        // Avoids overwriting mid-edit state and resetting cursor position to end
+        if (document.activeElement !== promptTextareaRef.current) {
+            setLocalPrompt(prompt);
+        }
+    }, [prompt]);
     const handlePromptChange = (value: string) => {
         setLocalPrompt(value);
         if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -144,19 +150,21 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
     useEffect(() => {
         const textarea = promptTextareaRef.current;
         if (textarea) {
-            // Reset height to auto to get the correct scrollHeight
+            // Save cursor position before DOM manipulation to prevent jump
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
             textarea.style.height = 'auto';
-            // Set height to scrollHeight, but cap at max-height (120px as defined in className)
-            const newHeight = Math.min(textarea.scrollHeight, 120);
-            textarea.style.height = `${newHeight}px`;
+            textarea.style.height = `${Math.min(textarea.scrollHeight, 120)}px`;
+            // Restore cursor after reflow
+            textarea.setSelectionRange(start, end);
         }
-    }, [prompt, promptTextareaRef]);
+    }, [localPrompt]); // depends on local state, not parent prop — fires immediately on keystroke
 
     // Handle paste
     const handlePaste = async () => {
         try {
             const text = await navigator.clipboard.readText();
-            onPromptChange(text);
+            handlePromptChange(text);
             // Focus textarea after paste
             promptTextareaRef.current?.focus();
         } catch (err) {
