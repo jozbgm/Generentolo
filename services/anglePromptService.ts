@@ -1,4 +1,4 @@
-import { getAiClient, fileToGenerativePart } from './geminiService';
+import { getAiClient, fileToGenerativePart, SAFETY_SETTINGS_PERMISSIVE } from './geminiService';
 
 /**
  * GENERENTOLO ANGLES v4.0 - Camera Position Prompt Engine
@@ -167,7 +167,7 @@ Output ONLY in this format, always in English:
 SUBJECT: [detailed appearance description]
 ENVIRONMENT: [setting and lighting description]`;
 
-        const config: any = { temperature: 0.3 };
+        const config: any = { temperature: 0.3, safetySettings: SAFETY_SETTINGS_PERMISSIVE };
         if (signal) config.abortSignal = signal;
 
         const analysisResult = await ai.models.generateContent({

@@ -8,7 +8,7 @@ if (!DEFAULT_API_KEY) {
 }
 
 // v2.1: Minimal safety settings for image generation — BLOCK_NONE on all categories
-const SAFETY_SETTINGS_PERMISSIVE = [
+export const SAFETY_SETTINGS_PERMISSIVE = [
     { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
     { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
     { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
@@ -42,7 +42,8 @@ export const getReasoningPlan = async (
 
         const result = await ai.models.generateContent({
             model: "gemini-3-flash-preview",
-            contents: [{ role: "user", parts: [{ text: systemPrompt + "\n\nPrompt: " + prompt }] }]
+            contents: [{ role: "user", parts: [{ text: systemPrompt + "\n\nPrompt: " + prompt }] }],
+            config: { safetySettings: SAFETY_SETTINGS_PERMISSIVE }
         });
 
         const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
@@ -192,7 +193,8 @@ export const extractCharacterDna = async (
                     imagePart,
                     { text: systemPrompt }
                 ]
-            }]
+            }],
+            config: { safetySettings: SAFETY_SETTINGS_PERMISSIVE }
         });
 
         const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
@@ -269,7 +271,8 @@ OUTPUT FORMAT (JSON):
                     ...imageParts,
                     { text: systemPrompt }
                 ]
-            }]
+            }],
+            config: { safetySettings: SAFETY_SETTINGS_PERMISSIVE }
         });
 
         const text = result.candidates?.[0]?.content?.parts?.[0]?.text || "";
@@ -338,7 +341,8 @@ export const generateSinglePromptFromImage = async (imageFiles: File[], styleFil
                 ]
             },
             config: {
-                temperature: 0.7
+                temperature: 0.7,
+                safetySettings: SAFETY_SETTINGS_PERMISSIVE
             }
         });
 
@@ -426,6 +430,7 @@ For all tools, ensure the \`options\` array contains a wide variety of choices, 
             },
             config: {
                 responseMimeType: "application/json",
+                safetySettings: SAFETY_SETTINGS_PERMISSIVE,
                 responseSchema: {
                     type: Type.ARRAY,
                     items: {
@@ -466,7 +471,8 @@ export const rewritePromptWithOptions = async (currentPrompt: string, toolSelect
             contents: { parts: [{ text: userMessage }] },
             config: {
                 systemInstruction: systemInstruction,
-                temperature: 0.2
+                temperature: 0.2,
+                safetySettings: SAFETY_SETTINGS_PERMISSIVE
             }
         });
 
@@ -496,7 +502,8 @@ export const rewritePromptWithStyleImage = async (currentPrompt: string, styleFi
             contents: { parts: [stylePart, { text: userMessage }] },
             config: {
                 systemInstruction: systemInstruction,
-                temperature: 0.3
+                temperature: 0.3,
+                safetySettings: SAFETY_SETTINGS_PERMISSIVE
             }
         });
 
@@ -781,7 +788,7 @@ Examples of correct responses:
         const analysisResult = await ai.models.generateContent({
             model: 'gemini-3-flash-preview',
             contents: { parts: [...imageParts, { text: analysisPrompt }] },
-            config: { temperature: 0.1 }
+            config: { temperature: 0.1, safetySettings: SAFETY_SETTINGS_PERMISSIVE }
         });
 
         const subjects = analysisResult.text?.trim() || "";
@@ -826,7 +833,7 @@ Rewritten: "Create the man from Image 1 wearing a hoodie with the logo from Imag
         const enrichmentResult = await ai.models.generateContent({
             model: 'gemini-3-flash-preview',
             contents: { parts: [{ text: enrichmentPrompt }] },
-            config: { temperature: 0.2 }
+            config: { temperature: 0.2, safetySettings: SAFETY_SETTINGS_PERMISSIVE }
         });
 
         const enrichedPrompt = enrichmentResult.text?.trim() || "";
@@ -858,7 +865,7 @@ export const extractStyleDescription = async (styleFile: File, userApiKey: strin
         const result = await ai.models.generateContent({
             model: 'gemini-3-flash-preview',
             contents: { parts: [stylePart, { text: promptText }] },
-            config: { temperature: 0.3 }
+            config: { temperature: 0.3, safetySettings: SAFETY_SETTINGS_PERMISSIVE }
         });
 
         return result.text?.trim() || "";
@@ -1480,6 +1487,7 @@ export const editImage = async (prompt: string, imageFile: File, userApiKey?: st
             contents: { parts },
             config: {
                 responseModalities: [Modality.IMAGE],
+                safetySettings: SAFETY_SETTINGS_PERMISSIVE,
                 outputOptions: {
                     mimeType: 'image/png',
                     compressionQuality: 100
@@ -1527,6 +1535,7 @@ export const inpaintImage = async (prompt: string, imageFile: File, maskFile: Fi
             contents: { parts },
             config: {
                 responseModalities: [Modality.IMAGE],
+                safetySettings: SAFETY_SETTINGS_PERMISSIVE,
                 outputOptions: {
                     mimeType: 'image/png',
                     compressionQuality: 100
@@ -1586,7 +1595,8 @@ export const generateNegativePrompt = async (prompt: string, referenceFiles: Fil
             config: {
                 systemInstruction,
                 temperature: 0.1,
-                topP: 0.95
+                topP: 0.95,
+                safetySettings: SAFETY_SETTINGS_PERMISSIVE
             }
         });
 
@@ -1718,6 +1728,7 @@ DO NOT add, remove, or modify any elements. This is a faithful high-resolution r
             responseModalities: [Modality.IMAGE],
             temperature: 0.4, // Lower temperature for more faithful recreation
             topP: 0.9,
+            safetySettings: SAFETY_SETTINGS_PERMISSIVE,
             imageConfig: {
                 imageSize: targetResolution.toUpperCase(), // CRITICAL: Must be "2K" or "4K"
                 aspectRatio: aspectRatio

@@ -1,4 +1,4 @@
-import { getAiClient } from './geminiService';
+import { getAiClient, SAFETY_SETTINGS_PERMISSIVE } from './geminiService';
 
 export interface StoryboardPrompt {
     id: string;
@@ -84,7 +84,8 @@ export const generateCinematicStoryboard = async (
                         { text: language === 'it' ? "Analizza questa immagine e crea lo storyboard di 9 inquadrature." : "Analyze this image and create the 9-shot storyboard." }
                     ]
                 }
-            ]
+            ],
+            config: { safetySettings: SAFETY_SETTINGS_PERMISSIVE }
         });
 
         const responseText = result.candidates?.[0]?.content?.parts?.[0]?.text || "";

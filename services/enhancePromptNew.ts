@@ -5,7 +5,7 @@
  * v2.7: Absolute integration with EVERY user selection (Presets, Studio, Technicals, Negative).
  */
 
-import { getAiClient, fileToGenerativePart } from './geminiService';
+import { getAiClient, fileToGenerativePart, SAFETY_SETTINGS_PERMISSIVE } from './geminiService';
 
 export interface EnhancementResult {
     enhancedPrompt: string;
@@ -120,7 +120,8 @@ ${characterDna ? `CHARACTER DNA REFERENCE: ${characterDna}.` : "No DNA reference
             },
             config: {
                 systemInstruction,
-                temperature: 0.7
+                temperature: 0.7,
+                safetySettings: SAFETY_SETTINGS_PERMISSIVE
             }
         });
 
