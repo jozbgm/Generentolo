@@ -3270,28 +3270,32 @@ export default function App() {
                 // Otherwise parallel is fine
                 if (hasMultipleReferences || currentModel === 'gemini-3-pro-image-preview' || currentModel === 'gemini-3.1-flash-image-preview') {
                     console.time(`[GEN] image ${index + 1}`);
-                    const imageDataUrl = await geminiService.generateImage(
-                        variantPrompt,
-                        currentAspect,
-                        allReferenceFiles,
-                        currentStyleImage,
-                        currentStructureImage,
-                        userApiKey,
-                        currentNeg,
-                        currentSeed,
-                        language,
-                        currentPrecise,
-                        currentModel,
-                        currentRes,
-                        undefined,
-                        controller.signal,
-                        currentGrounding,
-                        true, // v2.1: skipPreprocessing — already done once before the loop
-                        precomputedStyleDescription,
-                        thinkingLevel,
-                        currentVideoRef
-                    );
-                    console.timeEnd(`[GEN] image ${index + 1}`);
+                    let imageDataUrl: string;
+                    try {
+                        imageDataUrl = await geminiService.generateImage(
+                            variantPrompt,
+                            currentAspect,
+                            allReferenceFiles,
+                            currentStyleImage,
+                            currentStructureImage,
+                            userApiKey,
+                            currentNeg,
+                            currentSeed,
+                            language,
+                            currentPrecise,
+                            currentModel,
+                            currentRes,
+                            undefined,
+                            controller.signal,
+                            currentGrounding,
+                            true, // v2.1: skipPreprocessing — already done once before the loop
+                            precomputedStyleDescription,
+                            thinkingLevel,
+                            currentVideoRef
+                        );
+                    } finally {
+                        console.timeEnd(`[GEN] image ${index + 1}`);
+                    }
                     imageDataUrls.push(imageDataUrl);
                 } else {
                     // Simple case: can generate in parallel
@@ -3375,6 +3379,7 @@ export default function App() {
             console.error("Image generation failed", error);
             showToast(error.message || t.generationFailed, 'error');
         } finally {
+            console.timeEnd('[GEN] total');
             setIsLoading(false);
             abortControllerRef.current = null; // v1.3: Clear abort controller
         }
