@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { CameraIcon, LightbulbIcon, ShirtIcon, LayoutGridIcon, ChevronDownIcon, SparklesIcon } from './icons';
+import { CameraIcon, LightbulbIcon, ShirtIcon, LayoutGridIcon, ChevronDownIcon, SparklesIcon, TargetIcon } from './icons';
 import CustomSelect from './CustomSelect';
 import {
     CAMERAS, LENSES, FOCAL_LENGTHS, LIGHT_DIRECTIONS,
-    WARDROBE_CATEGORIES, SHOTS, PRODUCTION_KITS
+    WARDROBE_CATEGORIES, SHOTS, PRODUCTION_KITS, FOCUS_PRESETS
 } from '../data/studioPresets';
 
 interface StudioPanelProps {
@@ -172,6 +172,35 @@ const StudioPanel: React.FC<StudioPanelProps> = ({ t, studioConfig, setStudioCon
                                     className={`px-2 py-2 rounded-xl text-[10px] font-bold transition-all border text-center ${studioConfig.shot === shot.id ? 'bg-brand-yellow text-dark-bg border-brand-yellow shadow-md' : 'bg-transparent border-dark-border opacity-60 hover:opacity-100 hover:border-brand-yellow'}`}
                                 >
                                     {shot.name}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            {/* Focus Section */}
+            <div className="border border-dark-border rounded-2xl overflow-hidden">
+                <button
+                    onClick={() => toggleSection('focus')}
+                    className={`w-full flex items-center justify-between p-3 font-semibold transition-all ${openSection === 'focus' ? 'bg-brand-yellow text-dark-bg' : 'text-dark-text hover:bg-white/5 bg-transparent'}`}
+                >
+                    <div className="flex items-center gap-2 text-sm">
+                        <TargetIcon className={`w-4 h-4 ${openSection === 'focus' ? 'text-dark-bg' : 'text-brand-yellow'}`} />
+                        <span>{t.studioFocusTitle || 'Focus & Depth'}</span>
+                    </div>
+                    <ChevronDownIcon className={`w-4 h-4 transition-transform duration-300 ${openSection === 'focus' ? 'rotate-180 text-dark-bg' : 'opacity-50 text-dark-text'}`} />
+                </button>
+                {openSection === 'focus' && (
+                    <div className="p-3 bg-white/5 border-t border-dark-border animate-in slide-in-from-top-1 duration-200">
+                        <div className="grid grid-cols-2 gap-2">
+                            {FOCUS_PRESETS.map(fp => (
+                                <button
+                                    key={fp.id}
+                                    onClick={() => updateConfig('focus', studioConfig.focus === fp.id ? '' : fp.id)}
+                                    className={`px-2 py-2 rounded-xl text-[10px] font-bold transition-all border text-center ${studioConfig.focus === fp.id ? 'bg-brand-yellow text-dark-bg border-brand-yellow shadow-md' : 'bg-transparent border-dark-border opacity-60 hover:opacity-100 hover:border-brand-yellow'}`}
+                                >
+                                    {fp.name}
                                 </button>
                             ))}
                         </div>

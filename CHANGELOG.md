@@ -1,5 +1,22 @@
 # 📋 Changelog - Generentolo PRO
 
+## [2.5.0] - 2026-04-15
+### Added
+- **Cinematic Storyboard v2** — completamente riscritto con flusso theme-first: modale dedicata per scrivere il tema creativo prima di avviare la generazione. Selezione shot count (3/6/9/12). Struttura rigida 3×3 orientata al cinema pubblicitario. Generi ADV-focused: ADV, Fashion, Editorial, Beauty, Make-up, Luxury, Lifestyle, Mockup, Food, Automotive, Corporate, Sport, E-commerce, Street + cinematici.
+- **Lock/Unlock per singola card** — ogni shot dello storyboard può essere bloccato per escluderlo dalla rigenerazione globale. Bordo giallo quando bloccato.
+- **Rigenera singolo shot** — icona regen per shot con spinner live; riapre la modale tema per il singolo shot selezionato.
+- **Form Transfer** — toggle nella FloatingActionBar (visibile solo con reference caricate). Analizza la forma/silhouette del soggetto nella prima reference tramite Gemini Vision e la trasferisce alla nuova generazione. Funziona per qualsiasi tipo di soggetto: persone, scarpe, architetture, oggetti. Icona ShapeIcon (esagono).
+- **Two-step AI analysis per Style e Structure reference** — le immagini di reference per stile e struttura vengono ora analizzate da Gemini Vision prima della generazione. La descrizione testuale risultante (palette colori, mood, composizione spaziale, ecc.) viene iniettata nel prompt per risultati molto più fedeli. Cache WeakMap per evitare chiamate ridondanti su generazioni multiple.
+- **Focus & Depth nella tab Studio** — nuova sezione collassabile con 5 preset: Bokeh Background, Tack Sharp, Cinematic Depth, Tilt-Shift, Soft Focus.
+
+### Removed
+- **Physics Controls dropdown** — rimosso il menu a tendina "Physics Controls" dalla sidebar (Lighting, Camera, Focus). Le funzionalità uniche (Focus) sono state migrate nella tab Studio. Lighting e Camera erano ridondanti rispetto a Studio.
+
+### Fixed
+- Prevenuti console timer warning da timer leaked in generazione
+- Corretti cursor jump e text break nell'editing del prompt nella FAB
+- Propagazione corretta di `SAFETY_SETTINGS_PERMISSIVE` a tutte le chiamate API Gemini
+
 ## [2.4.0] - 2026-04-03
 ### Added
 - **Thinking Level selector** (NB2 / PRO only): Nuovo controllo nel model group della FloatingActionBar per selezionare la profondità di ragionamento interno del modello. ⚡ Fast (minimal, default), 🧠 Balanced (medium), 🔬 Deep (high). Visibile solo quando è selezionato NB2 o PRO.

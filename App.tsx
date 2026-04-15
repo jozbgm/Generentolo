@@ -7,20 +7,24 @@ import { StoryboardPrompt } from './services/storyboardService';
 import * as anglePromptService from './services/anglePromptService';
 import { useKeyboardShortcuts, APP_SHORTCUTS } from './hooks/useKeyboardShortcuts';
 import { useAccentColor } from './hooks/useAccentColor';
-import { SunIcon, MoonIcon, UploadIcon, DownloadIcon, SparklesIcon, CopyIcon, SettingsIcon, XIcon, CheckIcon, LanguageIcon, BrushIcon, DiceIcon, TrashIcon, ReloadIcon, StarIcon, CornerUpLeftIcon, ChevronDownIcon, ClapperboardIcon, DnaIcon, TargetIcon, PaletteIcon, PlusIcon, CameraIcon, LightbulbIcon, KeyboardIcon, ImageIcon, AlertTriangleIcon } from './components/icons';
+import { SunIcon, MoonIcon, UploadIcon, DownloadIcon, SparklesIcon, CopyIcon, SettingsIcon, XIcon, CheckIcon, LanguageIcon, BrushIcon, DiceIcon, TrashIcon, ReloadIcon, StarIcon, CornerUpLeftIcon, ChevronDownIcon, ClapperboardIcon, DnaIcon, TargetIcon, PaletteIcon, PlusIcon, KeyboardIcon, ImageIcon, AlertTriangleIcon } from './components/icons';
 import { indexedDBService, DnaCharacter } from './services/indexedDB';
 import FloatingActionBar from './components/FloatingActionBar';
 import ImageLightbox from './components/ImageLightbox';
 import StoryboardGrid from './components/StoryboardGrid';
+import StoryboardThemeModal from './components/StoryboardThemeModal';
 import QueuePanel from './components/QueuePanel';
 import GenerAngles, { AngleGenerationParams } from './components/GenerAngles';
 
-import { STYLE_PRESETS, PHYSICS_PRESETS } from './data/stylePresets'; // v1.4
+import { STYLE_PRESETS } from './data/stylePresets'; // v1.4
 import { fetchInvisibleReferences, removeBracketsFromPrompt } from './services/googleSearchService'; // v1.5.1
 import StudioPanel from './components/StudioPanel'; // v1.8: Studio Mode
 import CustomSelect from './components/CustomSelect'; // v2.x: accessible custom select
 import ThemePicker from './components/ThemePicker'; // v2.2: on-the-fly accent color picker
-import { CAMERAS, LENSES, FOCAL_LENGTHS, LIGHT_DIRECTIONS, WARDROBE_CATEGORIES, SHOTS, PRODUCTION_KITS } from './data/studioPresets';
+import { CAMERAS, LENSES, FOCAL_LENGTHS, LIGHT_DIRECTIONS, WARDROBE_CATEGORIES, SHOTS, PRODUCTION_KITS, FOCUS_PRESETS } from './data/studioPresets';
+
+// Feature flags
+const ANGLES_ENABLED = false; // tab non funzionante, nascosta per futura implementazione
 
 // Polyfill for crypto.randomUUID() on browsers that don't support it (mobile Safari, etc)
 if (!crypto.randomUUID) {
@@ -36,7 +40,7 @@ if (!crypto.randomUUID) {
 // --- Localization ---
 const translations = {
     en: {
-        headerTitle: 'Generentolo PRO v2.4',
+        headerTitle: 'Generentolo PRO v2.5',
         headerSubtitle: 'Let me do it for you!',
         refImagesTitle: 'Reference & Style Images',
         styleRefTitle: 'Style Reference',
@@ -306,7 +310,7 @@ const translations = {
         presetAppliedToPrompt: 'Will be applied to generation',
     },
     it: {
-        headerTitle: 'Generentolo PRO v2.4',
+        headerTitle: 'Generentolo PRO v2.5',
         headerSubtitle: 'Let me do it for you!',
         refImagesTitle: 'Immagini di Riferimento e Stile',
         styleRefTitle: 'Riferimento Stile',
@@ -789,15 +793,9 @@ const ReferencePanel: React.FC<{
     onAddStructureImage: (file: File) => void;
     onRemoveStructureImage: () => void;
     structureImage: File | null;
-    // v1.4: Style Presets and Physics Controls
+    // v1.4: Style Presets
     selectedStylePreset: string | null;
     setSelectedStylePreset: (id: string | null) => void;
-    selectedLighting: string | null;
-    setSelectedLighting: (id: string | null) => void;
-    selectedCamera: string | null;
-    setSelectedCamera: (id: string | null) => void;
-    selectedFocus: string | null;
-    setSelectedFocus: (id: string | null) => void;
     selectedModel: ModelType;
     preciseReference: boolean;
     setPreciseReference: (value: boolean) => void;
@@ -822,7 +820,7 @@ const ReferencePanel: React.FC<{
     onCaptureVideoFrame: (frameFile: File) => void;
     videoAsStyle: boolean;
     onToggleVideoAsStyle: () => void;
-}> = ({ onAddImages, onRemoveImage, referenceImages, onAddStyleImage, onRemoveStyleImage, styleImage, onAddStructureImage, onRemoveStructureImage, structureImage, selectedStylePreset, setSelectedStylePreset, selectedLighting, setSelectedLighting, selectedCamera, setSelectedCamera, selectedFocus, setSelectedFocus, selectedModel, preciseReference, setPreciseReference, dnaCharacters, selectedDnaIds, onSelectDna, onManageDna, appMode, setAppMode, studioConfig, setStudioConfig, onGenerateStoryboard, isStoryboardLoading, onGenerateFromAngle, isGeneratingAngles, videoReference, onAddVideoReference, onRemoveVideoReference, onCaptureVideoFrame, videoAsStyle, onToggleVideoAsStyle }) => {
+}> = ({ onAddImages, onRemoveImage, referenceImages, onAddStyleImage, onRemoveStyleImage, styleImage, onAddStructureImage, onRemoveStructureImage, structureImage, selectedStylePreset, setSelectedStylePreset, selectedModel, preciseReference, setPreciseReference, dnaCharacters, selectedDnaIds, onSelectDna, onManageDna, appMode, setAppMode, studioConfig, setStudioConfig, onGenerateStoryboard, isStoryboardLoading, onGenerateFromAngle, isGeneratingAngles, videoReference, onAddVideoReference, onRemoveVideoReference, onCaptureVideoFrame, videoAsStyle, onToggleVideoAsStyle }) => {
     const { t, language } = useLocalization();
     const [isDraggingRef, setIsDraggingRef] = useState(false);
     const [isDraggingStyle, setIsDraggingStyle] = useState(false);
@@ -830,7 +828,6 @@ const ReferencePanel: React.FC<{
 
     // v1.7.1: Collapsible sections to save space
     const [showPresets, setShowPresets] = useState(false);
-    const [showPhysics, setShowPhysics] = useState(false);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
     const videoElRef = useRef<HTMLVideoElement>(null);
@@ -918,6 +915,7 @@ const ReferencePanel: React.FC<{
                         <SparklesIcon className={`w-3.5 h-3.5 transition-colors ${appMode === 'studio' ? 'text-dark-bg' : 'text-brand-yellow'}`} />
                         {t.studioModeToggleStudio}
                     </button>
+                    {ANGLES_ENABLED && (
                     <button
                         onClick={() => setAppMode('angles')}
                         className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${appMode === 'angles' ? 'bg-brand-yellow text-dark-bg shadow-sm' : 'text-light-text-muted dark:text-dark-text-muted hover:text-brand-yellow dark:hover:text-brand-yellow'}`}
@@ -925,6 +923,7 @@ const ReferencePanel: React.FC<{
                         <TargetIcon className={`w-3.5 h-3.5 transition-colors ${appMode === 'angles' ? 'text-dark-bg' : 'text-brand-yellow'}`} />
                         Angles
                     </button>
+                    )}
                 </div>
 
                 <h3 className="font-semibold text-light-text dark:text-dark-text">{t.refImagesTitle}</h3>
@@ -1182,82 +1181,20 @@ const ReferencePanel: React.FC<{
                                 )}
                             </div>
 
-                            <div className="group/item">
-                                <button
-                                    onClick={() => setShowPhysics(!showPhysics)}
-                                    className="w-full flex items-center justify-between py-1 px-1 rounded-lg transition-all hover:bg-white/5 focus:outline-none"
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-6 h-6 rounded-md bg-brand-yellow/10 flex items-center justify-center text-brand-yellow"><SettingsIcon className="w-3.5 h-3.5" /></div>
-                                        <span className="text-[10px] font-black uppercase tracking-[0.15em] text-light-text/60 dark:text-dark-text/50 group-hover/item:text-brand-yellow transition-colors">{t.physicsControlTitle}</span>
-                                    </div>
-                                    <div className={`transition-transform duration-300 ${showPhysics ? 'rotate-180' : ''}`}>
-                                        <ChevronDownIcon className="w-3 h-3 opacity-30" />
-                                    </div>
-                                </button>
-                                {showPhysics && (
-                                    <div className="mt-4 space-y-4 px-1 animate-in fade-in slide-in-from-top-1 duration-300">
-                                        {/* Lighting Control */}
-                                        <div className="space-y-2">
-                                            <label className="text-[9px] font-black uppercase tracking-[0.2em] text-light-text-muted/60 dark:text-dark-text-muted/60 ml-1">
-                                                {t.lightingLabel}
-                                            </label>
-                                        <CustomSelect
-                                                value={selectedLighting}
-                                                placeholder={language === 'it' ? 'Illuminazione predefinita' : 'Default Lighting'}
-                                                options={PHYSICS_PRESETS.lighting.map(p => ({ value: p.id, label: language === 'it' ? p.nameIt : p.name }))}
-                                                onChange={(val) => setSelectedLighting(val)}
-                                            />
-                                        </div>
-
-                                        {/* Camera Control */}
-                                        <div className="space-y-2">
-                                            <label className="text-[9px] font-black uppercase tracking-[0.2em] text-light-text-muted/60 dark:text-dark-text-muted/60 ml-1">
-                                                {t.cameraLabel}
-                                            </label>
-                                        <CustomSelect
-                                                value={selectedCamera}
-                                                placeholder={language === 'it' ? 'Vista predefinita' : 'Default View'}
-                                                options={PHYSICS_PRESETS.camera.map(p => ({ value: p.id, label: language === 'it' ? p.nameIt : p.name }))}
-                                                onChange={(val) => setSelectedCamera(val)}
-                                            />
-                                        </div>
-
-                                        {/* Focus Control */}
-                                        <div className="space-y-2">
-                                            <label className="text-[9px] font-black uppercase tracking-[0.2em] text-light-text-muted/60 dark:text-dark-text-muted/60 ml-1">
-                                                {t.focusLabel}
-                                            </label>
-                                        <CustomSelect
-                                                value={selectedFocus}
-                                                placeholder={language === 'it' ? 'Fuoco predefinito' : 'Default Focus'}
-                                                options={PHYSICS_PRESETS.focus.map(p => ({ value: p.id, label: language === 'it' ? p.nameIt : p.name }))}
-                                                onChange={(val) => setSelectedFocus(val)}
-                                            />
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-
                             {/* Active Presets Strip - Shows what will be applied */}
-                            {(selectedStylePreset || selectedLighting || selectedCamera || selectedFocus) && (
+                            {selectedStylePreset && (
                                 <div className="mt-4 p-3 rounded-xl bg-brand-yellow/10 border border-brand-yellow/20">
                                     <div className="flex items-center justify-between mb-2">
                                         <span className="text-[9px] font-black uppercase tracking-widest text-brand-yellow">{t.activePresetsTitle}</span>
                                         <button
-                                            onClick={() => {
-                                                setSelectedStylePreset(null);
-                                                setSelectedLighting(null);
-                                                setSelectedCamera(null);
-                                                setSelectedFocus(null);
-                                            }}
+                                            onClick={() => setSelectedStylePreset(null)}
                                             className="px-2 py-0.5 text-[8px] font-bold uppercase tracking-wider bg-light-surface-accent dark:bg-dark-surface-accent text-light-text-muted dark:text-dark-text-muted rounded-full hover:bg-brand-yellow hover:text-black transition-all"
                                         >
                                             {t.resetAllPresets}
                                         </button>
                                     </div>
                                     <div className="flex flex-wrap gap-1.5">
-                                        {selectedStylePreset && (() => {
+                                        {(() => {
                                             const preset = STYLE_PRESETS.find(p => p.id === selectedStylePreset);
                                             return preset ? (
                                                 <div
@@ -1271,48 +1208,6 @@ const ReferencePanel: React.FC<{
                                                 </div>
                                             ) : null;
                                         })()}
-                                        {selectedLighting && (() => {
-                                            const preset = PHYSICS_PRESETS.lighting.find(p => p.id === selectedLighting);
-                                            return preset ? (
-                                                <div
-                                                    className="group relative px-2 py-1 bg-brand-yellow/20 text-brand-yellow rounded-full text-[9px] font-bold flex items-center gap-1 cursor-pointer hover:bg-brand-yellow/30 transition-all"
-                                                    onClick={() => setSelectedLighting(null)}
-                                                    title={preset.prompt}
-                                                >
-                                                    <span><LightbulbIcon className="w-3 h-3" /></span>
-                                                    <span>{language === 'it' ? preset.nameIt : preset.name}</span>
-                                                    <XIcon className="opacity-0 group-hover:opacity-100 ml-1 w-2.5 h-2.5" />
-                                                </div>
-                                            ) : null;
-                                        })()}
-                                        {selectedCamera && (() => {
-                                            const preset = PHYSICS_PRESETS.camera.find(p => p.id === selectedCamera);
-                                            return preset ? (
-                                                <div
-                                                    className="group relative px-2 py-1 bg-brand-yellow/20 text-brand-yellow rounded-full text-[9px] font-bold flex items-center gap-1 cursor-pointer hover:bg-brand-yellow/30 transition-all"
-                                                    onClick={() => setSelectedCamera(null)}
-                                                    title={preset.prompt}
-                                                >
-                                                    <span><CameraIcon className="w-3 h-3" /></span>
-                                                    <span>{language === 'it' ? preset.nameIt : preset.name}</span>
-                                                    <XIcon className="opacity-0 group-hover:opacity-100 ml-1 w-2.5 h-2.5" />
-                                                </div>
-                                            ) : null;
-                                        })()}
-                                        {selectedFocus && (() => {
-                                            const preset = PHYSICS_PRESETS.focus.find(p => p.id === selectedFocus);
-                                            return preset ? (
-                                                <div
-                                                    className="group relative px-2 py-1 bg-brand-yellow/20 text-brand-yellow rounded-full text-[9px] font-bold flex items-center gap-1 cursor-pointer hover:bg-brand-yellow/30 transition-all"
-                                                    onClick={() => setSelectedFocus(null)}
-                                                    title={preset.prompt}
-                                                >
-                                                    <span><TargetIcon className="w-3 h-3" /></span>
-                                                    <span>{language === 'it' ? preset.nameIt : preset.name}</span>
-                                                    <XIcon className="opacity-0 group-hover:opacity-100 ml-1 w-2.5 h-2.5" />
-                                                </div>
-                                            ) : null;
-                                        })()}
                                     </div>
                                     <p className="text-[8px] text-light-text-muted/50 dark:text-dark-text-muted/50 mt-2 italic">{t.presetAppliedToPrompt}</p>
                                 </div>
@@ -1321,13 +1216,13 @@ const ReferencePanel: React.FC<{
                     </div>
                 ) : appMode === 'studio' ? (
                     <StudioPanel t={t} studioConfig={studioConfig} setStudioConfig={setStudioConfig} />
-                ) : (
+                ) : ANGLES_ENABLED ? (
                     <GenerAngles
                         onGenerate={onGenerateFromAngle}
                         isGenerating={isGeneratingAngles}
                         referenceImages={referenceImages}
                     />
-                )}
+                ) : null}
             </div>
         </div>
     );
@@ -2698,6 +2593,7 @@ export default function App() {
     const [isEnhancing, setIsEnhancing] = useState(false);
     const [numImagesToGenerate, setNumImagesToGenerate] = useState(1);
     const [autoEnhance, setAutoEnhance] = useState(false); // v1.9 Pro: Default OFF as requested
+    const [poseTransfer, setPoseTransfer] = useState(false); // Form Transfer: replicate form from first reference
     const [zoomedImage, setZoomedImage] = useState<GeneratedImage | null>(null);
     const [editingImage, setEditingImage] = useState<GeneratedImage | null>(null);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -2749,13 +2645,16 @@ export default function App() {
     const [storyboardPrompts, setStoryboardPrompts] = useState<StoryboardPrompt[]>([]);
     const [isStoryboardOpen, setIsStoryboardOpen] = useState(false);
     const [isStoryboardLoading, setIsStoryboardLoading] = useState(false);
+    const [isStoryboardThemeOpen, setIsStoryboardThemeOpen] = useState(false);
+    const [storyboardTheme, setStoryboardTheme] = useState('');
+    const [storyboardShotCount, setStoryboardShotCount] = useState(9);
+    const [storyboardLockedIds, setStoryboardLockedIds] = useState<string[]>([]);
+    const [storyboardRegeneratingId, setStoryboardRegeneratingId] = useState<string | null>(null);
+    const [storyboardTargetImage, setStoryboardTargetImage] = useState<File | null>(null);
 
     // v1.4: New features states
     const [useGrounding, setUseGrounding] = useState(false); // Google Search Grounding
     const [selectedStylePreset, setSelectedStylePreset] = useState<string | null>(null);
-    const [selectedLighting, setSelectedLighting] = useState<string | null>(null);
-    const [selectedCamera, setSelectedCamera] = useState<string | null>(null);
-    const [selectedFocus, setSelectedFocus] = useState<string | null>(null);
 
     const promptTextareaRef = useRef<HTMLTextAreaElement>(null);
     const abortControllerRef = useRef<AbortController | null>(null);
@@ -2936,14 +2835,16 @@ export default function App() {
 
     const handleAddImages = (newFiles: File[]) => {
         setReferenceImages(prev => [...prev, ...newFiles].slice(0, MAX_USER_IMAGES));
-        // Clear storyboard prompts when reference changes
         setStoryboardPrompts([]);
+        setStoryboardLockedIds([]);
+        setStoryboardTargetImage(null);
     };
 
     const handleRemoveImage = (indexToRemove: number) => {
         setReferenceImages(prev => prev.filter((_, index) => index !== indexToRemove));
-        // Clear storyboard prompts when reference changes
         setStoryboardPrompts([]);
+        setStoryboardLockedIds([]);
+        setStoryboardTargetImage(null);
     };
 
     const handleAddStyleImage = (file: File) => {
@@ -2978,6 +2879,7 @@ export default function App() {
                 useGrounding: useGrounding,
                 preciseReference: preciseReference,
                 autoEnhance: autoEnhance,
+                poseTransfer: poseTransfer,
                 timestamp: Date.now(),
             };
             setQueue(prev => [...prev, newTask]);
@@ -3001,6 +2903,7 @@ export default function App() {
         const currentGrounding = isTask ? task.useGrounding : useGrounding;
         const currentPrecise = isTask ? task.preciseReference : preciseReference;
         const currentAutoEnhance = isTask ? task.autoEnhance : autoEnhance;
+        const currentPoseTransfer = isTask ? (task.poseTransfer ?? false) : poseTransfer;
         const currentVideoRef = (!isTask && videoAsStyle) ? videoReference : null; // v2.4: full video style ref
 
         if (currentRefImages.length === 0 && !currentPrompt && !currentStyleImage) return;
@@ -3040,10 +2943,7 @@ export default function App() {
                 const fullContext = {
                     studioConfig: currentStudioCfg,
                     classicPresets: {
-                        style: selectedStylePreset,
-                        lighting: selectedLighting,
-                        camera: selectedCamera,
-                        focus: selectedFocus
+                        style: selectedStylePreset
                     },
                     technical: {
                         aspectRatio: currentAspect,
@@ -3148,20 +3048,6 @@ export default function App() {
                     if (preset) presetSnippets.push(preset.promptSuffix);
                 }
 
-                if (selectedLighting) {
-                    const lighting = PHYSICS_PRESETS.lighting.find(l => l.id === selectedLighting);
-                    if (lighting) presetSnippets.push(lighting.prompt);
-                }
-
-                if (selectedCamera) {
-                    const camera = PHYSICS_PRESETS.camera.find(c => c.id === selectedCamera);
-                    if (camera) presetSnippets.push(camera.prompt);
-                }
-
-                if (selectedFocus) {
-                    const focus = PHYSICS_PRESETS.focus.find(f => f.id === selectedFocus);
-                    if (focus) presetSnippets.push(focus.prompt);
-                }
 
                 if (presetSnippets.length > 0) {
                     cleanedPrompt = `${cleanedPrompt}, ${presetSnippets.join(', ')}`;
@@ -3214,6 +3100,10 @@ export default function App() {
                 if (currentStudioCfg.shot) {
                     const shot = SHOTS.find(s => s.id === currentStudioCfg.shot);
                     if (shot) studioSnippets.push(shot.prompt);
+                }
+                if (currentStudioCfg.focus) {
+                    const focusPreset = FOCUS_PRESETS.find(f => f.id === currentStudioCfg.focus);
+                    if (focusPreset) studioSnippets.push(focusPreset.prompt);
                 }
                 if (currentStudioCfg.kit) {
                     const kit = PRODUCTION_KITS.find(k => k.id === currentStudioCfg.kit);
@@ -3291,7 +3181,8 @@ export default function App() {
                             true, // v2.1: skipPreprocessing — already done once before the loop
                             precomputedStyleDescription,
                             thinkingLevel,
-                            currentVideoRef
+                            currentVideoRef,
+                            currentPoseTransfer
                         );
                     } finally {
                         console.timeEnd(`[GEN] image ${index + 1}`);
@@ -3340,7 +3231,8 @@ export default function App() {
                             true, // v2.1: skipPreprocessing — already done once before the loop
                             precomputedStyleDescription,
                             thinkingLevel,
-                            currentVideoRef
+                            currentVideoRef,
+                            currentPoseTransfer
                         );
                     });
                     imageDataUrls.push(...await Promise.all(generationPromises));
@@ -4068,16 +3960,26 @@ export default function App() {
     }, [userApiKey, language, showToast, t.upscaleSuccess, t.upscaleFailed]);
 
     // v1.9.5: Storyboard Handlers
-    const handleGenerateStoryboard = useCallback(async (customImage?: File, forceRegenerate: boolean = false) => {
-        // If we already have prompts and not forcing regeneration, just open the modal
-        if (storyboardPrompts.length > 0 && !forceRegenerate) {
-            setIsStoryboardOpen(true);
+
+    // Step 1: open theme modal (validate image, store target)
+    const handleOpenStoryboard = useCallback((customImage?: File) => {
+        const imageToUse = customImage || (referenceImages.length > 0 ? referenceImages[0] : null);
+        if (!imageToUse || !(imageToUse instanceof Blob)) {
+            showToast(t.validImageForStoryboard, 'error');
             return;
         }
+        setStoryboardTargetImage(imageToUse);
+        setIsStoryboardThemeOpen(true);
+    }, [referenceImages, showToast, t.validImageForStoryboard]);
 
-        // Validation: ensure we have a valid File/Blob
-        const imageToAnalyze = customImage || (referenceImages.length > 0 ? referenceImages[0] : null);
+    // Step 2: called from theme modal — generate prompts
+    const handleGenerateStoryboard = useCallback(async (theme: string, shotCount: number) => {
+        setIsStoryboardThemeOpen(false);
+        setStoryboardTheme(theme);
+        setStoryboardShotCount(shotCount);
+        setStoryboardLockedIds([]);
 
+        const imageToAnalyze = storyboardTargetImage || (referenceImages.length > 0 ? referenceImages[0] : null);
         if (!imageToAnalyze || !(imageToAnalyze instanceof Blob)) {
             showToast(t.validImageForStoryboard, 'error');
             return;
@@ -4087,10 +3989,10 @@ export default function App() {
         setIsStoryboardOpen(true);
 
         try {
-            const prompts = await storyboardService.generateCinematicStoryboard(imageToAnalyze, userApiKey, language);
-            if (prompts.length === 0) {
-                throw new Error(t.storyboardFailed);
-            }
+            const prompts = await storyboardService.generateCinematicStoryboard(
+                imageToAnalyze, userApiKey, language, theme, shotCount
+            );
+            if (prompts.length === 0) throw new Error(t.storyboardFailed);
             setStoryboardPrompts(prompts);
         } catch (error: any) {
             showToast(error.message || t.storyboardFailed, 'error');
@@ -4098,13 +4000,42 @@ export default function App() {
         } finally {
             setIsStoryboardLoading(false);
         }
-    }, [storyboardPrompts.length, referenceImages, userApiKey, language, showToast, t.validImageForStoryboard, t.storyboardFailed]);
+    }, [storyboardTargetImage, referenceImages, userApiKey, language, showToast, t.validImageForStoryboard, t.storyboardFailed]);
+
+    // Rigenera: re-open theme modal pre-filled so user can adjust theme
+    const handleReopenThemeForRegenerate = useCallback(() => {
+        setIsStoryboardOpen(false);
+        setIsStoryboardThemeOpen(true);
+    }, []);
+
+    // Rigenera singolo shot
+    const handleRegenerateOne = useCallback(async (id: string, shotTitle: string) => {
+        const imageToAnalyze = storyboardTargetImage || (referenceImages.length > 0 ? referenceImages[0] : null);
+        if (!imageToAnalyze) return;
+
+        setStoryboardRegeneratingId(id);
+        try {
+            const newShot = await storyboardService.regenerateSingleShot(
+                imageToAnalyze, userApiKey, language, storyboardTheme, shotTitle, storyboardPrompts
+            );
+            setStoryboardPrompts(prev => prev.map(p => p.id === id ? { ...newShot, id } : p));
+        } catch (error: any) {
+            showToast(error.message || t.storyboardFailed, 'error');
+        } finally {
+            setStoryboardRegeneratingId(null);
+        }
+    }, [storyboardTargetImage, referenceImages, userApiKey, language, storyboardTheme, storyboardPrompts, showToast, t.storyboardFailed]);
+
+    const handleToggleStoryboardLock = useCallback((id: string) => {
+        setStoryboardLockedIds(prev =>
+            prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+        );
+    }, []);
 
     const handleStoryboardGenerateAll = useCallback(() => {
         if (storyboardPrompts.length === 0) return;
 
-        // Use the first reference image as the constant for all storyboard generations
-        const masterRef = referenceImages[0];
+        const masterRef = storyboardTargetImage || referenceImages[0];
 
         const newTasks: GenerationTask[] = storyboardPrompts.map(item => ({
             id: crypto.randomUUID(),
@@ -4317,12 +4248,6 @@ export default function App() {
                             structureImage={structureImage}
                             selectedStylePreset={selectedStylePreset}
                             setSelectedStylePreset={setSelectedStylePreset}
-                            selectedLighting={selectedLighting}
-                            setSelectedLighting={setSelectedLighting}
-                            selectedCamera={selectedCamera}
-                            setSelectedCamera={setSelectedCamera}
-                            selectedFocus={selectedFocus}
-                            setSelectedFocus={setSelectedFocus}
                             selectedModel={selectedModel}
                             preciseReference={preciseReference}
                             setPreciseReference={setPreciseReference}
@@ -4334,7 +4259,7 @@ export default function App() {
                             setAppMode={setAppMode}
                             studioConfig={studioConfig}
                             setStudioConfig={setStudioConfig}
-                            onGenerateStoryboard={handleGenerateStoryboard}
+                            onGenerateStoryboard={handleOpenStoryboard}
                             isStoryboardLoading={isStoryboardLoading}
                             onGenerateFromAngle={handleGenerateFromAngle}
                             isGeneratingAngles={isGeneratingAngles}
@@ -4364,7 +4289,7 @@ export default function App() {
                                 onGenerateStoryboard={(img) => {
                                     // Handle image translation to file for storyboard
                                     const file = dataURLtoFile(img.imageDataUrl || img.thumbnailDataUrl!, `storyboard-${img.id}.png`);
-                                    handleGenerateStoryboard(file);
+                                    handleOpenStoryboard(file);
                                 }}
                                 onQuickEdit={handleQuickEdit}
                                 onOutpaint={handleOutpaint}
@@ -4554,6 +4479,8 @@ export default function App() {
                     isEnhancing={isEnhancing}
                     referenceCount={referenceImages.length}
                     onOutpaintReference={handleOutpaintReference}
+                    poseTransfer={poseTransfer}
+                    onPoseTransferChange={setPoseTransfer}
                 />
 
                 <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} onSave={handleSaveApiKey} currentApiKey={userApiKey} />
@@ -4584,6 +4511,17 @@ export default function App() {
                     />
                 )}
 
+                {isStoryboardThemeOpen && (
+                    <StoryboardThemeModal
+                        onClose={() => setIsStoryboardThemeOpen(false)}
+                        onGenerate={handleGenerateStoryboard}
+                        language={language}
+                        referenceImage={storyboardTargetImage}
+                        initialTheme={storyboardTheme}
+                        initialShotCount={storyboardShotCount}
+                    />
+                )}
+
                 {isStoryboardOpen && (
                     <StoryboardGrid
                         prompts={storyboardPrompts}
@@ -4591,9 +4529,15 @@ export default function App() {
                         onUsePrompt={(p: string) => { setEditedPrompt(p); setIsStoryboardOpen(false); }}
                         onGenerateAll={handleStoryboardGenerateAll}
                         onGenerateOne={handleStoryboardGenerateOne}
-                        onRegenerate={() => handleGenerateStoryboard(undefined, true)}
+                        onRegenerate={handleReopenThemeForRegenerate}
+                        onRegenerateOne={handleRegenerateOne}
+                        onToggleLock={handleToggleStoryboardLock}
+                        lockedIds={storyboardLockedIds}
+                        regeneratingId={storyboardRegeneratingId}
                         isLoading={isStoryboardLoading}
                         language={language}
+                        theme={storyboardTheme}
+                        shotCount={storyboardShotCount}
                     />
                 )}
 
@@ -4612,7 +4556,7 @@ export default function App() {
                             onSaveAsDna={handleSaveImageAsDna}
                             onStoryboard={(img) => {
                                 const file = dataURLtoFile(img.imageDataUrl || img.thumbnailDataUrl!, `storyboard-${img.id}.png`);
-                                handleGenerateStoryboard(file);
+                                handleOpenStoryboard(file);
                             }}
                             t={t}
                         />

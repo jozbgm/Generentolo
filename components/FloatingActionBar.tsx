@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocalization } from '../App';
 import { ModelType, ResolutionType, ThinkingLevel } from '../types';
-import { XIcon, CopyIcon, PlusIcon, SparklesIcon, UserIcon, LanguageIcon, ImageIcon, SettingsIcon, ZapIcon, StarIcon, DiceIcon, CheckIcon, ReloadIcon, ClapperboardIcon, Layers2Icon, MonitorIcon, SmartphoneIcon, RatioSquareIcon } from './icons';
+import { XIcon, CopyIcon, PlusIcon, SparklesIcon, UserIcon, LanguageIcon, ImageIcon, SettingsIcon, ZapIcon, StarIcon, DiceIcon, CheckIcon, ReloadIcon, ClapperboardIcon, Layers2Icon, MonitorIcon, SmartphoneIcon, RatioSquareIcon, ShapeIcon } from './icons';
 
 interface FloatingActionBarProps {
     prompt: string;
@@ -35,6 +35,8 @@ interface FloatingActionBarProps {
     isEnhancing?: boolean;
     referenceCount: number;
     onOutpaintReference: (direction: 'up' | 'down' | 'left' | 'right', targetAspect?: string) => void;
+    poseTransfer: boolean;
+    onPoseTransferChange: (enabled: boolean) => void;
 }
 
 const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
@@ -69,6 +71,8 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
     isEnhancing,
     referenceCount,
     onOutpaintReference,
+    poseTransfer,
+    onPoseTransferChange,
 }) => {
     const { t, language } = useLocalization();
 
@@ -389,6 +393,24 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                                     />
                                 </div>
                             </div>
+
+                            {/* Form Transfer Toggle — visible only when reference images are present */}
+                            {referenceCount > 0 && (
+                                <div
+                                    className={`flex items-center bg-black/5 dark:bg-white/5 border rounded-xl px-3 gap-2.5 h-10 transition-all hover:bg-black/10 dark:hover:bg-white/10 cursor-pointer ${poseTransfer ? 'border-brand-yellow/30 ring-1 ring-brand-yellow/20' : 'border-black/5 dark:border-white/5 grayscale saturate-0'}`}
+                                    title={poseTransfer ? (language === 'it' ? 'Form Transfer attivo — replica forma/silhouette dalla reference' : 'Form Transfer active — replicating form/silhouette from reference') : (language === 'it' ? 'Form Transfer — replica forma e silhouette dalla prima reference' : 'Form Transfer — replicate form and silhouette from first reference')}
+                                    onClick={() => onPoseTransferChange(!poseTransfer)}
+                                >
+                                    <ShapeIcon className={`w-4 h-4 transition-opacity ${poseTransfer ? 'opacity-100 text-brand-yellow' : 'opacity-50 text-dark-text-muted'}`} />
+                                    <div
+                                        className={`relative w-9 h-5 rounded-full cursor-pointer transition-colors duration-300 ease-in-out border border-transparent ${poseTransfer ? 'bg-black/80 dark:bg-white/20' : 'bg-black/20 dark:bg-white/10'}`}
+                                    >
+                                        <div
+                                            className={`absolute top-0.5 w-4 h-4 rounded-full shadow-sm transition-all duration-300 ${poseTransfer ? 'translate-x-[18px] bg-brand-yellow glow-accent-xl' : 'translate-x-0.5 bg-white/40 dark:bg-white/60'}`}
+                                        />
+                                    </div>
+                                </div>
+                            )}
 
                             {/* Precise Profile Pill */}
                             <button

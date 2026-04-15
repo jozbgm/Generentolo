@@ -351,3 +351,18 @@ export const RatioSquareIcon: React.FC<{ className?: string }> = ({ className })
     </svg>
 );
 
+export const ShapeIcon: React.FC<{ className?: string }> = ({ className }) => (
+    <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 3 L20 8 L20 16 L12 21 L4 16 L4 8 Z" />
+    </svg>
+);
+
+export const LockIcon: React.FC<{ className?: string; locked?: boolean }> = ({ className, locked }) => (
+    <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+        {locked
+            ? <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            : <path d="M7 11V7a5 5 0 0 1 9.9-1" />}
+    </svg>
+);
+

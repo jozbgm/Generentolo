@@ -55,5 +55,6 @@ export interface GenerationTask {
   useGrounding: boolean;
   preciseReference: boolean;
   autoEnhance: boolean;
+  poseTransfer?: boolean;
   timestamp: number;
 }

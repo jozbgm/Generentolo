@@ -877,6 +877,76 @@ export const extractStyleDescription = async (styleFile: File, userApiKey: strin
 
 
 
+// ─── Reference Analysis Cache ────────────────────────────────────────────────
+// WeakMap caches keyed by File identity — auto-GC'd when files are removed.
+const _styleCache = new WeakMap<File, string>();
+const _structureCache = new WeakMap<File, string>();
+const _poseCache = new WeakMap<File, string>();
+
+const _analyzeFile = async (
+    file: File,
+    cache: WeakMap<File, string>,
+    systemPrompt: string,
+    userApiKey: string | null
+): Promise<string> => {
+    if (cache.has(file)) return cache.get(file)!;
+    try {
+        const ai = getAiClient(userApiKey);
+        const imagePart = await fileToGenerativePart(file);
+        const result = await (ai as any).models.generateContent({
+            model: 'gemini-3-flash-preview',
+            contents: [{ role: 'user', parts: [imagePart, { text: systemPrompt }] }],
+            config: { safetySettings: SAFETY_SETTINGS_PERMISSIVE }
+        });
+        const text = result.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+        if (text) cache.set(file, text);
+        return text;
+    } catch {
+        return '';
+    }
+};
+
+export const analyzeForStyle = (file: File, userApiKey: string | null): Promise<string> =>
+    _analyzeFile(file, _styleCache,
+        `Analyze this image and extract its visual style. Describe concisely (2-3 sentences max):
+- Color palette: dominant colors, tones, temperature, saturation level
+- Lighting: quality (hard/soft/diffused), direction, mood, source (natural/artificial/mixed)
+- Technical aesthetic: film stock feel, color grading, grain/texture, contrast
+- Artistic style: photographic, cinematic, editorial, commercial, etc.
+- Overall mood and atmosphere
+
+Return ONLY the style description, no preamble. Be technical and specific — use terms like "Kodak Portra 400 film grain", "golden hour backlit", "teal-orange color grade", "high-key commercial lighting". This description will be used as an image generation constraint.`,
+        userApiKey);
+
+export const analyzeForStructure = (file: File, userApiKey: string | null): Promise<string> =>
+    _analyzeFile(file, _structureCache,
+        `Analyze the spatial composition of this image. Describe concisely (2-3 sentences max):
+- Subject placement: position in frame (left/center/right, top/middle/bottom), framing rule (rule of thirds, centered, etc.)
+- Camera angle: eye-level, low angle, high angle, dutch tilt, bird's eye
+- Depth layers: foreground, midground, background relationships
+- Proportions and negative space usage
+- Any dominant compositional lines (leading lines, symmetry, etc.)
+
+Return ONLY the composition description, no preamble. Be spatial and precise — "subject positioned left third, slight low angle, shallow foreground blur, architectural lines leading to subject". This will be used to constrain spatial layout in image generation.`,
+        userApiKey);
+
+export const analyzeForForm = (file: File, userApiKey: string | null): Promise<string> =>
+    _analyzeFile(file, _poseCache,
+        `Analyze the FORM, SILHOUETTE and SPATIAL STRUCTURE of the main subject in this image. This analysis must work for ANY type of subject — a person, an object, a product, a building, a shoe, a vehicle, etc.
+
+Describe precisely:
+- Overall silhouette and outline shape
+- Main structural axes and proportions (height-to-width ratio, dominant directions)
+- Spatial orientation: angle/rotation/perspective of the subject relative to camera
+- Key structural features and their positions (e.g. for a person: limb positions; for a shoe: sole angle, toe direction; for a building: facade angle, roofline)
+- Weight distribution and balance point
+- Any dynamic lines or tension in the form
+
+Return ONLY the form/structure description, no preamble. Be precise enough that this exact shape and structure could be reproduced with a completely different subject — "diagonal stance 30° right, elongated vertical silhouette, upper mass wider than lower, main structural axis tilted 15° from vertical, subject occupies left-center of frame".`,
+        userApiKey);
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 export const generateImage = async (
     prompt: string,
     aspectRatio: string,
@@ -896,7 +966,8 @@ export const generateImage = async (
     skipPreprocessing?: boolean, // v1.9.2: Speed optimization
     _precomputedStyleDescription?: string, // v2.1: kept for API compat, style now handled as direct image part
     thinkingLevel?: 'minimal' | 'medium' | 'high', // v2.4: configurable thinking budget for NB2/PRO
-    videoReferenceFile?: File | null // v2.4: full video as style reference (NB2 only)
+    videoReferenceFile?: File | null, // v2.4: full video as style reference (NB2 only)
+    poseTransfer?: boolean // Pose Lock: replicate exact pose from first reference image
 ): Promise<string> => {
     try {
         const ai = getAiClient(userApiKey);
@@ -1059,6 +1130,13 @@ export const generateImage = async (
 
         // --- Standard path (all other models and scenarios with reference images) ---
 
+        // Run reference analyses in parallel (cached after first call — zero cost on multi-image generation)
+        const [styleAnalysis, structureAnalysis, formAnalysis] = await Promise.all([
+            styleFile ? analyzeForStyle(styleFile, userApiKey) : Promise.resolve(''),
+            structureFile ? analyzeForStructure(structureFile, userApiKey) : Promise.resolve(''),
+            (poseTransfer && referenceFiles.length > 0) ? analyzeForForm(referenceFiles[0], userApiKey) : Promise.resolve('')
+        ]);
+
         const aspectRatioGuidance = getAspectRatioGuidance(aspectRatio, language, model);
         const instructionParts: string[] = [aspectRatioGuidance];
 
@@ -1102,36 +1180,30 @@ export const generateImage = async (
             }
         }
 
-        // STEP 3: Style image role instruction (v2.1 — image sent directly as reference part, no Flash call)
+        // STEP 3: Style image — analysis-enhanced instruction
         if (styleFile) {
-            const styleIdx = referenceFiles.length + 1; // 1-based position in imageParts
-            if (referenceFiles.length > 0) {
-                instructionParts.push(language === 'it'
-                    ? `🎨 STILE (Immagine ${styleIdx}): Questa è un'immagine di RIFERIMENTO STILISTICO — applica la sua palette, illuminazione, mood e stile artistico. NON copiare i suoi soggetti, solo lo stile visivo.`
-                    : `🎨 STYLE (Image ${styleIdx}): This is a STYLE REFERENCE image — apply its color palette, lighting, mood and artistic style. Do NOT copy its subjects, only the visual style.`);
-            } else {
-                instructionParts.push(language === 'it'
-                    ? `🎨 STILE (Immagine ${styleIdx}): Applica la palette, l'illuminazione e il mood di questa immagine di stile.`
-                    : `🎨 STYLE (Image ${styleIdx}): Apply the color palette, lighting and mood from this style reference image.`);
-            }
+            const styleIdx = referenceFiles.length + 1;
+            const styleDesc = styleAnalysis
+                ? (language === 'it'
+                    ? `Applica ESATTAMENTE questo stile visivo: ${styleAnalysis}. NON copiare soggetti o contenuti dell'immagine di stile — applica SOLO l'estetica visiva.`
+                    : `Apply EXACTLY this visual style: ${styleAnalysis}. Do NOT copy the subjects or content — apply ONLY the visual aesthetic.`)
+                : (language === 'it'
+                    ? `Applica la palette, illuminazione, mood e stile artistico. NON copiare i soggetti, solo lo stile visivo.`
+                    : `Apply the color palette, lighting, mood and artistic style. Do NOT copy the subjects, only the visual style.`);
+            instructionParts.push(`🎨 ${language === 'it' ? 'STILE' : 'STYLE'} (${language === 'it' ? 'Immagine' : 'Image'} ${styleIdx}): ${styleDesc}`);
         }
 
-        // STEP 4: Add structure guidance if structure image is provided
-        // ControlNet-inspired: treat structure as spatial conditioning map
+        // STEP 4: Structure image — analysis-enhanced instruction (no more ControlNet language)
         if (structureFile) {
-            // Add structure image to imageParts for visual reference
             imageParts.push(await fileToGenerativePart(structureFile));
-
-            // Aggressive ControlNet-style guidance: lock spatial layout, depth, edges
-            const structureGuidanceText = referenceFiles.length > 0
+            const structureDesc = structureAnalysis
                 ? (language === 'it'
-                    ? `🏗️ CONTROLNET MODE: L'ultima immagine è una MAPPA DI CONDIZIONAMENTO SPAZIALE (come depth/edge map in ControlNet). Rispetta MILLIMETRICAMENTE: posizione di ogni elemento, profondità relativa, angolatura camera, linee di composizione, proporzioni geometriche. Sovrapposizione ESATTA degli elementi delle reference sulla struttura di questa mappa. IGNORA colori/stile della mappa, USA SOLO la sua geometria.`
-                    : `🏗️ CONTROLNET MODE: Last image is a SPATIAL CONDITIONING MAP (like depth/edge map in ControlNet). Respect MILLIMETER-PRECISE: position of each element, relative depth, camera angle, composition lines, geometric proportions. EXACT overlay of reference elements onto this map's structure. IGNORE map's colors/style, USE ONLY its geometry.`)
+                    ? `Segui questa composizione spaziale con precisione: ${structureAnalysis}. Usa l'immagine di struttura come guida visiva aggiuntiva per il layout.`
+                    : `Follow this spatial composition precisely: ${structureAnalysis}. Use the structure reference image as additional visual guidance for layout.`)
                 : (language === 'it'
-                    ? `🏗️ CONTROLNET MODE: Immagine = MAPPA DI CONDIZIONAMENTO SPAZIALE. Rispetta ESATTAMENTE: layout, profondità, angolo, geometria. Sovrapposizione millimetrica.`
-                    : `🏗️ CONTROLNET MODE: Image = SPATIAL CONDITIONING MAP. Respect EXACTLY: layout, depth, angle, geometry. Millimeter overlay.`);
-
-            instructionParts.push(structureGuidanceText);
+                    ? `Rispetta la composizione spaziale, posizione degli elementi, proporzioni geometriche e angolatura della camera.`
+                    : `Follow the spatial composition, element positions, geometric proportions and camera angle.`);
+            instructionParts.push(`🏗️ ${language === 'it' ? 'STRUTTURA' : 'STRUCTURE'}: ${structureDesc}`);
         }
 
         // STEP 5: Add Precise Reference guidance if enabled (v0.7 feature)
@@ -1141,6 +1213,13 @@ export const generateImage = async (
                 : `🎯 PRECISE: Keep face features, skin, eyes, nose, hair IDENTICAL to references. Maximum fidelity.`;
 
             instructionParts.push(preciseReferenceGuidance);
+        }
+
+        // STEP 5b: Form Transfer — replicate exact form/silhouette from first reference
+        if (poseTransfer && referenceFiles.length > 0 && formAnalysis) {
+            instructionParts.push(language === 'it'
+                ? `🔲 FORM TRANSFER: Replica ESATTAMENTE questa forma, silhouette e struttura spaziale con il nuovo soggetto: ${formAnalysis}. Il soggetto generato deve avere questa identica struttura formale — aspetto, materiali e contesto seguono il prompt.`
+                : `🔲 FORM TRANSFER: Replicate EXACTLY this form, silhouette and spatial structure with the new subject: ${formAnalysis}. The generated subject must have this identical formal structure — appearance, materials and context follow the prompt.`);
         }
 
         // STEP 6: v1.0 - Add Text-in-Image guidance (PRO feature)

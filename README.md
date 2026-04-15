@@ -1,4 +1,4 @@
-# Generentolo PRO v2.2
+# Generentolo PRO v2.5
 
 **Professional AI image generation suite powered by Google Gemini.**
 
@@ -18,12 +18,14 @@ Generate, iterate, and storyboard images at up to 4K resolution with triple-mode
 - **Native 4K generation** — up to 4096×4096px with PRO and NB2 models
 - **DNA Character Consistency** — extract a character's physical profile from reference images and inject it into any generation
 - **Perspective Studio** — 3D camera gizmo for multi-angle character turnarounds and batch angle generation
-- **Cinematic Storyboard** — transform a single reference image into a 9-frame storyboard with narrative continuity
+- **Cinematic Storyboard** — theme-first flow: set a creative theme, choose shot count (3/6/9/12), generate a full contact sheet with lock/unlock and single-shot regen
+- **Form Transfer** — lock the silhouette/form of any reference (person, object, architecture) onto new generations; works like ControlNet for any subject type
 - **Generation Queue** — queue multiple tasks and monitor progress without interrupting your workflow
 - **Google Search Grounding** — automatically fetch real reference images from Google Images; use `[brackets]` for explicit keyword control
 - **Auto-Enhance** — AI art director optimizes your prompt before every generation
 - **Inpainting** — mask-based region editing on existing images
 - **Prompt Library** — 150+ professional prompts across 15 categories, with search and one-click apply
+- **Two-step AI analysis** — Style and Structure reference images are analysed by Gemini Vision before generation; rich text descriptions are injected into the prompt for more faithful results
 - **Multi-reference support** — up to 14 reference images (PRO), style reference, and structure guide image
 - **Persistent history** — last 12 generations saved with full metadata; favorites system
 - **Bilingual UI** — full English / Italian support with live toggle

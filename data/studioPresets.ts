@@ -81,6 +81,14 @@ export const SHOTS: StudioOption[] = [
     { id: 'wide', name: 'Wide Shot', prompt: 'wide full body cinematic shot' }
 ];
 
+export const FOCUS_PRESETS: StudioOption[] = [
+    { id: 'bokeh', name: 'Bokeh Background', prompt: 'shallow depth of field, bokeh background, subject in sharp focus' },
+    { id: 'tack-sharp', name: 'Tack Sharp', prompt: 'tack sharp, everything in focus, deep depth of field' },
+    { id: 'cinematic-dof', name: 'Cinematic Depth', prompt: 'cinematic depth of field, shallow focus, film aesthetic' },
+    { id: 'tilt-shift', name: 'Tilt-Shift', prompt: 'tilt-shift effect, miniature look, selective focus' },
+    { id: 'soft-focus', name: 'Soft Focus', prompt: 'soft focus, dreamy aesthetic, slight blur' }
+];
+
 export const PRODUCTION_KITS = [
     { id: 'urban-cut', name: 'Urban Cut', prompt: 'urban cut style, paparazzi photography, high ISO, direct flash, slightly motion blurred, 35mm lens, candid street look' },
     { id: 'bts', name: 'Behind the Scenes (BTS)', prompt: 'behind the scenes shot, movie set visible, lighting rigs, C-stands, camera crew in periphery, professional production environment' },
