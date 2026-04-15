@@ -684,7 +684,7 @@ const Header: React.FC<HeaderProps> = ({ theme, toggleTheme, onOpenSettings, onO
                 <h1 className="text-xl font-bold flex items-center">
                     <span className="text-brand-yellow">Generentolo</span>
                     <span className="text-light-text-muted dark:text-white/90 ml-2">PRO</span>
-                    <span className="text-brand-yellow ml-2">v2.4</span>
+                    <span className="text-brand-yellow ml-2">v2.5</span>
                 </h1>
                 <p className="text-xs text-light-text-muted dark:text-dark-text-muted mt-1">
                     {t.headerSubtitle} Powered by <span className="font-bold text-brand-yellow">JOZ</span> for <span className="font-bold text-brand-yellow">Dugongo</span>
