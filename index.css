@@ -121,10 +121,24 @@ body {
   overflow-x: hidden;
   max-width: 100vw;
   position: relative;
+  /* Match app background so iOS keyboard doesn't expose white gap */
+  background-color: #ffffff;
+}
+
+html.dark,
+html.dark body {
+  background-color: #171717;
 }
 
 body {
   overscroll-behavior-x: none;
+}
+
+/* Smooth momentum scroll on iOS for the main scroll container */
+@media screen and (max-width: 1024px) {
+  main {
+    -webkit-overflow-scrolling: touch;
+  }
 }
 
 /* Prevent text input zoom on iOS */

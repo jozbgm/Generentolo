@@ -40,7 +40,7 @@ if (!crypto.randomUUID) {
 // --- Localization ---
 const translations = {
     en: {
-        headerTitle: 'Generentolo PRO v2.5',
+        headerTitle: 'Generentolo PRO v2.6',
         headerSubtitle: 'Let me do it for you!',
         refImagesTitle: 'Reference & Style Images',
         styleRefTitle: 'Style Reference',
@@ -310,7 +310,7 @@ const translations = {
         presetAppliedToPrompt: 'Will be applied to generation',
     },
     it: {
-        headerTitle: 'Generentolo PRO v2.5',
+        headerTitle: 'Generentolo PRO v2.6',
         headerSubtitle: 'Let me do it for you!',
         refImagesTitle: 'Immagini di Riferimento e Stile',
         styleRefTitle: 'Riferimento Stile',
@@ -679,22 +679,22 @@ const Header: React.FC<HeaderProps> = ({ theme, toggleTheme, onOpenSettings, onO
     const { t, language, setLanguage } = useLocalization();
     const toggleLanguage = () => setLanguage(language === 'en' ? 'it' : 'en');
     return (
-        <header className="flex justify-between items-center p-4">
-            <div>
-                <h1 className="text-xl font-bold flex items-center">
+        <header className="flex justify-between items-center px-4 py-3">
+            <div className="min-w-0 flex-1 mr-3">
+                <h1 className="text-lg sm:text-xl font-bold flex items-center">
                     <span className="text-brand-yellow">Generentolo</span>
                     <span className="text-light-text-muted dark:text-white/90 ml-2">PRO</span>
-                    <span className="text-brand-yellow ml-2">v2.5</span>
+                    <span className="text-brand-yellow ml-2">v2.6</span>
                 </h1>
-                <p className="text-xs text-light-text-muted dark:text-dark-text-muted mt-1">
-                    {t.headerSubtitle} Powered by <span className="font-bold text-brand-yellow">JOZ</span> for <span className="font-bold text-brand-yellow">Dugongo</span>
+                <p className="text-xs text-light-text-muted dark:text-dark-text-muted mt-0.5 truncate">
+                    {t.headerSubtitle} <span className="hidden sm:inline">Powered by </span><span className="font-bold text-brand-yellow">JOZ</span><span className="hidden sm:inline"> for <span className="font-bold text-brand-yellow">Dugongo</span></span>
                 </p>
             </div>
-            <div className="flex items-center gap-2">
-                <button onClick={onOpenShortcuts} className="p-2 rounded-full text-light-text-muted dark:text-brand-yellow hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors" title="Keyboard Shortcuts">
+            <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+                <button onClick={onOpenShortcuts} className="hidden sm:flex p-1.5 sm:p-2 rounded-full text-light-text-muted dark:text-brand-yellow hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors" title="Keyboard Shortcuts">
                     <KeyboardIcon className="w-5 h-5" />
                 </button>
-                <button onClick={toggleLanguage} title={language === 'en' ? 'Switch to Italian' : 'Switch to English'} className="p-2 rounded-full text-light-text-muted dark:text-brand-yellow hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors">
+                <button onClick={toggleLanguage} title={language === 'en' ? 'Switch to Italian' : 'Switch to English'} className="p-1.5 sm:p-2 rounded-full text-light-text-muted dark:text-brand-yellow hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors">
                     <LanguageIcon className="w-5 h-5" />
                 </button>
                 <ThemePicker
@@ -703,10 +703,10 @@ const Header: React.FC<HeaderProps> = ({ theme, toggleTheme, onOpenSettings, onO
                     onReset={onAccentColorReset}
                     defaultColor={defaultAccentColor}
                 />
-                <button onClick={onOpenSettings} title={t.settingsTitle} className="p-2 rounded-full text-light-text-muted dark:text-brand-yellow hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors">
+                <button onClick={onOpenSettings} title={t.settingsTitle} className="p-1.5 sm:p-2 rounded-full text-light-text-muted dark:text-brand-yellow hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors">
                     <SettingsIcon className="w-5 h-5" />
                 </button>
-                <button onClick={toggleTheme} title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'} className="p-2 rounded-full text-light-text-muted dark:text-dark-text-muted hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors">
+                <button onClick={toggleTheme} title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'} className="p-1.5 sm:p-2 rounded-full text-light-text-muted dark:text-dark-text-muted hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors">
                     {theme === 'dark' ? <SunIcon className="w-5 h-5" /> : <MoonIcon className="w-5 h-5" />}
                 </button>
             </div>
@@ -1258,7 +1258,7 @@ const ImageDisplay: React.FC<ImageDisplayProps> = ({ images, isLoading, onDownlo
     const [quickEditTarget, setQuickEditTarget] = useState<GeneratedImage | null>(null);
 
     return (
-        <div className="relative w-full h-full flex items-center justify-center bg-transparent rounded-[32px] overflow-hidden">
+        <div className="relative w-full lg:h-full flex items-center justify-center bg-transparent rounded-[32px] lg:overflow-hidden">
             {isLoading && (
                 <div className="flex flex-col items-center text-center max-w-md px-6 text-light-text-muted dark:text-dark-text-muted">
                     <div className="w-16 h-16 border-4 border-brand-yellow border-t-transparent rounded-full animate-spin mb-6"></div>
@@ -1271,13 +1271,13 @@ const ImageDisplay: React.FC<ImageDisplayProps> = ({ images, isLoading, onDownlo
                 </div>
             )}
             {!isLoading && images.length > 0 && (
-                <div className="w-full h-full flex flex-col items-center justify-center p-0">
-                    <div className={`w-full flex-1 min-h-0 grid ${images.length > 1 ? 'grid-cols-2' : 'grid-cols-1'} gap-0`}>
+                <div className="w-full lg:h-full flex flex-col items-center justify-center p-0">
+                    <div className={`w-full lg:flex-1 lg:min-h-0 grid ${images.length > 1 ? 'grid-cols-2' : 'grid-cols-1'} gap-0`}>
                         {images.map(image => {
                             const isUpscaling = upscalingImageId === image.id;
                             return (
-                                <div key={image.id} className="relative group w-full h-full overflow-hidden">
-                                    <img src={image.imageDataUrl || image.thumbnailDataUrl} alt={image.prompt} className="absolute inset-0 w-full h-full object-contain cursor-zoom-in transition-all duration-700 hover:scale-[1.02]" onClick={() => onZoom(image)} />
+                                <div key={image.id} className="relative group w-full lg:h-full lg:overflow-hidden">
+                                    <img src={image.imageDataUrl || image.thumbnailDataUrl} alt={image.prompt} className="lg:absolute lg:inset-0 w-full lg:h-full max-h-[70vh] lg:max-h-none object-contain cursor-zoom-in transition-all duration-700 hover:scale-[1.02] touch-pan-y" onClick={() => onZoom(image)} />
 
                                     {/* Upscaling overlay */}
                                     {isUpscaling && (
@@ -1287,13 +1287,13 @@ const ImageDisplay: React.FC<ImageDisplayProps> = ({ images, isLoading, onDownlo
                                         </div>
                                     )}
 
-                                    <div className="absolute top-2 right-2 flex gap-2 items-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <span className="px-2 py-1 rounded-full bg-black/50 text-white text-xs font-mono backdrop-blur-sm">{image.aspectRatio}</span>
+                                    <div className="absolute top-2 right-2 flex gap-2 items-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                                        <span className="px-2 py-1 rounded-full bg-black/50 text-white text-xs font-mono backdrop-blur-sm pointer-events-auto">{image.aspectRatio}</span>
 
                                         {/* v0.8: Favorite/Bookmark button */}
                                         <button
                                             onClick={() => onToggleFavorite(image.id)}
-                                            className={`p-2 rounded-full transition-colors ${image.isFavorite ? 'bg-brand-yellow text-dark-bg' : 'bg-black/50 text-white/70 hover:bg-black/70 hover:text-brand-yellow'}`}
+                                            className={`pointer-events-auto p-2 rounded-full transition-colors ${image.isFavorite ? 'bg-brand-yellow text-dark-bg' : 'bg-black/50 text-white/70 hover:bg-black/70 hover:text-brand-yellow'}`}
                                             aria-label={image.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
                                             title={image.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
                                         >
@@ -1303,7 +1303,7 @@ const ImageDisplay: React.FC<ImageDisplayProps> = ({ images, isLoading, onDownlo
                                         {/* v1.9.5: Storyboard button */}
                                         <button
                                             onClick={(e) => { e.stopPropagation(); onGenerateStoryboard(image); }}
-                                            className="p-2 rounded-full bg-black/50 text-brand-yellow hover:bg-brand-yellow hover:text-dark-bg transition-colors"
+                                            className="pointer-events-auto p-2 rounded-full bg-black/50 text-brand-yellow hover:bg-brand-yellow hover:text-dark-bg transition-colors"
                                             aria-label={t.cinematicStoryboardTitle}
                                             title={t.storyboardTooltip}
                                         >
@@ -1313,19 +1313,19 @@ const ImageDisplay: React.FC<ImageDisplayProps> = ({ images, isLoading, onDownlo
                                         {/* v1.7: Save as DNA button */}
                                         <button
                                             onClick={(e) => { e.stopPropagation(); onSaveDna(image); }}
-                                            className="p-2 rounded-full bg-black/50 text-brand-yellow hover:bg-brand-yellow hover:text-dark-bg transition-colors"
+                                            className="pointer-events-auto p-2 rounded-full bg-black/50 text-brand-yellow hover:bg-brand-yellow hover:text-dark-bg transition-colors"
                                             aria-label={t.dnaCharacterTitle}
                                             title={t.dnaTooltip}
                                         >
                                             <DnaIcon className="w-5 h-5" />
                                         </button>
 
-                                        <button onClick={() => onEdit(image)} className="p-2 rounded-full bg-black/50 text-brand-yellow hover:bg-brand-yellow hover:text-dark-bg transition-colors" aria-label={t.editAction}><BrushIcon className="w-5 h-5" /></button>
+                                        <button onClick={() => onEdit(image)} className="pointer-events-auto p-2 rounded-full bg-black/50 text-brand-yellow hover:bg-brand-yellow hover:text-dark-bg transition-colors" aria-label={t.editAction}><BrushIcon className="w-5 h-5" /></button>
 
                                         {/* v2.4: Outpaint */}
                                         <button
                                             onClick={(e) => { e.stopPropagation(); setShowOutpaintMenu(showOutpaintMenu === image.id ? null : image.id); setShowUpscaleMenu(null); }}
-                                            className="p-2 rounded-full bg-black/50 text-brand-yellow hover:bg-brand-yellow hover:text-dark-bg transition-colors"
+                                            className="pointer-events-auto p-2 rounded-full bg-black/50 text-brand-yellow hover:bg-brand-yellow hover:text-dark-bg transition-colors"
                                             aria-label="Outpaint — expand image"
                                             title="Outpaint"
                                         >
@@ -1336,7 +1336,7 @@ const ImageDisplay: React.FC<ImageDisplayProps> = ({ images, isLoading, onDownlo
                                         {!isUpscaling && (
                                             <button
                                                 onClick={(e) => { e.stopPropagation(); setShowUpscaleMenu(showUpscaleMenu === image.id ? null : image.id); setShowOutpaintMenu(null); }}
-                                                className="p-2 rounded-full bg-black/50 text-brand-yellow hover:bg-brand-yellow hover:text-dark-bg transition-colors"
+                                                className="pointer-events-auto p-2 rounded-full bg-black/50 text-brand-yellow hover:bg-brand-yellow hover:text-dark-bg transition-colors"
                                                 aria-label={t.upscaleAction}
                                                 title={t.upscaleAction}
                                             >
@@ -1344,12 +1344,12 @@ const ImageDisplay: React.FC<ImageDisplayProps> = ({ images, isLoading, onDownlo
                                             </button>
                                         )}
 
-                                        <button onClick={() => onDownload(image)} className="p-2 rounded-full bg-black/50 text-brand-yellow hover:bg-brand-yellow hover:text-dark-bg transition-colors" aria-label="Download image"><DownloadIcon className="w-5 h-5" /></button>
+                                        <button onClick={() => onDownload(image)} className="pointer-events-auto p-2 rounded-full bg-black/50 text-brand-yellow hover:bg-brand-yellow hover:text-dark-bg transition-colors" aria-label="Download image"><DownloadIcon className="w-5 h-5" /></button>
 
                                         {/* v0.8: Re-roll button */}
                                         <button
                                             onClick={() => onReroll(image)}
-                                            className="p-2 rounded-full bg-black/50 text-brand-yellow hover:bg-brand-yellow hover:text-dark-bg transition-colors"
+                                            className="pointer-events-auto p-2 rounded-full bg-black/50 text-brand-yellow hover:bg-brand-yellow hover:text-dark-bg transition-colors"
                                             aria-label={t.reroll}
                                             title={t.rerollTooltip}
                                         >
@@ -2280,7 +2280,15 @@ const DnaCharacterModal: React.FC<DnaCharacterModalProps> = ({ isOpen, onClose, 
     const [newName, setNewName] = useState('');
     const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
     const [expandedCharId, setExpandedCharId] = useState<string | null>(null);
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        if (selectedFiles.length === 0) { setPreviewUrl(null); return; }
+        const url = URL.createObjectURL(selectedFiles[0]);
+        setPreviewUrl(url);
+        return () => URL.revokeObjectURL(url);
+    }, [selectedFiles]);
 
     if (!isOpen) return null;
 
@@ -2329,7 +2337,7 @@ const DnaCharacterModal: React.FC<DnaCharacterModalProps> = ({ isOpen, onClose, 
                             >
                                 {selectedFiles.length > 0 ? (
                                     <div className="relative w-full h-full group/preview">
-                                        <img src={URL.createObjectURL(selectedFiles[0])} alt="Preview" className="w-full h-full object-cover" />
+                                        <img src={previewUrl ?? undefined} alt="Preview" className="w-full h-full object-cover" />
                                         {selectedFiles.length > 1 && (
                                             <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
                                                 <span className="text-white font-black text-xs">+{selectedFiles.length - 1}</span>
@@ -2665,13 +2673,15 @@ export default function App() {
 
     // Load presets and DNA characters from storage on mount
     useEffect(() => {
+        let cancelled = false;
         const loadedPresets = presetsService.loadPresets();
         setPresets(loadedPresets);
 
-        // Load DNA Characters from IndexedDB
         indexedDBService.getAllDnaCharacters()
-            .then(chars => { setDnaCharacters(chars); })
+            .then(chars => { if (!cancelled) setDnaCharacters(chars); })
             .catch(err => { console.error('Failed to load DNA characters:', err); });
+
+        return () => { cancelled = true; };
     }, [t]);
 
 
@@ -4235,7 +4245,7 @@ export default function App() {
                 <Header theme={theme} toggleTheme={toggleTheme} onOpenSettings={() => setIsSettingsOpen(true)} onOpenShortcuts={() => setIsShortcutsOpen(true)} accentColor={accentColor} onAccentColorChange={setAccentColor} onAccentColorReset={resetAccentColor} defaultAccentColor={defaultAccentColor} />
                 <main className="flex-1 flex flex-col lg:flex-row gap-4 lg:gap-6 px-4 pt-4 pb-32 lg:pb-28 overflow-y-auto lg:overflow-hidden">
                     {/* --- Left Sidebar (only references/style/structure) --- */}
-                    <aside className="w-full lg:w-[280px] flex-shrink-0 bg-light-surface/50 dark:bg-dark-surface/30 backdrop-blur-xl rounded-3xl overflow-y-auto h-full custom-scrollbar">
+                    <aside className="w-full lg:w-[280px] flex-shrink-0 bg-light-surface/50 dark:bg-dark-surface/30 backdrop-blur-xl rounded-3xl lg:overflow-y-auto lg:h-full custom-scrollbar order-2 lg:order-none">
                         <ReferencePanel
                             onAddImages={handleAddImages}
                             onRemoveImage={handleRemoveImage}
@@ -4273,8 +4283,8 @@ export default function App() {
                     </aside>
 
                     {/* --- Main Content --- */}
-                    <div className="flex-1 flex flex-col gap-2 lg:gap-6 min-w-0 h-full">
-                        <div className="flex-1 min-h-0 overflow-hidden">
+                    <div className="flex-1 flex flex-col gap-2 lg:gap-6 min-w-0 h-full order-1 lg:order-none">
+                        <div className="lg:flex-1 lg:min-h-0 lg:overflow-hidden">
                             <ImageDisplay
                                 images={currentImages}
                                 isLoading={isLoading}
@@ -4338,7 +4348,7 @@ export default function App() {
                     </div>
 
                     {/* --- Right Column (Buttons + History) --- */}
-                    <div className="w-full lg:w-[320px] flex-shrink-0 flex flex-col gap-4 overflow-y-auto custom-scrollbar h-full lg:pr-1">
+                    <div className="w-full lg:w-[320px] flex-shrink-0 flex flex-col gap-4 lg:overflow-y-auto custom-scrollbar lg:h-full lg:pr-1 order-3 lg:order-none">
                         <div className="space-y-3 p-4 bg-light-surface/50 dark:bg-dark-surface/30 backdrop-blur-xl rounded-3xl">
                             <button
                                 onClick={() => isLoading ? handleAbortGeneration() : handleGenerate()}

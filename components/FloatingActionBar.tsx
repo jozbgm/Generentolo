@@ -86,6 +86,9 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
             setLocalPrompt(prompt);
         }
     }, [prompt]);
+    useEffect(() => {
+        return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+    }, []);
     const handlePromptChange = (value: string) => {
         setLocalPrompt(value);
         if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -100,6 +103,22 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
     const [showThinkingMenu, setShowThinkingMenu] = useState(false);
     const [showOutpaintRefMenu, setShowOutpaintRefMenu] = useState(false);
     const [outpaintRefRatio, setOutpaintRefRatio] = useState('Auto');
+
+    const scrollStripRef = useRef<HTMLDivElement>(null);
+    const peekInnerTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    // On mobile, briefly scroll right then back to hint the strip is scrollable
+    useEffect(() => {
+        const strip = scrollStripRef.current;
+        if (!strip || window.innerWidth >= 1024) return;
+        const timer = setTimeout(() => {
+            strip.scrollTo({ left: 60, behavior: 'smooth' });
+            peekInnerTimerRef.current = setTimeout(() => strip.scrollTo({ left: 0, behavior: 'smooth' }), 500);
+        }, 800);
+        return () => {
+            clearTimeout(timer);
+            if (peekInnerTimerRef.current) clearTimeout(peekInnerTimerRef.current);
+        };
+    }, []);
 
     // UI state for copy feedback
     const [justCopied, setJustCopied] = useState(false);
@@ -206,8 +225,8 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
 
             {/* Advanced Settings Popover */}
             {showAdvancedPanel && (
-                <div className="fixed bottom-[110px] left-1/2 -translate-x-1/2 lg:left-[calc(50%-20px)] lg:-translate-x-1/2 w-[90%] lg:w-[400px] z-[80]">
-                    <div className="w-full bg-light-surface/90 dark:bg-dark-surface/90 backdrop-blur-2xl border border-white/20 dark:border-white/10 rounded-2xl shadow-2xl p-4 animate-slideUp">
+                <div className="fixed bottom-[110px] left-1/2 -translate-x-1/2 lg:left-[calc(50%-20px)] lg:-translate-x-1/2 w-[90%] lg:w-[400px] z-[80]" style={{ bottom: 'max(110px, calc(env(safe-area-inset-bottom) + 90px))' }}>
+                    <div className="w-full bg-light-surface/90 dark:bg-dark-surface/90 backdrop-blur-2xl border border-white/20 dark:border-white/10 rounded-2xl shadow-2xl p-4 animate-slideUp max-h-[60vh] overflow-y-auto">
                         <div className="flex items-center justify-between mb-3 border-b border-light-border/10 dark:border-white/10 pb-2">
                             <h3 className="text-[10px] font-bold uppercase tracking-widest text-light-text-muted dark:text-dark-text-muted">{t.advancedSettings || 'Advanced Settings'}</h3>
                             <button onClick={() => setShowAdvancedPanel(false)} className="p-1 hover:bg-white/10 rounded-lg transition-colors opacity-50 hover:opacity-100"><XIcon className="w-3.5 h-3.5" /></button>
@@ -249,7 +268,7 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
             )}
 
             {/* Main Floating Bar */}
-            <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 lg:left-[calc(50%-20px)] lg:-translate-x-1/2 w-[95%] lg:w-fit lg:min-w-[720px] max-w-5xl z-[70] transition-all duration-500`}>
+            <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 lg:left-[calc(50%-20px)] lg:-translate-x-1/2 w-[95%] lg:w-fit lg:min-w-[720px] max-w-5xl z-[70] transition-all duration-500`} style={{ bottom: 'max(1.5rem, calc(env(safe-area-inset-bottom) + 0.5rem))' }}>
 
                 {/* Visual Body - Handles Background, Border, Shadow and CLIPPING of the loading bar */}
                 <div className="absolute inset-0 bg-light-surface/85 dark:bg-dark-surface/65 backdrop-blur-[40px] border border-white/20 dark:border-white/10 rounded-[32px] shadow-floating-bar overflow-hidden">
@@ -321,10 +340,16 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                     </div>
 
                     {/* Bottom Row: Controls + Action Buttons */}
-                    <div className="flex items-center gap-2 flex-wrap pb-1 px-1.5">
+                    <div className="flex items-center pb-1 px-1.5 gap-2">
+
+                        {/* Scrollable controls strip with fade hint */}
+                        <div className="relative flex-1 min-w-0">
+                        <div ref={scrollStripRef} className="flex items-center gap-2 overflow-x-auto hide-scrollbar">
+                        {/* Fade gradient — hints that strip is scrollable on mobile */}
+                        <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-light-surface/80 dark:from-dark-surface/80 to-transparent z-10 lg:hidden" />
 
                         {/* 1. Pill Settings Group */}
-                        <div className="flex items-center bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 rounded-xl p-0.5 gap-0.5 h-10">
+                        <div className="flex items-center bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 rounded-xl p-0.5 gap-0.5 h-10 flex-shrink-0">
                             <button
                                 onClick={(e) => { e.stopPropagation(); setShowAspectMenu(!showAspectMenu); setShowNumImagesMenu(false); setShowModelMenu(false); setShowResolutionMenu(false); }}
                                 className={`h-full px-3 rounded-[10px] text-[10px] font-bold transition-all flex items-center gap-1.5 whitespace-nowrap ${showAspectMenu ? 'bg-brand-yellow text-dark-bg shadow-sm' : 'bg-brand-yellow/10 text-brand-yellow/80 hover:bg-brand-yellow/15'}`}
@@ -342,7 +367,7 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                         </div>
 
                         {/* 2. Model Group */}
-                        <div className="flex items-center bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 rounded-xl p-0.5 gap-0.5 h-10">
+                        <div className="flex items-center bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 rounded-xl p-0.5 gap-0.5 h-10 flex-shrink-0">
                             <button
                                 onClick={(e) => { e.stopPropagation(); setShowModelMenu(!showModelMenu); setShowAspectMenu(false); setShowNumImagesMenu(false); setShowResolutionMenu(false); }}
                                 className={`h-full px-3 rounded-[10px] text-[10px] font-bold transition-all flex items-center gap-1.5 whitespace-nowrap ${showModelMenu ? 'bg-brand-yellow text-dark-bg shadow-sm' : 'bg-brand-yellow/10 text-brand-yellow/80 hover:bg-brand-yellow/15'}`}
@@ -377,7 +402,7 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                         </div>
 
                         {/* 3. Toggles */}
-                        <div className="flex items-center gap-1.5 h-10">
+                        <div className="flex items-center gap-1.5 h-10 flex-shrink-0">
                             {/* Auto Enhance Switch */}
                             <div className={`flex items-center bg-black/5 dark:bg-white/5 border rounded-xl px-3 gap-2.5 h-10 transition-all hover:bg-black/10 dark:hover:bg-white/10 ${autoEnhance ? 'border-brand-yellow/30 ring-1 ring-brand-yellow/20' : 'border-black/5 dark:border-white/5 grayscale saturate-0'}`} title={t.autoEnhance}>
                                 <SparklesIcon className={`w-4 h-4 transition-opacity ${autoEnhance ? 'opacity-100 text-brand-yellow' : 'opacity-50 text-dark-text-muted'}`} />
@@ -487,11 +512,11 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                             </button>
                         </div>
 
-                        {/* Spacer to push generate buttons to right */}
-                        <div className="flex-1 min-w-[20px]" />
+                        </div>{/* end scroll inner */}
+                        </div>{/* end scroll wrapper */}
 
-                        {/* 4. Action Buttons (Generate, Stop, Queue) */}
-                        <div className="flex items-center gap-2 h-10">
+                        {/* 4. Action Buttons (Generate, Stop, Queue) — always visible */}
+                        <div className="flex items-center gap-2 h-10 flex-shrink-0">
                             {/* Generate / Stop Button */}
                             <button
                                 onClick={() => (isLoading ? onAbortGeneration() : onGenerate())}
@@ -538,8 +563,8 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                 {/* --- Popover Menus --- */}
                 {/* Aspect Ratio Menu */}
                 {showAspectMenu && (
-                    <div className="absolute bottom-full mb-4 left-6 bg-light-surface/95 dark:bg-dark-surface/95 backdrop-blur-[50px] border border-white/20 dark:border-white/10 rounded-2xl shadow-2xl p-2.5 grid grid-cols-4 gap-1.5 animate-slideUp min-w-[320px] z-[80]">
-                        <div className="col-span-4 px-2 py-1 mb-1 border-b border-white/5">
+                    <div className="absolute bottom-full mb-4 left-0 right-0 lg:right-auto lg:left-6 lg:min-w-[320px] bg-light-surface/95 dark:bg-dark-surface/95 backdrop-blur-[50px] border border-white/20 dark:border-white/10 rounded-2xl shadow-2xl p-2.5 grid grid-cols-3 sm:grid-cols-4 gap-1.5 animate-slideUp z-[80]">
+                        <div className="col-span-3 sm:col-span-4 px-2 py-1 mb-1 border-b border-white/5">
                             <span className="text-[9px] font-black uppercase tracking-widest text-light-text-muted dark:text-dark-text-muted opacity-70">Aspect Ratio</span>
                         </div>
                         {aspectRatios.map(ratio => (
@@ -557,7 +582,7 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
 
                 {/* Number of Images Menu */}
                 {showNumImagesMenu && (
-                    <div className="absolute bottom-full mb-4 left-24 bg-light-surface/95 dark:bg-dark-surface/95 backdrop-blur-[50px] border border-white/20 dark:border-white/10 rounded-2xl shadow-2xl p-2 flex gap-1.5 animate-slideUp z-[80]">
+                    <div className="absolute bottom-full mb-4 left-0 bg-light-surface/95 dark:bg-dark-surface/95 backdrop-blur-[50px] border border-white/20 dark:border-white/10 rounded-2xl shadow-2xl p-2 flex gap-1.5 animate-slideUp z-[80]">
                         {numImagesOptions.map(num => (
                             <button
                                 key={num}
@@ -572,7 +597,7 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
 
                 {/* Model Selector Menu */}
                 {showModelMenu && (
-                    <div className="absolute bottom-full mb-4 left-44 bg-light-surface/95 dark:bg-dark-surface/95 backdrop-blur-[50px] border border-white/20 dark:border-white/10 rounded-2xl shadow-2xl p-2 flex flex-col gap-1 anime-slideUp min-w-[210px] z-[80]">
+                    <div className="absolute bottom-full mb-4 left-0 bg-light-surface/95 dark:bg-dark-surface/95 backdrop-blur-[50px] border border-white/20 dark:border-white/10 rounded-2xl shadow-2xl p-2 flex flex-col gap-1 animate-slideUp min-w-[210px] z-[80]">
                         <div className="px-3 py-1.5 mb-1 border-b border-light-border/10 dark:border-white/5">
                             <span className="text-[9px] font-black uppercase tracking-widest text-light-text-muted dark:text-dark-text-muted opacity-70">Select Model</span>
                         </div>
@@ -611,7 +636,7 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
 
                 {/* Resolution Menu */}
                 {showResolutionMenu && (
-                    <div className="absolute bottom-full mb-4 left-64 bg-light-surface/95 dark:bg-dark-surface/95 backdrop-blur-[50px] border border-white/20 dark:border-white/10 rounded-2xl shadow-2xl p-2 flex gap-1.5 animate-slideUp z-[80]">
+                    <div className="absolute bottom-full mb-4 right-0 bg-light-surface/95 dark:bg-dark-surface/95 backdrop-blur-[50px] border border-white/20 dark:border-white/10 rounded-2xl shadow-2xl p-2 flex gap-1.5 animate-slideUp z-[80]">
                         {resolutionOptions.map(res => (
                             <button
                                 key={res}
@@ -626,7 +651,7 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
 
                 {/* Thinking Level Menu */}
                 {showThinkingMenu && (
-                    <div className="absolute bottom-full mb-4 left-64 bg-light-surface/95 dark:bg-dark-surface/95 backdrop-blur-[50px] border border-white/20 dark:border-white/10 rounded-2xl shadow-2xl p-3 animate-slideUp z-[80] min-w-[220px]">
+                    <div className="absolute bottom-full mb-4 right-0 bg-light-surface/95 dark:bg-dark-surface/95 backdrop-blur-[50px] border border-white/20 dark:border-white/10 rounded-2xl shadow-2xl p-3 animate-slideUp z-[80] min-w-[220px]">
                         <p className="text-[9px] font-black uppercase tracking-widest text-light-text-muted dark:text-dark-text-muted mb-2 px-1">Thinking Depth</p>
                         {([
                             {

@@ -1,5 +1,16 @@
 # 📋 Changelog - Generentolo PRO
 
+## [2.6.0] - 2026-04-21
+### Added
+- **ImageLightbox fullscreen** — completamente riscritto: l'immagine occupa l'intero schermo (`w-screen h-screen object-contain`), navigazione swipe sinistra/destra tra le immagini generate, frecce desktop, contatore posizione (1/N). Controlli (DNA, Storyboard, Download, X) in overlay con auto-hide dopo 3 secondi.
+
+### Fixed
+- **Responsive mobile/iOS** — audit completo: titolo header con `min-w-0 flex-1` per evitare overlap con icone di sistema, `viewport-fit=cover` per safe area iOS, background matching per eliminare il rettangolo bianco da tastiera, overflow panel rimossi su mobile per sbloccare lo scroll, `touch-pan-y` sull'immagine generata per permettere scroll verticale, `pointer-events-none` sull'overlay immagine con `pointer-events-auto` per ogni singolo pulsante.
+- **Memory leak URL.createObjectURL** — nel `DnaCharacterModal` la preview URL ora viene creata in `useEffect` con cleanup `revokeObjectURL` invece di essere creata inline nel JSX ad ogni render.
+- **Timer leak nested setTimeout** — il timer interno dell'animazione peek della FloatingActionBar ora è tracciato in un ref e viene pulito correttamente al cleanup.
+- **Debounce ref cleanup** — aggiunto cleanup su unmount per il `debounceRef` del prompt nella FloatingActionBar.
+- **Promise stale setState** — il caricamento DNA Characters da IndexedDB usa ora un flag `cancelled` per evitare aggiornamenti di stato su componenti smontati.
+
 ## [2.5.0] - 2026-04-15
 ### Added
 - **Cinematic Storyboard v2** — completamente riscritto con flusso theme-first: modale dedicata per scrivere il tema creativo prima di avviare la generazione. Selezione shot count (3/6/9/12). Struttura rigida 3×3 orientata al cinema pubblicitario. Generi ADV-focused: ADV, Fashion, Editorial, Beauty, Make-up, Luxury, Lifestyle, Mockup, Food, Automotive, Corporate, Sport, E-commerce, Street + cinematici.
