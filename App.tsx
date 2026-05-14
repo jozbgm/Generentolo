@@ -1358,26 +1358,37 @@ const ImageDisplay: React.FC<ImageDisplayProps> = ({ images, isLoading, onDownlo
 
                                     {/* Outpaint popup — outside hover div so it doesn't disappear on mousemove */}
                                     {showOutpaintMenu === image.id && (
-                                        <div className="absolute top-14 right-2 bg-dark-surface/95 backdrop-blur-xl border border-white/15 rounded-2xl shadow-2xl p-3 z-30 min-w-[160px]" onClick={e => e.stopPropagation()}>
+                                        <div className="absolute top-14 right-2 bg-dark-surface/95 backdrop-blur-xl border border-white/15 rounded-2xl shadow-2xl p-3 z-30 w-[220px]" onClick={e => e.stopPropagation()}>
                                             {/* Ratio selector */}
-                                            <p className="text-[9px] font-black uppercase tracking-widest text-dark-text-muted mb-1.5">Output ratio</p>
+                                            <p className="text-[9px] font-black uppercase tracking-widest text-dark-text-muted mb-1.5">Target ratio</p>
                                             <select
                                                 value={outpaintRatio}
                                                 onChange={e => setOutpaintRatio(e.target.value)}
-                                                className="w-full mb-3 bg-white/10 text-white text-[10px] rounded-lg px-2 py-1 border border-white/10 outline-none cursor-pointer"
+                                                className="w-full mb-3 bg-white/10 text-white text-[10px] rounded-lg px-2 py-1.5 border border-white/10 outline-none cursor-pointer"
                                             >
-                                                <option value="Auto">Auto (nearest)</option>
+                                                <option value="Auto">Auto (match source)</option>
                                                 {['1:1','4:3','3:4','16:9','9:16','3:2','2:3','21:9','4:5','5:4'].map(r => (
                                                     <option key={r} value={r}>{r}</option>
                                                 ))}
                                             </select>
-                                            <p className="text-[9px] font-black uppercase tracking-widest text-dark-text-muted mb-1.5">Direction</p>
+                                            {/* Symmetric expand */}
+                                            <p className="text-[9px] font-black uppercase tracking-widest text-dark-text-muted mb-1.5">Expand</p>
+                                            <div className="flex gap-1 mb-1">
+                                                <button onClick={() => { onOutpaint(image, 'horizontal', 50, outpaintRatio === 'Auto' ? undefined : outpaintRatio); setShowOutpaintMenu(null); }} className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-white/5 hover:bg-brand-yellow/20 hover:text-brand-yellow text-white/60 transition-colors text-[10px] font-bold" title="Expand left and right equally"><span>←→</span><span>Horiz</span></button>
+                                                <button onClick={() => { onOutpaint(image, 'vertical', 50, outpaintRatio === 'Auto' ? undefined : outpaintRatio); setShowOutpaintMenu(null); }} className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-white/5 hover:bg-brand-yellow/20 hover:text-brand-yellow text-white/60 transition-colors text-[10px] font-bold" title="Expand top and bottom equally"><span>↑↓</span><span>Vert</span></button>
+                                            </div>
+                                            <button onClick={() => { onOutpaint(image, 'all', 50, outpaintRatio === 'Auto' ? undefined : outpaintRatio); setShowOutpaintMenu(null); }} className="w-full flex items-center justify-center gap-1.5 py-2 mb-2 rounded-lg bg-white/5 hover:bg-brand-yellow/20 hover:text-brand-yellow text-white/60 transition-colors text-[10px] font-bold" title="Expand all sides equally">
+                                                <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M7 7l-4 -4m0 0h3m-3 0v3M17 7l4 -4m0 0h-3m3 0v3M7 17l-4 4m0 0h3m-3 0v-3M17 17l4 4m0 0h-3m3 0v-3"/></svg>
+                                                <span>All sides</span>
+                                            </button>
+                                            {/* Single direction */}
+                                            <p className="text-[9px] font-black uppercase tracking-widest text-dark-text-muted mb-1.5">Single side</p>
                                             <div className="grid grid-cols-3 gap-1">
                                                 <div />
                                                 <button onClick={() => { onOutpaint(image, 'up', 50, outpaintRatio === 'Auto' ? undefined : outpaintRatio); setShowOutpaintMenu(null); }} className="aspect-square rounded-lg bg-white/5 hover:bg-brand-yellow/20 hover:text-brand-yellow text-white/60 flex items-center justify-center transition-colors text-sm">↑</button>
                                                 <div />
                                                 <button onClick={() => { onOutpaint(image, 'left', 50, outpaintRatio === 'Auto' ? undefined : outpaintRatio); setShowOutpaintMenu(null); }} className="aspect-square rounded-lg bg-white/5 hover:bg-brand-yellow/20 hover:text-brand-yellow text-white/60 flex items-center justify-center transition-colors text-sm">←</button>
-                                                <button onClick={() => { onOutpaint(image, 'all', 50, outpaintRatio === 'Auto' ? undefined : outpaintRatio); setShowOutpaintMenu(null); }} className="aspect-square rounded-lg bg-white/10 hover:bg-brand-yellow/20 hover:text-brand-yellow text-white/40 hover:text-brand-yellow flex items-center justify-center transition-colors" title="Expand all sides"><svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><rect x="8" y="8" width="8" height="8" rx="1"/></svg></button>
+                                                <div className="aspect-square rounded-lg bg-white/5 flex items-center justify-center"><svg className="w-2.5 h-2.5 text-white/20" viewBox="0 0 24 24" fill="currentColor"><rect x="8" y="8" width="8" height="8" rx="1"/></svg></div>
                                                 <button onClick={() => { onOutpaint(image, 'right', 50, outpaintRatio === 'Auto' ? undefined : outpaintRatio); setShowOutpaintMenu(null); }} className="aspect-square rounded-lg bg-white/5 hover:bg-brand-yellow/20 hover:text-brand-yellow text-white/60 flex items-center justify-center transition-colors text-sm">→</button>
                                                 <div />
                                                 <button onClick={() => { onOutpaint(image, 'down', 50, outpaintRatio === 'Auto' ? undefined : outpaintRatio); setShowOutpaintMenu(null); }} className="aspect-square rounded-lg bg-white/5 hover:bg-brand-yellow/20 hover:text-brand-yellow text-white/60 flex items-center justify-center transition-colors text-sm">↓</button>
@@ -3829,13 +3840,31 @@ export default function App() {
         setIsLoading(true);
         setCurrentImages([]);
         setLoadingMessage(language === 'it' ? 'Espandendo immagine...' : 'Expanding image...');
+        const controller = new AbortController();
+        abortControllerRef.current = controller;
         try {
-            const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+            const rawImg = await new Promise<HTMLImageElement>((resolve, reject) => {
                 const el = new Image();
                 el.onload = () => resolve(el);
                 el.onerror = reject;
                 el.src = dataUrl;
             });
+
+            // Downscale source to max 2048px to keep the padded canvas manageable
+            const MAX_SRC = 2048;
+            let img = rawImg;
+            if (rawImg.width > MAX_SRC || rawImg.height > MAX_SRC) {
+                const scale = MAX_SRC / Math.max(rawImg.width, rawImg.height);
+                const sc = document.createElement('canvas');
+                sc.width = Math.round(rawImg.width * scale);
+                sc.height = Math.round(rawImg.height * scale);
+                sc.getContext('2d')!.drawImage(rawImg, 0, 0, sc.width, sc.height);
+                img = await new Promise<HTMLImageElement>((resolve) => {
+                    const el = new Image();
+                    el.onload = () => resolve(el);
+                    el.src = sc.toDataURL('image/jpeg', 0.92);
+                });
+            }
 
             // Parse target aspect ratio into a numeric ratio (width/height)
             let tr: number | null = null;
@@ -3920,7 +3949,7 @@ export default function App() {
                 '', '', language,
                 false,
                 selectedModel, selectedResolution,
-                undefined, undefined, false,
+                undefined, controller.signal, false,
                 false, undefined, thinkingLevel
             );
             const thumbnailDataUrl = await createThumbnailDataUrl(imageDataUrl);
@@ -3937,8 +3966,10 @@ export default function App() {
             setHistory(prev => [newImage, ...prev].slice(0, MAX_HISTORY_ITEMS));
             showToast(language === 'it' ? 'Outpaint completato!' : 'Outpaint complete!', 'success');
         } catch (error: any) {
+            if (controller.signal.aborted) return;
             showToast(error.message || t.generationFailed, 'error');
         } finally {
+            abortControllerRef.current = null;
             setIsLoading(false);
         }
     }, [isLoading, language, userApiKey, selectedModel, selectedResolution, thinkingLevel, showToast, t.generationFailed, editedPrompt]);
