@@ -1258,7 +1258,8 @@ const ImageDisplay: React.FC<ImageDisplayProps> = ({ images, isLoading, onDownlo
 
     return (
         <div className="relative w-full lg:h-full flex items-center justify-center bg-transparent rounded-[32px] lg:overflow-hidden">
-            {isLoading && (
+            {/* Full spinner — only when no previous image to show */}
+            {isLoading && images.length === 0 && (
                 <div className="flex flex-col items-center text-center max-w-md px-6 text-light-text-muted dark:text-dark-text-muted">
                     <div className="w-16 h-16 border-4 border-brand-yellow border-t-transparent rounded-full animate-spin mb-6"></div>
                     <p className="font-bold text-lg mb-2 text-light-text dark:text-dark-text animate-pulse">{loadingMessage || t.generatingStatus}</p>
@@ -1269,7 +1270,7 @@ const ImageDisplay: React.FC<ImageDisplayProps> = ({ images, isLoading, onDownlo
                     </div>
                 </div>
             )}
-            {!isLoading && images.length > 0 && (
+            {images.length > 0 && (
                 <div className="w-full lg:h-full flex flex-col items-center justify-center p-0">
                     <div className={`w-full lg:flex-1 lg:min-h-0 grid ${images.length > 1 ? 'grid-cols-2' : 'grid-cols-1'} gap-0`}>
                         {images.map(image => {
@@ -1410,6 +1411,16 @@ const ImageDisplay: React.FC<ImageDisplayProps> = ({ images, isLoading, onDownlo
                         })}
                     </div>
 
+                    {/* Overlay spinner when generating next image (queue) — previous image stays visible */}
+                    {isLoading && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 backdrop-blur-sm rounded-[32px] z-20">
+                            <div className="w-14 h-14 border-4 border-brand-yellow border-t-transparent rounded-full animate-spin mb-5"></div>
+                            <p className="font-bold text-base text-white animate-pulse mb-1">{loadingMessage || t.generatingStatus}</p>
+                            {reasoningText && (
+                                <p className="text-xs text-white/60 text-center max-w-xs px-4 italic">{reasoningText}</p>
+                            )}
+                        </div>
+                    )}
                 </div>
             )}
             {!isLoading && images.length === 0 && (
