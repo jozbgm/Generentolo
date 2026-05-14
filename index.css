@@ -152,30 +152,46 @@ body {
 }
 
 
-/* Custom native select options */
+/* Select options: light mode */
 select option {
+  background-color: var(--color-light-surface, #f9fafb);
+  color: var(--color-light-text, #262626);
+}
+
+/* Select options: dark styling in dark mode */
+.dark select option {
   background-color: var(--color-dark-surface, #202020);
   color: var(--color-dark-text, #F2F2F2);
 }
 
-/* Force dark color-scheme on all selects globally to remove browser blue tint */
-select {
-  color-scheme: dark;
-  background-color: var(--color-dark-surface, #202020);
-  color: var(--color-dark-text, #F2F2F2);
-}
-
+/* Dark mode: forza color-scheme e colori scuri sui select nativi */
 .dark select {
   color-scheme: dark;
+  background-color: var(--color-dark-surface, #202020);
+  color: var(--color-dark-text, #F2F2F2);
 }
 
-/* Override browser default blue focus outline on all interactive elements */
+/* Focus: rimuovere solo l'outline browser di default, il ring viene gestito con focus-visible */
 select:focus,
 input:focus,
 textarea:focus,
 button:focus {
-  outline: none !important;
-  box-shadow: none !important;
+  outline: none;
+}
+
+/* Focus visibile da tastiera — ring brand su tutti gli elementi interattivi */
+select:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgb(var(--color-brand-yellow-rgb) / 0.5);
+}
+
+/* Prompt textarea e Quick Edit input: il ring è gestito dal container padre (focus-within) */
+textarea.floating-prompt-textarea:focus-visible,
+input.nested-inline-input:focus-visible {
+  box-shadow: none;
 }
 
 /* Custom textarea resize handle styling */
@@ -332,5 +348,16 @@ textarea::-webkit-scrollbar-thumb:hover {
 .shadow-floating-bar {
   box-shadow: 0 25px 60px -15px rgba(0,0,0,0.4),
               0 0 80px -30px rgb(var(--color-brand-yellow-rgb) / 0.08);
+}
+
+/* Rispetta la preferenza utente per animazioni ridotte */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 

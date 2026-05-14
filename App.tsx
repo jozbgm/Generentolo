@@ -40,7 +40,7 @@ if (!crypto.randomUUID) {
 // --- Localization ---
 const translations = {
     en: {
-        headerTitle: 'Generentolo PRO v2.6',
+        headerTitle: 'Generentolo PRO v3.0',
         headerSubtitle: 'Let me do it for you!',
         refImagesTitle: 'Reference & Style Images',
         styleRefTitle: 'Style Reference',
@@ -310,7 +310,7 @@ const translations = {
         presetAppliedToPrompt: 'Will be applied to generation',
     },
     it: {
-        headerTitle: 'Generentolo PRO v2.6',
+        headerTitle: 'Generentolo PRO v3.0',
         headerSubtitle: 'Let me do it for you!',
         refImagesTitle: 'Immagini di Riferimento e Stile',
         styleRefTitle: 'Riferimento Stile',
@@ -679,23 +679,27 @@ const Header: React.FC<HeaderProps> = ({ theme, toggleTheme, onOpenSettings, onO
     const { t, language, setLanguage } = useLocalization();
     const toggleLanguage = () => setLanguage(language === 'en' ? 'it' : 'en');
     return (
-        <header className="flex justify-between items-center px-4 py-3">
-            <div className="min-w-0 flex-1 mr-3">
-                <h1 className="text-lg sm:text-xl font-bold flex items-center">
-                    <span className="text-brand-yellow">Generentolo</span>
-                    <span className="text-light-text-muted dark:text-white/90 ml-2">PRO</span>
-                    <span className="text-brand-yellow ml-2">v2.6</span>
-                </h1>
-                <p className="text-xs text-light-text-muted dark:text-dark-text-muted mt-0.5 truncate">
-                    {t.headerSubtitle} <span className="hidden sm:inline">Powered by </span><span className="font-bold text-brand-yellow">JOZ</span><span className="hidden sm:inline"> for <span className="font-bold text-brand-yellow">Dugongo</span></span>
-                </p>
+        <header className="relative flex justify-between items-center px-4 py-3 border-b border-light-border/60 dark:border-white/[0.06]">
+            {/* Subtle amber glow line at the bottom */}
+            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/3 h-[1px] bg-gradient-to-r from-transparent via-brand-yellow/30 to-transparent pointer-events-none" />
+            <div className="flex-shrink-0 w-[276px] flex items-center gap-3">
+                <div>
+                    <h1 className="text-base sm:text-lg font-black tracking-tight flex items-center justify-between w-full gap-2">
+                        <span className="text-light-text dark:text-white">Generentolo</span>
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-brand-yellow text-dark-bg">PRO</span>
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-light-surface-accent dark:bg-dark-surface-accent text-light-text-muted dark:text-dark-text-muted border border-light-border dark:border-dark-border">v3.0</span>
+                    </h1>
+                    <p className="text-[11px] text-light-text-muted dark:text-dark-text-muted mt-1.5 hidden sm:block">
+                        {t.headerSubtitle} — <span className="font-semibold text-brand-yellow/80">JOZ</span> <span className="opacity-50">for</span> <span className="font-semibold text-brand-yellow/80">Dugongo</span>
+                    </p>
+                </div>
             </div>
-            <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
-                <button onClick={onOpenShortcuts} className="hidden sm:flex p-1.5 sm:p-2 rounded-full text-light-text-muted dark:text-brand-yellow hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors" title="Keyboard Shortcuts">
-                    <KeyboardIcon className="w-5 h-5" />
+            <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0 bg-light-surface/60 dark:bg-dark-surface/40 border border-light-border/60 dark:border-white/[0.06] rounded-xl px-1 py-1">
+                <button onClick={onOpenShortcuts} className="hidden sm:flex p-1.5 rounded-lg text-light-text-muted dark:text-dark-text-muted hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:text-light-text dark:hover:text-brand-yellow transition-all" title="Keyboard Shortcuts">
+                    <KeyboardIcon className="w-4 h-4" />
                 </button>
-                <button onClick={toggleLanguage} title={language === 'en' ? 'Switch to Italian' : 'Switch to English'} className="p-1.5 sm:p-2 rounded-full text-light-text-muted dark:text-brand-yellow hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors">
-                    <LanguageIcon className="w-5 h-5" />
+                <button onClick={toggleLanguage} title={language === 'en' ? 'Switch to Italian' : 'Switch to English'} className="p-1.5 rounded-lg text-light-text-muted dark:text-dark-text-muted hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:text-light-text dark:hover:text-brand-yellow transition-all">
+                    <LanguageIcon className="w-4 h-4" />
                 </button>
                 <ThemePicker
                     accentColor={accentColor}
@@ -703,11 +707,12 @@ const Header: React.FC<HeaderProps> = ({ theme, toggleTheme, onOpenSettings, onO
                     onReset={onAccentColorReset}
                     defaultColor={defaultAccentColor}
                 />
-                <button onClick={onOpenSettings} title={t.settingsTitle} className="p-1.5 sm:p-2 rounded-full text-light-text-muted dark:text-brand-yellow hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors">
-                    <SettingsIcon className="w-5 h-5" />
+                <div className="w-px h-4 bg-light-border dark:bg-white/10 mx-0.5" />
+                <button onClick={onOpenSettings} title={t.settingsTitle} className="p-1.5 rounded-lg text-light-text-muted dark:text-dark-text-muted hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent hover:text-light-text dark:hover:text-brand-yellow transition-all">
+                    <SettingsIcon className="w-4 h-4" />
                 </button>
-                <button onClick={toggleTheme} title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'} className="p-1.5 sm:p-2 rounded-full text-light-text-muted dark:text-dark-text-muted hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors">
-                    {theme === 'dark' ? <SunIcon className="w-5 h-5" /> : <MoonIcon className="w-5 h-5" />}
+                <button onClick={toggleTheme} title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'} className="p-1.5 rounded-lg text-light-text-muted dark:text-dark-text-muted hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-all">
+                    {theme === 'dark' ? <SunIcon className="w-4 h-4" /> : <MoonIcon className="w-4 h-4" />}
                 </button>
             </div>
         </header>
@@ -926,10 +931,13 @@ const ReferencePanel: React.FC<{
                     )}
                 </div>
 
-                <h3 className="font-semibold text-light-text dark:text-dark-text">{t.refImagesTitle}</h3>
+                <h3 className="text-[10px] font-black uppercase tracking-widest text-light-text-muted dark:text-dark-text-muted flex items-center gap-1.5">
+                    <span className="w-1 h-3 rounded-full bg-brand-yellow inline-block"></span>
+                    {t.refImagesTitle}
+                </h3>
                 <div
                     onDragEnter={handleRefDragEnter} onDragLeave={handleRefDragLeave} onDragOver={handleDragOver} onDrop={handleRefDrop}
-                    className={`rounded-2xl transition-all relative p-3 bg-white/5 dark:bg-black/10 border ${isDraggingRef ? 'border-brand-yellow border-dashed bg-brand-yellow/10 ring-2 ring-brand-yellow/20' : 'border-white/10 dark:border-white/5'}`}
+                    className={`rounded-xl transition-all relative p-2.5 border ${isDraggingRef ? 'border-brand-yellow border-dashed bg-brand-yellow/5 ring-2 ring-brand-yellow/15' : 'border-light-border/50 dark:border-white/[0.06] bg-light-surface-accent/30 dark:bg-black/20'}`}
                 >
                     <div className="grid grid-cols-3 gap-3">
                         {referenceImages.map((file, index) => (
@@ -937,7 +945,7 @@ const ReferencePanel: React.FC<{
                         ))}
 
                         {referenceImages.length < 5 && (
-                            <div onClick={() => fileInputRef.current?.click()} className="relative group aspect-square rounded-xl glow-accent-md bg-black/5 dark:bg-white/5 flex items-center justify-center cursor-pointer border border-black/5 dark:border-white/5 hover:border-brand-yellow transition-colors">
+                            <div onClick={() => fileInputRef.current?.click()} className="relative group aspect-square rounded-xl bg-light-surface-accent/50 dark:bg-white/5 flex items-center justify-center cursor-pointer border border-dashed border-light-border dark:border-white/[0.10] hover:border-brand-yellow hover:bg-brand-yellow/5 transition-all">
                                 <div className="text-light-text-muted dark:text-dark-text-muted text-center group-hover:text-brand-yellow transition-colors">
                                     <UploadIcon className="w-6 h-6 mx-auto" />
                                     <span className="text-xs mt-1 block">{t.addImage}</span>
@@ -1038,22 +1046,22 @@ const ReferencePanel: React.FC<{
                     </div>
                 )}
 
-                <div className="border-t border-light-border dark:border-dark-border/50"></div>
+                <div className="h-px bg-gradient-to-r from-transparent via-light-border dark:via-white/[0.08] to-transparent"></div>
 
                 {appMode !== 'angles' && (
-                    <div className="pt-1">
+                    <div>
                         <button
                             onClick={() => onGenerateStoryboard()}
                             disabled={referenceImages.length === 0 || isStoryboardLoading}
-                            className={`w-full group relative overflow-hidden flex items-center justify-center gap-3 py-3 bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border hover:border-brand-yellow rounded-2xl transition-all cursor-pointer select-none hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:border-light-border disabled:dark:hover:border-dark-border ${isStoryboardLoading ? 'animate-pulse' : ''}`}
+                            className={`w-full group relative overflow-hidden flex items-center justify-center gap-3 py-3 bg-light-surface/80 dark:bg-dark-surface/60 border rounded-xl transition-all cursor-pointer select-none hover:scale-[1.01] active:scale-[0.99] disabled:cursor-not-allowed disabled:hover:scale-100 ${referenceImages.length === 0 ? 'border-dashed border-light-border/40 dark:border-white/[0.05] opacity-50' : 'border-light-border/60 dark:border-white/[0.07] hover:border-brand-yellow/50'} ${isStoryboardLoading ? 'animate-pulse' : ''}`}
                         >
                             <div className="sweep-accent absolute inset-0 pointer-events-none" />
-                            <ClapperboardIcon className="w-6 h-6 text-brand-yellow relative pointer-events-none" />
+                            <ClapperboardIcon className="w-5 h-5 text-brand-yellow relative pointer-events-none flex-shrink-0" />
                             <div className="text-left relative pointer-events-none">
-                                <span className="block text-[10px] font-black uppercase tracking-widest text-light-text dark:text-dark-text transition-colors group-hover:text-brand-yellow">
+                                <span className="block text-[11px] font-bold text-light-text dark:text-dark-text transition-colors group-hover:text-brand-yellow">
                                     {t.cinematicStoryboardTitle}
                                 </span>
-                                <span className="block text-[9px] text-light-text-muted dark:text-dark-text-muted font-medium">
+                                <span className="block text-[10px] text-light-text-muted dark:text-dark-text-muted">
                                     {isStoryboardLoading ? t.storyboardAnalyzing : t.storyboardSubtext}
                                 </span>
                             </div>
@@ -1061,15 +1069,10 @@ const ReferencePanel: React.FC<{
                                 <div className="ml-auto mr-2 w-3 h-3 border-2 border-brand-yellow border-t-transparent rounded-full animate-spin pointer-events-none relative" />
                             )}
                         </button>
-                        {referenceImages.length === 0 && (
-                            <p className="mt-1 text-[8px] text-center text-light-text-muted dark:text-dark-text-muted italic">
-                                {t.uploadForStoryboard}
-                            </p>
-                        )}
                     </div>
                 )}
 
-                <div className="border-t border-light-border dark:border-dark-border/50"></div>
+                <div className="h-px bg-gradient-to-r from-transparent via-light-border dark:via-white/[0.08] to-transparent"></div>
 
                 {appMode === 'classic' ? (
                     <div className="space-y-4 pt-2">
@@ -1078,7 +1081,7 @@ const ReferencePanel: React.FC<{
                                 onDragEnter={handleStyleDragEnter} onDragLeave={handleStyleDragLeave} onDragOver={handleDragOver} onDrop={handleStyleDrop}
                                 className={`rounded-2xl transition-all relative ${isDraggingStyle ? 'scale-105 z-10' : ''}`}
                             >
-                                <div className={`relative group shadow-sm rounded-2xl overflow-hidden aspect-[4/5] bg-white/5 dark:bg-black/10 backdrop-blur-3xl border ${isDraggingStyle ? 'border-brand-yellow ring-2 ring-brand-yellow/20' : 'border-white/10 dark:border-white/5'} transition-all`}>
+                                <div className={`relative group shadow-sm rounded-2xl overflow-hidden aspect-[4/5] bg-light-surface-accent/40 dark:bg-black/20 backdrop-blur-3xl border ${isDraggingStyle ? 'border-brand-yellow ring-2 ring-brand-yellow/20' : 'border-light-border/60 dark:border-white/[0.07]'} transition-all`}>
                                     <div className="absolute top-2 left-2 px-2.5 py-1 bg-light-surface-accent dark:bg-dark-surface-accent text-brand-yellow text-[7px] rounded-full font-black tracking-[.2em] z-10 shadow-sm backdrop-blur-md">STYLE</div>
                                     {styleImage ? (
                                         <StyleImagePreview file={styleImage} onRemove={onRemoveStyleImage} />
@@ -1098,7 +1101,7 @@ const ReferencePanel: React.FC<{
                                 onDragEnter={handleStructureDragEnter} onDragLeave={handleStructureDragLeave} onDragOver={handleDragOver} onDrop={handleStructureDrop}
                                 className={`rounded-2xl transition-all relative ${isDraggingStructure ? 'scale-105 z-10' : ''}`}
                             >
-                                <div className={`relative group shadow-sm rounded-2xl overflow-hidden aspect-[4/5] bg-white/5 dark:bg-black/10 backdrop-blur-3xl border ${isDraggingStructure ? 'border-brand-yellow ring-2 ring-brand-yellow/20' : 'border-white/10 dark:border-white/5'} transition-all`}>
+                                <div className={`relative group shadow-sm rounded-2xl overflow-hidden aspect-[4/5] bg-light-surface-accent/40 dark:bg-black/20 backdrop-blur-3xl border ${isDraggingStructure ? 'border-brand-yellow ring-2 ring-brand-yellow/20' : 'border-light-border/60 dark:border-white/[0.07]'} transition-all`}>
                                     <div className="absolute top-2 left-2 px-2.5 py-1 bg-light-surface-accent dark:bg-dark-surface-accent text-brand-yellow text-[7px] rounded-full font-black tracking-[.2em] z-10 shadow-sm backdrop-blur-md">STRUCTURE</div>
                                     {structureImage ? (
                                         <StyleImagePreview file={structureImage} onRemove={onRemoveStructureImage} />
@@ -1115,7 +1118,7 @@ const ReferencePanel: React.FC<{
                             </div>
                         </div>
 
-                        <div onClick={onManageDna} role="button" className="group relative overflow-hidden bg-light-surface dark:bg-dark-surface rounded-[2rem] p-4 border border-light-border dark:border-dark-border backdrop-blur-2xl shadow-sm transition-all hover:border-brand-yellow cursor-pointer select-none">
+                        <div onClick={onManageDna} role="button" className="group relative overflow-hidden bg-light-surface dark:bg-dark-surface rounded-2xl p-4 border border-light-border dark:border-dark-border backdrop-blur-2xl shadow-sm transition-all hover:border-brand-yellow cursor-pointer select-none">
                             <div className="sweep-accent absolute inset-0 pointer-events-none" />
                             <div className="flex items-center justify-between mb-3 relative">
                                 <h3 className="text-[10px] font-black uppercase tracking-wider text-light-text dark:text-dark-text flex items-center gap-2 group-hover:text-brand-yellow transition-colors">
@@ -1126,7 +1129,7 @@ const ReferencePanel: React.FC<{
                             </div>
 
                             {dnaCharacters.length === 0 ? (
-                                <div className="py-2 px-3 rounded-xl bg-black/5 border border-dashed border-white/5">
+                                <div className="py-2 px-3 rounded-xl bg-black/5 dark:bg-black/10 border border-dashed border-light-border/40 dark:border-white/[0.06]">
                                     <p className="text-[9px] text-light-text-muted dark:text-dark-text-muted italic text-center">{t.dnaCharacterNone}</p>
                                 </div>
                             ) : (
@@ -1137,7 +1140,7 @@ const ReferencePanel: React.FC<{
                                             onClick={(e) => { e.stopPropagation(); onSelectDna(char.id); }}
                                             className="flex-shrink-0 relative group/char"
                                         >
-                                            <div className={`w-11 h-11 rounded-full p-0.5 border-2 transition-all duration-500 scale-95 group-hover/char:scale-105 ${selectedDnaIds.includes(char.id) ? 'border-brand-yellow glow-accent-lg rotate-3 scale-110' : 'border-white/10 opacity-60 hover:opacity-100 hover:rotate-2'}`}>
+                                            <div className={`w-11 h-11 rounded-full p-0.5 border-2 transition-all duration-500 scale-95 group-hover/char:scale-105 ${selectedDnaIds.includes(char.id) ? 'border-brand-yellow glow-accent-lg rotate-3 scale-110' : 'border-light-border dark:border-white/10 opacity-60 hover:opacity-100 hover:rotate-2'}`}>
                                                 {char.thumbnailData ? (
                                                     <img src={char.thumbnailData} alt={char.name} className="w-full h-full object-cover rounded-full" />
                                                 ) : (
@@ -1243,19 +1246,15 @@ interface ImageDisplayProps {
     upscalingImageId: string | null; // v1.1
     onSaveDna: (image: GeneratedImage) => void; // v1.7
     onGenerateStoryboard: (image: GeneratedImage) => void; // v1.9.5
-    onQuickEdit: (image: GeneratedImage, instruction: string) => void; // v2.4
-    onOutpaint: (image: GeneratedImage, direction: 'left'|'right'|'up'|'down', amount: number, targetAspect?: string) => void; // v2.4
-    externalQuickEditTarget?: GeneratedImage | null; // v2.4: target from history
+    onOutpaint: (image: GeneratedImage, direction: 'left'|'right'|'up'|'down'|'all'|'horizontal'|'vertical', amount: number, targetAspect?: string) => void; // v2.4
     reasoningText?: string; // v1.7: Creative reasoning plan
     loadingMessage?: string; // v1.9.2: Funny loading messages
 }
-const ImageDisplay: React.FC<ImageDisplayProps> = ({ images, isLoading, onDownload, onZoom, onEdit, onReroll, onToggleFavorite, onUpscale, upscalingImageId, onSaveDna, onGenerateStoryboard, onQuickEdit, onOutpaint, externalQuickEditTarget, reasoningText, loadingMessage }) => {
+const ImageDisplay: React.FC<ImageDisplayProps> = ({ images, isLoading, onDownload, onZoom, onEdit, onReroll, onToggleFavorite, onUpscale, upscalingImageId, onSaveDna, onGenerateStoryboard, onOutpaint, reasoningText, loadingMessage }) => {
     const { t } = useLocalization();
     const [showUpscaleMenu, setShowUpscaleMenu] = useState<string | null>(null);
     const [showOutpaintMenu, setShowOutpaintMenu] = useState<string | null>(null);
     const [outpaintRatio, setOutpaintRatio] = useState('Auto');
-    const [quickEditText, setQuickEditText] = useState('');
-    const [quickEditTarget, setQuickEditTarget] = useState<GeneratedImage | null>(null);
 
     return (
         <div className="relative w-full lg:h-full flex items-center justify-center bg-transparent rounded-[32px] lg:overflow-hidden">
@@ -1378,7 +1377,7 @@ const ImageDisplay: React.FC<ImageDisplayProps> = ({ images, isLoading, onDownlo
                                                 <button onClick={() => { onOutpaint(image, 'up', 50, outpaintRatio === 'Auto' ? undefined : outpaintRatio); setShowOutpaintMenu(null); }} className="aspect-square rounded-lg bg-white/5 hover:bg-brand-yellow/20 hover:text-brand-yellow text-white/60 flex items-center justify-center transition-colors text-sm">↑</button>
                                                 <div />
                                                 <button onClick={() => { onOutpaint(image, 'left', 50, outpaintRatio === 'Auto' ? undefined : outpaintRatio); setShowOutpaintMenu(null); }} className="aspect-square rounded-lg bg-white/5 hover:bg-brand-yellow/20 hover:text-brand-yellow text-white/60 flex items-center justify-center transition-colors text-sm">←</button>
-                                                <div className="aspect-square rounded-lg bg-white/10 flex items-center justify-center"><svg className="w-3 h-3 text-white/30" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="1"/></svg></div>
+                                                <button onClick={() => { onOutpaint(image, 'all', 50, outpaintRatio === 'Auto' ? undefined : outpaintRatio); setShowOutpaintMenu(null); }} className="aspect-square rounded-lg bg-white/10 hover:bg-brand-yellow/20 hover:text-brand-yellow text-white/40 hover:text-brand-yellow flex items-center justify-center transition-colors" title="Expand all sides"><svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><rect x="8" y="8" width="8" height="8" rx="1"/></svg></button>
                                                 <button onClick={() => { onOutpaint(image, 'right', 50, outpaintRatio === 'Auto' ? undefined : outpaintRatio); setShowOutpaintMenu(null); }} className="aspect-square rounded-lg bg-white/5 hover:bg-brand-yellow/20 hover:text-brand-yellow text-white/60 flex items-center justify-center transition-colors text-sm">→</button>
                                                 <div />
                                                 <button onClick={() => { onOutpaint(image, 'down', 50, outpaintRatio === 'Auto' ? undefined : outpaintRatio); setShowOutpaintMenu(null); }} className="aspect-square rounded-lg bg-white/5 hover:bg-brand-yellow/20 hover:text-brand-yellow text-white/60 flex items-center justify-center transition-colors text-sm">↓</button>
@@ -1394,63 +1393,31 @@ const ImageDisplay: React.FC<ImageDisplayProps> = ({ images, isLoading, onDownlo
                                             <button onClick={(e) => { e.stopPropagation(); onUpscale(image, '4k'); setShowUpscaleMenu(null); }} className="w-full px-4 py-2 text-left text-white hover:bg-dark-surface-accent transition-colors">{t.upscale4K}</button>
                                         </div>
                                     )}
+
                                 </div>
                             );
                         })}
                     </div>
 
-                    {/* v2.4: Quick Edit bar */}
-                    <div className="px-2 sm:px-3 pb-3 pt-1.5">
-                        {/* History target indicator */}
-                        {externalQuickEditTarget && (
-                            <div className="flex items-center gap-1.5 mb-1.5 px-1">
-                                <img src={externalQuickEditTarget.thumbnailDataUrl || externalQuickEditTarget.imageDataUrl} alt="" className="w-5 h-5 rounded object-cover border border-brand-yellow/40" />
-                                <span className="text-[9px] text-brand-yellow/80 font-bold truncate flex-1">Editing from history</span>
-                            </div>
-                        )}
-                        <div className={`flex items-center gap-2 bg-black/20 dark:bg-black/30 border rounded-2xl px-3 py-2 ${externalQuickEditTarget ? 'border-brand-yellow/30' : 'border-white/10'}`}>
-                            <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-brand-yellow/60 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                            <input
-                                type="text"
-                                value={quickEditText}
-                                onChange={e => { setQuickEditText(e.target.value); if (!externalQuickEditTarget && images.length > 0) setQuickEditTarget(images[0]); }}
-                                onFocus={() => { if (!externalQuickEditTarget && images.length > 0 && !quickEditTarget) setQuickEditTarget(images[0]); }}
-                                onKeyDown={e => {
-                                    if (e.key === 'Enter' && quickEditText.trim()) {
-                                        const target = externalQuickEditTarget ?? quickEditTarget ?? images[0];
-                                        if (target) { onQuickEdit(target, quickEditText); setQuickEditText(''); setQuickEditTarget(null); }
-                                    }
-                                }}
-                                placeholder="Quick edit: make the sky orange, add fog…"
-                                className="flex-1 min-w-0 bg-transparent text-xs text-light-text dark:text-dark-text placeholder:text-white/20 outline-none"
-                            />
-                            <button
-                                onClick={() => {
-                                    const target = externalQuickEditTarget ?? quickEditTarget ?? images[0];
-                                    if (quickEditText.trim() && target) { onQuickEdit(target, quickEditText); setQuickEditText(''); setQuickEditTarget(null); }
-                                }}
-                                disabled={!quickEditText.trim() || (!externalQuickEditTarget && images.length === 0)}
-                                className="shrink-0 px-2.5 py-1 rounded-xl bg-brand-yellow/15 hover:bg-brand-yellow/30 text-brand-yellow text-[10px] font-bold disabled:opacity-30 transition-colors whitespace-nowrap"
-                            >
-                                Apply
-                            </button>
-                        </div>
-                    </div>
                 </div>
             )}
             {!isLoading && images.length === 0 && (
-                <div className="text-center text-light-text-muted dark:text-dark-text-muted">
-                    <div
-                        className="w-24 h-24 mx-auto mb-4 rounded-full flex items-center justify-center"
-                        style={{ background: 'radial-gradient(circle, rgb(var(--color-brand-yellow-rgb) / 0.15) 0%, rgb(var(--color-brand-yellow-rgb) / 0.05) 100%)' }}
-                    >
+                <div className="text-center text-light-text-muted dark:text-dark-text-muted select-none">
+                    <div className="relative w-28 h-28 mx-auto mb-6 flex items-center justify-center">
+                        {/* Outer ring */}
+                        <div className="absolute inset-0 rounded-full border border-light-border dark:border-white/[0.06]" />
+                        {/* Middle ring */}
+                        <div className="absolute inset-4 rounded-full border border-dashed border-light-border dark:border-white/[0.08]" />
+                        {/* Inner icon container */}
                         <div
-                            className="w-16 h-16 rounded-full"
-                            style={{ background: 'radial-gradient(circle, rgb(var(--color-brand-yellow-rgb) / 0.30) 0%, rgb(var(--color-brand-yellow-rgb) / 0.10) 100%)' }}
-                        />
+                            className="w-14 h-14 rounded-full flex items-center justify-center"
+                            style={{ background: 'radial-gradient(circle, rgb(var(--color-brand-yellow-rgb) / 0.18) 0%, rgb(var(--color-brand-yellow-rgb) / 0.05) 100%)' }}
+                        >
+                            <SparklesIcon className="w-6 h-6 text-brand-yellow opacity-60" />
+                        </div>
                     </div>
-                    <p className="font-semibold text-lg">{t.imageDisplayPlaceholderTitle}</p>
-                    <p className="text-sm opacity-70">{t.imageDisplayPlaceholderSubtext}</p>
+                    <p className="font-bold text-[15px] text-light-text dark:text-dark-text mb-1">{t.imageDisplayPlaceholderTitle}</p>
+                    <p className="text-sm opacity-50 max-w-[200px] mx-auto leading-relaxed">{t.imageDisplayPlaceholderSubtext}</p>
                 </div>
             )}
         </div>
@@ -1525,9 +1492,13 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({
     const visibleHistory = filteredHistory.slice(0, displayCount);
 
     return (
-        <div className="flex flex-col bg-light-surface/50 dark:bg-dark-surface/30 backdrop-blur-xl rounded-3xl p-4">
+        <div className="flex flex-col bg-light-surface/70 dark:bg-dark-surface/50 backdrop-blur-xl rounded-2xl border border-light-border/60 dark:border-white/[0.07] p-3 shadow-sm">
             <div className="flex justify-between items-center mb-3">
-                <h2 className="font-semibold text-light-text dark:text-dark-text">{t.historyTitle} {history.length > 0 && <span className="text-sm text-light-text-muted dark:text-dark-text-muted">({history.length})</span>}</h2>
+                <h2 className="text-[11px] font-black uppercase tracking-widest text-light-text-muted dark:text-dark-text-muted flex items-center gap-1.5">
+                    <span className="w-1 h-3.5 rounded-full bg-brand-yellow inline-block"></span>
+                    {t.historyTitle}
+                    {history.length > 0 && <span className="ml-1 px-1.5 py-0.5 rounded-md bg-light-surface-accent dark:bg-dark-surface-accent text-[9px] font-black">{history.length}</span>}
+                </h2>
                 {history.length > 0 && (
                     <div className="flex items-center gap-2">
                         {!isSelectionMode ? (
@@ -1943,7 +1914,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
 
     return (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose} role="dialog" aria-modal="true" aria-labelledby="help-modal-title">
-            <div className="bg-[#f8f8f6]/95 dark:bg-[#202020]/90 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl w-full max-w-3xl max-h-[85vh] flex flex-col" onClick={e => e.stopPropagation()}>
+            <div className="bg-[#f8f8f6]/95 dark:bg-[#202020]/90 backdrop-blur-xl border border-light-border dark:border-white/10 rounded-2xl shadow-2xl w-full max-w-3xl max-h-[85vh] flex flex-col" onClick={e => e.stopPropagation()}>
                 <div className="flex items-center justify-between p-6 border-b border-light-border dark:border-dark-border">
                     <div className="flex items-center gap-3">
                         <SparklesIcon className="w-6 h-6 text-[#4a5d16] dark:text-brand-yellow" />
@@ -1996,7 +1967,7 @@ const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ isOpen, onClose }) => {
 
     return (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose} role="dialog" aria-modal="true" aria-labelledby="shortcuts-modal-title">
-            <div className="bg-[#f8f8f6]/90 dark:bg-[#202020]/80 backdrop-blur-xl border border-white/10 dark:border-white/10 rounded-2xl shadow-2xl w-full max-w-md p-6" onClick={e => e.stopPropagation()}>
+            <div className="bg-[#f8f8f6]/90 dark:bg-[#202020]/80 backdrop-blur-xl border border-light-border dark:border-white/10 rounded-2xl shadow-2xl w-full max-w-md p-6" onClick={e => e.stopPropagation()}>
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
                         <KeyboardIcon className="w-6 h-6 text-[#4a5d16] dark:text-brand-yellow" />
@@ -2065,7 +2036,7 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose }) => {
 
     return (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose} role="dialog" aria-modal="true" aria-labelledby="feedback-title">
-            <div className="bg-[#f8f8f6]/90 dark:bg-[#202020]/80 backdrop-blur-xl border border-white/10 dark:border-white/10 rounded-2xl shadow-2xl w-full max-w-md p-6" onClick={e => e.stopPropagation()}>
+            <div className="bg-[#f8f8f6]/90 dark:bg-[#202020]/80 backdrop-blur-xl border border-light-border dark:border-white/10 rounded-2xl shadow-2xl w-full max-w-md p-6" onClick={e => e.stopPropagation()}>
                 <h2 id="feedback-title" className="text-lg font-semibold mb-4 text-light-text dark:text-dark-text">{t.feedbackTitle}</h2>
                 <div className="space-y-4">
                     <div>
@@ -2120,7 +2091,7 @@ const Toast: React.FC<ToastProps> = ({ message, type, onClose }) => {
     const isSuccess = type === 'success';
 
     return (
-        <div className={`fixed bottom-28 right-5 z-[100] flex items-center gap-3 p-3 rounded-xl shadow-2xl border backdrop-blur-xl animate-slide-in-right ${isSuccess ? 'bg-brand-yellow/20 text-light-text dark:text-dark-text border-brand-yellow/30' : 'bg-light-surface dark:bg-dark-surface text-light-text dark:text-dark-text border-light-border dark:border-dark-border'}`}>
+        <div className={`fixed bottom-36 right-5 z-[100] flex items-center gap-3 p-3 rounded-xl shadow-2xl border backdrop-blur-xl animate-slide-in-right ${isSuccess ? 'bg-brand-yellow/20 text-light-text dark:text-dark-text border-brand-yellow/30' : 'bg-light-surface dark:bg-dark-surface text-light-text dark:text-dark-text border-light-border dark:border-dark-border'}`}>
             {isSuccess
                 ? <CheckIcon className="w-4 h-4 text-brand-yellow flex-shrink-0" />
                 : <AlertTriangleIcon className="w-4 h-4 text-dark-text-muted flex-shrink-0" />
@@ -2225,7 +2196,7 @@ const InpaintEditor: React.FC<InpaintEditorProps> = ({ image, onClose, onSave })
 
     return (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose} role="dialog" aria-modal="true" aria-labelledby="inpaint-modal-title">
-            <div className="bg-light-surface/80 dark:bg-dark-surface/80 backdrop-blur-xl border border-white/10 dark:border-white/10 rounded-2xl shadow-2xl w-full max-w-4xl flex flex-col" onClick={e => e.stopPropagation()}>
+            <div className="bg-light-surface/80 dark:bg-dark-surface/80 backdrop-blur-xl border border-light-border dark:border-white/10 rounded-2xl shadow-2xl w-full max-w-4xl flex flex-col" onClick={e => e.stopPropagation()}>
                 <div className="flex justify-between items-center p-4 border-b border-light-border dark:border-dark-border">
                     <h2 id="inpaint-modal-title" className="text-lg font-semibold text-light-text dark:text-dark-text">{t.inpaintModalTitle}</h2>
                     <button onClick={onClose} aria-label={t.cancel} className="p-2 rounded-xl text-light-text-muted dark:text-dark-text-muted hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent transition-colors"><XIcon className="w-5 h-5" /></button>
@@ -2241,7 +2212,7 @@ const InpaintEditor: React.FC<InpaintEditorProps> = ({ image, onClose, onSave })
                     <div className="space-y-4">
                         <div>
                             <label className="block text-sm font-medium mb-2">{t.inpaintPromptLabel}</label>
-                            <textarea value={inpaintPrompt} onChange={(e) => setInpaintPrompt(e.target.value)} rows={4} className="w-full p-2 bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded-lg" />
+                            <textarea value={inpaintPrompt} onChange={(e) => setInpaintPrompt(e.target.value)} rows={4} className="w-full p-2 bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded-lg focus:ring-2 focus:ring-brand-yellow/50 focus:border-brand-yellow/50" />
                         </div>
                         <div>
                             <label className="block text-sm font-medium mb-2">{t.brushSizeLabel}: {brushSize}</label>
@@ -2483,29 +2454,35 @@ const MAX_HISTORY_ITEMS = 200; // Increased from 12 to support infinite scroll
 // --- Constants & Helpers ---
 const FUNNY_MESSAGES = [
     "Generentolo is generentoling...",
-    "Generentolo is rantoling...",
-    "Generentolo is skibidibopping...",
-    "Generentolo is scoatting...",
-    "Generentolo is swagging...",
     "Generentolo is Jozzoling...",
+    "Generentolo is sbroccating...",
+    "Generentolo is aperol-spritzing...",
+    "Generentolo is Marzia Pezzotting...",
+    "Generentolo is chupa-chuping...",
+    "Generentolo is gigachadding...",
+    "Generentolo is Oompa-loompaing...",
     "Generentolo is smarmellating...",
-    "Generentolo is sboccing...",
-    "Generentolo is gnegneing your prompt...",
-    "Generentolo is gigachadding the image...",
-    "Generentolo is trying to remember how to draw...",
-    "Generentolo is vibetrolling...",
-    "Generentolo is fighting the GPU...",
-    "Generentolo is Throat-punching the latency...",
-    "Generentolo is Oh-mio-deoing the canvas...",
-    "Generentolo is Main-character-ing the whole app...",
-    "Generentolo is Alpha-dogging the progress bar...",
-    "Generentolo is establishing dominance over the GPU...",
+    "Generentolo is Quiet quitting...",
+    "Generentolo is Ettoreting...",
     "Generentolo is sbrodoling...",
-    "Generentolo is alpha-maleing...",
-    "Generentolo is meow meowing...",
-    "Generentolo is sbarlafusing...",
-    "Generentolo is casoncelling...",
-    "Generentolo is architettoling..."
+    "Generentolo is pizzocchering...",
+    "Generentolo is architettoling...",
+    "Generentolo is rantoling...",
+    "Generentolo is scoatting...",
+    "Generentolo is anzianotting...",
+    "Generentolo is api-consuming...",
+    "Generentolo is capybaring...",
+    "Generentolo is Photosciopping...",
+    "Generentolo is Led Zeppeling...",
+    "Generentolo is Chuck Norrising...",
+    "Generentolo is Polenta e Oseing...",
+    "Generentolo is ctrl-z-ing...",
+    "Generentolo is lorem-ipsuming...",
+    "Generentolo is doomscrolling...",
+    "Generentolo is ossobooking...",
+    "Generentolo is Nicolas Caging...",
+    "Generentolo is vibe-coding...",
+    "Generentolo is pausa-pranzoing...",
 ];
 
 const extractVideoThumbnail = (file: File): Promise<string> => {
@@ -2668,6 +2645,7 @@ export default function App() {
     const abortControllerRef = useRef<AbortController | null>(null);
     const variationsAbortControllerRef = useRef<AbortController | null>(null);
     const isProcessingQueueRef = useRef(false); // v2.3: prevents queue race condition
+    const lastQueueResultRef = useRef<GeneratedImage[] | null>(null); // v2.5: stores last queue task result for canvas update
 
     const t = useMemo(() => translations[language], [language]);
 
@@ -2928,7 +2906,7 @@ export default function App() {
 
         setIsLoading(true);
         setReasoningText(''); // Reset reasoning
-        setCurrentImages([]);
+        if (!isTask) setCurrentImages([]);
 
         // v1.9.2: Parallel Pre-processing System (Auto-Enhance Master Brain, Grounding)
         let cleanedPrompt = currentPrompt;
@@ -3274,7 +3252,11 @@ export default function App() {
                 })
             );
 
-            setCurrentImages(newImages);
+            if (isTask) {
+                lastQueueResultRef.current = newImages;
+            } else {
+                setCurrentImages(newImages);
+            }
             setHistory(prev => [...newImages, ...prev].slice(0, MAX_HISTORY_ITEMS));
 
         } catch (error: any) {
@@ -3311,9 +3293,19 @@ export default function App() {
     ]);
 
     // v1.9.5: Generation Queue Processor — v2.3: ref mutex prevents race condition
+    // v2.5: when the queue drains and loading finishes, push the last task result to canvas
     useEffect(() => {
         if (!isLoading) {
             isProcessingQueueRef.current = false; // Reset mutex when generation completes
+
+            // v2.5: If queue is now empty and we have a pending queue result, show it on canvas.
+            // This handles the case where setCurrentImages(newImages) inside handleGenerate was
+            // batched/overwritten by the next task's setCurrentImages([]) start call.
+            const pendingResult = lastQueueResultRef.current;
+            if (queue.length === 0 && pendingResult !== null) {
+                setCurrentImages(pendingResult);
+                lastQueueResultRef.current = null;
+            }
         }
         if (!isLoading && !isProcessingQueueRef.current && queue.length > 0) {
             isProcessingQueueRef.current = true;
@@ -3828,8 +3820,9 @@ export default function App() {
         }
     }, [isLoading, language, userApiKey, selectedModel, selectedResolution, thinkingLevel, showToast, t.generationFailed]);
 
-    // v2.4: Outpainting — expand canvas in one direction, fill with AI
-    const handleOutpaint = useCallback(async (image: GeneratedImage, direction: 'left' | 'right' | 'up' | 'down', amount: number, targetAspect?: string) => {
+    // v2.4: Outpainting — expand canvas in one or more directions, fill with AI
+    // v3.0: ratio-driven padding, symmetric directions (horizontal/vertical), prompt-aware
+    const handleOutpaint = useCallback(async (image: GeneratedImage, direction: 'left' | 'right' | 'up' | 'down' | 'all' | 'horizontal' | 'vertical', amount: number, targetAspect?: string) => {
         if (isLoading) return;
         const dataUrl = image.imageDataUrl || image.thumbnailDataUrl;
         if (!dataUrl) return;
@@ -3837,32 +3830,80 @@ export default function App() {
         setCurrentImages([]);
         setLoadingMessage(language === 'it' ? 'Espandendo immagine...' : 'Expanding image...');
         try {
-            // Build padded canvas
             const img = await new Promise<HTMLImageElement>((resolve, reject) => {
                 const el = new Image();
                 el.onload = () => resolve(el);
                 el.onerror = reject;
                 el.src = dataUrl;
             });
-            const pad = Math.round((direction === 'left' || direction === 'right' ? img.width : img.height) * (amount / 100));
-            const newW = img.width + (direction === 'left' || direction === 'right' ? pad : 0);
-            const newH = img.height + (direction === 'up' || direction === 'down' ? pad : 0);
+
+            // Parse target aspect ratio into a numeric ratio (width/height)
+            let tr: number | null = null;
+            if (targetAspect) {
+                const [a, b] = targetAspect.split(':').map(Number);
+                if (a > 0 && b > 0) tr = a / b;
+            }
+
+            let padL = 0, padR = 0, padT = 0, padB = 0;
+            const fixedW = Math.round(img.width * (amount / 100));
+            const fixedH = Math.round(img.height * (amount / 100));
+
+            switch (direction) {
+                case 'all': {
+                    const p = Math.round(Math.min(img.width, img.height) * (amount / 100));
+                    padL = padR = padT = padB = p;
+                    break;
+                }
+                case 'horizontal': {
+                    const diff = tr !== null ? Math.max(0, Math.round(img.height * tr) - img.width) : fixedW * 2;
+                    padL = padR = Math.round(diff / 2);
+                    break;
+                }
+                case 'vertical': {
+                    const diff = tr !== null ? Math.max(0, Math.round(img.width / tr) - img.height) : fixedH * 2;
+                    padT = padB = Math.round(diff / 2);
+                    break;
+                }
+                case 'left':
+                    padL = tr !== null ? Math.max(0, Math.round(img.height * tr) - img.width) : fixedW;
+                    break;
+                case 'right':
+                    padR = tr !== null ? Math.max(0, Math.round(img.height * tr) - img.width) : fixedW;
+                    break;
+                case 'up':
+                    padT = tr !== null ? Math.max(0, Math.round(img.width / tr) - img.height) : fixedH;
+                    break;
+                case 'down':
+                    padB = tr !== null ? Math.max(0, Math.round(img.width / tr) - img.height) : fixedH;
+                    break;
+            }
+
+            const newW = img.width + padL + padR;
+            const newH = img.height + padT + padB;
+
+            if (newW === img.width && newH === img.height) {
+                showToast(language === 'it' ? 'Immagine già in questo formato' : 'Image already at this ratio', 'error');
+                return;
+            }
+
             const canvas = document.createElement('canvas');
             canvas.width = newW;
             canvas.height = newH;
             const ctx = canvas.getContext('2d')!;
             ctx.fillStyle = '#ffffff';
             ctx.fillRect(0, 0, newW, newH);
-            const dx = direction === 'right' ? 0 : direction === 'left' ? pad : 0;
-            const dy = direction === 'down' ? 0 : direction === 'up' ? pad : 0;
-            ctx.drawImage(img, dx, dy);
+            ctx.drawImage(img, padL, padT);
             const blob = await new Promise<Blob>((resolve) => canvas.toBlob(b => resolve(b!), 'image/png'));
             const paddedFile = new File([blob], 'outpaint.png', { type: 'image/png' });
 
-            const dirLabels = { left: 'left side', right: 'right side', up: 'top', down: 'bottom' };
-            const outpaintPrompt = `Seamlessly extend this image by filling the white area on the ${dirLabels[direction]}. Continue the scene naturally: match the style, lighting, perspective, colors, and content of the original image. The white area is the new region to generate.`;
+            const dirLabel: Record<typeof direction, string> = {
+                left: 'left side', right: 'right side', up: 'top', down: 'bottom',
+                all: 'all sides', horizontal: 'left and right sides', vertical: 'top and bottom',
+            };
+            const isMulti = ['all', 'horizontal', 'vertical'].includes(direction);
+            const userHint = editedPrompt.trim() ? ` User's creative intent: "${editedPrompt.trim()}".` : '';
+            const outpaintPrompt = `Seamlessly extend this image by filling the white area${isMulti ? 's' : ''} on the ${dirLabel[direction]}. Continue the scene naturally: match the style, lighting, perspective, colors, and content of the original image. The white area${isMulti ? 's are' : ' is'} the new region to generate.${userHint}`;
 
-            // Use user-selected ratio or snap to nearest valid one
             const VALID_RATIOS = ['1:1','1:4','1:8','2:3','3:2','3:4','4:1','4:3','4:5','5:4','8:1','9:16','16:9','21:9'];
             const pixelRatio = newW / newH;
             const autoAspect = VALID_RATIOS.reduce((best, r) => {
@@ -3886,7 +3927,7 @@ export default function App() {
             const newImage: GeneratedImage = {
                 id: crypto.randomUUID(),
                 imageDataUrl, thumbnailDataUrl,
-                prompt: `Outpaint ${direction} +${amount}% — ${image.prompt}`,
+                prompt: `Outpaint ${direction} → ${newAspect}${editedPrompt.trim() ? ` | "${editedPrompt.trim()}"` : ''}`,
                 aspectRatio: newAspect,
                 timestamp: Date.now(),
                 model: selectedModel,
@@ -3900,11 +3941,17 @@ export default function App() {
         } finally {
             setIsLoading(false);
         }
-    }, [isLoading, language, userApiKey, selectedModel, selectedResolution, thinkingLevel, showToast, t.generationFailed]);
+    }, [isLoading, language, userApiKey, selectedModel, selectedResolution, thinkingLevel, showToast, t.generationFailed, editedPrompt]);
 
-    // v2.4: Outpaint a reference image directly from the FAB
-    const handleOutpaintReference = useCallback(async (direction: 'left' | 'right' | 'up' | 'down', targetAspect?: string) => {
-        if (referenceImages.length === 0 || isLoading) return;
+    // v2.4: Outpaint from FAB — uses current generated image if available, otherwise first reference
+    const handleOutpaintReference = useCallback(async (direction: 'left' | 'right' | 'up' | 'down' | 'all' | 'horizontal' | 'vertical', targetAspect?: string) => {
+        if (isLoading) return;
+        // Prefer current generated image; fall back to first reference image
+        if (currentImages.length > 0) {
+            handleOutpaint(currentImages[0], direction, 50, targetAspect);
+            return;
+        }
+        if (referenceImages.length === 0) return;
         const file = referenceImages[0];
         const dataUrl = await new Promise<string>((resolve) => {
             const reader = new FileReader();
@@ -3919,7 +3966,7 @@ export default function App() {
             timestamp: Date.now(),
         };
         handleOutpaint(fakeImage, direction, 50, targetAspect);
-    }, [referenceImages, isLoading, handleOutpaint]);
+    }, [referenceImages, currentImages, isLoading, handleOutpaint]);
 
     // v0.8: Toggle favorite/bookmark
     const handleToggleFavorite = useCallback((imageId: string) => {
@@ -4243,9 +4290,9 @@ export default function App() {
         <LanguageContext.Provider value={{ language, setLanguage, t }}>
             <div className="h-screen w-screen bg-light-bg dark:bg-dark-bg text-light-text dark:text-dark-text flex flex-col font-sans">
                 <Header theme={theme} toggleTheme={toggleTheme} onOpenSettings={() => setIsSettingsOpen(true)} onOpenShortcuts={() => setIsShortcutsOpen(true)} accentColor={accentColor} onAccentColorChange={setAccentColor} onAccentColorReset={resetAccentColor} defaultAccentColor={defaultAccentColor} />
-                <main className="flex-1 flex flex-col lg:flex-row gap-4 lg:gap-6 px-4 pt-4 pb-32 lg:pb-28 overflow-y-auto lg:overflow-hidden">
+                <main className="flex-1 flex flex-col lg:flex-row gap-3 lg:gap-4 px-4 pt-3 pb-32 lg:pb-28 overflow-y-auto lg:overflow-hidden">
                     {/* --- Left Sidebar (only references/style/structure) --- */}
-                    <aside className="w-full lg:w-[280px] flex-shrink-0 bg-light-surface/50 dark:bg-dark-surface/30 backdrop-blur-xl rounded-3xl lg:overflow-y-auto lg:h-full custom-scrollbar order-2 lg:order-none">
+                    <aside className="w-full lg:w-[276px] flex-shrink-0 bg-light-surface/70 dark:bg-dark-surface/50 backdrop-blur-xl rounded-2xl border border-light-border/60 dark:border-white/[0.07] lg:overflow-y-auto lg:h-full custom-scrollbar order-1 lg:order-none shadow-sm">
                         <ReferencePanel
                             onAddImages={handleAddImages}
                             onRemoveImage={handleRemoveImage}
@@ -4283,7 +4330,47 @@ export default function App() {
                     </aside>
 
                     {/* --- Main Content --- */}
-                    <div className="flex-1 flex flex-col gap-2 lg:gap-6 min-w-0 h-full order-1 lg:order-none">
+                    <div className="flex-1 flex flex-col gap-2 lg:gap-3 min-w-0 h-full order-2 lg:order-none">
+
+                        {/* Generation Prompt — top of canvas, never hidden by FAB */}
+                        {(currentImages.length > 0 || isLoading) && (
+                            <div className="flex-shrink-0">
+                                <div className="w-full px-4 py-2.5 bg-light-surface/60 dark:bg-dark-surface/40 backdrop-blur-2xl rounded-2xl border border-light-border dark:border-dark-border/50 shadow-sm animate-fadeIn flex items-center gap-3">
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2 mb-0.5">
+                                            <span className="text-[9px] font-black uppercase tracking-widest text-light-text-muted dark:text-dark-text-muted">
+                                                <span className="w-1 h-2.5 rounded-full bg-brand-yellow inline-block mr-1.5 align-middle"></span>
+                                                {t.generationPromptTitle}
+                                            </span>
+                                            {(autoEnhance || isPromptEnhancedInternal) && (
+                                                <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-brand-yellow/20 text-brand-yellow text-[9px] font-bold uppercase tracking-wider">
+                                                    <SparklesIcon className="w-2.5 h-2.5" />
+                                                    AI Enhanced
+                                                </span>
+                                            )}
+                                        </div>
+                                        <p className="text-xs text-light-text dark:text-dark-text leading-relaxed line-clamp-1 hover:line-clamp-none transition-all duration-300 cursor-default">
+                                            {isEnhancing ? (
+                                                <span className="italic opacity-70 flex items-center gap-2 animate-pulse">
+                                                    <span className="w-1.5 h-1.5 bg-brand-yellow rounded-full inline-block"></span>
+                                                    {t.creativeEnhancementInProgress}
+                                                </span>
+                                            ) : (
+                                                isLoading ? (isPromptEnhancedInternal ? activeDisplayPrompt : editedPrompt) : (currentImages[0]?.prompt || editedPrompt)
+                                            )}
+                                        </p>
+                                    </div>
+                                    <button
+                                        onClick={() => handleCopyToClipboard(isLoading ? editedPrompt : (currentImages[0]?.prompt || ''))}
+                                        className="flex-shrink-0 p-1.5 rounded-lg bg-light-surface-accent dark:bg-dark-surface-accent border border-light-border dark:border-dark-border hover:border-brand-yellow/50 active:scale-95 transition-all"
+                                        title={t.copy}
+                                    >
+                                        <CopyIcon className="w-3.5 h-3.5 text-light-text-muted dark:text-dark-text-muted" />
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
                         <div className="lg:flex-1 lg:min-h-0 lg:overflow-hidden">
                             <ImageDisplay
                                 images={currentImages}
@@ -4297,89 +4384,35 @@ export default function App() {
                                 upscalingImageId={upscalingImageId}
                                 onSaveDna={handleSaveImageAsDna}
                                 onGenerateStoryboard={(img) => {
-                                    // Handle image translation to file for storyboard
                                     const file = dataURLtoFile(img.imageDataUrl || img.thumbnailDataUrl!, `storyboard-${img.id}.png`);
                                     handleOpenStoryboard(file);
                                 }}
-                                onQuickEdit={handleQuickEdit}
                                 onOutpaint={handleOutpaint}
-                                externalQuickEditTarget={quickEditSourceImage}
                                 reasoningText={reasoningText}
                                 loadingMessage={loadingMessage}
                             />
                         </div>
-
-                        {(currentImages.length > 0 || isLoading) && (
-                            <div className="flex-shrink-0 overflow-y-auto max-h-[300px] lg:max-h-[250px]">
-                                <div className="w-full p-4 bg-light-surface/60 dark:bg-dark-surface/40 backdrop-blur-2xl rounded-2xl border border-light-border dark:border-dark-border/50 shadow-lg animate-fadeIn">
-                                        <div className="flex justify-between items-start gap-4">
-                                            <div className="flex-1 min-w-0">
-                                                <div className="flex items-center gap-2 mb-1.5">
-                                                    <h4 className="text-[10px] lg:text-xs font-bold text-light-text-muted dark:text-dark-text-muted uppercase tracking-[0.1em]">{t.generationPromptTitle}</h4>
-                                                    {(autoEnhance || isPromptEnhancedInternal) && (
-                                                        <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-brand-yellow/20 text-brand-yellow text-[9px] font-bold uppercase tracking-wider animate-pulse">
-                                                            <SparklesIcon className="w-2.5 h-2.5" />
-                                                            AI Enhanced
-                                                        </span>
-                                                    )}
-                                                </div>
-                                                <p className="text-xs lg:text-sm text-light-text dark:text-dark-text leading-relaxed line-clamp-3 hover:line-clamp-none transition-all duration-300">
-                                                    {isEnhancing ? (
-                                                        <span className="italic opacity-70 flex items-center gap-2 animate-pulse">
-                                                            <span className="w-1.5 h-1.5 bg-brand-yellow rounded-full"></span>
-                                                            {t.creativeEnhancementInProgress}
-                                                        </span>
-                                                    ) : (
-                                                        isLoading ? (isPromptEnhancedInternal ? activeDisplayPrompt : editedPrompt) : (currentImages[0]?.prompt || editedPrompt)
-                                                    )}
-                                                </p>
-                                            </div>
-                                            <button
-                                                onClick={() => handleCopyToClipboard(isLoading ? editedPrompt : (currentImages[0]?.prompt || ''))}
-                                                className="flex-shrink-0 p-2 rounded-xl bg-light-surface-accent dark:bg-dark-surface-accent border border-light-border dark:border-dark-border hover:border-brand-yellow/50 active:scale-95 transition-all duration-200"
-                                                title={t.copy}
-                                            >
-                                                <CopyIcon className="w-4 h-4 text-light-text-muted dark:text-dark-text-muted group-hover:text-brand-yellow" />
-                                            </button>
-                                        </div>
-                                </div>
-                            </div>
-                        )}
                     </div>
 
                     {/* --- Right Column (Buttons + History) --- */}
-                    <div className="w-full lg:w-[320px] flex-shrink-0 flex flex-col gap-4 lg:overflow-y-auto custom-scrollbar lg:h-full lg:pr-1 order-3 lg:order-none">
-                        <div className="space-y-3 p-4 bg-light-surface/50 dark:bg-dark-surface/30 backdrop-blur-xl rounded-3xl">
-                            <button
-                                onClick={() => isLoading ? handleAbortGeneration() : handleGenerate()}
-                                disabled={isEnhancing}
-                                className={`w-full flex justify-center items-center gap-2 font-semibold py-3 rounded-xl transition-all duration-300 disabled:opacity-50 ${isLoading
-                                    ? 'bg-light-surface-accent dark:bg-dark-surface-accent text-brand-yellow border border-brand-yellow hover:bg-brand-yellow/10'
-                                    : 'bg-brand-yellow text-dark-bg hover:shadow-lg'
-                                    }`}
-                            >
-                                {isLoading ? (
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h12v12H6z"/></svg>
-                                ) : <SparklesIcon className="w-5 h-5" />}
-                                <span className={isLoading ? "text-sm" : ""}>{isLoading ? t.stopGeneration : t.generateButton}</span>
-                            </button>
-
+                    <div className="w-full lg:w-[308px] flex-shrink-0 flex flex-col gap-3 lg:overflow-y-auto custom-scrollbar lg:h-full lg:pr-0.5 order-3 lg:order-none">
+                        <div className="p-3 bg-light-surface/70 dark:bg-dark-surface/50 backdrop-blur-xl rounded-2xl border border-light-border/60 dark:border-white/[0.07] shadow-sm space-y-2">
                             {/* Secondary Queue button in sidebar */}
                             {isLoading && (
                                 <button
                                     onClick={() => handleGenerate()}
-                                    className="w-full py-2 rounded-xl bg-brand-yellow/10 text-brand-yellow border border-brand-yellow/20 text-xs font-bold hover:bg-brand-yellow/20 transition-all flex items-center justify-center gap-2"
+                                    className="w-full py-2 rounded-xl bg-brand-yellow/10 text-brand-yellow border border-brand-yellow/30 text-xs font-bold hover:bg-brand-yellow/20 transition-all flex items-center justify-center gap-2"
                                 >
-                                    <span><PlusIcon className="w-3.5 h-3.5" /></span> {t.addToQueue}
+                                    <PlusIcon className="w-3.5 h-3.5" /> {t.addToQueue}
                                 </button>
                             )}
-                            <div className="flex flex-col gap-3">
-                                <button onClick={handleUseAsReference} disabled={isActionDisabled || currentImages.length === 0 || referenceImages.length >= MAX_USER_IMAGES} className="w-full flex justify-center items-center gap-2 font-semibold py-2.5 rounded-xl border border-light-border dark:border-dark-border text-light-text dark:text-dark-text hover:border-brand-yellow hover:text-brand-yellow disabled:opacity-40 transition-all duration-200 group text-sm">
-                                    <CornerUpLeftIcon className="w-4 h-4 group-hover:text-brand-yellow transition-colors" />
+                            <div className="flex gap-2">
+                                <button onClick={handleUseAsReference} disabled={isActionDisabled || currentImages.length === 0 || referenceImages.length >= MAX_USER_IMAGES} className="flex-1 flex justify-center items-center gap-1.5 font-medium py-2 rounded-xl border border-light-border dark:border-dark-border/70 text-light-text-muted dark:text-dark-text-muted hover:border-brand-yellow/50 hover:text-brand-yellow disabled:opacity-50 transition-all duration-200 group text-xs">
+                                    <CornerUpLeftIcon className="w-3.5 h-3.5 text-brand-yellow/50 group-hover:text-brand-yellow transition-colors" />
                                     {t.useAsReference}
                                 </button>
-                                <button onClick={handleResetInterface} title={t.resetInterface} disabled={isActionDisabled} className="w-full flex justify-center items-center gap-2 font-semibold py-2.5 rounded-xl border border-light-border dark:border-dark-border text-light-text dark:text-dark-text hover:border-brand-yellow hover:text-brand-yellow disabled:opacity-40 transition-all duration-200 group text-sm">
-                                    <ReloadIcon className="w-4 h-4 group-hover:text-brand-yellow transition-colors" />
+                                <button onClick={handleResetInterface} title={t.resetInterface} disabled={isActionDisabled} className="flex-1 flex justify-center items-center gap-1.5 font-medium py-2 rounded-xl border border-light-border dark:border-dark-border/70 text-light-text-muted dark:text-dark-text-muted hover:border-brand-yellow/50 hover:text-brand-yellow disabled:opacity-50 transition-all duration-200 group text-xs">
+                                    <ReloadIcon className="w-3.5 h-3.5 text-brand-yellow/50 group-hover:text-brand-yellow transition-colors" />
                                     {t.resetInterface}
                                 </button>
                             </div>
@@ -4396,24 +4429,25 @@ export default function App() {
                             )}
 
                             {/* Tabs */}
-                            <div className="flex gap-2 bg-light-surface/50 dark:bg-dark-surface/30 backdrop-blur-xl rounded-2xl p-1">
+                            <div className="flex gap-1 bg-light-surface/70 dark:bg-dark-surface/50 backdrop-blur-xl rounded-xl border border-light-border/60 dark:border-white/[0.07] p-1 shadow-sm">
                                 <button
                                     onClick={() => setSidebarTab('history')}
-                                    className={`flex-1 py-2 px-4 rounded-xl text-sm font-medium transition-all ${sidebarTab === 'history'
-                                        ? 'bg-light-surface dark:bg-dark-surface text-light-text dark:text-dark-text shadow-sm'
-                                        : 'text-light-text-muted dark:text-dark-text-muted hover:bg-light-surface/50 dark:hover:bg-dark-surface/50'
+                                    className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${sidebarTab === 'history'
+                                        ? 'bg-white dark:bg-dark-surface-accent text-light-text dark:text-dark-text shadow-sm border border-light-border/60 dark:border-white/10'
+                                        : 'text-light-text-muted dark:text-dark-text-muted hover:text-light-text dark:hover:text-dark-text'
                                         }`}
                                 >
+                                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="12 8 12 12 14 14"/><circle cx="12" cy="12" r="9"/></svg>
                                     History
                                 </button>
                                 <button
                                     onClick={() => setSidebarTab('presets')}
-                                    className={`flex-1 py-2 px-4 rounded-xl text-sm font-medium transition-all ${sidebarTab === 'presets'
-                                        ? 'bg-light-surface dark:bg-dark-surface text-light-text dark:text-dark-text shadow-sm'
-                                        : 'text-light-text-muted dark:text-dark-text-muted hover:bg-light-surface/50 dark:hover:bg-dark-surface/50'
+                                    className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${sidebarTab === 'presets'
+                                        ? 'bg-white dark:bg-dark-surface-accent text-light-text dark:text-dark-text shadow-sm border border-light-border/60 dark:border-white/10'
+                                        : 'text-light-text-muted dark:text-dark-text-muted hover:text-light-text dark:hover:text-dark-text'
                                         }`}
                                 >
-                                    <StarIcon className="w-4 h-4 inline-block mr-1 -mt-0.5" filled={sidebarTab === 'presets'} />
+                                    <StarIcon className="w-3.5 h-3.5" filled={sidebarTab === 'presets'} />
                                     Presets
                                 </button>
                             </div>
@@ -4491,6 +4525,10 @@ export default function App() {
                     onOutpaintReference={handleOutpaintReference}
                     poseTransfer={poseTransfer}
                     onPoseTransferChange={setPoseTransfer}
+                    hasGeneratedImages={currentImages.length > 0}
+                    quickEditSourceImage={quickEditSourceImage}
+                    onQuickEdit={(instruction) => handleQuickEdit(quickEditSourceImage ?? currentImages[0], instruction)}
+                    onClearQuickEditSource={() => setQuickEditSourceImage(null)}
                 />
 
                 <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} onSave={handleSaveApiKey} currentApiKey={userApiKey} />

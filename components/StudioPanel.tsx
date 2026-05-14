@@ -46,19 +46,19 @@ const StudioPanel: React.FC<StudioPanelProps> = ({ t, studioConfig, setStudioCon
     return (
         <div className="space-y-3 animate-in fade-in duration-300">
             {/* Cinema Rig Section */}
-            <div className="border border-dark-border rounded-2xl overflow-hidden">
+            <div className="border border-light-border dark:border-dark-border rounded-2xl overflow-hidden">
                 <button
                     onClick={() => toggleSection('cinema')}
-                    className={`w-full flex items-center justify-between p-3 font-semibold transition-all ${openSection === 'cinema' ? 'bg-brand-yellow text-dark-bg' : 'text-dark-text hover:bg-white/5 bg-transparent'}`}
+                    className={`w-full flex items-center justify-between p-3 font-semibold transition-all ${openSection === 'cinema' ? 'bg-brand-yellow text-dark-bg' : 'text-light-text dark:text-dark-text hover:bg-black/[0.04] dark:hover:bg-white/5 bg-transparent'}`}
                 >
                     <div className="flex items-center gap-2 text-sm">
                         <CameraIcon className={`w-4 h-4 ${openSection === 'cinema' ? 'text-dark-bg' : 'text-brand-yellow'}`} />
                         <span>{t.studioCinemaRigTitle}</span>
                     </div>
-                    <ChevronDownIcon className={`w-4 h-4 transition-transform duration-300 ${openSection === 'cinema' ? 'rotate-180 text-dark-bg' : 'opacity-50 text-dark-text'}`} />
+                    <ChevronDownIcon className={`w-4 h-4 transition-transform duration-300 ${openSection === 'cinema' ? 'rotate-180 text-dark-bg' : 'opacity-50 text-light-text dark:text-dark-text'}`} />
                 </button>
                 {openSection === 'cinema' && (
-                    <div className="p-3 space-y-3 bg-white/5 border-t border-dark-border animate-in slide-in-from-top-1 duration-200">
+                    <div className="p-3 space-y-3 bg-black/5 dark:bg-white/5 border-t border-light-border dark:border-dark-border animate-in slide-in-from-top-1 duration-200">
                         {renderDropdown(t.studioCameraModel, studioConfig.camera, CAMERAS, (val) => updateConfig('camera', val))}
                         {renderDropdown(t.studioLensModel, studioConfig.lens, LENSES, (val) => updateConfig('lens', val))}
                         {renderDropdown(t.studioFocalLength, studioConfig.focal, FOCAL_LENGTHS, (val) => updateConfig('focal', val))}
@@ -67,19 +67,19 @@ const StudioPanel: React.FC<StudioPanelProps> = ({ t, studioConfig, setStudioCon
             </div>
 
             {/* Light Forge Section */}
-            <div className="border border-dark-border rounded-2xl overflow-hidden">
+            <div className="border border-light-border dark:border-dark-border rounded-2xl overflow-hidden">
                 <button
                     onClick={() => toggleSection('light')}
-                    className={`w-full flex items-center justify-between p-3 font-semibold transition-all ${openSection === 'light' ? 'bg-brand-yellow text-dark-bg' : 'text-dark-text hover:bg-white/5 bg-transparent'}`}
+                    className={`w-full flex items-center justify-between p-3 font-semibold transition-all ${openSection === 'light' ? 'bg-brand-yellow text-dark-bg' : 'text-light-text dark:text-dark-text hover:bg-black/[0.04] dark:hover:bg-white/5 bg-transparent'}`}
                 >
                     <div className="flex items-center gap-2 text-sm">
                         <LightbulbIcon className={`w-4 h-4 ${openSection === 'light' ? 'text-dark-bg' : 'text-brand-yellow'}`} />
                         <span>{t.studioLightForgeTitle}</span>
                     </div>
-                    <ChevronDownIcon className={`w-4 h-4 transition-transform duration-300 ${openSection === 'light' ? 'rotate-180 text-dark-bg' : 'opacity-50 text-dark-text'}`} />
+                    <ChevronDownIcon className={`w-4 h-4 transition-transform duration-300 ${openSection === 'light' ? 'rotate-180 text-dark-bg' : 'opacity-50 text-light-text dark:text-dark-text'}`} />
                 </button>
                 {openSection === 'light' && (
-                    <div className="p-3 space-y-3 bg-white/5 border-t border-dark-border animate-in slide-in-from-top-1 duration-200">
+                    <div className="p-3 space-y-3 bg-black/5 dark:bg-white/5 border-t border-light-border dark:border-dark-border animate-in slide-in-from-top-1 duration-200">
                         {renderDropdown(t.studioLightDirection, studioConfig.lightDir, LIGHT_DIRECTIONS, (val) => updateConfig('lightDir', val))}
 
                         <div className="space-y-1">
@@ -128,19 +128,19 @@ const StudioPanel: React.FC<StudioPanelProps> = ({ t, studioConfig, setStudioCon
             </div>
 
             {/* Wardrobe Studio Section */}
-            <div className="border border-dark-border rounded-2xl overflow-hidden">
+            <div className="border border-light-border dark:border-dark-border rounded-2xl overflow-hidden">
                 <button
                     onClick={() => toggleSection('wardrobe')}
-                    className={`w-full flex items-center justify-between p-3 font-semibold transition-all ${openSection === 'wardrobe' ? 'bg-brand-yellow text-dark-bg' : 'text-dark-text hover:bg-white/5 bg-transparent'}`}
+                    className={`w-full flex items-center justify-between p-3 font-semibold transition-all ${openSection === 'wardrobe' ? 'bg-brand-yellow text-dark-bg' : 'text-light-text dark:text-dark-text hover:bg-black/[0.04] dark:hover:bg-white/5 bg-transparent'}`}
                 >
                     <div className="flex items-center gap-2 text-sm">
                         <ShirtIcon className={`w-4 h-4 ${openSection === 'wardrobe' ? 'text-dark-bg' : 'text-brand-yellow'}`} />
                         <span>{t.studioWardrobeTitle}</span>
                     </div>
-                    <ChevronDownIcon className={`w-4 h-4 transition-transform duration-300 ${openSection === 'wardrobe' ? 'rotate-180 text-dark-bg' : 'opacity-50 text-dark-text'}`} />
+                    <ChevronDownIcon className={`w-4 h-4 transition-transform duration-300 ${openSection === 'wardrobe' ? 'rotate-180 text-dark-bg' : 'opacity-50 text-light-text dark:text-dark-text'}`} />
                 </button>
                 {openSection === 'wardrobe' && (
-                    <div className="p-3 space-y-3 bg-white/5 border-t border-dark-border animate-in slide-in-from-top-1 duration-200">
+                    <div className="p-3 space-y-3 bg-black/5 dark:bg-white/5 border-t border-light-border dark:border-dark-border animate-in slide-in-from-top-1 duration-200">
                         {renderDropdown(t.studioWardrobeGender, studioConfig.wardrobeGender, WARDROBE_CATEGORIES.gender, (val) => updateConfig('wardrobeGender', val))}
                         {renderDropdown(t.studioWardrobeTop, studioConfig.wardrobeTop, WARDROBE_CATEGORIES.tops, (val) => updateConfig('wardrobeTop', val))}
                         {renderDropdown(t.studioWardrobeOuter, studioConfig.wardrobeOuter, WARDROBE_CATEGORIES.outerwear, (val) => updateConfig('wardrobeOuter', val))}
@@ -151,25 +151,25 @@ const StudioPanel: React.FC<StudioPanelProps> = ({ t, studioConfig, setStudioCon
             </div>
 
             {/* Shot Grid Section */}
-            <div className="border border-dark-border rounded-2xl overflow-hidden">
+            <div className="border border-light-border dark:border-dark-border rounded-2xl overflow-hidden">
                 <button
                     onClick={() => toggleSection('shots')}
-                    className={`w-full flex items-center justify-between p-3 font-semibold transition-all ${openSection === 'shots' ? 'bg-brand-yellow text-dark-bg' : 'text-dark-text hover:bg-white/5 bg-transparent'}`}
+                    className={`w-full flex items-center justify-between p-3 font-semibold transition-all ${openSection === 'shots' ? 'bg-brand-yellow text-dark-bg' : 'text-light-text dark:text-dark-text hover:bg-black/[0.04] dark:hover:bg-white/5 bg-transparent'}`}
                 >
                     <div className="flex items-center gap-2 text-sm">
                         <LayoutGridIcon className={`w-4 h-4 ${openSection === 'shots' ? 'text-dark-bg' : 'text-brand-yellow'}`} />
                         <span>{t.studioShotGridTitle}</span>
                     </div>
-                    <ChevronDownIcon className={`w-4 h-4 transition-transform duration-300 ${openSection === 'shots' ? 'rotate-180 text-dark-bg' : 'opacity-50 text-dark-text'}`} />
+                    <ChevronDownIcon className={`w-4 h-4 transition-transform duration-300 ${openSection === 'shots' ? 'rotate-180 text-dark-bg' : 'opacity-50 text-light-text dark:text-dark-text'}`} />
                 </button>
                 {openSection === 'shots' && (
-                    <div className="p-3 bg-white/5 border-t border-dark-border animate-in slide-in-from-top-1 duration-200">
+                    <div className="p-3 bg-black/5 dark:bg-white/5 border-t border-light-border dark:border-dark-border animate-in slide-in-from-top-1 duration-200">
                         <div className="grid grid-cols-2 gap-2">
                             {SHOTS.map(shot => (
                                 <button
                                     key={shot.id}
                                     onClick={() => updateConfig('shot', shot.id)}
-                                    className={`px-2 py-2 rounded-xl text-[10px] font-bold transition-all border text-center ${studioConfig.shot === shot.id ? 'bg-brand-yellow text-dark-bg border-brand-yellow shadow-md' : 'bg-transparent border-dark-border opacity-60 hover:opacity-100 hover:border-brand-yellow'}`}
+                                    className={`px-2 py-2 rounded-xl text-[10px] font-bold transition-all border text-center ${studioConfig.shot === shot.id ? 'bg-brand-yellow text-dark-bg border-brand-yellow shadow-md' : 'bg-transparent border-light-border dark:border-dark-border opacity-60 hover:opacity-100 hover:border-brand-yellow'}`}
                                 >
                                     {shot.name}
                                 </button>
@@ -180,25 +180,25 @@ const StudioPanel: React.FC<StudioPanelProps> = ({ t, studioConfig, setStudioCon
             </div>
 
             {/* Focus Section */}
-            <div className="border border-dark-border rounded-2xl overflow-hidden">
+            <div className="border border-light-border dark:border-dark-border rounded-2xl overflow-hidden">
                 <button
                     onClick={() => toggleSection('focus')}
-                    className={`w-full flex items-center justify-between p-3 font-semibold transition-all ${openSection === 'focus' ? 'bg-brand-yellow text-dark-bg' : 'text-dark-text hover:bg-white/5 bg-transparent'}`}
+                    className={`w-full flex items-center justify-between p-3 font-semibold transition-all ${openSection === 'focus' ? 'bg-brand-yellow text-dark-bg' : 'text-light-text dark:text-dark-text hover:bg-black/[0.04] dark:hover:bg-white/5 bg-transparent'}`}
                 >
                     <div className="flex items-center gap-2 text-sm">
                         <TargetIcon className={`w-4 h-4 ${openSection === 'focus' ? 'text-dark-bg' : 'text-brand-yellow'}`} />
                         <span>{t.studioFocusTitle || 'Focus & Depth'}</span>
                     </div>
-                    <ChevronDownIcon className={`w-4 h-4 transition-transform duration-300 ${openSection === 'focus' ? 'rotate-180 text-dark-bg' : 'opacity-50 text-dark-text'}`} />
+                    <ChevronDownIcon className={`w-4 h-4 transition-transform duration-300 ${openSection === 'focus' ? 'rotate-180 text-dark-bg' : 'opacity-50 text-light-text dark:text-dark-text'}`} />
                 </button>
                 {openSection === 'focus' && (
-                    <div className="p-3 bg-white/5 border-t border-dark-border animate-in slide-in-from-top-1 duration-200">
+                    <div className="p-3 bg-black/5 dark:bg-white/5 border-t border-light-border dark:border-dark-border animate-in slide-in-from-top-1 duration-200">
                         <div className="grid grid-cols-2 gap-2">
                             {FOCUS_PRESETS.map(fp => (
                                 <button
                                     key={fp.id}
                                     onClick={() => updateConfig('focus', studioConfig.focus === fp.id ? '' : fp.id)}
-                                    className={`px-2 py-2 rounded-xl text-[10px] font-bold transition-all border text-center ${studioConfig.focus === fp.id ? 'bg-brand-yellow text-dark-bg border-brand-yellow shadow-md' : 'bg-transparent border-dark-border opacity-60 hover:opacity-100 hover:border-brand-yellow'}`}
+                                    className={`px-2 py-2 rounded-xl text-[10px] font-bold transition-all border text-center ${studioConfig.focus === fp.id ? 'bg-brand-yellow text-dark-bg border-brand-yellow shadow-md' : 'bg-transparent border-light-border dark:border-dark-border opacity-60 hover:opacity-100 hover:border-brand-yellow'}`}
                                 >
                                     {fp.name}
                                 </button>
@@ -208,7 +208,7 @@ const StudioPanel: React.FC<StudioPanelProps> = ({ t, studioConfig, setStudioCon
                 )}
             </div>
 
-            {/* 🚀 Production Kits (Production Workflow) */}
+            {/* Production Kits */}
             <div className="pt-2 space-y-2">
                 <div className="flex items-center gap-2 px-1">
                     <SparklesIcon className="w-3.5 h-3.5" />
@@ -219,7 +219,6 @@ const StudioPanel: React.FC<StudioPanelProps> = ({ t, studioConfig, setStudioCon
                         <button
                             key={kit.id}
                             onClick={() => {
-                                // If clicking the same kit, deselect it. Otherwise, select the new kit.
                                 const newKitValue = studioConfig.kit === kit.id ? null : kit.id;
                                 updateConfig('kit', newKitValue);
                             }}
