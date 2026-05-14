@@ -111,6 +111,16 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
     const [showResolutionMenu, setShowResolutionMenu] = useState(false);
     const [showThinkingMenu, setShowThinkingMenu] = useState(false);
     const [showOutpaintRefMenu, setShowOutpaintRefMenu] = useState(false);
+
+    const closeAllMenus = () => {
+        setShowAspectMenu(false);
+        setShowNumImagesMenu(false);
+        setShowAdvancedPanel(false);
+        setShowModelMenu(false);
+        setShowResolutionMenu(false);
+        setShowThinkingMenu(false);
+        setShowOutpaintRefMenu(false);
+    };
     const [outpaintRefRatio, setOutpaintRefRatio] = useState('Auto');
     const [quickEditText, setQuickEditText] = useState('');
     const [justPasteFailed, setJustPasteFailed] = useState(false);
@@ -439,7 +449,7 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                         {/* 1. Pill Settings Group */}
                         <div className="flex items-center bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 rounded-xl p-0.5 gap-0.5 h-10 flex-shrink-0">
                             <button
-                                onClick={(e) => { e.stopPropagation(); setShowAspectMenu(!showAspectMenu); setShowNumImagesMenu(false); setShowModelMenu(false); setShowResolutionMenu(false); }}
+                                onClick={(e) => { e.stopPropagation(); const next = !showAspectMenu; closeAllMenus(); setShowAspectMenu(next); }}
                                 className={`h-full px-3 rounded-[10px] text-[10px] font-bold transition-all flex items-center gap-1.5 whitespace-nowrap ${showAspectMenu ? 'bg-brand-yellow text-dark-bg shadow-sm' : 'bg-brand-yellow/10 text-brand-yellow/80 hover:bg-brand-yellow/15'}`}
                             >
                                 {getAspectRatioIcon(aspectRatio)}
@@ -450,7 +460,7 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                         {/* 2. Model Group */}
                         <div className="flex items-center bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 rounded-xl p-0.5 gap-0.5 h-10 flex-shrink-0">
                             <button
-                                onClick={(e) => { e.stopPropagation(); setShowModelMenu(!showModelMenu); setShowAspectMenu(false); setShowNumImagesMenu(false); setShowResolutionMenu(false); }}
+                                onClick={(e) => { e.stopPropagation(); const next = !showModelMenu; closeAllMenus(); setShowModelMenu(next); }}
                                 className={`h-full px-3 rounded-[10px] text-[10px] font-bold transition-all flex items-center gap-1.5 whitespace-nowrap ${showModelMenu ? 'bg-brand-yellow text-dark-bg shadow-sm' : 'bg-brand-yellow/10 text-brand-yellow/80 hover:bg-brand-yellow/15'}`}
                             >
                                 <StarIcon className="w-3.5 h-3.5" />
@@ -460,14 +470,14 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                                 <>
                                     <div className="w-[1px] h-4 bg-brand-yellow/20 mx-0.5" />
                                     <button
-                                        onClick={(e) => { e.stopPropagation(); setShowResolutionMenu(!showResolutionMenu); setShowAspectMenu(false); setShowNumImagesMenu(false); setShowModelMenu(false); setShowThinkingMenu(false); }}
+                                        onClick={(e) => { e.stopPropagation(); const next = !showResolutionMenu; closeAllMenus(); setShowResolutionMenu(next); }}
                                         className={`h-full px-3 rounded-[10px] text-[10px] font-bold transition-all whitespace-nowrap ${showResolutionMenu ? 'bg-brand-yellow text-dark-bg shadow-sm' : 'bg-brand-yellow/10 text-brand-yellow/80 hover:bg-brand-yellow/15'}`}
                                     >
                                         {selectedResolution.toUpperCase()}
                                     </button>
                                     <div className="w-[1px] h-4 bg-brand-yellow/20 mx-0.5" />
                                     <button
-                                        onClick={(e) => { e.stopPropagation(); setShowThinkingMenu(!showThinkingMenu); setShowAspectMenu(false); setShowNumImagesMenu(false); setShowModelMenu(false); setShowResolutionMenu(false); }}
+                                        onClick={(e) => { e.stopPropagation(); const next = !showThinkingMenu; closeAllMenus(); setShowThinkingMenu(next); }}
                                         className={`h-full px-3 rounded-[10px] text-[10px] font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${showThinkingMenu ? 'bg-brand-yellow text-dark-bg shadow-sm' : 'bg-brand-yellow/10 text-brand-yellow/80 hover:bg-brand-yellow/15'}`}
                                         aria-label={`Thinking depth: ${thinkingLevel}`}
                                         title="Thinking level — controls internal reasoning depth"
@@ -547,21 +557,54 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
 
                             {/* Outpaint pill — visible when reference images are loaded OR when there are generated images */}
                             {(referenceCount > 0 || hasGeneratedImages) && (
-                                <div className="h-full">
+                                <div className="h-full relative">
                                     <button
-                                        onClick={(e) => { e.stopPropagation(); setShowOutpaintRefMenu(v => !v); setShowAdvancedPanel(false); setShowModelMenu(false); setShowResolutionMenu(false); setShowThinkingMenu(false); }}
+                                        onClick={(e) => { e.stopPropagation(); const next = !showOutpaintRefMenu; closeAllMenus(); setShowOutpaintRefMenu(next); }}
                                         className={`h-full flex items-center gap-1.5 px-2.5 rounded-xl transition-all border text-[10px] font-bold ${showOutpaintRefMenu ? 'bg-brand-yellow/15 border-brand-yellow/30 text-brand-yellow' : 'bg-black/5 dark:bg-white/5 border-transparent text-light-text-muted dark:text-dark-text-muted hover:bg-white/5'}`}
                                         title="Outpaint reference image"
                                     >
                                         <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="5" y="5" width="14" height="14" rx="1"/><path d="M5 12H2M22 12h-3M12 5V2M12 22v-3"/></svg>
                                         <span className="hidden sm:inline">Outpaint</span>
                                     </button>
+                                    {/* Outpaint menu — anchored above this button */}
+                                    {showOutpaintRefMenu && (
+                                        <div className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 bg-light-surface/95 dark:bg-dark-surface/95 backdrop-blur-[50px] border border-light-border dark:border-white/10 rounded-2xl shadow-2xl p-3 animate-slideUp z-[80] w-[220px]" onClick={e => e.stopPropagation()}>
+                                            <p className="text-[9px] font-black uppercase tracking-widest text-light-text-muted dark:text-dark-text-muted mb-1.5">Target ratio</p>
+                                            <select value={outpaintRefRatio} onChange={e => setOutpaintRefRatio(e.target.value)} className="w-full mb-3 bg-black/5 dark:bg-white/10 text-light-text dark:text-white text-[10px] rounded-lg px-2 py-1.5 border border-light-border dark:border-white/10 outline-none cursor-pointer">
+                                                <option value="Auto">Auto (match source)</option>
+                                                {['1:1','4:3','3:4','16:9','9:16','3:2','2:3','21:9','4:5','5:4'].map(r => (
+                                                    <option key={r} value={r}>{r}</option>
+                                                ))}
+                                            </select>
+                                            <p className="text-[9px] font-black uppercase tracking-widest text-light-text-muted dark:text-dark-text-muted mb-1.5">Expand</p>
+                                            <div className="flex gap-1 mb-1">
+                                                <button onClick={() => { onOutpaintReference('horizontal', outpaintRefRatio === 'Auto' ? undefined : outpaintRefRatio); setShowOutpaintRefMenu(false); }} className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-black/5 dark:bg-white/5 hover:bg-brand-yellow/20 hover:text-brand-yellow text-light-text-muted dark:text-white/60 transition-colors text-[10px] font-bold" title="Expand left and right equally"><span>←→</span><span>Horiz</span></button>
+                                                <button onClick={() => { onOutpaintReference('vertical', outpaintRefRatio === 'Auto' ? undefined : outpaintRefRatio); setShowOutpaintRefMenu(false); }} className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-black/5 dark:bg-white/5 hover:bg-brand-yellow/20 hover:text-brand-yellow text-light-text-muted dark:text-white/60 transition-colors text-[10px] font-bold" title="Expand top and bottom equally"><span>↑↓</span><span>Vert</span></button>
+                                            </div>
+                                            <button onClick={() => { onOutpaintReference('all', outpaintRefRatio === 'Auto' ? undefined : outpaintRefRatio); setShowOutpaintRefMenu(false); }} className="w-full flex items-center justify-center gap-1.5 py-2 mb-2 rounded-lg bg-black/5 dark:bg-white/5 hover:bg-brand-yellow/20 hover:text-brand-yellow text-light-text-muted dark:text-white/60 transition-colors text-[10px] font-bold">
+                                                <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M7 7l-4 -4m0 0h3m-3 0v3M17 7l4 -4m0 0h-3m3 0v3M7 17l-4 4m0 0h3m-3 0v-3M17 17l4 4m0 0h-3m3 0v-3"/></svg>
+                                                <span>All sides</span>
+                                            </button>
+                                            <p className="text-[9px] font-black uppercase tracking-widest text-light-text-muted dark:text-dark-text-muted mb-1.5">Single side</p>
+                                            <div className="grid grid-cols-3 gap-1">
+                                                <div />
+                                                <button onClick={() => { onOutpaintReference('up', outpaintRefRatio === 'Auto' ? undefined : outpaintRefRatio); setShowOutpaintRefMenu(false); }} className="aspect-square rounded-lg bg-black/5 dark:bg-white/5 hover:bg-brand-yellow/20 hover:text-brand-yellow text-light-text-muted dark:text-white/60 flex items-center justify-center transition-colors text-sm">↑</button>
+                                                <div />
+                                                <button onClick={() => { onOutpaintReference('left', outpaintRefRatio === 'Auto' ? undefined : outpaintRefRatio); setShowOutpaintRefMenu(false); }} className="aspect-square rounded-lg bg-black/5 dark:bg-white/5 hover:bg-brand-yellow/20 hover:text-brand-yellow text-light-text-muted dark:text-white/60 flex items-center justify-center transition-colors text-sm">←</button>
+                                                <div className="aspect-square rounded-lg bg-light-border/30 dark:bg-white/5 flex items-center justify-center"><svg className="w-2.5 h-2.5 text-light-text-muted dark:text-white/20" viewBox="0 0 24 24" fill="currentColor"><rect x="8" y="8" width="8" height="8" rx="1"/></svg></div>
+                                                <button onClick={() => { onOutpaintReference('right', outpaintRefRatio === 'Auto' ? undefined : outpaintRefRatio); setShowOutpaintRefMenu(false); }} className="aspect-square rounded-lg bg-black/5 dark:bg-white/5 hover:bg-brand-yellow/20 hover:text-brand-yellow text-light-text-muted dark:text-white/60 flex items-center justify-center transition-colors text-sm">→</button>
+                                                <div />
+                                                <button onClick={() => { onOutpaintReference('down', outpaintRefRatio === 'Auto' ? undefined : outpaintRefRatio); setShowOutpaintRefMenu(false); }} className="aspect-square rounded-lg bg-black/5 dark:bg-white/5 hover:bg-brand-yellow/20 hover:text-brand-yellow text-light-text-muted dark:text-white/60 flex items-center justify-center transition-colors text-sm">↓</button>
+                                                <div />
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             )}
 
                             {/* Advanced Settings Cog */}
                             <button
-                                onClick={(e) => { e.stopPropagation(); setShowAdvancedPanel(!showAdvancedPanel); setShowAspectMenu(false); setShowNumImagesMenu(false); setShowModelMenu(false); setShowResolutionMenu(false); setShowThinkingMenu(false); }}
+                                onClick={(e) => { e.stopPropagation(); const next = !showAdvancedPanel; closeAllMenus(); setShowAdvancedPanel(next); }}
                                 className={`h-full w-10 flex items-center justify-center rounded-xl transition-all hover:scale-105 active:scale-90 border border-transparent ${showAdvancedPanel ? 'bg-brand-yellow/20 text-brand-yellow border-brand-yellow/20 ring-2 ring-brand-yellow/10' : 'bg-black/5 dark:bg-white/5 text-light-text-muted dark:text-dark-text-muted hover:bg-white/10 hover:text-light-text/70 hover:rotate-90 grayscale saturate-0'}`}
                                 title={t.advancedSettings}
                             >
@@ -747,64 +790,6 @@ const FloatingActionBar: React.FC<FloatingActionBarProps> = ({
                                 {thinkingLevel === level && <CheckIcon className="w-3.5 h-3.5 text-brand-yellow ml-auto" />}
                             </button>
                         ))}
-                    </div>
-                )}
-                {/* Outpaint Direction Menu */}
-                {showOutpaintRefMenu && (
-                    <div className="absolute bottom-full mb-4 right-0 bg-light-surface/95 dark:bg-dark-surface/95 backdrop-blur-[50px] border border-light-border dark:border-white/10 rounded-2xl shadow-2xl p-3 animate-slideUp z-[80] w-[220px]" onClick={e => e.stopPropagation()}>
-                        {/* Target aspect ratio */}
-                        <p className="text-[9px] font-black uppercase tracking-widest text-light-text-muted dark:text-dark-text-muted mb-1.5">Target ratio</p>
-                        <select
-                            value={outpaintRefRatio}
-                            onChange={e => setOutpaintRefRatio(e.target.value)}
-                            className="w-full mb-3 bg-black/5 dark:bg-white/10 text-light-text dark:text-white text-[10px] rounded-lg px-2 py-1.5 border border-light-border dark:border-white/10 outline-none cursor-pointer"
-                        >
-                            <option value="Auto">Auto (match source)</option>
-                            {['1:1','4:3','3:4','16:9','9:16','3:2','2:3','21:9','4:5','5:4'].map(r => (
-                                <option key={r} value={r}>{r}</option>
-                            ))}
-                        </select>
-
-                        {/* Symmetric directions */}
-                        <p className="text-[9px] font-black uppercase tracking-widest text-light-text-muted dark:text-dark-text-muted mb-1.5">Expand</p>
-                        <div className="flex gap-1 mb-1">
-                            <button
-                                onClick={() => { onOutpaintReference('horizontal', outpaintRefRatio === 'Auto' ? undefined : outpaintRefRatio); setShowOutpaintRefMenu(false); }}
-                                className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-black/5 dark:bg-white/5 hover:bg-brand-yellow/20 hover:text-brand-yellow text-light-text-muted dark:text-white/60 transition-colors text-[10px] font-bold"
-                                title="Expand left and right equally"
-                            >
-                                <span>←→</span><span>Horiz</span>
-                            </button>
-                            <button
-                                onClick={() => { onOutpaintReference('vertical', outpaintRefRatio === 'Auto' ? undefined : outpaintRefRatio); setShowOutpaintRefMenu(false); }}
-                                className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-black/5 dark:bg-white/5 hover:bg-brand-yellow/20 hover:text-brand-yellow text-light-text-muted dark:text-white/60 transition-colors text-[10px] font-bold"
-                                title="Expand top and bottom equally"
-                            >
-                                <span>↑↓</span><span>Vert</span>
-                            </button>
-                        </div>
-                        <button
-                            onClick={() => { onOutpaintReference('all', outpaintRefRatio === 'Auto' ? undefined : outpaintRefRatio); setShowOutpaintRefMenu(false); }}
-                            className="w-full flex items-center justify-center gap-1.5 py-2 mb-2 rounded-lg bg-black/5 dark:bg-white/5 hover:bg-brand-yellow/20 hover:text-brand-yellow text-light-text-muted dark:text-white/60 transition-colors text-[10px] font-bold"
-                            title="Expand all sides equally"
-                        >
-                            <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M7 7l-4 -4m0 0h3m-3 0v3M17 7l4 -4m0 0h-3m3 0v3M7 17l-4 4m0 0h3m-3 0v-3M17 17l4 4m0 0h-3m3 0v-3"/></svg>
-                            <span>All sides</span>
-                        </button>
-
-                        {/* Single direction arrows */}
-                        <p className="text-[9px] font-black uppercase tracking-widest text-light-text-muted dark:text-dark-text-muted mb-1.5">Single side</p>
-                        <div className="grid grid-cols-3 gap-1">
-                            <div />
-                            <button onClick={() => { onOutpaintReference('up', outpaintRefRatio === 'Auto' ? undefined : outpaintRefRatio); setShowOutpaintRefMenu(false); }} className="aspect-square rounded-lg bg-black/5 dark:bg-white/5 hover:bg-brand-yellow/20 hover:text-brand-yellow text-light-text-muted dark:text-white/60 flex items-center justify-center transition-colors text-sm">↑</button>
-                            <div />
-                            <button onClick={() => { onOutpaintReference('left', outpaintRefRatio === 'Auto' ? undefined : outpaintRefRatio); setShowOutpaintRefMenu(false); }} className="aspect-square rounded-lg bg-black/5 dark:bg-white/5 hover:bg-brand-yellow/20 hover:text-brand-yellow text-light-text-muted dark:text-white/60 flex items-center justify-center transition-colors text-sm">←</button>
-                            <div className="aspect-square rounded-lg bg-light-border/30 dark:bg-white/5 flex items-center justify-center"><svg className="w-2.5 h-2.5 text-light-text-muted dark:text-white/20" viewBox="0 0 24 24" fill="currentColor"><rect x="8" y="8" width="8" height="8" rx="1"/></svg></div>
-                            <button onClick={() => { onOutpaintReference('right', outpaintRefRatio === 'Auto' ? undefined : outpaintRefRatio); setShowOutpaintRefMenu(false); }} className="aspect-square rounded-lg bg-black/5 dark:bg-white/5 hover:bg-brand-yellow/20 hover:text-brand-yellow text-light-text-muted dark:text-white/60 flex items-center justify-center transition-colors text-sm">→</button>
-                            <div />
-                            <button onClick={() => { onOutpaintReference('down', outpaintRefRatio === 'Auto' ? undefined : outpaintRefRatio); setShowOutpaintRefMenu(false); }} className="aspect-square rounded-lg bg-black/5 dark:bg-white/5 hover:bg-brand-yellow/20 hover:text-brand-yellow text-light-text-muted dark:text-white/60 flex items-center justify-center transition-colors text-sm">↓</button>
-                            <div />
-                        </div>
                     </div>
                 )}
                 </div>{/* end FAB inner relative wrapper */}
