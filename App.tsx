@@ -3263,11 +3263,7 @@ export default function App() {
                 })
             );
 
-            if (isTask) {
-                lastQueueResultRef.current = newImages;
-            } else {
-                setCurrentImages(newImages);
-            }
+            setCurrentImages(newImages);
             setHistory(prev => [...newImages, ...prev].slice(0, MAX_HISTORY_ITEMS));
 
         } catch (error: any) {
@@ -3307,16 +3303,7 @@ export default function App() {
     // v2.5: when the queue drains and loading finishes, push the last task result to canvas
     useEffect(() => {
         if (!isLoading) {
-            isProcessingQueueRef.current = false; // Reset mutex when generation completes
-
-            // v2.5: If queue is now empty and we have a pending queue result, show it on canvas.
-            // This handles the case where setCurrentImages(newImages) inside handleGenerate was
-            // batched/overwritten by the next task's setCurrentImages([]) start call.
-            const pendingResult = lastQueueResultRef.current;
-            if (queue.length === 0 && pendingResult !== null) {
-                setCurrentImages(pendingResult);
-                lastQueueResultRef.current = null;
-            }
+            isProcessingQueueRef.current = false;
         }
         if (!isLoading && !isProcessingQueueRef.current && queue.length > 0) {
             isProcessingQueueRef.current = true;
@@ -3738,6 +3725,8 @@ export default function App() {
 
     // v0.8: Re-roll handler - regenerate with same settings but new seed
     const handleReroll = useCallback(async (image: GeneratedImage) => {
+        const controller = new AbortController();
+        abortControllerRef.current = controller;
         setIsLoading(true);
         setCurrentImages([]);
         try {
@@ -3758,7 +3747,7 @@ export default function App() {
                 image.model || selectedModel,
                 image.resolution || selectedResolution,
                 undefined,
-                undefined,
+                controller.signal,
                 false, // v1.4: No grounding for recreate
                 undefined,
                 thinkingLevel
@@ -3780,9 +3769,11 @@ export default function App() {
             setHistory(prev => [newImage, ...prev].slice(0, MAX_HISTORY_ITEMS));
             showToast(t.variantGenerated, 'success');
         } catch (error: any) {
+            if (controller.signal.aborted) return;
             console.error("Re-roll failed", error);
             showToast(error.message || t.generationFailed, 'error');
         } finally {
+            abortControllerRef.current = null;
             setIsLoading(false);
         }
     }, [referenceImages, styleReferenceImage, structureImage, userApiKey, language, preciseReference, showToast, t.generationFailed]);
@@ -3793,6 +3784,8 @@ export default function App() {
         const dataUrl = image.imageDataUrl || image.thumbnailDataUrl;
         if (!dataUrl) return;
         setQuickEditSourceImage(null); // clear history target after submitting
+        const controller = new AbortController();
+        abortControllerRef.current = controller;
         setIsLoading(true);
         setCurrentImages([]);
         setLoadingMessage(language === 'it' ? 'Applicando modifica...' : 'Applying edit...');
@@ -3808,7 +3801,7 @@ export default function App() {
                 '', '', language,
                 false,
                 selectedModel, selectedResolution,
-                undefined, undefined, false,
+                undefined, controller.signal, false,
                 false, undefined, thinkingLevel
             );
             const thumbnailDataUrl = await createThumbnailDataUrl(imageDataUrl);
@@ -3825,8 +3818,10 @@ export default function App() {
             setHistory(prev => [newImage, ...prev].slice(0, MAX_HISTORY_ITEMS));
             showToast(language === 'it' ? 'Modifica applicata!' : 'Edit applied!', 'success');
         } catch (error: any) {
+            if (controller.signal.aborted) return;
             showToast(error.message || t.generationFailed, 'error');
         } finally {
+            abortControllerRef.current = null;
             setIsLoading(false);
         }
     }, [isLoading, language, userApiKey, selectedModel, selectedResolution, thinkingLevel, showToast, t.generationFailed]);
