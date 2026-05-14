@@ -1,0 +1,56 @@
+SOURCE: services/geminiService.ts ~line 228
+FUNCTION: extractCharacterDnaMulti (multiple images)
+MODEL: gemini-3.1-flash-image-preview
+NOTE: ${numImages} is replaced at runtime with the actual number of images
+
+--- EN ---
+You are analyzing ${numImages} images of the SAME subject from different angles/views.
+(Nano Banana 2 supports up to 14 reference images — leverage all provided views.)
+
+TASK: Produce a UNIFIED, COMPLETE DNA that synthesizes ALL views into a single
+generation-ready reference.
+
+STEP 1 — VIEW IDENTIFICATION: For each image, identify: angle
+(front/back/left/right/3-4/top/low), lighting conditions, and any unique information
+only visible from that view.
+
+STEP 2 — UNIFIED DNA: Merge all observations into one complete description covering:
+1. SUBJECT TYPE: person / product / object / animal — be exact
+2. PRIMARY FEATURES: dominant visual traits consistent across ALL angles
+3. ANGLE-SPECIFIC DETAILS: details only visible from certain views — clearly label which angle
+4. MATERIALS & TEXTURES: full surface description (fabric type, finish, reflectivity, grain)
+5. COLOR SYSTEM: dominant palette with precise color names or hex references
+6. PROPORTIONS & SILHOUETTE: overall shape language, weight distribution, scale impression
+7. DISTINCTIVE MARKS: anything that makes this subject immediately identifiable
+
+OUTPUT — return valid JSON only:
+{
+  "viewDescriptions": ["[angle]: description", ...],
+  "unifiedDna": "Single dense paragraph combining all views, ready for prompt injection..."
+}
+
+--- IT ---
+Stai analizzando ${numImages} immagini dello STESSO soggetto da diverse angolazioni.
+(Nano Banana 2 supporta fino a 14 immagini di riferimento — sfrutta tutte le viste fornite.)
+
+COMPITO: Produci un DNA UNIFICATO e COMPLETO che sintetizzi TUTTE le viste
+in un unico riferimento pronto per la generazione.
+
+STEP 1 — IDENTIFICAZIONE VISTE: Per ogni immagine, identifica: angolazione
+(frontale/posteriore/sinistra/destra/3-4/dall'alto/dal basso),
+condizioni di luce, informazioni uniche visibili solo da quella vista.
+
+STEP 2 — DNA UNIFICATO: Fondi tutte le osservazioni in un'unica descrizione completa:
+1. TIPO DI SOGGETTO: persona / prodotto / oggetto / animale — sii preciso
+2. CARATTERISTICHE PRIMARIE: tratti visivi dominanti consistenti in TUTTE le angolazioni
+3. DETTAGLI PER ANGOLAZIONE: dettagli visibili solo da certe viste — indica chiaramente da quale
+4. MATERIALI E TEXTURE: descrizione completa delle superfici (tipo tessuto, finitura, riflettività, grana)
+5. SISTEMA COLORI: palette dominante con nomi precisi o riferimenti esadecimali
+6. PROPORZIONI E SILHOUETTE: linguaggio della forma generale, distribuzione del peso, impressione di scala
+7. SEGNI DISTINTIVI: tutto ciò che rende questo soggetto immediatamente riconoscibile
+
+OUTPUT — restituisci solo JSON valido:
+{
+  "viewDescriptions": ["[angolazione]: descrizione", ...],
+  "unifiedDna": "Paragrafo denso singolo che combina tutte le viste, pronto per iniezione in prompt..."
+}

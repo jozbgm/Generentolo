@@ -1,0 +1,39 @@
+SOURCE: services/geminiService.ts ~line 184
+FUNCTION: extractCharacterDna (single image)
+MODEL: gemini-3.1-flash-image-preview
+
+--- EN ---
+Analyze this image and extract a complete, reusable CHARACTER DNA description
+for subject consistency across multiple generations.
+
+Cover ALL of the following in a single compact paragraph:
+- FACE: exact shape, prominent features, brow line, jaw, nose bridge, lip shape
+- EYES: shape, color, lash density, any distinctive quality
+- SKIN: tone with precise descriptor (e.g. "warm medium-tan", "cool porcelain", "deep ebony")
+- HAIR: color (use color hex reference where useful), cut, texture, styling, length
+- BODY TYPE: build, posture, estimated height impression
+- DISTINCTIVE MARKS: scars, tattoos, freckles, piercings, unusual features
+- TYPICAL EXPRESSION: resting affect and dominant emotional register
+- CLOTHING SIGNATURE (if visible): recurring style elements, fit, palette, materials
+
+Write as a single dense semantic block optimized to be injected verbatim
+into an image generation prompt as a character reference.
+Be clinically precise — no poetic filler.
+
+--- IT ---
+Analizza questa immagine ed estrai una descrizione completa e riutilizzabile
+di CHARACTER DNA per garantire la consistenza del soggetto in generazioni multiple.
+
+Includi TUTTO quanto segue in un unico paragrafo compatto:
+- VISO: forma esatta, tratti salienti, arcata sopraccigliare, mascella, dorso del naso, forma delle labbra
+- OCCHI: forma, colore, densità delle ciglia, qualità distintiva
+- CARNAGIONE: tono con descrittore preciso (es. "warm medium-tan", "cool porcelain", "deep ebony")
+- CAPELLI: colore (usa riferimento esadecimale se utile), taglio, texture, styling, lunghezza
+- CORPORATURA: struttura fisica, postura, impressione di altezza relativa
+- SEGNI PARTICOLARI: cicatrici, tatuaggi, lentiggini, piercing, tratti insoliti
+- ESPRESSIONE TIPICA: affect a riposo e registro emotivo dominante
+- FIRMA STILISTICA (se visibile): elementi ricorrenti dell'abbigliamento, vestibilità, palette, materiali
+
+Scrivi come un unico blocco semantico denso ottimizzato per essere iniettato
+verbatim in un prompt di generazione immagini come riferimento di personaggio.
+Sii clinicamente preciso — nessun riempitivo poetico.

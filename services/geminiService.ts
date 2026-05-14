@@ -37,11 +37,23 @@ export const getReasoningPlan = async (
         const ai = getAiClient(userApiKey);
 
         const systemPrompt = language === 'it'
-            ? "Sei un Art Director esperto. In base al prompt fornito, descrivi brevemente (max 2 frasi) come intendi impostare l'immagine (luci, composizione, mood). Sii professionale e ispiratore. Non usare introduzioni come 'Ecco il piano'."
-            : "You are an expert Art Director. Based on the provided prompt, briefly describe (max 2 sentences) how you plan to set up the image (lighting, composition, mood). Be professional and inspiring. Do not use intros like 'Here is the plan'.";
+            ? `Sei un Creative Director specializzato in fotografia pubblicitaria ed editoriale.
+In base al prompt fornito, scrivi un brief professionale sintetico (max 2 frasi)
+che descriva il tuo approccio registico: specifica il setup luci per nome
+(es. "three-point softbox", "Rembrandt", "luce d'ora dorata in controluce con lunghe ombre"),
+l'intenzione compositiva (es. "regola dei terzi", "spazio negativo",
+"soggetto in primo piano stretto su ambiente sfocato") e il registro emotivo dell'immagine.
+Sii preciso e ispirante. Scrivi direttamente — nessuna frase introduttiva.`
+            : `You are a Creative Director specializing in advertising and editorial photography.
+Based on the provided prompt, write a concise professional brief (max 2 sentences)
+describing your directorial approach: specify the lighting setup by name
+(e.g. "three-point softbox", "Rembrandt", "golden-hour backlight with long shadows"),
+the compositional intent (e.g. "rule of thirds", "negative space", "tight foreground subject
+against blurred environment"), and the emotional register of the image.
+Be precise and inspiring. Write directly — no introductory phrases.`;
 
         const result = await ai.models.generateContent({
-            model: "gemini-3-flash-preview",
+            model: "gemini-3.1-pro-preview",
             contents: [{ role: "user", parts: [{ text: systemPrompt + "\n\nPrompt: " + prompt }] }],
             config: { safetySettings: SAFETY_SETTINGS_PERMISSIVE }
         });
@@ -182,11 +194,41 @@ export const extractCharacterDna = async (
         const imagePart = await fileToGenerativePart(resizedBlob);
 
         const systemPrompt = language === 'it'
-            ? "Analizza questa immagine e descrivi i tratti somatici e l'aspetto fisico del soggetto principale in modo estremamente dettagliato per scopi di 'character consistency'. Descrivi: forma del viso, colore e taglio dei capelli, forma e colore degli occhi, carnagione, segni particolari, espressione tipica e corporatura. Crea una descrizione semantica 'compatta' ma completa che possa essere usata come riferimento per generare lo stesso personaggio in altri contesti. Sii preciso e professionale."
-            : "Analyze this image and describe the physical features and appearance of the main subject in extreme detail for 'character consistency' purposes. Describe: face shape, hair color and style, eye shape and color, skin tone, unique marks, typical expression, and body type. Create a 'compact' but complete semantic description that can be used as a reference to generate the same character in other contexts. Be precise and professional.";
+            ? `Analizza questa immagine ed estrai una descrizione completa e riutilizzabile
+di CHARACTER DNA per garantire la consistenza del soggetto in generazioni multiple.
+
+Includi TUTTO quanto segue in un unico paragrafo compatto:
+- VISO: forma esatta, tratti salienti, arcata sopraccigliare, mascella, dorso del naso, forma delle labbra
+- OCCHI: forma, colore, densità delle ciglia, qualità distintiva
+- CARNAGIONE: tono con descrittore preciso (es. "warm medium-tan", "cool porcelain", "deep ebony")
+- CAPELLI: colore (usa riferimento esadecimale se utile), taglio, texture, styling, lunghezza
+- CORPORATURA: struttura fisica, postura, impressione di altezza relativa
+- SEGNI PARTICOLARI: cicatrici, tatuaggi, lentiggini, piercing, tratti insoliti
+- ESPRESSIONE TIPICA: affect a riposo e registro emotivo dominante
+- FIRMA STILISTICA (se visibile): elementi ricorrenti dell'abbigliamento, vestibilità, palette, materiali
+
+Scrivi come un unico blocco semantico denso ottimizzato per essere iniettato
+verbatim in un prompt di generazione immagini come riferimento di personaggio.
+Sii clinicamente preciso — nessun riempitivo poetico.`
+            : `Analyze this image and extract a complete, reusable CHARACTER DNA description
+for subject consistency across multiple generations.
+
+Cover ALL of the following in a single compact paragraph:
+- FACE: exact shape, prominent features, brow line, jaw, nose bridge, lip shape
+- EYES: shape, color, lash density, any distinctive quality
+- SKIN: tone with precise descriptor (e.g. "warm medium-tan", "cool porcelain", "deep ebony")
+- HAIR: color (use color hex reference where useful), cut, texture, styling, length
+- BODY TYPE: build, posture, estimated height impression
+- DISTINCTIVE MARKS: scars, tattoos, freckles, piercings, unusual features
+- TYPICAL EXPRESSION: resting affect and dominant emotional register
+- CLOTHING SIGNATURE (if visible): recurring style elements, fit, palette, materials
+
+Write as a single dense semantic block optimized to be injected verbatim
+into an image generation prompt as a character reference.
+Be clinically precise — no poetic filler.`;
 
         const result = await ai.models.generateContent({
-            model: "gemini-3-flash-preview", // v2.0: Restored Gemini 3.0 Flash as per user request
+            model: "gemini-3.1-pro-preview",
             contents: [{
                 role: "user",
                 parts: [
@@ -226,45 +268,57 @@ export const extractMultiImageDna = async (
         const numImages = imageFiles.length;
 
         const systemPrompt = language === 'it'
-            ? `Stai analizzando ${numImages} immagini dello STESSO soggetto da diverse angolazioni/viste.
+            ? `Stai analizzando ${numImages} immagini dello STESSO soggetto da diverse angolazioni.
+(Nano Banana 2 supporta fino a 14 immagini di riferimento — sfrutta tutte le viste fornite.)
 
-COMPITO: Crea una descrizione DNA UNIFICATA e COMPLETA che combini le informazioni di TUTTE le viste.
+COMPITO: Produci un DNA UNIFICATO e COMPLETO che sintetizzi TUTTE le viste
+in un unico riferimento pronto per la generazione.
 
-Per ogni immagine, identifica prima che vista rappresenta (frontale, posteriore, laterale sinistra/destra, dall'alto, ecc.).
+STEP 1 — IDENTIFICAZIONE VISTE: Per ogni immagine, identifica: angolazione
+(frontale/posteriore/sinistra/destra/3-4/dall'alto/dal basso),
+condizioni di luce, informazioni uniche visibili solo da quella vista.
 
-Poi crea una DESCRIZIONE UNICA E COMPLETA che includa:
-1. IDENTIFICAZIONE: Che tipo di soggetto è (persona, prodotto, oggetto, animale, ecc.)
-2. CARATTERISTICHE PRINCIPALI: Le caratteristiche visive dominanti visibili da TUTTE le angolazioni
-3. DETTAGLI PER VISTA: Dettagli specifici visibili solo da certe angolazioni
-4. COLORI E MATERIALI: Palette colori completa e materiali/texture
-5. DIMENSIONI E PROPORZIONI: Forma generale e proporzioni
+STEP 2 — DNA UNIFICATO: Fondi tutte le osservazioni in un'unica descrizione completa:
+1. TIPO DI SOGGETTO: persona / prodotto / oggetto / animale — sii preciso
+2. CARATTERISTICHE PRIMARIE: tratti visivi dominanti consistenti in TUTTE le angolazioni
+3. DETTAGLI PER ANGOLAZIONE: dettagli visibili solo da certe viste — indica chiaramente da quale
+4. MATERIALI E TEXTURE: descrizione completa delle superfici (tipo tessuto, finitura, riflettività, grana)
+5. SISTEMA COLORI: palette dominante con nomi precisi o riferimenti esadecimali
+6. PROPORZIONI E SILHOUETTE: linguaggio della forma generale, distribuzione del peso, impressione di scala
+7. SEGNI DISTINTIVI: tutto ciò che rende questo soggetto immediatamente riconoscibile
 
-FORMATO OUTPUT (JSON):
+OUTPUT — restituisci solo JSON valido:
 {
-  "viewDescriptions": ["descrizione vista 1", "descrizione vista 2", ...],
-  "unifiedDna": "Descrizione DNA completa e unificata..."
+  "viewDescriptions": ["[angolazione]: descrizione", ...],
+  "unifiedDna": "Paragrafo denso singolo che combina tutte le viste, pronto per iniezione in prompt..."
 }`
             : `You are analyzing ${numImages} images of the SAME subject from different angles/views.
+(Nano Banana 2 supports up to 14 reference images — leverage all provided views.)
 
-TASK: Create a UNIFIED and COMPLETE DNA description that combines information from ALL views.
+TASK: Produce a UNIFIED, COMPLETE DNA that synthesizes ALL views into a single
+generation-ready reference.
 
-For each image, first identify what view it represents (front, back, left side, right side, top, etc.).
+STEP 1 — VIEW IDENTIFICATION: For each image, identify: angle
+(front/back/left/right/3-4/top/low), lighting conditions, and any unique information
+only visible from that view.
 
-Then create a SINGLE COMPLETE DESCRIPTION that includes:
-1. IDENTIFICATION: What type of subject this is (person, product, object, animal, etc.)
-2. KEY FEATURES: Dominant visual features visible from ALL angles
-3. VIEW-SPECIFIC DETAILS: Details only visible from certain angles
-4. COLORS AND MATERIALS: Complete color palette and materials/textures
-5. DIMENSIONS AND PROPORTIONS: Overall shape and proportions
+STEP 2 — UNIFIED DNA: Merge all observations into one complete description covering:
+1. SUBJECT TYPE: person / product / object / animal — be exact
+2. PRIMARY FEATURES: dominant visual traits consistent across ALL angles
+3. ANGLE-SPECIFIC DETAILS: details only visible from certain views — clearly label which angle
+4. MATERIALS & TEXTURES: full surface description (fabric type, finish, reflectivity, grain)
+5. COLOR SYSTEM: dominant palette with precise color names or hex references
+6. PROPORTIONS & SILHOUETTE: overall shape language, weight distribution, scale impression
+7. DISTINCTIVE MARKS: anything that makes this subject immediately identifiable
 
-OUTPUT FORMAT (JSON):
+OUTPUT — return valid JSON only:
 {
-  "viewDescriptions": ["view 1 description", "view 2 description", ...],
-  "unifiedDna": "Complete unified DNA description..."
+  "viewDescriptions": ["[angle]: description", ...],
+  "unifiedDna": "Single dense paragraph combining all views, ready for prompt injection..."
 }`;
 
         const result = await ai.models.generateContent({
-            model: "gemini-3-flash-preview", // v2.0: Restored Gemini 3.0 Flash as per user request
+            model: "gemini-3.1-pro-preview",
             contents: [{
                 role: "user",
                 parts: [
@@ -321,19 +375,63 @@ export const generateSinglePromptFromImage = async (imageFiles: File[], styleFil
         }
 
         const stylePromptPart = styleFile
-            ? (language === 'it' ? "Applica lo stile visivo (colori, illuminazione, atmosfera) dell'immagine di stile fornita a questo scenario." : "Apply the visual style (colors, lighting, mood) from the provided style image to this scenario.")
+            ? (language === 'it'
+                ? `Analizza l'immagine di riferimento stilistica ed estrai: color science (cast caldo/freddo, livello di saturazione), qualità della luce (dura/morbida, direzione), registro texturale e mood tonale generale. Integra questi come proprietà intrinseche della nuova scena — non come aggiunte stilistiche.`
+                : `Analyze the style reference image and extract: color science (warm/cool cast, saturation level), lighting quality (hard/soft, direction), textural register, and overall tonal mood. Integrate these as intrinsic properties of the new scene — not as stylistic add-ons.`)
             : "";
 
         const structurePromptPart = structureFile
-            ? (language === 'it' ? "L'ultima immagine è una guida strutturale: mantieni la stessa composizione spaziale, layout e geometria nella generazione." : "The last image is a structural guide: maintain the same spatial composition, layout and geometry in the generation.")
+            ? (language === 'it'
+                ? `L'ultima immagine è una guida strutturale: replica la sua esatta geometria spaziale — posizionamento dei soggetti, linea dell'orizzonte, rapporto di profondità primo piano/sfondo e distribuzione dello spazio negativo — sostituendo tutti i contenuti con i nuovi soggetti.`
+                : `The final image is a structural guide: replicate its exact spatial geometry — subject placement, horizon line, foreground-to-background depth ratio, and negative space distribution — while replacing all content with the new subjects.`)
             : "";
 
         const promptText = language === 'it'
-            ? `Sei un art director e un esperto di prompt per la generazione di immagini pubblicitarie. Analizza TUTTI i soggetti e gli elementi in TUTTE le immagini di riferimento fornite. Il tuo obiettivo è creare UN UNICO prompt per un'immagine pubblicitaria professionale e creativa che COMBINI in modo intelligente e artistico i soggetti delle diverse immagini. Invece di descrivere semplicemente le immagini, immagina uno scenario di advertising ideale che unisca i soggetti. ${stylePromptPart} ${structurePromptPart} Sii dettagliato e mira a produrre un'immagine di alta qualità. Restituisci solo la stringa del prompt.`
-            : `You are an art director and an expert prompt engineer for advertising imagery. Analyze ALL subjects and elements in ALL provided reference images. Your goal is to create A SINGLE professional and creative advertising image prompt that intelligently and artistically COMBINES the subjects from the different images. Instead of just describing the images, imagine an ideal advertising scenario that merges the subjects. ${stylePromptPart} ${structurePromptPart} Be detailed and aim to produce a high-quality image. Return only the prompt string.`;
+            ? `Sei un Art Director pubblicitario e prompt engineer esperto per Nano Banana 2
+(Gemini 3.1 Flash Image). Hai accesso a tutte le immagini di riferimento fornite
+(fino a 14 input supportati nativamente — usale tutte).
+
+COMPITO: Crea UN UNICO prompt per un'immagine pubblicitaria professionale che COMBINI
+intelligentemente i soggetti di tutte le immagini in uno scenario visivo unificato.
+
+Segui questa struttura con precisione:
+[SOGGETTO] Identifica e descrivi ogni soggetto da ogni immagine di riferimento con precisione fisica.
+[AZIONE] Definisci l'interazione o la dinamica tra i soggetti nella scena.
+[LOCATION/CONTESTO] Descrivi l'ambiente: superfici, architettura, atmosfera, ora del giorno.
+[COMPOSIZIONE] Specifica il framing: posizione della camera (a occhio / basso angolo / aereo / 3/4), profondità di campo (f-stop), focale (es. "obiettivo ritratto 85mm", "grandangolo 35mm"), stratificazione primo/secondo/sfondo.
+[STILE] Definisci il DNA visivo: nome del setup luci, color grade, hardware fotografico (es. "girato su Hasselblad H6D", "color science Fujifilm Provia 100F", "obiettivo anamorfco con lievi flares orizzontali").
+
+${stylePromptPart}
+${structurePromptPart}
+
+REGOLE:
+- Usa il positive framing: descrivi cosa C'È nella scena, non cosa dovrebbe essere assente
+- Scrivi come un unico paragrafo fluente — niente liste, niente tag
+- Restituisci SOLO la stringa del prompt`
+            : `You are an advertising Art Director and expert prompt engineer for Nano Banana 2
+(Gemini 3.1 Flash Image). You have access to all provided reference images
+(up to 14 inputs are natively supported — use all of them).
+
+TASK: Create ONE single, professional advertising image prompt that intelligently
+COMBINES the subjects from all provided images into a unified visual scenario.
+
+Follow this structure precisely:
+[SUBJECT] Identify and describe each subject from each reference image with physical precision.
+[ACTION] Define the interaction or dynamic between subjects in the scene.
+[LOCATION/CONTEXT] Describe the environment — surfaces, architecture, atmosphere, time of day.
+[COMPOSITION] Specify framing: camera position (eye-level / low angle / aerial / 3/4 view), depth of field (f-stop), focal length (e.g. "85mm portrait lens", "35mm wide"), foreground/midground/background layering.
+[STYLE] Define the visual DNA: lighting setup by name, color grade, photographic hardware (e.g. "shot on Hasselblad H6D", "Fujifilm Provia 100F color science", "anamorphic lens with subtle horizontal flares").
+
+${stylePromptPart}
+${structurePromptPart}
+
+RULES:
+- Use positive framing: describe what IS in the scene, not what should be absent
+- Write as a single flowing paragraph — no lists, no tags
+- Return ONLY the prompt string`;
 
         const result = await ai.models.generateContent({
-            model: 'gemini-3-flash-preview',
+            model: 'gemini-3.1-pro-preview',
             contents: {
                 parts: [
                     ...imageParts,
@@ -421,7 +519,7 @@ CRITICAL RULE: If you identify multiple distinct subject types across the images
 For all tools, ensure the \`options\` array contains a wide variety of choices, at least 15-20 specific and creative options directly inspired by ALL the provided images. The goal is to provide professional-level control. Return a JSON array of objects, where each object has "name", "label" (in English), and "options" (in English) keys.`;
 
         const result = await ai.models.generateContent({
-            model: 'gemini-3-flash-preview',
+            model: 'gemini-3.1-pro-preview',
             contents: {
                 parts: [
                     ...imageParts,
@@ -459,15 +557,43 @@ export const rewritePromptWithOptions = async (currentPrompt: string, toolSelect
         const ai = getAiClient(userApiKey);
 
         const systemInstruction = language === 'it'
-            ? `Sei un assistente AI che perfeziona i prompt per un modello di generazione di immagini. Riscrivi il prompt dell'utente per incorporare in modo fluido e creativo le opzioni selezionate. Il prompt finale deve essere un'unica istruzione coerente. Non aggiungere testo di conversazione o spiegazioni. Restituisci solo il testo del prompt riscritto.`
-            : `You are an AI assistant that refines prompts for an image generation model. Rewrite the user's prompt to seamlessly and creatively incorporate their selected options. The final prompt should be a single, coherent instruction. Do not add any conversational text or explanations. Return only the rewritten prompt text.`;
+            ? `Sei un prompt engineer specializzato in Nano Banana 2 (Gemini 3.1 Flash Image).
+Riscrivi il prompt dell'utente per incorporare fluidamente le opzioni selezionate
+rispettando queste regole non negoziabili:
+
+1. LINGUAGGIO NATURALE: Scrivi in prosa fluente — mai come lista di tag separati da virgola.
+2. POSITIVE FRAMING: Descrivi ciò che C'È presente. Sostituisci le negazioni
+   (es. "nessun disordine sullo sfondo") con il loro equivalente positivo
+   (es. "sfondo studio pulito e minimale").
+3. SPECIFICITÀ: Traduci i descrittori generici in precisi
+   (es. "buona illuminazione" → "luce Rembrandt direzionale morbida da sinistra camera";
+   "realistico" → "girato su Sony A7R V, 85mm f/1.4, luce naturale dalla finestra").
+4. ISTRUZIONE SINGOLA E COERENTE: L'output finale deve leggersi come un unico prompt unificato,
+   non come concatenazione di istruzioni separate.
+
+Restituisci SOLO il prompt riscritto — nessun commento, nessuna spiegazione.`
+            : `You are a prompt engineer specializing in Nano Banana 2 (Gemini 3.1 Flash Image).
+Rewrite the user's prompt to seamlessly incorporate their selected options
+following these non-negotiable rules:
+
+1. NATURAL LANGUAGE: Write in flowing prose — never as comma-separated tags or keyword lists.
+2. POSITIVE FRAMING: Describe what IS present. Replace any negations
+   (e.g. "no background clutter") with their positive equivalent
+   (e.g. "clean, minimal studio background").
+3. SPECIFICITY: Translate generic descriptors into precise ones
+   (e.g. "good lighting" → "soft directional Rembrandt lighting from camera-left";
+   "realistic" → "shot on Sony A7R V, 85mm f/1.4, natural window light").
+4. SINGLE COHERENT INSTRUCTION: The final output must read as one unified prompt,
+   not a concatenation of separate instructions.
+
+Return ONLY the rewritten prompt — no commentary, no explanations.`;
 
         const userMessage = language === 'it'
             ? `Riscrivi questo prompt: "${currentPrompt}" per includere questi elementi: ${toolSelections}.`
             : `Rewrite this prompt: "${currentPrompt}" to include these elements: ${toolSelections}.`;
 
         const result = await ai.models.generateContent({
-            model: 'gemini-3-flash-preview',
+            model: 'gemini-3.1-pro-preview',
             contents: { parts: [{ text: userMessage }] },
             config: {
                 systemInstruction: systemInstruction,
@@ -490,15 +616,55 @@ export const rewritePromptWithStyleImage = async (currentPrompt: string, styleFi
         const stylePart = await fileToGenerativePart(styleFile);
 
         const systemInstruction = language === 'it'
-            ? "Sei un direttore artistico esperto. Analizza l'immagine fornita per il suo stile artistico, la palette di colori, l'illuminazione e l'atmosfera generale. Riscrivi il prompt dell'utente per incorporare in modo creativo questi elementi stilistici. Il nuovo prompt deve essere un'istruzione diretta e suggestiva per un'IA di generazione di immagini. Restituisci solo il testo del prompt riscritto."
-            : "You are an expert art director. Analyze the provided image for its artistic style, color palette, lighting, and overall mood. Rewrite the user's prompt to creatively incorporate these stylistic elements. The new prompt should be a direct, inspiring instruction for an image generation AI. Return only the rewritten prompt text.";
+            ? `Sei un Art Director esperto e colorist. Analizza l'immagine di riferimento stilistica fornita
+ed estrai il suo completo DNA visivo nelle seguenti dimensioni:
+
+- ILLUMINAZIONE: qualità (dura/morbida/diffusa), direzione (frontale/laterale/controluce/dall'alto),
+  nome del setup se identificabile (es. "Rembrandt", "butterfly", "split",
+  "luce outdoor coperta", "luce laterale da finestra")
+- COLOR SCIENCE: cast dominante (caldo/freddo/neutro), registro di saturazione
+  (desaturato/naturale/vivido), colore delle ombre (es. "ombre teal", "neri caldi sollevati"),
+  comportamento delle alte luci (bruciate/mantenute/cremose)
+- LINGUAGGIO CAMERA: lunghezza focale apparente, profondità di campo,
+  eventuale firma hardware identificabile (es. rendering colore Fujifilm,
+  compressione medio formato, ratio anamorfco widescreen)
+- REGISTRO TEXTURALE: presenza di grana, carattere della nitidezza
+  (clinica/morbida/con alazione), stile di rendering delle superfici
+- TEMPERATURA DEL MOOD: registro emotivo in 2-3 parole precise
+  (es. "malinconia quieta", "tensione elettrica", "nostalgia assolata")
+
+Riscrivi poi il prompt dell'utente integrando queste proprietà stilistiche
+come qualità intrinseche della scena — non come etichette stilistiche.
+Solo positive framing: descrivi ciò che C'È, non ciò da evitare.
+Restituisci SOLO il testo del prompt riscritto.`
+            : `You are an expert Art Director and colorist. Analyze the provided style reference image
+and extract its complete visual DNA across these dimensions:
+
+- LIGHTING: quality (hard/soft/diffused), direction (front/side/back/top),
+  setup name if identifiable (e.g. "Rembrandt", "butterfly", "split",
+  "overcast outdoor fill", "window sidelight")
+- COLOR SCIENCE: dominant cast (warm/cool/neutral), saturation register
+  (desaturated/natural/vivid), shadow color (e.g. "teal shadows", "warm lifted blacks"),
+  highlight behavior (blown/retained/creamy)
+- CAMERA LANGUAGE: apparent focal length, depth of field,
+  any identifiable hardware signature (e.g. Fujifilm color rendering,
+  medium format compression, anamorphic widescreen ratio)
+- TEXTURAL REGISTER: grain presence, sharpness character
+  (clinical/soft/halation), surface rendering style
+- MOOD TEMPERATURE: emotional register in 2-3 precise words
+  (e.g. "quiet melancholy", "electric tension", "sun-drenched nostalgia")
+
+Then rewrite the user's prompt by integrating these stylistic properties
+as intrinsic scene qualities — not as stylistic labels.
+Positive framing only: describe what IS present, not what to avoid.
+Return ONLY the rewritten prompt text.`;
 
         const userMessage = language === 'it'
             ? `Prompt utente da riscrivere: "${currentPrompt}"`
             : `User prompt to rewrite: "${currentPrompt}"`;
 
         const result = await ai.models.generateContent({
-            model: 'gemini-3-flash-preview',
+            model: 'gemini-3.1-pro-preview',
             contents: { parts: [stylePart, { text: userMessage }] },
             config: {
                 systemInstruction: systemInstruction,
@@ -786,7 +952,7 @@ Examples of correct responses:
 3. cosmetic product`;
 
         const analysisResult = await ai.models.generateContent({
-            model: 'gemini-3-flash-preview',
+            model: 'gemini-3.1-pro-preview',
             contents: { parts: [...imageParts, { text: analysisPrompt }] },
             config: { temperature: 0.1, safetySettings: SAFETY_SETTINGS_PERMISSIVE }
         });
@@ -831,7 +997,7 @@ Original: "put the logo on the man's hoodie"
 Rewritten: "Create the man from Image 1 wearing a hoodie with the logo from Image 2"`;
 
         const enrichmentResult = await ai.models.generateContent({
-            model: 'gemini-3-flash-preview',
+            model: 'gemini-3.1-pro-preview',
             contents: { parts: [{ text: enrichmentPrompt }] },
             config: { temperature: 0.2, safetySettings: SAFETY_SETTINGS_PERMISSIVE }
         });
@@ -863,7 +1029,7 @@ export const extractStyleDescription = async (styleFile: File, userApiKey: strin
             : "Analyze this image and describe ONLY the stylistic elements: color palette, lighting type, mood/atmosphere, photographic or artistic style, textures. DO NOT describe the subjects or objects present, only the visual style. Be concise (max 2-3 sentences).";
 
         const result = await ai.models.generateContent({
-            model: 'gemini-3-flash-preview',
+            model: 'gemini-3.1-pro-preview',
             contents: { parts: [stylePart, { text: promptText }] },
             config: { temperature: 0.3, safetySettings: SAFETY_SETTINGS_PERMISSIVE }
         });
@@ -894,7 +1060,7 @@ const _analyzeFile = async (
         const ai = getAiClient(userApiKey);
         const imagePart = await fileToGenerativePart(file);
         const result = await (ai as any).models.generateContent({
-            model: 'gemini-3-flash-preview',
+            model: 'gemini-3.1-pro-preview',
             contents: [{ role: 'user', parts: [imagePart, { text: systemPrompt }] }],
             config: { safetySettings: SAFETY_SETTINGS_PERMISSIVE }
         });
@@ -1661,15 +1827,86 @@ export const generateNegativePrompt = async (prompt: string, referenceFiles: Fil
         }
 
         const systemInstruction = language === 'it'
-            ? "Sei un assistente AI per un generatore di immagini professionale. Il tuo compito è creare un 'prompt negativo' per migliorare la qualità dell'immagine. Analizza il prompt principale dell'utente E le eventuali immagini di riferimento fornite. Il prompt negativo deve essere un elenco di termini separati da virgola da EVITARE, come difetti artistici comuni (es. 'brutto, deforme, sfocato, anatomia scadente, mani fatte male, arti extra'). REGOLA FONDAMENTALE: NON aggiungere termini per elementi che sono chiaramente PRESENTI e INTENZIONALI nelle immagini di riferimento. Ad esempio, se un'immagine di riferimento contiene testo o un logo, NON includere 'testo' o 'logo' nel prompt negativo. Restituisci SOLO la stringa di termini."
-            : "You are an AI assistant for a professional image generator. Your task is to create a 'negative prompt' to improve image quality. Analyze the user's main prompt AND any provided reference images. The negative prompt should be a comma-separated list of terms to AVOID, such as common artistic flaws (e.g., 'ugly, deformed, blurry, poor anatomy, bad hands, extra limbs'). CRITICAL RULE: Do NOT add terms for things that are clearly PRESENT and INTENTIONAL in the reference images. For example, if a reference image contains text or a logo, DO NOT include 'text' or 'logo' in the negative prompt. Return ONLY the string of terms.";
+            ? `Sei un prompt engineer per Nano Banana 2 (Gemini 3.1 Flash Image).
+
+NOTA SUL MODELLO: Nano Banana 2 risponde meglio al positive framing che ai prompt negativi.
+Il tuo compito principale è generare una LISTA NEGATIVA SEMANTICA — un insieme mirato di termini che,
+iniettati come vincoli "da evitare:", aiuta a sopprimere gli artefatti di generazione comuni
+specifici per questo tipo di prompt.
+
+PASSI DI ANALISI:
+1. Esamina il prompt principale dell'utente per il tipo di soggetto
+   (persona / prodotto / oggetto / scena / architettura)
+2. Esamina le eventuali immagini di riferimento per elementi INTENZIONALI
+   (testo, loghi, oggetti specifici, design grafico) — NON includerli mai nella lista negativa
+3. Seleziona SOLO le categorie di artefatti rilevanti per questo specifico tipo di soggetto:
+
+   ANATOMICI (solo quando sono presenti persone/animali):
+   dita extra, dita fuse, mani deformate, arti flottanti, tratti facciali asimmetrici,
+   occhi extra, collo troppo lungo, proporzioni corporee distorte
+
+   TECNICI (sempre rilevanti):
+   motion blur, distorsione obiettivo, sovraesposizione, aberrazione cromatica,
+   artefatti compressione JPEG, pixelatura, pattern moire
+
+   COMPOSITIVI (sempre rilevanti):
+   teste tagliate, soggetti duplicati, corpi che si fondono, orizzonte inclinato
+
+   QUALITÀ SUPERFICIALE (sempre rilevanti):
+   texture pelle plasticosa, colori sovrasaturati, aloni HDR artificiali,
+   watermark, rumore visibile
+
+   SPECIFICI PRODOTTI (solo quando prodotti/oggetti sono il soggetto):
+   disallineamento etichette, testo packaging distorto, proporzioni logo errate,
+   riflessi superficiali che oscurano i dettagli del prodotto
+
+OUTPUT: Una lista di termini da evitare separata da virgola — concisa, specifica,
+rilevante per questo esatto prompt. Massimo 20 termini.
+NON includere mai termini per elementi intenzionalmente presenti nei riferimenti.
+Restituisci SOLO la stringa di termini — nessuna spiegazione, nessun preambolo.`
+            : `You are a prompt engineer for Nano Banana 2 (Gemini 3.1 Flash Image).
+
+IMPORTANT MODEL NOTE: Nano Banana 2 responds better to positive framing than to negative prompts.
+Your primary task is to generate a SEMANTIC NEGATIVE LIST — a targeted set of terms that,
+when injected as "avoid:" constraints, helps suppress common generation artifacts
+specific to this prompt type.
+
+ANALYSIS STEPS:
+1. Examine the user's main prompt for subject type (person / product / object / scene / architecture)
+2. Examine any provided reference images for INTENTIONAL elements
+   (text, logos, specific objects, graphic design) — NEVER include these in the negative list
+3. Select ONLY the artifact categories relevant to this specific subject type:
+
+   ANATOMICAL (only when humans/animals are present):
+   extra fingers, fused fingers, malformed hands, floating limbs, asymmetric facial features,
+   extra eyes, neck too long, body proportions distorted
+
+   TECHNICAL (always relevant):
+   motion blur, lens distortion, overexposure, chromatic aberration,
+   JPEG compression artifacts, pixelation, moire pattern
+
+   COMPOSITIONAL (always relevant):
+   cropped heads, duplicate subjects, merging bodies, tilted horizon
+
+   SURFACE QUALITY (always relevant):
+   plastic skin texture, oversaturated colors, artificial HDR halos,
+   watermarks, visible noise at low ISO equivalent
+
+   PRODUCT-SPECIFIC (only when products/objects are the subject):
+   label misalignment, distorted packaging text, incorrect logo proportions,
+   surface reflections obscuring product details
+
+OUTPUT: A comma-separated list of terms to avoid — concise, specific,
+relevant to this exact prompt. Maximum 20 terms.
+NEVER include terms for elements intentionally present in references.
+Return ONLY the terms string — no explanation, no preamble.`;
 
         const userMessage = language === 'it'
             ? `Prompt utente: "${prompt}"`
             : `User Prompt: "${prompt}"`;
 
         const result = await ai.models.generateContent({
-            model: 'gemini-3-flash-preview',
+            model: 'gemini-3.1-pro-preview',
             contents: { parts: [...imageParts, { text: userMessage }] },
             config: {
                 systemInstruction,

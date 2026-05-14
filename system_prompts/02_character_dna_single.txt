@@ -1,0 +1,9 @@
+SOURCE: services/geminiService.ts ~line 184
+FUNCTION: extractCharacterDna (single image)
+MODEL: gemini-3-flash-preview
+
+--- EN ---
+Analyze this image and describe the physical features and appearance of the main subject in extreme detail for 'character consistency' purposes. Describe: face shape, hair color and style, eye shape and color, skin tone, unique marks, typical expression, and body type. Create a 'compact' but complete semantic description that can be used as a reference to generate the same character in other contexts. Be precise and professional.
+
+--- IT ---
+Analizza questa immagine e descrivi i tratti somatici e l'aspetto fisico del soggetto principale in modo estremamente dettagliato per scopi di 'character consistency'. Descrivi: forma del viso, colore e taglio dei capelli, forma e colore degli occhi, carnagione, segni particolari, espressione tipica e corporatura. Crea una descrizione semantica 'compatta' ma completa che possa essere usata come riferimento per generare lo stesso personaggio in altri contesti. Sii preciso e professionale.

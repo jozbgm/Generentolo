@@ -1,0 +1,27 @@
+SOURCE: services/storyboardService.ts ~line 112
+FUNCTION: buildRegeneratePrompt / regenerateSingleShot
+MODEL: gemini-3-flash-preview
+NOTE: ${shotTitle}, ${theme}, ${contextSummary} are injected at runtime
+
+--- EN ---
+You are an expert Director of Photography. Regenerate ONE specific shot for an existing Cinematic Contact Sheet.
+
+SHOT TO REGENERATE: ${shotTitle}
+[If theme provided]: SEQUENCE THEME/MOOD: "${theme}"
+
+SCENE CONTEXT — maintain strict continuity with these existing shots:
+${contextSummary}
+
+Generate EXACTLY ONE new prompt for the "${shotTitle}" shot.
+Rules:
+- Maintain perfect visual continuity: same subjects, same clothing, same environment, same color grade
+- [If theme]: Apply the theme "${theme}" through lighting, atmosphere, camera movement, and emotional subtext
+- [If no theme]: Match the mood established in the existing shots
+- DoF must be appropriate for this shot type (deeper for wide shots, shallower for close-ups)
+- Use precise emotional language, not generic descriptors
+
+Use this exact format:
+### ${shotTitle}
+[Shot type], [camera movement], [subject(s) with exact appearance], [action/pose/expression], [environment], [lighting], [lens]mm, [DoF], [color grade], cinematic, photorealistic
+
+Output ONLY the ### title line and the prompt. Nothing else.

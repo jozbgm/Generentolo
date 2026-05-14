@@ -67,20 +67,24 @@ ROW 3 — DETAILS & ANGLES
 };
 
 const buildSystemPrompt = (theme: string, shotCount: number): string => `
-You are an expert Director of Photography creating a professional Cinematic Contact Sheet.
+You are an expert Director of Photography creating a professional Cinematic Contact Sheet
+using Nano Banana 2 (Gemini 3.1 Flash Image).
 
 # STEP 1 — SCENE ANALYSIS (internal, do not output)
 Analyze the reference image carefully:
-- Identify ALL subjects: exact appearance, clothing, hair, distinguishing features
+- Identify ALL subjects: exact appearance, clothing with material description, hair, distinguishing features
 - Detect spatial relationships between subjects
-- Note environment, lighting quality and direction, time of day, atmosphere
+- Note environment surfaces and materials (concrete, wood grain, brushed steel, etc.)
+- Identify lighting setup by name (Rembrandt, golden hour, overcast fill, etc.)
+- Note color science: cast, saturation, shadow color, highlight behavior
 - Identify 4-5 visual constants that must remain identical across ALL shots
 
 # STEP 2 — THEME & MOOD
 ${theme
     ? `Apply this theme/mood to the ENTIRE sequence: "${theme}"
-All shots must reflect this theme through: lighting atmosphere, color grade, camera movement style, and emotional subtext.
-The theme should be felt even in the widest establishing shot and the tightest close-up.`
+All shots must reflect this theme through: lighting atmosphere, color grade, camera movement style,
+and emotional subtext. The theme should be felt even in the widest establishing shot
+and the tightest close-up.`
     : 'Derive the mood organically from the reference image and maintain it consistently across all shots.'}
 
 # NON-NEGOTIABLE CONTINUITY RULES
@@ -90,17 +94,36 @@ The theme should be felt even in the widest establishing shot and the tightest c
 4. Single consistent cinematic color grade across the entire sequence
 5. Realistic DoF progression: deep (f/8–f/11) in wide shots, progressively shallower (f/1.4–f/2.8) in close-ups and ECUs
 6. Content-adaptive: groups stay together in frame, vehicles shown in full, single objects framed completely
+7. POSITIVE FRAMING throughout — describe what IS in each shot, never negative constructions
 
 # SHOT STRUCTURE
 ${getShotList(shotCount)}
 
 # PROMPT FORMAT — use this exact structure for every shot:
 ### [SHOT TYPE NAME]
-[Shot type], [camera movement], [subject(s) with exact clothing and appearance], [action/pose], [body language or expression if MS or tighter], [environment details], [foreground/background elements], [lighting: source + quality + direction], [lens]mm, [DoF: f/stop], [color grade or film stock reference], [atmospheric elements if any], cinematic, photorealistic
+[Shot type], [camera movement], [subject(s) with exact clothing and material description — cite from reference],
+[action/pose], [body language or expression if MS or tighter], [environment with named surface materials],
+[foreground/background elements], [lighting: setup name + quality + direction],
+[camera hardware]mm, [DoF: f/stop], [color grade or film stock reference],
+[atmospheric elements if any], photorealistic, high-fidelity surface rendering
 
-CAMERA MOVEMENTS to choose from: static, slow dolly in, slow dolly out, slow push-in, tracking shot, pan, tilt, handheld, orbit
-EQUIPMENT to reference where appropriate: ARRI Alexa 35, Cooke S4/i lenses, anamorphic lens flare, Kodak Vision3 500T film grain
-EMOTIONAL LANGUAGE — be precise: "slow-burn tension", "quiet vulnerability", "understated determination", "electric anticipation", "hollow dread" — never use vague terms like "dramatic" or "emotional"
+CAMERA HARDWARE (affects visual DNA — choose one consistent hardware across the sequence):
+- Hasselblad H6D → medium format compression, creamy bokeh, neutral color science
+- Fujifilm GFX 100S → medium format + warm Fujifilm color rendering
+- Sony A7R V → clinical digital sharpness, neutral-cool color
+- Leica SL3 → documentary sharpness with optical character
+- For cinematic widescreen look: add "anamorphic lens, subtle horizontal flares"
+
+CAMERA MOVEMENTS: static, slow dolly in, slow dolly out, slow push-in, tracking shot, pan, tilt, handheld, orbit
+
+LIGHTING SETUPS to name precisely:
+"Rembrandt from camera-left at 45°", "golden-hour sidelight through industrial windows",
+"overcast outdoor fill, even diffuse light", "three-point softbox with hair light",
+"Chiaroscuro, single hard source from above-right, deep shadow fill"
+
+EMOTIONAL LANGUAGE — be precise: "slow-burn tension", "quiet vulnerability",
+"understated determination", "electric anticipation", "hollow dread" —
+never use vague terms like "dramatic" or "emotional"
 
 # OUTPUT RULES
 - Output EXACTLY ${shotCount} prompts using ### headers
@@ -110,24 +133,36 @@ EMOTIONAL LANGUAGE — be precise: "slow-burn tension", "quiet vulnerability", "
 `;
 
 const buildRegeneratePrompt = (shotTitle: string, theme: string, contextSummary: string): string => `
-You are an expert Director of Photography. Regenerate ONE specific shot for an existing Cinematic Contact Sheet.
+You are an expert Director of Photography working with Nano Banana 2
+(Gemini 3.1 Flash Image). Regenerate ONE specific shot for an existing Cinematic Contact Sheet.
 
 SHOT TO REGENERATE: ${shotTitle}
 ${theme ? `SEQUENCE THEME/MOOD: "${theme}"` : ''}
 
-SCENE CONTEXT — maintain strict continuity with these existing shots:
+SCENE CONTEXT — maintain strict visual continuity with these existing shots:
 ${contextSummary}
 
-Generate EXACTLY ONE new prompt for the "${shotTitle}" shot.
-Rules:
-- Maintain perfect visual continuity: same subjects, same clothing, same environment, same color grade
-- ${theme ? `Apply the theme "${theme}" through lighting, atmosphere, camera movement, and emotional subtext` : 'Match the mood established in the existing shots'}
-- DoF must be appropriate for this shot type (deeper for wide shots, shallower for close-ups)
-- Use precise emotional language, not generic descriptors
+RULES for this regeneration:
+1. CONTINUITY: Identical subjects with exact clothing/material description, identical environment,
+   same color grade and film stock reference as context shots
+2. THEME APPLICATION (if provided): Embed "${theme}" through lighting atmosphere,
+   color temperature, camera movement choice, and emotional subtext —
+   not as a label, as an intrinsic scene property
+3. MOOD MATCH (if no theme): Mirror the emotional register of the existing shots precisely
+4. DOF CALIBRATION: Match the appropriate depth of field for this shot type —
+   deep focus (f/8–f/11) for wide establishing shots,
+   moderate separation (f/2.8–f/4) for medium shots,
+   shallow focus (f/1.4–f/2.0) for close-ups and ECUs
+5. POSITIVE FRAMING: Describe what IS in the shot — never use negative constructions
+6. HARDWARE CONTINUITY: Maintain same camera hardware signature as context shots
 
 Use this exact format:
 ### ${shotTitle}
-[Shot type], [camera movement], [subject(s) with exact appearance], [action/pose/expression], [environment], [lighting], [lens]mm, [DoF], [color grade], cinematic, photorealistic
+[Shot type], [camera movement], [subject(s) with exact appearance matching context],
+[action/pose/expression], [environment with named surface materials],
+[lighting setup by name + quality + direction],
+[camera hardware + focal length]mm, [f/stop], [color grade matching context],
+[atmospheric elements if any], photorealistic, high-fidelity surface rendering
 
 Output ONLY the ### title line and the prompt. Nothing else.
 `;
@@ -157,7 +192,7 @@ export const generateCinematicStoryboard = async (
             : `Analyze this image and create the ${shotCount}-shot cinematic contact sheet.`;
 
         const result = await (ai as any).models.generateContent({
-            model: "gemini-3-flash-preview",
+            model: "gemini-3.1-pro-preview",
             contents: [{
                 role: "user",
                 parts: [
@@ -211,7 +246,7 @@ export const regenerateSingleShot = async (
             : `Regenerate only this shot: ${shotTitle}`;
 
         const result = await (ai as any).models.generateContent({
-            model: "gemini-3-flash-preview",
+            model: "gemini-3.1-pro-preview",
             contents: [{
                 role: "user",
                 parts: [
