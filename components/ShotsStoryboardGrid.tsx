@@ -85,22 +85,22 @@ const ShotsStoryboardGrid: React.FC<ShotsStoryboardGridProps> = ({
 
                     <div className="flex items-center gap-3 flex-shrink-0">
                         <button
-                            onClick={onRegenerate}
-                            disabled={isLoading}
-                            aria-label={isIT ? 'Modifica impostazioni e rigenera' : 'Edit settings and regenerate'}
-                            className="hidden md:flex items-center gap-2 px-4 py-2.5 bg-brand-yellow text-dark-bg rounded-xl font-bold hover:scale-105 active:scale-95 transition-all shadow-lg disabled:opacity-50"
-                        >
-                            <ReloadIcon className="w-4 h-4" />
-                            {isIT ? 'Rigenera' : 'Regenerate'}
-                        </button>
-                        <button
                             onClick={() => onGenerateAll(editedPrompts)}
                             disabled={isLoading}
                             aria-label={isIT ? 'Genera tutti i frame nella coda' : 'Generate all frames in queue'}
-                            className="hidden md:flex items-center gap-2 px-6 py-2.5 bg-light-surface dark:bg-dark-surface text-light-text dark:text-dark-text border border-light-border dark:border-dark-border rounded-xl font-bold hover:border-brand-yellow hover:text-brand-yellow hover:scale-105 active:scale-95 transition-all shadow-md disabled:opacity-50"
+                            className="hidden md:flex items-center gap-2 px-6 py-2.5 bg-brand-yellow text-dark-bg rounded-xl font-bold hover:scale-105 active:scale-95 transition-all shadow-lg disabled:opacity-50"
                         >
                             <SparklesIcon className="w-4 h-4" />
                             {isIT ? 'Genera Tutto (Coda)' : 'Generate All (Queue)'}
+                        </button>
+                        <button
+                            onClick={onRegenerate}
+                            disabled={isLoading}
+                            aria-label={isIT ? 'Modifica impostazioni e rigenera' : 'Edit settings and regenerate'}
+                            className="hidden md:flex items-center gap-2 px-4 py-2.5 bg-light-surface dark:bg-dark-surface text-light-text dark:text-dark-text border border-light-border dark:border-dark-border rounded-xl font-bold hover:border-brand-yellow hover:text-brand-yellow hover:scale-105 active:scale-95 transition-all shadow-md disabled:opacity-50"
+                        >
+                            <ReloadIcon className="w-4 h-4" />
+                            {isIT ? 'Rigenera' : 'Regenerate'}
                         </button>
                         <button
                             onClick={onClose}
@@ -296,22 +296,22 @@ const ShotsStoryboardGrid: React.FC<ShotsStoryboardGridProps> = ({
                 {/* Mobile footer — Rigenera + Genera Tutto */}
                 <div className="md:hidden p-4 border-t border-light-border dark:border-dark-border flex-shrink-0 flex gap-3">
                     <button
-                        onClick={onRegenerate}
-                        disabled={isLoading}
-                        aria-label={isIT ? 'Modifica impostazioni e rigenera' : 'Edit settings and regenerate'}
-                        className="flex items-center justify-center gap-2 px-4 py-3.5 bg-brand-yellow text-dark-bg rounded-2xl font-bold shadow-lg disabled:opacity-50 active:scale-95 transition-all"
-                    >
-                        <ReloadIcon className="w-4 h-4" />
-                        {isIT ? 'Rigenera' : 'Regen'}
-                    </button>
-                    <button
                         onClick={() => onGenerateAll(editedPrompts)}
                         disabled={isLoading}
                         aria-label={isIT ? 'Genera tutti i frame nella coda' : 'Generate all frames in queue'}
-                        className="flex-1 flex items-center justify-center gap-2 py-3.5 bg-light-surface dark:bg-dark-surface text-light-text dark:text-dark-text border border-light-border dark:border-dark-border rounded-2xl font-bold shadow-md hover:border-brand-yellow hover:text-brand-yellow disabled:opacity-50 active:scale-95 transition-all"
+                        className="flex-1 flex items-center justify-center gap-2 py-3.5 bg-brand-yellow text-dark-bg rounded-2xl font-bold shadow-lg disabled:opacity-50 active:scale-95 transition-all"
                     >
                         <SparklesIcon className="w-5 h-5" />
                         {isIT ? 'Genera Tutto' : 'Gen All'}
+                    </button>
+                    <button
+                        onClick={onRegenerate}
+                        disabled={isLoading}
+                        aria-label={isIT ? 'Modifica impostazioni e rigenera' : 'Edit settings and regenerate'}
+                        className="flex items-center justify-center gap-2 px-4 py-3.5 bg-light-surface dark:bg-dark-surface text-light-text dark:text-dark-text border border-light-border dark:border-dark-border rounded-2xl font-bold shadow-md hover:border-brand-yellow hover:text-brand-yellow disabled:opacity-50 active:scale-95 transition-all"
+                    >
+                        <ReloadIcon className="w-4 h-4" />
+                        {isIT ? 'Rigenera' : 'Regen'}
                     </button>
                 </div>
             </div>
