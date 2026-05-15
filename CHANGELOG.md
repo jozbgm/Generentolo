@@ -1,16 +1,13 @@
 # 📋 Changelog - Generentolo PRO
 
-## [3.1.0] - 2026-05-14
-### Changed
-- **System prompts v2** — Riscritti tutti e 10 i system prompt di generazione immagini: framing positivo (mai "no X", sempre la versione affermativa), naming hardware fotografico specifico (Fujifilm GFX 100S, Sony A7R V, Hasselblad H6D per impronta visiva diversa), lighting by name (three-point softbox, Rembrandt at 45°, Butterfly lighting, Chiaroscuro), struttura Character DNA espansa, best practice Nano Banana 2 aggiornate.
-- **Migrazione reasoning model** — Tutte e 15 le chiamate testo/ragionamento (`geminiService.ts`, `storyboardService.ts`, `enhancePromptNew.ts`) migrate da `gemini-3-flash-preview` a `gemini-3.1-pro-preview` per migliore qualità di analisi e pianificazione.
-- **Auto-Enhance prompt engine** — Struttura narrativa rielaborata: output 120-180 parole, include hardware fotografico, nome esatto del lighting setup, color grade/film stock, texture atmosferiche. Art Director Plan in lingua corrente (IT/EN).
-
 ## [3.0.0] - 2026-05-14
 ### Added
 - **30 nuovi loading messages** — Rimpiazzati tutti e 24 i `FUNNY_MESSAGES` con 30 nuove frasi.
 
 ### Changed
+- **System prompts v2** — Riscritti tutti e 10 i system prompt di generazione immagini: framing positivo (mai "no X", sempre la versione affermativa), naming hardware fotografico specifico (Fujifilm GFX 100S, Sony A7R V, Hasselblad H6D per impronta visiva diversa), lighting by name (three-point softbox, Rembrandt at 45°, Butterfly lighting, Chiaroscuro), struttura Character DNA espansa, best practice Nano Banana 2 aggiornate.
+- **Migrazione reasoning model** — Tutte e 15 le chiamate testo/ragionamento (`geminiService.ts`, `storyboardService.ts`, `enhancePromptNew.ts`) migrate da `gemini-3-flash-preview` a `gemini-3.1-pro-preview` per migliore qualità di analisi e pianificazione.
+- **Auto-Enhance prompt engine** — Struttura narrativa rielaborata: output 120-180 parole, include hardware fotografico, nome esatto del lighting setup, color grade/film stock, texture atmosferiche. Art Director Plan in lingua corrente (IT/EN).
 - **Outpaint: velocità** — La sorgente viene ridimensionata a max 2048px prima del canvas padding, riducendo significativamente i tempi di elaborazione.
 - **Outpaint: menu esteso** — Aggiunta al menu outpaint sull'immagine la direzione orizzontale, verticale e tutti i lati, allineato alle opzioni della FAB.
 
