@@ -29,10 +29,23 @@ const ShotsStoryboardModal: React.FC<ShotsStoryboardModalProps> = ({
     initialDuration = 15, initialAspectRatio = '16:9', initialAudioType = 'music', initialBrief = ''
 }) => {
     const [duration, setDuration] = useState(initialDuration);
+    const [durationInput, setDurationInput] = useState(String(initialDuration));
     const [aspectRatio, setAspectRatio] = useState(initialAspectRatio);
     const [audioType, setAudioType] = useState(initialAudioType);
     const [brief, setBrief] = useState(initialBrief);
     const [thumbUrls, setThumbUrls] = useState<string[]>([]);
+
+    const applyDuration = (raw: string) => {
+        const parsed = parseInt(raw, 10);
+        const clamped = isNaN(parsed) ? duration : Math.max(1, Math.min(60, parsed));
+        setDuration(clamped);
+        setDurationInput(String(clamped));
+    };
+
+    const setPresetDuration = (preset: number) => {
+        setDuration(preset);
+        setDurationInput(String(preset));
+    };
 
     const isIT = language === 'it';
     const hasImages = referenceImages.length > 0;
@@ -45,7 +58,11 @@ const ShotsStoryboardModal: React.FC<ShotsStoryboardModalProps> = ({
 
     const handleSubmit = () => {
         if (!hasImages) return;
-        onGenerate(duration, aspectRatio, audioType, brief.trim());
+        const parsed = parseInt(durationInput, 10);
+        const finalDuration = isNaN(parsed) ? duration : Math.max(1, Math.min(60, parsed));
+        setDuration(finalDuration);
+        setDurationInput(String(finalDuration));
+        onGenerate(finalDuration, aspectRatio, audioType, brief.trim());
     };
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -58,7 +75,7 @@ const ShotsStoryboardModal: React.FC<ShotsStoryboardModalProps> = ({
 
     return (
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-4" onKeyDown={handleKeyDown}>
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-md animate-fadeIn" onClick={onClose} />
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-md animate-fadeIn cursor-pointer" onClick={onClose} />
 
             <div className="relative w-full max-w-lg bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border rounded-[2rem] shadow-2xl flex flex-col overflow-hidden animate-slideUp max-h-[90vh]">
 
@@ -79,6 +96,7 @@ const ShotsStoryboardModal: React.FC<ShotsStoryboardModalProps> = ({
                     </div>
                     <button
                         onClick={onClose}
+                        aria-label={isIT ? 'Chiudi' : 'Close'}
                         className="p-2.5 rounded-xl hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent text-light-text-muted dark:text-dark-text-muted transition-all hover:rotate-90"
                     >
                         <XIcon className="w-5 h-5" />
@@ -124,10 +142,11 @@ const ShotsStoryboardModal: React.FC<ShotsStoryboardModalProps> = ({
 
                     {/* Brief narrativo */}
                     <div>
-                        <label className="block text-xs font-bold uppercase tracking-widest text-light-text-muted dark:text-dark-text-muted mb-2">
+                        <label htmlFor="shots-brief" className="block text-xs font-bold uppercase tracking-widest text-light-text-muted dark:text-dark-text-muted mb-2">
                             {isIT ? 'Idea / Brief narrativo (opzionale)' : 'Idea / Narrative brief (optional)'}
                         </label>
                         <textarea
+                            id="shots-brief"
                             value={brief}
                             onChange={e => setBrief(e.target.value)}
                             placeholder={isIT
@@ -145,17 +164,20 @@ const ShotsStoryboardModal: React.FC<ShotsStoryboardModalProps> = ({
 
                     {/* Duration */}
                     <div>
-                        <label className="block text-xs font-bold uppercase tracking-widest text-light-text-muted dark:text-dark-text-muted mb-2">
+                        <label htmlFor="shots-duration" className="block text-xs font-bold uppercase tracking-widest text-light-text-muted dark:text-dark-text-muted mb-2">
                             {isIT ? 'Durata (secondi)' : 'Duration (seconds)'}
                         </label>
                         <div className="flex items-center gap-3 mb-2">
                             <input
+                                id="shots-duration"
                                 type="number"
-                                min={3}
-                                max={120}
+                                min={1}
+                                max={60}
                                 step={1}
-                                value={duration}
-                                onChange={e => setDuration(Math.max(3, Math.min(120, Number(e.target.value))))}
+                                value={durationInput}
+                                onChange={e => setDurationInput(e.target.value)}
+                                onBlur={e => applyDuration(e.target.value)}
+                                onKeyDown={e => { if (e.key === 'Enter') applyDuration((e.target as HTMLInputElement).value); }}
                                 className="w-24 px-3 py-2.5 rounded-xl bg-black/5 dark:bg-white/5 border border-light-border dark:border-dark-border text-light-text dark:text-dark-text text-sm font-bold text-center focus:outline-none focus:border-brand-yellow/60 transition-colors"
                             />
                         </div>
@@ -163,7 +185,7 @@ const ShotsStoryboardModal: React.FC<ShotsStoryboardModalProps> = ({
                             {DURATION_PRESETS.map(preset => (
                                 <button
                                     key={preset}
-                                    onClick={() => setDuration(preset)}
+                                    onClick={() => setPresetDuration(preset)}
                                     className={`${pillBase} ${duration === preset ? pillActive : pillInactive}`}
                                 >
                                     {preset}s

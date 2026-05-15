@@ -1,5 +1,20 @@
 # 📋 Changelog - Generentolo PRO
 
+## [3.0.2] - 2026-05-15
+### Fixed
+- **Shots Storyboard — Generate All ignora le modifiche ai prompt** — Il pulsante "Genera Tutto (Coda)" ora usa i prompt editati nei textarea invece di quelli originali dell'AI. Le modifiche manuali ai frame prompt vengono rispettate nella coda.
+- **Shots Storyboard — Submit ignora il valore digitato nella durata** — Se l'utente scriveva un numero nel campo durata senza prima cliccare fuori (blur), il submit usava il vecchio valore. Ora il valore nel campo viene sempre committato al click di "Genera Storyboard".
+- **Shots Storyboard — Regenerate con nuove reference usa dati stale** — Chiudendo la grid mentre una generazione era in volo, la Promise completava in background aggiornando `shotsStoryboardResult` con i vecchi dati. La generazione successiva partiva con quello stato sporco. Fix: `generationId` pattern — i risultati orfani vengono ignorati; `setShotsStoryboardResult(null)` viene chiamato prima di ogni nuova generazione.
+- **Shots Storyboard — Bottone bloccato dopo chiusura durante loading** — Chiudendo la grid mentre stava generando, `isShotsStoryboardLoading` rimaneva `true` e il bottone nella sidebar restava disabled fino al completamento della Promise in background. Fix: `handleCloseShotsStoryboardGrid` azzera il loading state immediatamente e cancella la generazione orfana.
+- **Shots Storyboard — Impossibile riaprire dopo chiusura mid-generation** — Conseguenza del bug sopra. Ora il bottone è sempre cliccabile se ci sono reference; se esiste una generazione orfana in background, viene cancellata e il modal si apre.
+- **Campo durata — impossibile digitare direttamente** — Il campo numero usava clamping immediato su ogni keystroke, rendendo impossibile scrivere valori come "10" partendo da "5". Risolto con stato stringa separato (`durationInput`): la digitazione è libera, il clamping avviene solo su blur o Enter. Range aggiornato a 1–60s.
+
+### Changed
+- **Shots Storyboard — Azioni card sempre visibili** — I bottoni Lock, Rigenera-singolo e Copia nelle card erano `opacity-0 group-hover:opacity-100`, invisibili su touch. Ora partono da `opacity-40` e salgono a `opacity-100` su hover/focus.
+- **Shots Storyboard — "Rigenera" disponibile su mobile** — Il footer mobile mostrava solo "Genera Tutto". Aggiunto pulsante "Rigenera" affiancato, accessibile su tutti i dispositivi.
+- **Shots Storyboard — Touch target aumentati** — I bottoni icona nelle card header portati a `min-w-[36px] min-h-[36px]` per migliore precisione su touch.
+- **Shots Storyboard — Accessibilità** — Aggiunti `aria-label` su tutti i bottoni icon-only (X, lock, regen singolo, copy, rigenera header, genera tutto, copia video prompt). Labels `htmlFor` collegate agli input `id` su brief e durata. `cursor-pointer` sui backdrop di entrambi i modali. `aria-expanded` sul collapsible Seedance prompt.
+
 ## [3.0.1] - 2026-05-15
 ### Added
 - **Shots Storyboard** — Nuovo componente per generare prompt video Seedance 2.0 da reference images. Flusso: carica reference → scrivi un brief narrativo (opzionale) → imposta durata (3–120s), aspect ratio e tipo audio → genera un prompt Seedance 2.0 completo in 4 sezioni (Shot Timeline, Master Effects Inventory, Effects Density Map, Energy Arc) → per ogni shot un frame prompt per Nano Banana 2. Bottone nella sidebar sotto Cinematic Storyboard.

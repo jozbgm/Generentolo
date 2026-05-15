@@ -7,7 +7,7 @@ interface ShotsStoryboardGridProps {
     videoPrompt: string;
     onClose: () => void;
     onUsePrompt: (prompt: string) => void;
-    onGenerateAll: () => void;
+    onGenerateAll: (editedPrompts: Map<string, string>) => void;
     onGenerateOne: (prompt: string) => void;
     onRegenerate: () => void;
     onRegenerateOne: (id: string, shotTitle: string) => void;
@@ -61,7 +61,7 @@ const ShotsStoryboardGrid: React.FC<ShotsStoryboardGridProps> = ({
     return (
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 lg:p-8">
             <div
-                className="absolute inset-0 bg-black/60 backdrop-blur-md animate-fadeIn"
+                className="absolute inset-0 bg-black/60 backdrop-blur-md animate-fadeIn cursor-pointer"
                 onClick={onClose}
             />
 
@@ -87,15 +87,16 @@ const ShotsStoryboardGrid: React.FC<ShotsStoryboardGridProps> = ({
                         <button
                             onClick={onRegenerate}
                             disabled={isLoading}
+                            aria-label={isIT ? 'Modifica impostazioni e rigenera' : 'Edit settings and regenerate'}
                             className="hidden md:flex items-center gap-2 px-4 py-2.5 bg-brand-yellow text-dark-bg rounded-xl font-bold hover:scale-105 active:scale-95 transition-all shadow-lg disabled:opacity-50"
-                            title={isIT ? 'Modifica impostazioni e rigenera' : 'Edit settings and regenerate'}
                         >
                             <ReloadIcon className="w-4 h-4" />
                             {isIT ? 'Rigenera' : 'Regenerate'}
                         </button>
                         <button
-                            onClick={onGenerateAll}
+                            onClick={() => onGenerateAll(editedPrompts)}
                             disabled={isLoading}
+                            aria-label={isIT ? 'Genera tutti i frame nella coda' : 'Generate all frames in queue'}
                             className="hidden md:flex items-center gap-2 px-6 py-2.5 bg-light-surface dark:bg-dark-surface text-light-text dark:text-dark-text border border-light-border dark:border-dark-border rounded-xl font-bold hover:border-brand-yellow hover:text-brand-yellow hover:scale-105 active:scale-95 transition-all shadow-md disabled:opacity-50"
                         >
                             <SparklesIcon className="w-4 h-4" />
@@ -103,6 +104,7 @@ const ShotsStoryboardGrid: React.FC<ShotsStoryboardGridProps> = ({
                         </button>
                         <button
                             onClick={onClose}
+                            aria-label={isIT ? 'Chiudi' : 'Close'}
                             className="p-2.5 rounded-xl hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent text-light-text-muted dark:text-dark-text-muted transition-all hover:rotate-90"
                         >
                             <XIcon className="w-6 h-6" />
@@ -147,8 +149,8 @@ const ShotsStoryboardGrid: React.FC<ShotsStoryboardGridProps> = ({
                                             }`}
                                         >
                                             {/* Card header */}
-                                            <div className="px-5 py-4 flex items-center justify-between border-b border-light-border dark:border-dark-border/30 bg-light-surface/30 dark:bg-dark-surface/10">
-                                                <div className="flex items-center gap-3 min-w-0">
+                                            <div className="px-4 py-3 flex items-center justify-between border-b border-light-border dark:border-dark-border/30 bg-light-surface/30 dark:bg-dark-surface/10">
+                                                <div className="flex items-center gap-2 min-w-0">
                                                     <span className="text-xs font-black text-light-text-muted dark:text-dark-text-muted italic flex-shrink-0">
                                                         #{item.shotIndex}
                                                     </span>
@@ -158,18 +160,21 @@ const ShotsStoryboardGrid: React.FC<ShotsStoryboardGridProps> = ({
                                                 </div>
 
                                                 {/* Action icons */}
-                                                <div className="flex items-center gap-1">
+                                                <div className="flex items-center gap-0.5 flex-shrink-0">
                                                     {/* Lock */}
                                                     <button
                                                         onClick={() => onToggleLock(item.id)}
-                                                        className={`p-1.5 rounded-lg transition-all ${
-                                                            isLocked
-                                                                ? 'text-brand-yellow hover:bg-brand-yellow/10'
-                                                                : 'opacity-0 group-hover:opacity-100 hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent text-light-text-muted dark:text-dark-text-muted hover:text-brand-yellow'
-                                                        }`}
+                                                        aria-label={isLocked
+                                                            ? (isIT ? 'Sblocca questo shot' : 'Unlock this shot')
+                                                            : (isIT ? 'Blocca questo shot' : 'Lock this shot')}
                                                         title={isLocked
                                                             ? (isIT ? 'Sblocca questo shot' : 'Unlock this shot')
                                                             : (isIT ? 'Blocca questo shot' : 'Lock this shot')}
+                                                        className={`p-2 rounded-lg transition-all min-w-[36px] min-h-[36px] flex items-center justify-center ${
+                                                            isLocked
+                                                                ? 'text-brand-yellow hover:bg-brand-yellow/10'
+                                                                : 'opacity-40 hover:opacity-100 hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent text-light-text-muted dark:text-dark-text-muted hover:text-brand-yellow'
+                                                        }`}
                                                     >
                                                         <LockIcon className="w-3.5 h-3.5" locked={isLocked} />
                                                     </button>
@@ -178,10 +183,11 @@ const ShotsStoryboardGrid: React.FC<ShotsStoryboardGridProps> = ({
                                                     <button
                                                         onClick={() => !isLocked && !isRegenerating && onRegenerateOne(item.id, item.title)}
                                                         disabled={isLocked || isRegenerating || !!regeneratingId}
-                                                        className="p-1.5 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent text-light-text-muted dark:text-dark-text-muted hover:text-brand-yellow transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                                                        aria-label={isIT ? `Rigenera shot ${item.shotIndex}` : `Regenerate shot ${item.shotIndex}`}
                                                         title={isLocked
                                                             ? (isIT ? 'Sblocca per rigenerare' : 'Unlock to regenerate')
                                                             : (isIT ? 'Rigenera solo questo shot' : 'Regenerate this shot only')}
+                                                        className="p-2 rounded-lg opacity-40 hover:opacity-100 hover:bg-light-surface-accent dark:hover:bg-dark-surface-accent text-light-text-muted dark:text-dark-text-muted hover:text-brand-yellow transition-all disabled:opacity-20 disabled:cursor-not-allowed min-w-[36px] min-h-[36px] flex items-center justify-center"
                                                     >
                                                         {isRegenerating
                                                             ? <div className="w-3.5 h-3.5 border-2 border-brand-yellow/40 border-t-brand-yellow rounded-full animate-spin" />
@@ -192,8 +198,9 @@ const ShotsStoryboardGrid: React.FC<ShotsStoryboardGridProps> = ({
                                                     {/* Copy */}
                                                     <button
                                                         onClick={() => handleCopy(item.id, currentPrompt)}
-                                                        className="p-1.5 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-brand-yellow hover:text-dark-bg text-light-text-muted dark:text-dark-text-muted transition-all"
+                                                        aria-label={isIT ? 'Copia prompt' : 'Copy prompt'}
                                                         title={isIT ? 'Copia prompt' : 'Copy prompt'}
+                                                        className="p-2 rounded-lg opacity-40 hover:opacity-100 hover:bg-brand-yellow hover:text-dark-bg text-light-text-muted dark:text-dark-text-muted transition-all min-w-[36px] min-h-[36px] flex items-center justify-center"
                                                     >
                                                         {copiedId === item.id
                                                             ? <CheckIcon className="w-3.5 h-3.5" />
@@ -205,18 +212,17 @@ const ShotsStoryboardGrid: React.FC<ShotsStoryboardGridProps> = ({
 
                                             {/* Card body */}
                                             <div className="p-5 flex-1 flex flex-col">
-                                                {/* Shot description — read-only */}
                                                 {item.shotDescription && (
                                                     <p className="text-[10px] text-light-text-muted dark:text-dark-text-muted leading-relaxed mb-3 line-clamp-2 italic">
                                                         {item.shotDescription}
                                                     </p>
                                                 )}
 
-                                                {/* Image prompt — editable textarea */}
                                                 <textarea
                                                     value={currentPrompt}
                                                     onChange={e => setEditedPrompts(prev => new Map(prev).set(item.id, e.target.value))}
                                                     rows={4}
+                                                    aria-label={isIT ? `Prompt immagine per shot ${item.shotIndex}` : `Image prompt for shot ${item.shotIndex}`}
                                                     placeholder={isIT ? 'Prompt immagine...' : 'Image prompt...'}
                                                     className={`w-full text-sm text-light-text-muted dark:text-dark-text-muted leading-relaxed font-mono bg-black/5 dark:bg-black/40 border rounded-xl p-4 mb-4 resize-none focus:outline-none focus:border-brand-yellow/40 transition-colors custom-scrollbar ${
                                                         isRegenerating
@@ -225,7 +231,6 @@ const ShotsStoryboardGrid: React.FC<ShotsStoryboardGridProps> = ({
                                                     }`}
                                                 />
 
-                                                {/* Action buttons */}
                                                 <div className="flex gap-2">
                                                     <button
                                                         onClick={() => onUsePrompt(currentPrompt)}
@@ -252,6 +257,7 @@ const ShotsStoryboardGrid: React.FC<ShotsStoryboardGridProps> = ({
                                 <div className="mt-8 border border-light-border dark:border-dark-border/50 rounded-2xl overflow-hidden">
                                     <button
                                         onClick={() => setShowVideoPrompt(prev => !prev)}
+                                        aria-expanded={showVideoPrompt}
                                         className="w-full flex items-center justify-between px-5 py-4 bg-light-surface-accent/30 dark:bg-dark-surface-accent/20 hover:bg-light-surface-accent/50 dark:hover:bg-dark-surface-accent/40 transition-colors"
                                     >
                                         <span className="text-sm font-bold text-light-text dark:text-dark-text flex items-center gap-2">
@@ -267,8 +273,9 @@ const ShotsStoryboardGrid: React.FC<ShotsStoryboardGridProps> = ({
                                                     setCopiedVideoPrompt(true);
                                                     setTimeout(() => setCopiedVideoPrompt(false), 2000);
                                                 }}
-                                                className="absolute top-6 right-6 p-1.5 rounded-lg hover:bg-brand-yellow hover:text-dark-bg text-light-text-muted dark:text-dark-text-muted transition-all"
+                                                aria-label={isIT ? 'Copia prompt Seedance' : 'Copy Seedance prompt'}
                                                 title={isIT ? 'Copia prompt' : 'Copy prompt'}
+                                                className="absolute top-6 right-6 p-1.5 rounded-lg hover:bg-brand-yellow hover:text-dark-bg text-light-text-muted dark:text-dark-text-muted transition-all"
                                             >
                                                 {copiedVideoPrompt
                                                     ? <CheckIcon className="w-3.5 h-3.5" />
@@ -286,15 +293,25 @@ const ShotsStoryboardGrid: React.FC<ShotsStoryboardGridProps> = ({
                     )}
                 </div>
 
-                {/* Mobile footer */}
-                <div className="md:hidden p-4 border-t border-light-border dark:border-dark-border flex-shrink-0">
+                {/* Mobile footer — Rigenera + Genera Tutto */}
+                <div className="md:hidden p-4 border-t border-light-border dark:border-dark-border flex-shrink-0 flex gap-3">
                     <button
-                        onClick={onGenerateAll}
+                        onClick={onRegenerate}
                         disabled={isLoading}
-                        className="w-full flex items-center justify-center gap-2 py-4 bg-light-surface dark:bg-dark-surface text-light-text dark:text-dark-text border border-light-border dark:border-dark-border rounded-2xl font-bold shadow-md hover:border-brand-yellow hover:text-brand-yellow"
+                        aria-label={isIT ? 'Modifica impostazioni e rigenera' : 'Edit settings and regenerate'}
+                        className="flex items-center justify-center gap-2 px-4 py-3.5 bg-brand-yellow text-dark-bg rounded-2xl font-bold shadow-lg disabled:opacity-50 active:scale-95 transition-all"
+                    >
+                        <ReloadIcon className="w-4 h-4" />
+                        {isIT ? 'Rigenera' : 'Regen'}
+                    </button>
+                    <button
+                        onClick={() => onGenerateAll(editedPrompts)}
+                        disabled={isLoading}
+                        aria-label={isIT ? 'Genera tutti i frame nella coda' : 'Generate all frames in queue'}
+                        className="flex-1 flex items-center justify-center gap-2 py-3.5 bg-light-surface dark:bg-dark-surface text-light-text dark:text-dark-text border border-light-border dark:border-dark-border rounded-2xl font-bold shadow-md hover:border-brand-yellow hover:text-brand-yellow disabled:opacity-50 active:scale-95 transition-all"
                     >
                         <SparklesIcon className="w-5 h-5" />
-                        {isIT ? 'Genera Tutto' : 'Generate All'}
+                        {isIT ? 'Genera Tutto' : 'Gen All'}
                     </button>
                 </div>
             </div>

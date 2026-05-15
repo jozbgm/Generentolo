@@ -1085,7 +1085,7 @@ const ReferencePanel: React.FC<{
 
                         <button
                             onClick={() => onGenerateShotsStoryboard()}
-                            disabled={referenceImages.length === 0 || isShotsStoryboardLoading}
+                            disabled={referenceImages.length === 0}
                             title={language === 'it' ? 'Shots Storyboard — Genera frame da prompt video' : 'Shots Storyboard — Generate frames from video prompt'}
                             className={`w-full group relative overflow-hidden flex items-center justify-start gap-3 px-4 py-3 bg-light-surface/80 dark:bg-dark-surface/60 border rounded-xl transition-all cursor-pointer select-none hover:scale-[1.01] active:scale-[0.99] disabled:cursor-not-allowed disabled:hover:scale-100 ${referenceImages.length === 0 ? 'border-dashed border-light-border/40 dark:border-white/[0.05] opacity-50' : 'border-light-border/60 dark:border-white/[0.07] hover:border-brand-yellow/50'} ${isShotsStoryboardLoading ? 'animate-pulse' : ''}`}
                         >
@@ -2683,6 +2683,7 @@ export default function App() {
     const [queue, setQueue] = useState<GenerationTask[]>([]);
 
     // Shots Storyboard
+    const shotsGenerationIdRef = useRef<string | null>(null);
     const [shotsStoryboardResult, setShotsStoryboardResult] = useState<ShotsStoryboardResult | null>(null);
     const [isShotsStoryboardModalOpen, setIsShotsStoryboardModalOpen] = useState(false);
     const [isShotsStoryboardGridOpen, setIsShotsStoryboardGridOpen] = useState(false);
@@ -4217,12 +4218,21 @@ export default function App() {
             showToast(t.validImageForStoryboard, 'error');
             return;
         }
+        // Se la grid è già aperta portala in primo piano (non fare niente)
+        if (isShotsStoryboardGridOpen) return;
+        // Se c'è una generazione orfana in background, cancellala prima di aprire il modal
+        if (isShotsStoryboardLoading) {
+            shotsGenerationIdRef.current = null;
+            setIsShotsStoryboardLoading(false);
+        }
         setIsShotsStoryboardModalOpen(true);
-    }, [referenceImages, showToast, t.validImageForStoryboard]);
+    }, [referenceImages, showToast, t.validImageForStoryboard, isShotsStoryboardGridOpen, isShotsStoryboardLoading]);
 
     const handleGenerateShotsStoryboard = useCallback(async (
         duration: number, aspectRatio: string, audioType: string, brief: string
     ) => {
+        const genId = crypto.randomUUID();
+        shotsGenerationIdRef.current = genId;
         handleAspectRatioChange(aspectRatio);
         setShotsStoryboardBrief(brief);
         setIsShotsStoryboardModalOpen(false);
@@ -4231,6 +4241,7 @@ export default function App() {
         setShotsStoryboardAspectRatio(aspectRatio);
         setShotsStoryboardAudioType(audioType);
         setShotsStoryboardLockedIds([]);
+        setShotsStoryboardResult(null);
         setIsShotsStoryboardGridOpen(true);
         try {
             const result = await generateShotsStoryboard(
@@ -4242,17 +4253,30 @@ export default function App() {
                 language,
                 userApiKey
             );
+            if (shotsGenerationIdRef.current !== genId) return;
             setShotsStoryboardResult(result);
         } catch (err: any) {
+            if (shotsGenerationIdRef.current !== genId) return;
             showToast(err.message || t.shotsStoryboardFailed, 'error');
             setIsShotsStoryboardGridOpen(false);
         } finally {
-            setIsShotsStoryboardLoading(false);
+            if (shotsGenerationIdRef.current === genId) {
+                setIsShotsStoryboardLoading(false);
+            }
         }
     }, [referenceImages, language, userApiKey, showToast, t.shotsStoryboardFailed]);
 
-    const handleRegenerateShotsStoryboard = useCallback(() => {
+    const handleCloseShotsStoryboardGrid = useCallback(() => {
+        shotsGenerationIdRef.current = null;
         setIsShotsStoryboardGridOpen(false);
+        setIsShotsStoryboardLoading(false);
+        setShotsStoryboardResult(null);
+    }, []);
+
+    const handleRegenerateShotsStoryboard = useCallback(() => {
+        shotsGenerationIdRef.current = null;
+        setIsShotsStoryboardGridOpen(false);
+        setIsShotsStoryboardLoading(false);
         setShotsStoryboardResult(null);
         setIsShotsStoryboardModalOpen(true);
     }, []);
@@ -4299,7 +4323,7 @@ export default function App() {
         handleGenerate();
     }, [handleGenerate]);
 
-    const handleShotsGenerateAll = useCallback(() => {
+    const handleShotsGenerateAll = useCallback((editedPrompts: Map<string, string>) => {
         if (!shotsStoryboardResult) return;
         const unlocked = shotsStoryboardResult.framePrompts.filter(
             fp => !shotsStoryboardLockedIds.includes(fp.id)
@@ -4307,7 +4331,7 @@ export default function App() {
         if (unlocked.length === 0) return;
         const newTasks: GenerationTask[] = unlocked.map(fp => ({
             id: crypto.randomUUID(),
-            prompt: fp.imagePrompt,
+            prompt: editedPrompts.get(fp.id) ?? fp.imagePrompt,
             negativePrompt,
             seed,
             aspectRatio,
@@ -4815,7 +4839,7 @@ export default function App() {
                     <ShotsStoryboardGrid
                         framePrompts={shotsStoryboardResult?.framePrompts ?? []}
                         videoPrompt={shotsStoryboardResult?.videoPrompt ?? ''}
-                        onClose={() => { setIsShotsStoryboardGridOpen(false); setShotsStoryboardResult(null); }}
+                        onClose={handleCloseShotsStoryboardGrid}
                         onUsePrompt={handleShotsUsePrompt}
                         onGenerateAll={handleShotsGenerateAll}
                         onGenerateOne={handleShotsGenerateOne}
