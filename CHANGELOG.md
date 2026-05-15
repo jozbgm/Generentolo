@@ -1,9 +1,6 @@
 # 📋 Changelog - Generentolo PRO
 
 ## [3.0.0] - 2026-05-14
-### Added
-- **30 nuovi loading messages** — Rimpiazzati tutti e 24 i `FUNNY_MESSAGES` con 30 nuove frasi.
-
 ### Changed
 - **System prompts v2** — Riscritti tutti e 10 i system prompt di generazione immagini: framing positivo (mai "no X", sempre la versione affermativa), naming hardware fotografico specifico (Fujifilm GFX 100S, Sony A7R V, Hasselblad H6D per impronta visiva diversa), lighting by name (three-point softbox, Rembrandt at 45°, Butterfly lighting, Chiaroscuro), struttura Character DNA espansa, best practice Nano Banana 2 aggiornate.
 - **Migrazione reasoning model** — Tutte e 15 le chiamate testo/ragionamento (`geminiService.ts`, `storyboardService.ts`, `enhancePromptNew.ts`) migrate da `gemini-3-flash-preview` a `gemini-3.1-pro-preview` per migliore qualità di analisi e pianificazione.
