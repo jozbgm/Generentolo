@@ -1,4 +1,4 @@
-# Generentolo PRO v2.6
+# Generentolo PRO v3.1
 
 **Professional AI image generation suite powered by Google Gemini.**
 

@@ -1,5 +1,33 @@
 # 📋 Changelog - Generentolo PRO
 
+## [3.1.0] - 2026-05-14
+### Changed
+- **System prompts v2** — Riscritti tutti e 10 i system prompt di generazione immagini: framing positivo (mai "no X", sempre la versione affermativa), naming hardware fotografico specifico (Fujifilm GFX 100S, Sony A7R V, Hasselblad H6D per impronta visiva diversa), lighting by name (three-point softbox, Rembrandt at 45°, Butterfly lighting, Chiaroscuro), struttura Character DNA espansa, best practice Nano Banana 2 aggiornate.
+- **Migrazione reasoning model** — Tutte e 15 le chiamate testo/ragionamento (`geminiService.ts`, `storyboardService.ts`, `enhancePromptNew.ts`) migrate da `gemini-3-flash-preview` a `gemini-3.1-pro-preview` per migliore qualità di analisi e pianificazione.
+- **Auto-Enhance prompt engine** — Struttura narrativa rielaborata: output 120-180 parole, include hardware fotografico, nome esatto del lighting setup, color grade/film stock, texture atmosferiche. Art Director Plan in lingua corrente (IT/EN).
+
+## [3.0.0] - 2026-05-14
+### Added
+- **30 nuovi loading messages** — Rimpiazzati tutti e 24 i `FUNNY_MESSAGES` con 30 nuove frasi.
+
+### Changed
+- **Outpaint: velocità** — La sorgente viene ridimensionata a max 2048px prima del canvas padding, riducendo significativamente i tempi di elaborazione.
+- **Outpaint: menu esteso** — Aggiunta al menu outpaint sull'immagine la direzione orizzontale, verticale e tutti i lati, allineato alle opzioni della FAB.
+
+### Fixed
+- **StudioPanel light mode** — Corretti colori in modalità chiara: `dark:` prefix aggiunto su tutti i border/text/bg che prima usavano classi hardcoded.
+- **FAB tablet overflow** — Rimosso `lg:min-w-[720px]` dalla FAB che causava overflow su tablet.
+- **FAB stop button** — Background del pulsante stop aggiornato a variabile CSS invece di colore hardcoded.
+- **FAB paste-fail feedback** — Quando il paste fallisce, il pulsante mostra `XIcon` + tinta rossa per 2 secondi.
+- **Outpaint stop button** — Registrato `AbortController` per l'outpaint: il pulsante Stop funziona correttamente durante le operazioni di outpaint.
+- **Stop button su Reroll e Quick Edit** — `handleReroll` e `handleQuickEdit` registrano ora correttamente un `AbortController` — il pulsante Stop li interrompe.
+- **Queue canvas** — Ogni risultato della queue viene mostrato sul canvas non appena completato, invece di attendere che la coda si svuoti.
+- **Canvas blank durante generazione** — `ImageDisplay` non viene più svuotato durante una nuova generazione: l'immagine precedente rimane visibile con un overlay spinner.
+- **Outpaint menu posizione** — Aggiunto `closeAllMenus()` helper; il menu outpaint ora si posiziona correttamente centrato sopra il pulsante invece di andare sul bordo della FAB.
+- **Pulsanti azione disabilitati** — Opacity cambiata da `30` a `50` per migliore visibilità dello stato disabilitato.
+- **Light mode select styling** — Aggiunto stile CSS per le `<option>` in light mode.
+- **Backdrop FAB** — Aggiunto `role=presentation` all'overlay backdrop della FAB.
+
 ## [2.6.0] - 2026-04-21
 ### Added
 - **ImageLightbox fullscreen** — completamente riscritto: l'immagine occupa l'intero schermo (`w-screen h-screen object-contain`), navigazione swipe sinistra/destra tra le immagini generate, frecce desktop, contatore posizione (1/N). Controlli (DNA, Storyboard, Download, X) in overlay con auto-hide dopo 3 secondi.
