@@ -1,6 +1,6 @@
 # 📋 Changelog - Generentolo PRO
 
-## [3.1.0] - 2026-05-15
+## [3.0.1] - 2026-05-15
 ### Added
 - **Shots Storyboard** — Nuovo componente separato dal Cinematic Storyboard. Flusso: carica reference → imposta durata (3–120s), aspect ratio e tipo audio → genera un prompt Seedance 2.0 completo (4 sezioni: shot timeline, Master Effects Inventory, Effects Density Map, Energy Arc) → estrae N shot → genera un prompt immagine statica per ogni card. Griglia con textarea editabile per ogni prompt, collapsible per il prompt Seedance completo con copia, lock/regen singolo shot, Usa/Genera/Genera Tutto (coda).
 - **System prompt Fase 1 Shots Storyboard** — Prompt Seedance 2.0 con effetti stacked, speed percentages esplicite, transition logic, SIGNATURE VISUAL EFFECT callout, PRODUCT & PEOPLE FIDELITY RULES (testo prodotto verbatim, descrizione fisica completa delle persone identica in ogni shot).
