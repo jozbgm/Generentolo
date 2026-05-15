@@ -3,12 +3,13 @@ import { ClapperboardIcon, XIcon, SparklesIcon } from './icons';
 
 interface ShotsStoryboardModalProps {
     onClose: () => void;
-    onGenerate: (duration: number, aspectRatio: string, audioType: string) => void;
+    onGenerate: (duration: number, aspectRatio: string, audioType: string, brief: string) => void;
     language: 'en' | 'it';
     referenceImages: File[];
     initialDuration?: number;
     initialAspectRatio?: string;
     initialAudioType?: string;
+    initialBrief?: string;
 }
 
 const DURATION_PRESETS = [5, 10, 15, 30, 60];
@@ -25,15 +26,15 @@ const AUDIO_TYPES = [
 
 const ShotsStoryboardModal: React.FC<ShotsStoryboardModalProps> = ({
     onClose, onGenerate, language, referenceImages,
-    initialDuration = 15, initialAspectRatio = '16:9', initialAudioType = 'music'
+    initialDuration = 15, initialAspectRatio = '16:9', initialAudioType = 'music', initialBrief = ''
 }) => {
     const [duration, setDuration] = useState(initialDuration);
     const [aspectRatio, setAspectRatio] = useState(initialAspectRatio);
     const [audioType, setAudioType] = useState(initialAudioType);
+    const [brief, setBrief] = useState(initialBrief);
     const [thumbUrls, setThumbUrls] = useState<string[]>([]);
 
     const isIT = language === 'it';
-    const shotCount = Math.max(3, Math.min(20, Math.round(duration / 3)));
     const hasImages = referenceImages.length > 0;
 
     useEffect(() => {
@@ -44,7 +45,7 @@ const ShotsStoryboardModal: React.FC<ShotsStoryboardModalProps> = ({
 
     const handleSubmit = () => {
         if (!hasImages) return;
-        onGenerate(duration, aspectRatio, audioType);
+        onGenerate(duration, aspectRatio, audioType, brief.trim());
     };
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -121,6 +122,27 @@ const ShotsStoryboardModal: React.FC<ShotsStoryboardModalProps> = ({
                         </div>
                     )}
 
+                    {/* Brief narrativo */}
+                    <div>
+                        <label className="block text-xs font-bold uppercase tracking-widest text-light-text-muted dark:text-dark-text-muted mb-2">
+                            {isIT ? 'Idea / Brief narrativo (opzionale)' : 'Idea / Narrative brief (optional)'}
+                        </label>
+                        <textarea
+                            value={brief}
+                            onChange={e => setBrief(e.target.value)}
+                            placeholder={isIT
+                                ? 'Descrivi cosa vuoi che succeda, es: "logo 2s, donna cammina 3s, usa il prodotto 5s, closeup prodotto 3s, logo finale 2s"'
+                                : 'Describe what should happen, e.g. "logo 2s, woman walks 3s, uses product 5s, product closeup 3s, final logo 2s"'}
+                            rows={3}
+                            className="w-full px-4 py-3 rounded-xl bg-black/5 dark:bg-white/5 border border-light-border dark:border-dark-border text-light-text dark:text-dark-text text-sm resize-none focus:outline-none focus:border-brand-yellow/60 transition-colors placeholder:text-light-text-muted/40 dark:placeholder:text-dark-text-muted/40"
+                        />
+                        <p className="text-[10px] text-light-text-muted dark:text-dark-text-muted mt-1.5 leading-relaxed">
+                            {isIT
+                                ? 'È l\'idea che decide quanti shot generare, non la durata. Puoi fare riferimento alle reference per numero, es: "ref 0 (donna)", "ref 1 (prodotto)"'
+                                : 'The brief decides how many shots to generate, not the duration. You can reference images by number, e.g. "ref 0 (woman)", "ref 1 (product)"'}
+                        </p>
+                    </div>
+
                     {/* Duration */}
                     <div>
                         <label className="block text-xs font-bold uppercase tracking-widest text-light-text-muted dark:text-dark-text-muted mb-2">
@@ -136,9 +158,6 @@ const ShotsStoryboardModal: React.FC<ShotsStoryboardModalProps> = ({
                                 onChange={e => setDuration(Math.max(3, Math.min(120, Number(e.target.value))))}
                                 className="w-24 px-3 py-2.5 rounded-xl bg-black/5 dark:bg-white/5 border border-light-border dark:border-dark-border text-light-text dark:text-dark-text text-sm font-bold text-center focus:outline-none focus:border-brand-yellow/60 transition-colors"
                             />
-                            <span className="text-xs text-brand-yellow font-bold">
-                                → {shotCount} {isIT ? 'shot' : 'shots'}
-                            </span>
                         </div>
                         <div className="flex gap-2 flex-wrap">
                             {DURATION_PRESETS.map(preset => (
@@ -151,6 +170,11 @@ const ShotsStoryboardModal: React.FC<ShotsStoryboardModalProps> = ({
                                 </button>
                             ))}
                         </div>
+                        <p className="text-[10px] text-light-text-muted dark:text-dark-text-muted mt-1.5">
+                            {isIT
+                                ? '→ il numero di shot viene deciso in base al brief'
+                                : '→ shot count is decided based on the brief'}
+                        </p>
                     </div>
 
                     {/* Aspect Ratio */}
@@ -198,7 +222,7 @@ const ShotsStoryboardModal: React.FC<ShotsStoryboardModalProps> = ({
                         className="w-full flex items-center justify-center gap-2 py-3.5 bg-brand-yellow text-dark-bg rounded-xl font-bold text-sm hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
                     >
                         <SparklesIcon className="w-4 h-4" />
-                        {isIT ? `Genera ${shotCount} Prompt` : `Generate ${shotCount} Prompts`}
+                        {isIT ? 'Genera Storyboard' : 'Generate Storyboard'}
                     </button>
                     <p className="text-center text-xs text-light-text-muted dark:text-dark-text-muted">
                         {isIT ? '⌘+Invio per generare' : '⌘+Enter to generate'}

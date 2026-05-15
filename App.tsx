@@ -2692,6 +2692,7 @@ export default function App() {
     const [shotsStoryboardDuration, setShotsStoryboardDuration] = useState(15);
     const [shotsStoryboardAspectRatio, setShotsStoryboardAspectRatio] = useState('16:9');
     const [shotsStoryboardAudioType, setShotsStoryboardAudioType] = useState('music');
+    const [shotsStoryboardBrief, setShotsStoryboardBrief] = useState('');
 
     // v1.9.5: Cinematic Storyboard
     const [storyboardPrompts, setStoryboardPrompts] = useState<StoryboardPrompt[]>([]);
@@ -4220,9 +4221,10 @@ export default function App() {
     }, [referenceImages, showToast, t.validImageForStoryboard]);
 
     const handleGenerateShotsStoryboard = useCallback(async (
-        duration: number, aspectRatio: string, audioType: string
+        duration: number, aspectRatio: string, audioType: string, brief: string
     ) => {
         handleAspectRatioChange(aspectRatio);
+        setShotsStoryboardBrief(brief);
         setIsShotsStoryboardModalOpen(false);
         setIsShotsStoryboardLoading(true);
         setShotsStoryboardDuration(duration);
@@ -4236,6 +4238,7 @@ export default function App() {
                 duration,
                 aspectRatio,
                 audioType as any,
+                brief,
                 language,
                 userApiKey
             );
@@ -4266,6 +4269,8 @@ export default function App() {
                 shot,
                 referenceImages,
                 shotsStoryboardResult.videoPrompt,
+                shotsStoryboardResult.referenceDescriptions,
+                shotsStoryboardResult.shots.length,
                 language,
                 userApiKey
             );
@@ -4802,6 +4807,7 @@ export default function App() {
                         initialDuration={shotsStoryboardDuration}
                         initialAspectRatio={shotsStoryboardAspectRatio}
                         initialAudioType={shotsStoryboardAudioType}
+                        initialBrief={shotsStoryboardBrief}
                     />
                 )}
 

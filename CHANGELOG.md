@@ -2,9 +2,15 @@
 
 ## [3.0.1] - 2026-05-15
 ### Added
-- **Shots Storyboard** — Nuovo componente separato dal Cinematic Storyboard. Flusso: carica reference → imposta durata (3–120s), aspect ratio e tipo audio → genera un prompt Seedance 2.0 completo (4 sezioni: shot timeline, Master Effects Inventory, Effects Density Map, Energy Arc) → estrae N shot → genera un prompt immagine statica per ogni card. Griglia con textarea editabile per ogni prompt, collapsible per il prompt Seedance completo con copia, lock/regen singolo shot, Usa/Genera/Genera Tutto (coda).
-- **System prompt Fase 1 Shots Storyboard** — Prompt Seedance 2.0 con effetti stacked, speed percentages esplicite, transition logic, SIGNATURE VISUAL EFFECT callout, PRODUCT & PEOPLE FIDELITY RULES (testo prodotto verbatim, descrizione fisica completa delle persone identica in ogni shot).
-- **System prompt Fase 2 Shots Storyboard** — Prompt frame statico per Nano Banana 2 con stesse fidelity rules, formato flowing paragraph, f/stop calibrato al tipo di inquadratura, hardware camera consistente across all shots.
+- **Shots Storyboard** — Nuovo componente per generare prompt video Seedance 2.0 da reference images. Flusso: carica reference → scrivi un brief narrativo (opzionale) → imposta durata (3–120s), aspect ratio e tipo audio → genera un prompt Seedance 2.0 completo in 4 sezioni (Shot Timeline, Master Effects Inventory, Effects Density Map, Energy Arc) → per ogni shot un frame prompt per Nano Banana 2. Bottone nella sidebar sotto Cinematic Storyboard.
+- **Brief narrativo** — Campo textarea nel popup dove descrivere cosa succede nel tempo (es. "logo 2s, donna cammina 3s, closeup prodotto 3s"). Il brief — non la durata — decide il numero di shot. Supporta riferimenti alle reference per indice ("ref 0", "ref 1"). Persiste al riapertura del popup.
+- **Shot count narrativo** — Il modello decide autonomamente quanti shot generare in base al brief (limiti: min 2, max 20). Shot da 1s (flash, cut) a 6-8s (slow motion, hero reveal) liberamente miscelati per ritmo e contrasto.
+- **Reference selettive per shot** — Ogni shot ha `referenceIndices` (indici 0-based): la Fase 2 passa a Gemini solo le reference effettivamente presenti in quello shot, eliminando contaminazione cross-shot.
+- **Memory tra Fase 1 e Fase 2** — La Fase 1 genera `referenceDescriptions`: una descrizione esaustiva verbatim per ogni reference (testi prodotto, dettagli fisici persone). La Fase 2 riceve questa libreria testuale invece di rianalizzare le immagini — garantisce coerenza di testi e identità across tutti i frame prompt.
+- **Flag `isGraphic`** — Shot puramente grafici/digitali (logo, testo animato, motion graphic) ricevono un prompt senza hardware camera, focal length o f/stop — parametri fotografici non applicabili a grafica 2D.
+- **`maxOutputTokens: 8192`** — Aggiunto su tutte le chiamate Gemini del service per eliminare troncamenti del prompt video e dei frame prompt.
+- **Griglia risultati** — Card per ogni shot con textarea editabile, pulsanti Usa / Genera / Rigenera singolo, lock/unlock, copia. Sezione collassabile per il prompt Seedance completo con copia one-click. Footer mobile con "Genera Tutto (Coda)".
+- **Rigenera singolo shot** — Usa le stesse reference selettive e la reference library testuale della generazione originale; passa `totalShotCount` corretto per contesto temporale preciso.
 - **Sync aspect ratio** — La scelta dell'aspect ratio nel popup Shots Storyboard si propaga al FAB globale.
 
 ## [3.0.0] - 2026-05-14

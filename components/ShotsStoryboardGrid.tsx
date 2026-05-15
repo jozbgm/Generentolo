@@ -35,7 +35,6 @@ const ShotsStoryboardGrid: React.FC<ShotsStoryboardGridProps> = ({
     });
 
     const isIT = language === 'it';
-    const shotCount = Math.max(3, Math.min(20, Math.round(duration / 3)));
 
     React.useEffect(() => {
         setEditedPrompts(prev => {
@@ -56,8 +55,8 @@ const ShotsStoryboardGrid: React.FC<ShotsStoryboardGridProps> = ({
     const subtitle = framePrompts.length > 0
         ? `${framePrompts.length} shots · ${duration}s · ${aspectRatio}`
         : isIT
-            ? `${shotCount} shot sequenziali · ${duration}s · ${aspectRatio}`
-            : `${shotCount} sequential shots · ${duration}s · ${aspectRatio}`;
+            ? `Generazione in corso · ${duration}s · ${aspectRatio}`
+            : `Generating · ${duration}s · ${aspectRatio}`;
 
     return (
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 lg:p-8">
@@ -121,8 +120,8 @@ const ShotsStoryboardGrid: React.FC<ShotsStoryboardGridProps> = ({
                             </h3>
                             <p className="text-sm text-light-text-muted dark:text-dark-text-muted max-w-md">
                                 {isIT
-                                    ? `Analisi reference e creazione di ${shotCount} prompt shot...`
-                                    : `Analyzing references and creating ${shotCount} shot prompts...`}
+                                    ? 'Analisi reference e creazione dei prompt shot...'
+                                    : 'Analyzing references and creating shot prompts...'}
                             </p>
                             <div className="flex gap-2 mt-4">
                                 <div className="w-2 h-2 rounded-full bg-brand-yellow animate-bounce" style={{ animationDelay: '0ms' }} />
