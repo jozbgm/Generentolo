@@ -13,6 +13,9 @@ import FloatingActionBar from './components/FloatingActionBar';
 import ImageLightbox from './components/ImageLightbox';
 import StoryboardGrid from './components/StoryboardGrid';
 import StoryboardThemeModal from './components/StoryboardThemeModal';
+import ShotsStoryboardModal from './components/ShotsStoryboardModal';
+import ShotsStoryboardGrid from './components/ShotsStoryboardGrid';
+import { generateShotsStoryboard, regenerateSingleShotPrompt, ShotsStoryboardResult } from './services/shotsStoryboardService';
 import QueuePanel from './components/QueuePanel';
 import GenerAngles, { AngleGenerationParams } from './components/GenerAngles';
 
@@ -295,6 +298,10 @@ const translations = {
         variantGenerated: 'Variant generated!',
         shotsAddedToQueue: 'shots added to queue',
         storyboardFailed: 'Storyboard generation failed',
+        shotsStoryboardTitle: 'Shots Storyboard',
+        shotsStoryboardSubtext: 'Frame prompts from video sequence',
+        shotsStoryboardAnalyzing: 'Generating prompts...',
+        shotsStoryboardFailed: 'Shots storyboard generation failed',
         presetsSaved: 'Presets saved successfully!',
         presetsFailed: 'Failed to save preset',
         presetLoaded: 'Loaded preset:',
@@ -565,6 +572,10 @@ const translations = {
         variantGenerated: 'Variante generata!',
         shotsAddedToQueue: 'inquadrature aggiunte alla coda',
         storyboardFailed: 'Generazione storyboard fallita',
+        shotsStoryboardTitle: 'Shots Storyboard',
+        shotsStoryboardSubtext: 'Prompt frame da sequenza video',
+        shotsStoryboardAnalyzing: 'Generazione in corso...',
+        shotsStoryboardFailed: 'Generazione shots storyboard fallita',
         presetsSaved: 'Preset salvato con successo!',
         presetsFailed: 'Impossibile salvare il preset',
         presetLoaded: 'Preset caricato:',
@@ -815,6 +826,8 @@ const ReferencePanel: React.FC<{
     setStudioConfig: (config: any) => void;
     onGenerateStoryboard: () => void;
     isStoryboardLoading: boolean;
+    onGenerateShotsStoryboard: () => void;
+    isShotsStoryboardLoading: boolean;
     // GenerAngles
     onGenerateFromAngle: (params: AngleGenerationParams) => void;
     isGeneratingAngles: boolean;
@@ -825,7 +838,7 @@ const ReferencePanel: React.FC<{
     onCaptureVideoFrame: (frameFile: File) => void;
     videoAsStyle: boolean;
     onToggleVideoAsStyle: () => void;
-}> = ({ onAddImages, onRemoveImage, referenceImages, onAddStyleImage, onRemoveStyleImage, styleImage, onAddStructureImage, onRemoveStructureImage, structureImage, selectedStylePreset, setSelectedStylePreset, selectedModel, preciseReference, setPreciseReference, dnaCharacters, selectedDnaIds, onSelectDna, onManageDna, appMode, setAppMode, studioConfig, setStudioConfig, onGenerateStoryboard, isStoryboardLoading, onGenerateFromAngle, isGeneratingAngles, videoReference, onAddVideoReference, onRemoveVideoReference, onCaptureVideoFrame, videoAsStyle, onToggleVideoAsStyle }) => {
+}> = ({ onAddImages, onRemoveImage, referenceImages, onAddStyleImage, onRemoveStyleImage, styleImage, onAddStructureImage, onRemoveStructureImage, structureImage, selectedStylePreset, setSelectedStylePreset, selectedModel, preciseReference, setPreciseReference, dnaCharacters, selectedDnaIds, onSelectDna, onManageDna, appMode, setAppMode, studioConfig, setStudioConfig, onGenerateStoryboard, isStoryboardLoading, onGenerateShotsStoryboard, isShotsStoryboardLoading, onGenerateFromAngle, isGeneratingAngles, videoReference, onAddVideoReference, onRemoveVideoReference, onCaptureVideoFrame, videoAsStyle, onToggleVideoAsStyle }) => {
     const { t, language } = useLocalization();
     const [isDraggingRef, setIsDraggingRef] = useState(false);
     const [isDraggingStyle, setIsDraggingStyle] = useState(false);
@@ -1049,15 +1062,15 @@ const ReferencePanel: React.FC<{
                 <div className="h-px bg-gradient-to-r from-transparent via-light-border dark:via-white/[0.08] to-transparent"></div>
 
                 {appMode !== 'angles' && (
-                    <div>
+                    <div className="space-y-2">
                         <button
                             onClick={() => onGenerateStoryboard()}
                             disabled={referenceImages.length === 0 || isStoryboardLoading}
-                            className={`w-full group relative overflow-hidden flex items-center justify-center gap-3 py-3 bg-light-surface/80 dark:bg-dark-surface/60 border rounded-xl transition-all cursor-pointer select-none hover:scale-[1.01] active:scale-[0.99] disabled:cursor-not-allowed disabled:hover:scale-100 ${referenceImages.length === 0 ? 'border-dashed border-light-border/40 dark:border-white/[0.05] opacity-50' : 'border-light-border/60 dark:border-white/[0.07] hover:border-brand-yellow/50'} ${isStoryboardLoading ? 'animate-pulse' : ''}`}
+                            className={`w-full group relative overflow-hidden flex items-center justify-start gap-3 px-4 py-3 bg-light-surface/80 dark:bg-dark-surface/60 border rounded-xl transition-all cursor-pointer select-none hover:scale-[1.01] active:scale-[0.99] disabled:cursor-not-allowed disabled:hover:scale-100 ${referenceImages.length === 0 ? 'border-dashed border-light-border/40 dark:border-white/[0.05] opacity-50' : 'border-light-border/60 dark:border-white/[0.07] hover:border-brand-yellow/50'} ${isStoryboardLoading ? 'animate-pulse' : ''}`}
                         >
                             <div className="sweep-accent absolute inset-0 pointer-events-none" />
                             <ClapperboardIcon className="w-5 h-5 text-brand-yellow relative pointer-events-none flex-shrink-0" />
-                            <div className="text-left relative pointer-events-none">
+                            <div className="text-left relative pointer-events-none flex-1 min-w-0">
                                 <span className="block text-[11px] font-bold text-light-text dark:text-dark-text transition-colors group-hover:text-brand-yellow">
                                     {t.cinematicStoryboardTitle}
                                 </span>
@@ -1066,7 +1079,28 @@ const ReferencePanel: React.FC<{
                                 </span>
                             </div>
                             {isStoryboardLoading && (
-                                <div className="ml-auto mr-2 w-3 h-3 border-2 border-brand-yellow border-t-transparent rounded-full animate-spin pointer-events-none relative" />
+                                <div className="ml-auto flex-shrink-0 w-3 h-3 border-2 border-brand-yellow border-t-transparent rounded-full animate-spin pointer-events-none relative" />
+                            )}
+                        </button>
+
+                        <button
+                            onClick={() => onGenerateShotsStoryboard()}
+                            disabled={referenceImages.length === 0 || isShotsStoryboardLoading}
+                            title={language === 'it' ? 'Shots Storyboard — Genera frame da prompt video' : 'Shots Storyboard — Generate frames from video prompt'}
+                            className={`w-full group relative overflow-hidden flex items-center justify-start gap-3 px-4 py-3 bg-light-surface/80 dark:bg-dark-surface/60 border rounded-xl transition-all cursor-pointer select-none hover:scale-[1.01] active:scale-[0.99] disabled:cursor-not-allowed disabled:hover:scale-100 ${referenceImages.length === 0 ? 'border-dashed border-light-border/40 dark:border-white/[0.05] opacity-50' : 'border-light-border/60 dark:border-white/[0.07] hover:border-brand-yellow/50'} ${isShotsStoryboardLoading ? 'animate-pulse' : ''}`}
+                        >
+                            <div className="sweep-accent absolute inset-0 pointer-events-none" />
+                            <ClapperboardIcon className="w-5 h-5 text-brand-yellow relative pointer-events-none flex-shrink-0" />
+                            <div className="text-left relative pointer-events-none flex-1 min-w-0">
+                                <span className="block text-[11px] font-bold text-light-text dark:text-dark-text transition-colors group-hover:text-brand-yellow">
+                                    {t.shotsStoryboardTitle}
+                                </span>
+                                <span className="block text-[10px] text-light-text-muted dark:text-dark-text-muted">
+                                    {isShotsStoryboardLoading ? t.shotsStoryboardAnalyzing : t.shotsStoryboardSubtext}
+                                </span>
+                            </div>
+                            {isShotsStoryboardLoading && (
+                                <div className="ml-auto flex-shrink-0 w-3 h-3 border-2 border-brand-yellow border-t-transparent rounded-full animate-spin pointer-events-none relative" />
                             )}
                         </button>
                     </div>
@@ -2648,6 +2682,17 @@ export default function App() {
     // v1.9.5: Generation Queue
     const [queue, setQueue] = useState<GenerationTask[]>([]);
 
+    // Shots Storyboard
+    const [shotsStoryboardResult, setShotsStoryboardResult] = useState<ShotsStoryboardResult | null>(null);
+    const [isShotsStoryboardModalOpen, setIsShotsStoryboardModalOpen] = useState(false);
+    const [isShotsStoryboardGridOpen, setIsShotsStoryboardGridOpen] = useState(false);
+    const [isShotsStoryboardLoading, setIsShotsStoryboardLoading] = useState(false);
+    const [shotsStoryboardLockedIds, setShotsStoryboardLockedIds] = useState<string[]>([]);
+    const [shotsStoryboardRegeneratingId, setShotsStoryboardRegeneratingId] = useState<string | null>(null);
+    const [shotsStoryboardDuration, setShotsStoryboardDuration] = useState(15);
+    const [shotsStoryboardAspectRatio, setShotsStoryboardAspectRatio] = useState('16:9');
+    const [shotsStoryboardAudioType, setShotsStoryboardAudioType] = useState('music');
+
     // v1.9.5: Cinematic Storyboard
     const [storyboardPrompts, setStoryboardPrompts] = useState<StoryboardPrompt[]>([]);
     const [isStoryboardOpen, setIsStoryboardOpen] = useState(false);
@@ -4165,6 +4210,126 @@ export default function App() {
         handleGenerate();
     }, [handleGenerate]);
 
+    // Shots Storyboard handlers
+    const handleOpenShotsStoryboard = useCallback(() => {
+        if (referenceImages.length === 0) {
+            showToast(t.validImageForStoryboard, 'error');
+            return;
+        }
+        setIsShotsStoryboardModalOpen(true);
+    }, [referenceImages, showToast, t.validImageForStoryboard]);
+
+    const handleGenerateShotsStoryboard = useCallback(async (
+        duration: number, aspectRatio: string, audioType: string
+    ) => {
+        handleAspectRatioChange(aspectRatio);
+        setIsShotsStoryboardModalOpen(false);
+        setIsShotsStoryboardLoading(true);
+        setShotsStoryboardDuration(duration);
+        setShotsStoryboardAspectRatio(aspectRatio);
+        setShotsStoryboardAudioType(audioType);
+        setShotsStoryboardLockedIds([]);
+        setIsShotsStoryboardGridOpen(true);
+        try {
+            const result = await generateShotsStoryboard(
+                referenceImages,
+                duration,
+                aspectRatio,
+                audioType as any,
+                language,
+                userApiKey
+            );
+            setShotsStoryboardResult(result);
+        } catch (err: any) {
+            showToast(err.message || t.shotsStoryboardFailed, 'error');
+            setIsShotsStoryboardGridOpen(false);
+        } finally {
+            setIsShotsStoryboardLoading(false);
+        }
+    }, [referenceImages, language, userApiKey, showToast, t.shotsStoryboardFailed]);
+
+    const handleRegenerateShotsStoryboard = useCallback(() => {
+        setIsShotsStoryboardGridOpen(false);
+        setShotsStoryboardResult(null);
+        setIsShotsStoryboardModalOpen(true);
+    }, []);
+
+    const handleRegenerateSingleShotPrompt = useCallback(async (id: string, _shotTitle: string) => {
+        if (!shotsStoryboardResult) return;
+        const fp = shotsStoryboardResult.framePrompts.find(f => f.id === id);
+        if (!fp) return;
+        const shot = shotsStoryboardResult.shots.find(s => s.index === fp.shotIndex);
+        if (!shot) return;
+        setShotsStoryboardRegeneratingId(id);
+        try {
+            const updated = await regenerateSingleShotPrompt(
+                shot,
+                referenceImages,
+                shotsStoryboardResult.videoPrompt,
+                language,
+                userApiKey
+            );
+            setShotsStoryboardResult(prev => {
+                if (!prev) return prev;
+                return {
+                    ...prev,
+                    framePrompts: prev.framePrompts.map(f => f.id === id ? { ...updated, id } : f)
+                };
+            });
+        } catch (err: any) {
+            showToast(err.message || t.shotsStoryboardFailed, 'error');
+        } finally {
+            setShotsStoryboardRegeneratingId(null);
+        }
+    }, [shotsStoryboardResult, referenceImages, language, userApiKey, showToast, t.shotsStoryboardFailed]);
+
+    const handleShotsUsePrompt = useCallback((prompt: string) => {
+        setEditedPrompt(prompt);
+        setIsShotsStoryboardGridOpen(false);
+    }, []);
+
+    const handleShotsGenerateOne = useCallback((prompt: string) => {
+        setEditedPrompt(prompt);
+        setIsShotsStoryboardGridOpen(false);
+        handleGenerate();
+    }, [handleGenerate]);
+
+    const handleShotsGenerateAll = useCallback(() => {
+        if (!shotsStoryboardResult) return;
+        const unlocked = shotsStoryboardResult.framePrompts.filter(
+            fp => !shotsStoryboardLockedIds.includes(fp.id)
+        );
+        if (unlocked.length === 0) return;
+        const newTasks: GenerationTask[] = unlocked.map(fp => ({
+            id: crypto.randomUUID(),
+            prompt: fp.imagePrompt,
+            negativePrompt,
+            seed,
+            aspectRatio,
+            numImages: 1,
+            model: selectedModel,
+            resolution: selectedResolution,
+            referenceImages: referenceImages.length > 0 ? [referenceImages[0]] : [],
+            styleImage: styleReferenceImage,
+            structureImage,
+            selectedDnaIds: [...selectedDnaIds],
+            studioConfig: { ...studioConfig },
+            useGrounding,
+            preciseReference,
+            autoEnhance: false,
+            timestamp: Date.now(),
+        }));
+        setQueue(prev => [...prev, ...newTasks]);
+        setIsShotsStoryboardGridOpen(false);
+        showToast(`${newTasks.length} ${t.shotsAddedToQueue}`, 'success');
+    }, [shotsStoryboardResult, shotsStoryboardLockedIds, referenceImages, negativePrompt, seed, aspectRatio, selectedModel, selectedResolution, styleReferenceImage, structureImage, selectedDnaIds, studioConfig, useGrounding, preciseReference, showToast, t.shotsAddedToQueue]);
+
+    const handleShotsToggleLock = useCallback((id: string) => {
+        setShotsStoryboardLockedIds(prev =>
+            prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+        );
+    }, []);
+
     // Preset handlers
     const handleSavePreset = useCallback((name: string, prompt: string, negativePrompt?: string) => {
         try {
@@ -4355,6 +4520,8 @@ export default function App() {
                             setStudioConfig={setStudioConfig}
                             onGenerateStoryboard={handleOpenStoryboard}
                             isStoryboardLoading={isStoryboardLoading}
+                            onGenerateShotsStoryboard={handleOpenShotsStoryboard}
+                            isShotsStoryboardLoading={isShotsStoryboardLoading}
                             onGenerateFromAngle={handleGenerateFromAngle}
                             isGeneratingAngles={isGeneratingAngles}
                             videoReference={videoReference}
@@ -4623,6 +4790,38 @@ export default function App() {
                         language={language}
                         theme={storyboardTheme}
                         shotCount={storyboardShotCount}
+                    />
+                )}
+
+                {isShotsStoryboardModalOpen && (
+                    <ShotsStoryboardModal
+                        onClose={() => setIsShotsStoryboardModalOpen(false)}
+                        onGenerate={handleGenerateShotsStoryboard}
+                        language={language}
+                        referenceImages={referenceImages}
+                        initialDuration={shotsStoryboardDuration}
+                        initialAspectRatio={shotsStoryboardAspectRatio}
+                        initialAudioType={shotsStoryboardAudioType}
+                    />
+                )}
+
+                {isShotsStoryboardGridOpen && (
+                    <ShotsStoryboardGrid
+                        framePrompts={shotsStoryboardResult?.framePrompts ?? []}
+                        videoPrompt={shotsStoryboardResult?.videoPrompt ?? ''}
+                        onClose={() => { setIsShotsStoryboardGridOpen(false); setShotsStoryboardResult(null); }}
+                        onUsePrompt={handleShotsUsePrompt}
+                        onGenerateAll={handleShotsGenerateAll}
+                        onGenerateOne={handleShotsGenerateOne}
+                        onRegenerate={handleRegenerateShotsStoryboard}
+                        onRegenerateOne={handleRegenerateSingleShotPrompt}
+                        onToggleLock={handleShotsToggleLock}
+                        lockedIds={shotsStoryboardLockedIds}
+                        regeneratingId={shotsStoryboardRegeneratingId}
+                        isLoading={isShotsStoryboardLoading}
+                        language={language}
+                        duration={shotsStoryboardDuration}
+                        aspectRatio={shotsStoryboardAspectRatio}
                     />
                 )}
 

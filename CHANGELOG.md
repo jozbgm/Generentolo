@@ -1,5 +1,12 @@
 # 📋 Changelog - Generentolo PRO
 
+## [3.1.0] - 2026-05-15
+### Added
+- **Shots Storyboard** — Nuovo componente separato dal Cinematic Storyboard. Flusso: carica reference → imposta durata (3–120s), aspect ratio e tipo audio → genera un prompt Seedance 2.0 completo (4 sezioni: shot timeline, Master Effects Inventory, Effects Density Map, Energy Arc) → estrae N shot → genera un prompt immagine statica per ogni card. Griglia con textarea editabile per ogni prompt, collapsible per il prompt Seedance completo con copia, lock/regen singolo shot, Usa/Genera/Genera Tutto (coda).
+- **System prompt Fase 1 Shots Storyboard** — Prompt Seedance 2.0 con effetti stacked, speed percentages esplicite, transition logic, SIGNATURE VISUAL EFFECT callout, PRODUCT & PEOPLE FIDELITY RULES (testo prodotto verbatim, descrizione fisica completa delle persone identica in ogni shot).
+- **System prompt Fase 2 Shots Storyboard** — Prompt frame statico per Nano Banana 2 con stesse fidelity rules, formato flowing paragraph, f/stop calibrato al tipo di inquadratura, hardware camera consistente across all shots.
+- **Sync aspect ratio** — La scelta dell'aspect ratio nel popup Shots Storyboard si propaga al FAB globale.
+
 ## [3.0.0] - 2026-05-14
 ### Changed
 - **System prompts v2** — Riscritti tutti e 10 i system prompt di generazione immagini: framing positivo (mai "no X", sempre la versione affermativa), naming hardware fotografico specifico (Fujifilm GFX 100S, Sony A7R V, Hasselblad H6D per impronta visiva diversa), lighting by name (three-point softbox, Rembrandt at 45°, Butterfly lighting, Chiaroscuro), struttura Character DNA espansa, best practice Nano Banana 2 aggiornate.
