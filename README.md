@@ -12,6 +12,10 @@ Generate, iterate, and storyboard images at up to 4K resolution with triple-mode
 
 ---
 
+![Generentolo PRO](screen.png)
+
+---
+
 ## Features
 
 - **Triple-model support** — Flash (fast), PRO (4K quality), Nano Banana 2 (speed + quality)
